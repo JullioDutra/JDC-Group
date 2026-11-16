@@ -33,7 +33,7 @@ fim          ─► IMAGEM do campinho final + vencedor estado: FINISHED      (r
 - **Ordem estrita**: os dois escolhem o goleiro; só então abre a rodada dos defensores, e assim por diante. Quem manda nome fora da vez recebe um aviso (uma vez por vez) e a jogada não vale.
 - **Só os dois jogam**: mensagens de quem está fora da partida nunca escalam; comandos de consulta (`placar`, `regras`, `ranking`) continuam abertos a todos.
 - **Vez**: um de cada vez. Quem abre a rodada alterna (rodadas ímpares o anfitrião, pares o desafiante), porque quem escolhe por último vê o número do outro.
-- **Validação pela IA** (a vez só passa se tudo for válido): o jogador existe? Atua na posição da rodada? Passou pelo clube / é da seleção sorteada? Já foi escalado nesta partida? A IA tem o dado do tema?
+- **Validação pela IA** (a vez só passa se tudo for válido): o jogador existe? Atua na posição da rodada? Passou pelo clube / é da seleção sorteada? Já foi escalado nesta partida, por qualquer um dos dois, em qualquer rodada e por qualquer time (Alexis no Arsenal bloqueia Alexis no United)? A IA tem o dado do tema?
 - **Resposta rápida**: no meio da rodada a confirmação é só texto (`✅ Rogério Ceni — 131 gols`); a imagem só é gerada quando os dois escolheram.
 - **Tempo**: 90 s por jogada. Passou disso, o adversário manda `tempo` e quem atrasou fica com o pior valor possível na posição.
 - **Desistência** com a bola rolando = derrota por W.O. Partida parada por 20 min é encerrada sozinha.

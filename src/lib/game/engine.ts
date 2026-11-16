@@ -164,6 +164,18 @@ function sideOf(state: MatchState, jid: string): Side | null {
   return null;
 }
 
+/** Procura um escalado com qualquer um destes nomes normalizados. */
+function findUsed(state: MatchState, keys: string[]): { side: Side } | null {
+  for (const side of [0, 1] as const) {
+    for (const p of state.picks[side]) {
+      if (!p) continue;
+      const names = [p.key, ...(p.aliases ?? [])];
+      if (keys.some((k) => names.includes(k))) return { side };
+    }
+  }
+  return null;
+}
+
 type Step = 'same-round' | 'round-done' | 'match-done';
 
 /** Registra a escolha e avança vez/rodada. */
@@ -381,9 +393,14 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (!profile) {
     return [text(`❌ Não encontrei nenhum jogador chamado "${msg.text.trim()}". ${retry}`)];
   }
+  // Cada jogador real só pode ser usado UMA vez na partida, por qualquer um dos dois,
+  // em qualquer rodada e por qualquer clube (ex.: Alexis no Arsenal bloqueia Alexis no United).
   const key = normalize(profile.name);
-  if (state.picks.some((list) => list.some((p) => p?.key === key))) {
-    return [text(`❌ *${profile.name}* já foi escalado nesta partida. ${retry}`)];
+  const typed = normalize(msg.text);
+  const used = findUsed(state, [key, typed]);
+  if (used) {
+    const by = used.side === side ? 'por você' : `por *${state.players[used.side]!.name}*`;
+    return [text(`❌ *${profile.name}* já foi escalado nesta partida (${by}). Respostas repetidas não valem, nem por outro time. ${retry}`)];
   }
   if (!profile.positions.includes(slot)) {
     const actual = profile.positions.map((p) => POSITION_LABEL[p]).join('/');
@@ -402,7 +419,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return [text(`🤷 Não tenho um dado confiável de ${mode.tagline.split(' · ')[0].toLowerCase()} para *${profile.name}*. Escolha outro. ${retry}`)];
   }
 
-  const step = applyPick(state, side, { name: profile.name, key, value }, nowMs);
+  const step = applyPick(state, side, { name: profile.name, key, value, ...(typed !== key ? { aliases: [typed] } : {}) }, nowMs);
   const confirmed = isBlind(state)
     ? `✅ *${profile.name}* escalado! O número fica em segredo até o fim. 🤫`
     : `✅ *${profile.name}* — *${formatNumber(value)} ${mode.unit}*`;

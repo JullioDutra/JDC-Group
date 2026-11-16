@@ -1,6 +1,6 @@
 # Modo em Grupo: planejamento completo
 
-O 1 x 1 (Duelo de Craques) põe dois jogadores frente a frente. O **Modo em Grupo** abre uma *sala*: todo mundo do grupo que mandar `entrar` passa a jogar, cada um responde, e a rodada avança quando **todos os inscritos responderem** (ou quando o tempo acabar). Ele existe nos três jogos da plataforma: ⚽ futebol, 🎌 animes e 🧠 conhecimentos gerais.
+O 1 x 1 (Duelo de Craques) põe dois jogadores frente a frente. O **Modo em Grupo** abre uma *sala* de até 10–15 pessoas: quem mandar `entrar` passa a jogar, **cada um dá uma resposta por rodada**, **nenhuma resposta pode se repetir na partida**, e a rodada avança quando **todos os inscritos responderem** (ou quando o tempo acabar). Ele existe nos três jogos da plataforma: ⚽ futebol, 🎌 animes e 🧠 conhecimentos gerais.
 
 Documentos relacionados: [`PLATAFORMA.md`](PLATAFORMA.md) · [`PLANEJAMENTO.md`](PLANEJAMENTO.md) · [`ANIMES.md`](ANIMES.md) · [`CONHECIMENTOS-GERAIS.md`](CONHECIMENTOS-GERAIS.md) · [`EVOLUTION.md`](EVOLUTION.md)
 
@@ -16,9 +16,9 @@ O Projeto Trivia publica quizzes, Top 10, desafios e drafts sobre Champions, Bra
 |---|---|---|
 | **Jogo das Conexões** | "Atletas lendários do Brasil vs Mundo", conexões sobre Neymar | **Conexões** (§4.4) |
 | **Um X para cada letra** | "Um goleiro para cada letra do alfabeto", "Times com a letra A" | **Alfabeto** (§4.5) |
-| **Draft 5x5** | "Draft 5x5 – jogadores com a letra F" | **Draft da Resenha** (§4.10) |
+| **Draft 5x5** | "Draft 5x5 – jogadores com a letra F" | **Draft da Resenha** (§4.9) |
 | **Top N** | "Top 15 melhores goleiros do mundo" | **Top 10 coletivo** (§4.6) |
-| **Perguntei para 100 pessoas** | "Qual o melhor goleiro brasileiro de todos os tempos?" | **Pesquisa da Galera** (§4.9) |
+| **Perguntei para 100 pessoas** | "Qual o melhor goleiro brasileiro de todos os tempos?" | Retirado (conflita com respostas únicas, ver §4) |
 | **Qual é a nota?** | adivinhar a nota/número | **Chute Certo** (§4.7) |
 | **Quem não pertence à lista?** | 4–5 nomes, um intruso | **Intruso** (§4.8) |
 
@@ -44,7 +44,7 @@ Fontes: [Adivinhe o jogador por time + número + país + posição](https://www.
 | Jogo | Mecânica | Decisão |
 |---|---|---|
 | **Kahoot** | Pontos por acerto + bônus por velocidade; *streak* (sequência de acertos) dá bônus com teto, para quem está atrás seguir no jogo; modo "confiança" (aposta) | Adotado: acerto + bônus de velocidade com teto + sequência |
-| **HQ Trivia** | Eliminação: errou, está fora; **vida extra** usada uma vez | Adotado no modo **Sobrevivente** (§4.11) |
+| **HQ Trivia** | Eliminação: errou, está fora; **vida extra** usada uma vez | Adotado no modo **Sobrevivente** (§4.10) |
 | **Bots de WhatsApp (GamaGame, WASumo)** | Lista em que todos respondem ao mesmo tempo; quem acerta primeiro pontua; ranking de participação | Adotado em Top 10 e Alfabeto |
 | **Telegram QuizBot** | Tempo por pergunta, acertos e tempo de cada um, ranking por quiz | Adotado no placar |
 
@@ -71,7 +71,7 @@ abrir sala            ─► IMAGEM "Sala aberta": jogo, modo, regras curtas, "m
 entrar / sair         ─► o bot reage ✅ na mensagem (sem texto, para não poluir o grupo)
 começar (anfitrião)   ─► fecha as inscrições (mínimo 2) · IMAGEM com a lista de jogadores
 rodada n              ─► IMAGEM da pergunta (rodada, categoria, tempo)
-  respostas           ─► o bot reage ✅ em cada resposta recebida; "5/8 responderam" só no fim
+  respostas           ─► 1 por jogador; ✅ (reação) se aceita, ❌ curto se repetida ou inválida
   todos responderam   ─► IMAGEM da revelação: resposta certa, quem acertou (por ordem), pontos
   ou o tempo acabou      quem não respondeu leva 0
 a cada 5 rodadas      ─► IMAGEM do placar parcial (top 5)
@@ -85,7 +85,7 @@ Comandos da sala:
 | `abrir sala` / `jogo em grupo` | qualquer membro | abre a sala e vira anfitrião |
 | `abrir sala futebol` / `anime` / `quiz` | qualquer membro | já escolhe o jogo |
 | `aleatório` | anfitrião | sorteia jogo e modo |
-| `entrar` / `entrar no jogo` | qualquer membro | entra na sala (aceito até a 3ª rodada, começando com 0) |
+| `entrar` / `entrar no jogo` | qualquer membro | entra na sala, até o limite do modo (aceito até a 3ª rodada, começando com 0) |
 | `sair` | jogador | sai da sala |
 | `começar` | anfitrião | fecha as inscrições |
 | `placar` | qualquer um | placar parcial |
@@ -94,49 +94,65 @@ Comandos da sala:
 ### 2.3 Quem pode responder
 
 - **Só quem mandou `entrar`.** Mensagens de quem está fora da sala são ignoradas, como no 1 x 1.
-- **Uma resposta por pergunta** nos modos "todos respondem": vale a primeira mensagem que parece uma resposta. Isso evita chute em metralhadora.
-- **Nos modos de corrida e de lista**, cada um pode tentar várias vezes, com penalidade se errar (descrito em cada modo).
+- **Uma resposta por jogador por rodada.** A primeira resposta válida de cada um é a que vale; depois disso, as mensagens dele são ignoradas até a próxima rodada.
+- **Sala de 10 a 15 jogadores**, conforme o modo (tabela da §2.7). Com a sala cheia, `entrar` responde "sala cheia, fica para a próxima".
 
 ### 2.4 "Todos responderam" sem travar o jogo
 
-O pedido é avançar quando todos responderem. Três proteções impedem que um jogador ausente trave a sala:
+A rodada avança assim que **todos os inscritos tiverem uma resposta aceita**. Três proteções impedem que um ausente trave a sala:
 
-1. **Tempo por pergunta** (20 a 45 s, conforme o modo). Esgotado, a rodada fecha mesmo sem todos.
+1. **Tempo por rodada** (30 a 60 s, conforme o modo). Esgotado, a rodada fecha; quem não respondeu leva 0.
 2. **Ausência**: quem fica 2 rodadas seguidas sem responder vira "ausente" e sai da conta de "todos". Volta assim que responder.
 3. **Anfitrião/admin** pode mandar `pular`.
 
 Sobre o relógio: a função da Vercel só roda quando chega uma mensagem, então ela não "acorda sozinha" quando o tempo acaba. Duas soluções, usadas juntas:
 - **Verificação preguiçosa**: qualquer mensagem no grupo depois do prazo fecha a rodada atrasada.
-- **Agendador externo** (recomendado: Upstash QStash, plano grátis): ao abrir uma pergunta, agendamos uma chamada a `/api/tick` para o segundo exato do prazo. O cron da Vercel não serve, porque no plano Hobby ele roda só uma vez por dia.
+- **Agendador externo** (recomendado: Upstash QStash, plano grátis): ao abrir a rodada, agendamos uma chamada a `/api/tick` para o segundo exato do prazo. O cron da Vercel não serve, porque no plano Hobby ele roda só uma vez por dia.
 
-### 2.5 O problema da cola, e como resolver
+### 2.5 Regra anti-cola: respostas únicas (decisão tomada)
 
-No WhatsApp, tudo que alguém escreve no grupo **todo mundo vê**. Em "todos respondem" com resposta aberta, quem responde por último copia quem respondeu primeiro. Por isso cada modo usa **um destes três formatos**:
+O jogo acontece **no grupo**, à vista de todos, e a cola deixa de compensar por uma regra só:
 
-| Formato | Como | Quando usar |
-|---|---|---|
-| **Corrida** | O primeiro a acertar leva mais pontos; copiar não adianta, porque quem copia já chegou atrasado | Dicas, Emoji, Bandeiraço |
-| **Reivindicação** | Cada resposta certa só pode ser dada **uma vez**; quem falou primeiro fica com ela | Top 10, Alfabeto, Conexões |
-| **Resposta no privado** | Cada um responde **no privado do bot**; no grupo aparece só "✅ 6/8 responderam", e a revelação mostra todos | Que time é esse?, Chute Certo, Intruso, Quiz, Stop |
+> **Uma resposta não pode se repetir na partida.** Se alguém já usou um jogador, personagem, país ou palavra, ninguém mais pode usar, nem na mesma rodada, nem em outra, nem por outro time.
 
-A **resposta no privado** é o que viabiliza o "todos respondem e depois avança" sem cola:
-- O bot só aceita mensagem no privado de quem **está numa sala aberta**. Fora disso, o privado continua ignorado.
-- Isso não afeta o bot pessoal: ele é outra instância da Evolution.
-- Cuidado técnico: o mesmo contato pode aparecer como `@lid` no grupo e como telefone no privado. A sala guarda os dois identificadores quando disponíveis, e o `entrar` registra o telefone (ver [`EVOLUTION.md`](EVOLUTION.md)).
-- **Enquetes nativas do WhatsApp foram descartadas**: os votos chegam criptografados em `messages.update` e há relatos de votos de grupo que não chegam ao webhook.
+Exemplo, no tema Joias (idade): Ana usa **Alexis Sánchez** pelo Arsenal. Duas rodadas depois, Bia tenta **Alexis** pelo Manchester United e o bot responde: "❌ Alexis Sánchez já foi escalado nesta partida (por Ana). Respostas repetidas não valem, nem por outro time." *(Essa regra já funciona no 1 x 1 e tem teste automático.)*
+
+Como a regra vale em cada tipo de modo:
+
+| Tipo de modo | Regra |
+|---|---|
+| **Várias respostas certas** (Escalação, Alfabeto, Top 10, Stop, Draft, Sobrevivente) | Cada resposta certa só pode ser usada **uma vez** na partida. Copiar quem respondeu antes é inútil: a resposta copiada é recusada. Repetida ou inválida **não gasta** a resposta do jogador, que tenta outra dentro do tempo |
+| **Uma resposta certa** (Quem é?, Que time é esse?, Emoji, Bandeiraço, Intruso) | Vira **corrida**: só o primeiro que acertar pontua. Quem repetir a resposta de outro é recusado. Aqui **cada jogador tem 1 tentativa por rodada**, e errar gasta a tentativa, para ninguém chutar em metralhadora |
+| **Número** (Chute Certo) | Cada jogador escolhe um número **diferente** dos já ditos, no estilo "O Preço Certo". Quem responde depois não copia; no máximo encosta no número de alguém, o que também é estratégia |
+
+Como o bot reconhece "mesma resposta": compara a **entidade**, não o texto. "Alexis", "Alexis Sanchez" e "alexis sánchez" viram o mesmo jogador pela ficha da IA e pelo que foi digitado. Em palavras abertas (Stop, Alfabeto), a comparação é normalizada: sem acento, sem maiúsculas, singular/plural.
+
+Isso dispensa respostas no privado: **o jogo inteiro acontece no grupo**. A ideia de resposta no privado fica de lado.
 
 ### 2.6 Pontuação (padrão para todos os modos)
 
 | Item | Pontos |
 |---|---|
 | Acerto | 100 |
-| Bônus de velocidade (ordem entre os que acertaram) | 1º +50 · 2º +30 · 3º +15 · demais +5 |
+| Bônus de velocidade (ordem entre os que acertaram na rodada) | 1º +50 · 2º +30 · 3º +15 · demais +5 |
 | Sequência de 3 acertos seguidos | +50, uma vez a cada sequência (teto, como no Kahoot) |
-| Chute Certo (§4.7) | 100 para o mais próximo, 60 para o 2º, 30 para o 3º; acerto exato +50 |
-| Erro em modo de corrida | −20 (desestimula chute aleatório) |
+| Chute Certo (§4.7) | 100 para o mais próximo, 60 para o 2º, 30 para o 3º; exato +50 |
+| Corrida: errou a tentativa | 0 (a punição é perder a chance na rodada) |
 | Ranking do grupo | 1º da sala 5 pts, 2º 3, 3º 2, participação 1. Ranking por jogo e geral |
 
----
+### 2.7 Tamanho da sala por modo
+
+Para não ficar pesado nem poluir o grupo: **mínimo 2, máximo entre 10 e 15**.
+
+| Modo | Máx. | Por quê |
+|---|---|---|
+| Escalação em Grupo (§4.0) | **10** | 6 rodadas × 10 = 60 escolhas, cada uma consultando a IA; a imagem do placar fica legível |
+| Draft da Resenha | **8** | Ordem em serpente fica longa |
+| Top 10 coletivo | **10** | Só há 10 respostas por lista |
+| Stop coletivo | **10** | Cada jogador manda 6 palavras por rodada |
+| Conexões | **12** | 4 grupos por partida |
+| Quem é? · Que time é esse? · Emoji · Bandeiraço · Intruso | **15** | Corrida, 1 tentativa cada: mensagens limitadas |
+| Alfabeto · Chute Certo · Sobrevivente | **15** | 1 resposta por jogador por rodada |
 
 ## 3. Imagens do Modo em Grupo
 
@@ -145,8 +161,8 @@ Mesmo formato (1080x1350) e a identidade do jogo escolhido (verde-estádio, roxo
 | Tela | Conteúdo |
 |---|---|
 | **Sala aberta** | Nome do modo, regras em 3 linhas, "MANDE ENTRAR", tempo restante, contador de inscritos |
-| **Lista de jogadores** | Até 30 nomes em colunas, cada um com uma cor; "VALENDO!" |
-| **Pergunta** | "PERGUNTA 4/10", categoria, o conteúdo (escalação, dicas, emojis, bandeira, lista com lacunas), tempo e formato da resposta ("responda no PRIVADO" ou "no GRUPO") |
+| **Lista de jogadores** | Até 15 nomes em colunas, cada um com uma cor; "VALENDO!" |
+| **Pergunta** | "RODADA 4/10", categoria, o conteúdo (escalação, dicas, emojis, bandeira, lista com lacunas), tempo, e o lembrete "1 resposta por pessoa · respostas repetidas não valem" |
 | **Revelação** | Resposta certa em destaque; lista de quem acertou, por ordem, com pontos ganhos; quem errou ou não respondeu, em cinza |
 | **Placar parcial** | Top 5 com barras; quem subiu ou caiu desde o último placar |
 | **Pódio** | Top 3 em degraus, mais "mais rápido", "maior sequência" e "chute mais preciso" |
@@ -155,13 +171,31 @@ Mesmo formato (1080x1350) e a identidade do jogo escolhido (verde-estádio, roxo
 
 ## 4. Catálogo de modos
 
-Cada modo mostra: mecânica, formato da resposta, dados e em quais jogos aparece (⚽ 🎌 🧠).
+Cada modo mostra: mecânica, regra anti-cola, dados e em quais jogos aparece (⚽ 🎌 🧠). Todos seguem a §2.5: **uma resposta por jogador por rodada e nada se repete na partida**.
+
+### 4.0 Escalação em Grupo · ⚽ 🎌 🧠 · várias respostas certas · **o modo principal**
+
+O Duelo de Craques para a sala toda. O tema é escolhido pelo anfitrião ou sorteado (`aleatório`): gols, idade, valor, altura etc. Em cada rodada, **todos** escalam a mesma posição:
+
+```
+Rodada 1 · GOLEIRO · (clube sorteado: Barcelona)      ← todos mandam 1 goleiro
+  Ana: Ter Stegen ✅   Bia: Valdés ✅   Caio: Ter Stegen ❌ já usado por Ana → manda outro
+  todos com resposta aceita → abre a rodada 2
+Rodada 2 · DEFENSOR …  (2 defensores, 2 meias, 1 atacante)
+Fim: soma de cada um, maior (ou menor) vence
+```
+
+- Ordem estrita igual ao 1 x 1: todos fecham o goleiro antes de abrir os defensores.
+- **Nenhum jogador real se repete** entre ninguém, em nenhuma rodada, por nenhum time.
+- Quanto mais gente na sala, mais disputados ficam os nomes óbvios. Quem responde rápido "reserva" o craque; quem demora precisa conhecer mais. Isso substitui o bônus de velocidade.
+- Dados e validação: os mesmos do 1 x 1 (Maritaca + cache, restrição por clube/seleção, faixas de plausibilidade). 🎌 usa o Esquadrão (papéis) e 🧠 o Volta ao Mundo / Brasil de Ponta a Ponta.
+- Imagem por rodada: **tabela da sala** (cada jogador numa linha, as 6 posições em colunas, número em cada casa), em vez do campinho, porque o campinho só comporta 2 times. No modo cego, os números ficam escondidos até o fim.
 
 ### 4.1 Quem é? (dicas progressivas) · ⚽ 🎌 🧠 · corrida
 
-O bot revela até 5 dicas, uma a cada 8 s. ⚽ nacionalidade → posição → clubes → títulos → número da camisa. 🎌 obra → papel → aparência → habilidade → ano de estreia. 🧠 personalidade, lugar ou objeto. O primeiro a acertar leva **pontos conforme a dica**: 1ª 150, 2ª 120, 3ª 90, 4ª 60, 5ª 30; erro −20. Dados: cache das fichas (futebol), AniList (anime) e lista curada (geral).
+O bot revela até 5 dicas, uma a cada 8 s. ⚽ nacionalidade → posição → clubes → títulos → número da camisa. 🎌 obra → papel → aparência → habilidade → ano de estreia. 🧠 personalidade, lugar ou objeto. **1 tentativa por jogador**; o primeiro a acertar leva **pontos conforme a dica**: 1ª 150, 2ª 120, 3ª 90, 4ª 60, 5ª 30. Dados: cache das fichas (futebol), AniList (anime) e lista curada (geral).
 
-### 4.2 Que time é esse? (escalação histórica) · ⚽ 🎌 · privado
+### 4.2 Que time é esse? (escalação histórica) · ⚽ 🎌 · corrida
 
 Pedido seu. O bot mostra uma **escalação em campinho**, só com os nomes:
 
@@ -172,79 +206,79 @@ Mauro Silva · Dunga · Mazinho · Zinho
 Bebeto · Romário
 ```
 
-Cada um responde no privado **time + ano** (`Brasil 94`). Pontos: time certo 100, ano exato +60, ±1 ano +30, mais velocidade. Variantes:
-- **Por nacionalidades**: em vez dos nomes, as bandeiras de cada posição (formato do FourFourTwo).
-- **Meia escalação**: só 6 nomes; quem acerta com menos informação ganha mais.
+**1 tentativa por jogador**, no formato **time + ano** (`Brasil 94`). Pontos: o primeiro com time **e** ano exatos leva 150. Quem acertou só o time leva 60, por ordem de chegada; repetir um palpite já dito é recusado. Variantes:
+- **Por nacionalidades**: as bandeiras de cada posição em vez dos nomes (formato do FourFourTwo).
+- **Meia escalação**: só 6 nomes; acertar com menos informação vale mais.
 - **🎌 Que grupo é esse?**: nomes dos membros → a organização (Akatsuki, Bando do Chapéu de Palha, Time 7, Hashiras, Cavaleiros de Ouro, Espada Kamui…).
 
 Dados: **lista curada** de ~150 times marcantes, cada um com escalação, ano, competição e apelidos aceitos. Exemplos: seleções de 70, 82, 94, 2002, 2014 e 2022; Barça 2009/2011; Real 2017; Milan 1989/2007; Liverpool 2005/2019; Manchester United 1999; Bayern 2013/2020; Ajax 1995; Flamengo 1981/2019; Santos 1962/2011; São Paulo 1992/2005; Palmeiras 1999/2021; Grêmio 1983/2017; Inter 2006; Corinthians 2012; Atlético-MG 2013; Cruzeiro 2003; Vasco 1998. Para finais europeias também existe o **StatsBomb Open Data** (escalações de todas as finais de Champions de 2003/04 a 2018/19 e Copas), mas só para uso **não comercial**.
 
 ### 4.3 Emoji · 🎌 ⚽ 🧠 · corrida
 
-`🍥🦊👊` → Naruto · `⚡👓🧙` → Harry Potter · `👑🦁⚽🇸🇪` → Ibrahimović. Primeiro a acertar: 100 + velocidade. Com 15 s sem acerto, sai uma dica escrita (vale 60). Dados: lista curada (~200 por jogo).
+`🍥🦊👊` → Naruto · `⚡👓🧙` → Harry Potter · `👑🦁⚽🇸🇪` → Ibrahimović. 1 tentativa por jogador; o primeiro a acertar leva 100 + velocidade. Com 15 s sem acerto, sai uma dica escrita, e quem ainda tem tentativa pode usar (vale 60). Dados: lista curada (~200 por jogo).
 
-### 4.4 Conexões · ⚽ 🎌 🧠 · reivindicação
+### 4.4 Conexões · ⚽ 🎌 🧠 · várias respostas certas
 
-Inspirado no "Jogo das Conexões" do Projeto Trivia e no Football Connections. O bot mostra **16 nomes numerados**, e os jogadores mandam **4 números** que formam um grupo (`3 7 11 14`). O primeiro a achar cada grupo leva 150 e o bot revela a ligação ("jogaram no Barça e no PSG"). Erro tira 20. Quatro grupos por partida, do fácil ao difícil, com cores como no original. Dados: lista curada; a IA ajuda a montar rascunhos que você revisa.
+Inspirado no "Jogo das Conexões" do Projeto Trivia e no Football Connections. O bot mostra **16 nomes numerados**. Em cada rodada, cada jogador manda **1 grupo de 4 números** (`3 7 11 14`). Um grupo achado é **retirado do tabuleiro**, e repetir um grupo já achado é recusado. Quem achou leva 150 e o bot revela a ligação ("jogaram no Barça e no PSG"). Quatro grupos por partida, do fácil ao difícil. Dados: lista curada; a IA ajuda a montar rascunhos que você revisa.
 
-### 4.5 Alfabeto · ⚽ 🎌 🧠 · reivindicação
+### 4.5 Alfabeto · ⚽ 🎌 🧠 · várias respostas certas
 
-Do "um goleiro para cada letra" do Projeto Trivia. O bot sorteia **categoria + letra** ("goleiros com a letra C") e dá 45 s. Todo mundo manda nomes no grupo; **cada nome válido só vale para quem mandou primeiro** (+50), e repetido não conta. A IA valida em lote (uma chamada no fim, usando o cache). Variante **Alfabeto completo**: a sala inteira tenta cobrir A–Z de uma categoria em 3 minutos, cooperando contra o relógio, e cada letra rende pontos para quem a preencheu.
+Do "um goleiro para cada letra" do Projeto Trivia. O bot sorteia **categoria + letra** ("goleiros com a letra C"). Cada jogador manda **1 nome** por rodada; nomes já ditos são recusados, então quem demora precisa ir mais fundo. Válido e único: 100 + ordem de chegada. São 5 letras por partida. Variante **Alfabeto completo**: a sala coopera para cobrir A–Z de uma categoria em 3 minutos, uma letra por mensagem e sem repetir.
 
-### 4.6 Top 10 coletivo · ⚽ 🎌 🧠 · reivindicação
+### 4.6 Top 10 coletivo · ⚽ 🎌 🧠 · várias respostas certas
 
-"Os 10 maiores artilheiros da história da Champions", "os 10 personagens mais favoritados de One Piece", "os 10 países mais populosos". Imagem com 10 lacunas; quem acerta reivindica a posição (1º lugar da lista = 100 pts … 10º = 10 pts). 90 s ou até completar. A imagem é reenviada a cada 3 acertos, para não poluir. Dados: listas curadas (futebol) e AniList/REST Countries/IBGE (dados reais).
+"Os 10 maiores artilheiros da história da Champions", "os 10 personagens mais favoritados de One Piece", "os 10 países mais populosos". Imagem com 10 lacunas. Cada rodada, **1 palpite por jogador**; acerto reivindica a posição (1º da lista = 100 … 10º = 10), e posição já revelada não vale de novo. Termina quando a lista fecha ou depois de 3 rodadas. Dados: listas curadas (futebol) e AniList/REST Countries/IBGE (dados reais).
 
-### 4.7 Chute Certo · ⚽ 🎌 🧠 · privado
+### 4.7 Chute Certo · ⚽ 🎌 🧠 · número único
 
-Do "Qual é a nota?" do Projeto Trivia, no estilo "o preço certo". "Quantos gols Romário fez pelo Vasco?", "Quantos episódios tem One Piece até o arco de Wano?", "Qual a altitude de La Paz?". Todos respondem um número no privado; vence o mais próximo (100/60/30, exato +50). É ótimo para grupos grandes: ninguém sabe exato e todo mundo pontua.
+Do "Qual é a nota?" do Projeto Trivia, no estilo "O Preço Certo". "Quantos gols Romário fez pelo Vasco?", "Quantos episódios tem One Piece até o arco de Wano?", "Qual a altitude de La Paz?". Cada um manda **1 número, diferente de todos os já ditos**; vence o mais próximo (100/60/30, exato +50). Responder por último não é cola: é estratégia ("1 a mais que o Caio").
 
-### 4.8 Intruso · ⚽ 🎌 🧠 · privado
+### 4.8 Intruso · ⚽ 🎌 🧠 · corrida
 
-"Quem não pertence à lista?" A) Cafu B) Roberto Carlos C) Ronaldinho D) Juninho Pernambucano (intruso: Juninho Pernambucano, porque os outros três foram campeões da Copa de 2002). Cada um responde a letra no privado. Revelação com o motivo. Múltipla escolha, rápido e sem cola.
+"Quem não pertence à lista?" Cafu · Roberto Carlos · Ronaldinho · Juninho Pernambucano (intruso: Juninho Pernambucano, porque os outros três foram campeões da Copa de 2002). **1 tentativa por jogador**; o primeiro a apontar o intruso **e** dizer o motivo leva 150. Só o nome certo, sem o motivo, vale 50. O motivo é conferido pela IA contra o gabarito.
 
-### 4.9 Pesquisa da Galera · ⚽ 🎌 🧠 · privado
+### 4.9 Draft da Resenha · ⚽ 🎌 · ordem de draft
 
-Do "Perguntei para 100 pessoas" do Projeto Trivia: o bot pergunta **opinião** ("melhor goleiro brasileiro da história?") e cada um responde no privado. Pontua quem escolheu a **resposta mais popular da sala** (o "Família" do grupo: 100 / 60 / 30 conforme a posição). Não precisa de dados, é pura resenha, e as respostas viram a "tabela da galera" na imagem.
+Do "Draft 5x5" do Projeto Trivia. Até 8 jogadores, **ordem em serpente** (1→8, 8→1…), 5 escolhas cada, com a regra da rodada ("só jogadores com a letra F", "só quem jogou no Brasileirão"). A IA valida cada escolha, e ninguém repete. No fim, votação no grupo: cada um manda o número do time em que vota, sem poder votar no próprio, e o mais votado vence. Imagem: mural com os times de cada um.
 
-### 4.10 Draft da Resenha · ⚽ 🎌 · ordem de draft
+### 4.10 Sobrevivente · ⚽ 🎌 🧠 · várias respostas certas + eliminação
 
-Do "Draft 5x5" do Projeto Trivia. Até 8 jogadores, **ordem em serpente** (1→8, 8→1…), 5 escolhas cada, com regra da rodada ("só jogadores com a letra F", "só quem jogou no Brasileirão"). A IA valida cada escolha, e ninguém repete. No fim, **votação no privado**: cada um vota no melhor time, sem poder votar no próprio, e o mais votado vence. Imagem: mural com os times de cada um.
+Inspirado na eliminação do HQ Trivia, adaptado para respostas únicas. O bot dá uma **categoria** ("campeões da Libertadores", "personagens de Naruto", "capitais da Europa"). Na ordem da sala, cada um tem 15 s para dizer **um item novo**. Repetiu, errou ou estourou o tempo, está fora. Cada jogador tem **1 vida extra**. A categoria muda a cada volta e fica mais difícil; o último de pé vence.
 
-### 4.11 Sobrevivente · ⚽ 🎌 🧠 · privado + eliminação
+### 4.11 Stop coletivo · 🧠 ⚽ 🎌 · várias respostas certas
 
-No formato HQ Trivia: perguntas de múltipla escolha (A–D) cada vez mais difíceis. Errou ou não respondeu, está fora (pode assistir). Cada jogador tem **1 vida extra** e escolhe quando usá-la (`vida`). O último de pé vence; se todos caírem na mesma pergunta, vence quem caiu por último, com desempate por tempo.
+A Adedonha para a sala toda, no grupo: uma letra e 6 categorias. Cada um manda **1 mensagem com as 6 respostas**; o primeiro a mandar pode gritar `stop`, e os outros têm 15 s. Resposta **igual à de alguém que mandou antes não vale**: copiar dá zero, então quem demora precisa pensar diferente. Válida 10 pontos, inválida ou repetida 0. Imagem: tabela com as respostas e ✓/✗.
 
-### 4.12 Stop coletivo · 🧠 ⚽ 🎌 · privado
+### 4.12 Bandeiraço · 🧠 · corrida
 
-A Adedonha para a sala toda: uma letra e 6 categorias. Cada um manda as 6 respostas no privado em uma mensagem; o primeiro a mandar pode gritar `stop` no grupo, e os outros têm 15 s. Pontos: resposta válida e **única na sala** 10, repetida 5, inválida 0. Imagem: tabela com todas as respostas, ✓/✗ e as repetidas destacadas.
+Bandeira desenhada (SVG de domínio público), 1 tentativa por jogador, e o primeiro a acertar o país leva o ponto. Fases: América do Sul → Europa → mundo inteiro.
 
-### 4.13 Bandeiraço · 🧠 · corrida
+### 4.13 Quiz Relâmpago · 🧠 ⚽ 🎌 · corrida
 
-Bandeira desenhada (SVG de domínio público), e o primeiro a escrever o país leva o ponto. Fases: América do Sul → Europa → mundo inteiro.
+10 perguntas de resposta curta (sem alternativas A–D, porque com só 4 opções e respostas únicas a regra não funciona). 1 tentativa por jogador, e só o primeiro a acertar pontua (100 + velocidade). Banco curado por categoria.
 
-### 4.14 Quiz Relâmpago · 🧠 ⚽ 🎌 · privado
+### Fora do plano
 
-10 perguntas de múltipla escolha (A–D), 20 s cada, pontuação Kahoot. Banco curado por categoria (história, geografia, ciência, entretenimento, Brasil, futebol, anime).
+**Pesquisa da Galera** (do "Perguntei para 100 pessoas") foi retirada: a graça dela é coincidir com a maioria, o que contradiz a regra de respostas únicas.
 
 ### Resumo
 
-| Modo | ⚽ | 🎌 | 🧠 | Formato | Dados | Prioridade |
-|---|---|---|---|---|---|---|
-| Que time é esse? | ✅ | ✅ (grupo) | — | privado | curado | **1** |
-| Quem é? (dicas) | ✅ | ✅ | ✅ | corrida | cache/AniList/curado | **1** |
-| Top 10 coletivo | ✅ | ✅ | ✅ | reivindicação | curado/AniList/IBGE | **2** |
-| Alfabeto | ✅ | ✅ | ✅ | reivindicação | IA (validação) | **2** |
-| Chute Certo | ✅ | ✅ | ✅ | privado | curado | **2** |
-| Intruso | ✅ | ✅ | ✅ | privado | curado | 3 |
-| Conexões | ✅ | ✅ | ✅ | reivindicação | curado | 3 |
-| Emoji | ✅ | ✅ | ✅ | corrida | curado | 3 |
-| Sobrevivente | ✅ | ✅ | ✅ | privado | curado | 3 |
-| Pesquisa da Galera | ✅ | ✅ | ✅ | privado | nenhum | 3 |
-| Stop coletivo | ✅ | ✅ | ✅ | privado | IA | 4 |
-| Draft da Resenha | ✅ | ✅ | — | ordem | IA | 4 |
-| Bandeiraço | — | — | ✅ | corrida | SVG livre | 4 |
-| Quiz Relâmpago | ✅ | ✅ | ✅ | privado | curado | 4 |
+| Modo | ⚽ | 🎌 | 🧠 | Regra | Máx. | Dados | Prioridade |
+|---|---|---|---|---|---|---|---|
+| **Escalação em Grupo** | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA + cache (pronto) | **1** |
+| Que time é esse? | ✅ | ✅ (grupo) | — | corrida, 1 tentativa | 15 | curado | **1** |
+| Quem é? (dicas) | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | cache/AniList/curado | **2** |
+| Alfabeto | ✅ | ✅ | ✅ | várias certas, sem repetir | 15 | IA | **2** |
+| Top 10 coletivo | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | curado/AniList/IBGE | **2** |
+| Chute Certo | ✅ | ✅ | ✅ | número único | 15 | curado | **2** |
+| Sobrevivente | ✅ | ✅ | ✅ | várias certas + eliminação | 15 | IA | 3 |
+| Intruso | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 3 |
+| Conexões | ✅ | ✅ | ✅ | grupos únicos | 12 | curado | 3 |
+| Emoji | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 3 |
+| Stop coletivo | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA | 4 |
+| Draft da Resenha | ✅ | ✅ | — | serpente, sem repetir | 8 | IA | 4 |
+| Bandeiraço | — | — | ✅ | corrida, 1 tentativa | 15 | SVG livre | 4 |
+| Quiz Relâmpago | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 4 |
 
 ---
 
@@ -271,7 +305,7 @@ O Modo em Grupo é uma nova **mecânica** da plataforma ([`PLATAFORMA.md`](PLATA
 src/lib/platform/mechanics/party/
   session.ts     sala: inscrição, anfitrião, ausentes, ordem, pontuação, placar
   round.ts       ciclo da rodada: abrir → coletar → fechar → revelar
-  formats/       corrida.ts · reivindicacao.ts · privado.ts · draft.ts · eliminacao.ts
+  formats/       escalacao.ts · corrida.ts · unicas.ts (respostas únicas) · numero-unico.ts · draft.ts · eliminacao.ts
   scoring.ts     tabela da §2.6
 src/games/<jogo>/party/*.ts   cada modo: como gerar a pergunta e como corrigir
 content/<jogo>/*.json         pacotes curados
@@ -282,11 +316,12 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 |---|---|
 | Estado da sala | `matches.state` (jsonb), com `mechanic = 'party'`: jogadores `{jid, altJid, nome, pontos, sequência, ausências}`, rodada, pergunta, prazo, respostas e reivindicações |
 | Uma sessão por grupo | Continua valendo: um 1 x 1 **ou** uma sala por grupo de cada vez |
-| Privado | O adaptador da Evolution passa a entregar mensagens privadas **só** de quem está numa sala aberta (consulta por `jid` no banco); o resto do privado segue ignorado |
-| Reações | `message/sendReaction` da Evolution para o ✅ de "entrei" e "respondi" (menos mensagens = menos risco de banimento) |
+| Respostas usadas | `state.used`: conjunto de chaves normalizadas (entidade canônica + o que foi digitado) de tudo que já foi aceito na partida; base da regra de respostas únicas |
+| Tentativas | `state.attempts[rodada][jogador]`: garante 1 resposta aceita (ou 1 tentativa, nos modos de corrida) por rodada |
+| Reações | `message/sendReaction` da Evolution para o ✅ de "entrei" e "resposta aceita"; recusas (repetida/inválida) em texto curto. Menos mensagens = menos risco de banimento |
 | Timer | QStash agenda `/api/tick?match=…&round=…` (com assinatura) + verificação preguiçosa a cada mensagem |
 | Concorrência | Muitas respostas chegando juntas: a trava otimista já reprocessa (até 3 vezes). Na sala, a resposta vira um *append* atômico em `jsonb`, para não disputar a linha inteira |
-| Volume | Sala de 20 pessoas × 10 perguntas: ~200 respostas, mas só ~25 mensagens do bot (pergunta + revelação + placares). As respostas recebem reações, não textos |
+| Volume | Sala de 15 pessoas × 10 rodadas: ~150 respostas, mas só ~25 mensagens do bot (rodada + revelação + placares). As respostas aceitas recebem reações, não textos |
 
 ### Novas tabelas
 
@@ -302,17 +337,20 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 
 | Fase | Entrega |
 |---|---|
-| **G1** | Sala (`abrir sala`, `entrar`, `começar`, ausentes, timer), pontuação e imagens base, com dois modos: **Quem é?** (⚽, usando o cache) e **Que time é esse?** (⚽, 50 times curados) |
-| **G2** | Resposta no privado; **Chute Certo**, **Intruso** e **Top 10 coletivo** (⚽) |
-| **G3** | Os mesmos modos em 🎌 (AniList) e 🧠 (IBGE/REST Countries) |
-| **G4** | **Alfabeto**, **Conexões**, **Emoji**, **Pesquisa da Galera** |
-| **G5** | **Sobrevivente**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; página de curadoria `/admin/conteudo` |
+| **G1** | Sala (`abrir sala`, `entrar` com limite por modo, `começar`, ausentes, timer), regra de respostas únicas, pontuação e imagens base. Primeiro modo: **Escalação em Grupo** de futebol, que reaproveita temas, IA, cache e validações do 1 x 1 já pronto |
+| **G2** | **Que time é esse?** (50 times curados) e **Quem é?** (⚽, usando o cache) |
+| **G3** | **Alfabeto**, **Top 10 coletivo**, **Chute Certo** (⚽) |
+| **G4** | Os mesmos modos em 🎌 (AniList) e 🧠 (IBGE/REST Countries) |
+| **G5** | **Sobrevivente**, **Intruso**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; página de curadoria `/admin/conteudo` |
 
-## 8. Decisões em aberto (suas)
+## 8. Decisões
 
-1. **Resposta no privado**: ok o bot receber mensagens privadas dos jogadores durante uma sala? Sem isso, os modos "todos respondem" ficam sujeitos a cola.
-2. **Tamanho máximo da sala**: sugestão de 30.
-3. **Entrar no meio**: aceitar até a 3ª rodada (sugestão) ou só antes de começar?
-4. **Agendador**: ok usar o Upstash QStash (grátis) para os tempos exatos?
-5. **StatsBomb**: só vale se a plataforma não for comercial; senão, as escalações históricas ficam 100% curadas.
-6. **Vídeos favoritos do Projeto Trivia**: mande 3 ou 4 links para eu detalhar mais formatos.
+Tomadas:
+- ✅ **Uma resposta por jogador por rodada; respostas repetidas não valem** (nem por outro time). O jogo fica todo no grupo, sem resposta no privado.
+- ✅ **Sala de 10 a 15 jogadores**, conforme o modo (§2.7).
+
+Em aberto (suas):
+1. **Entrar no meio**: aceitar até a 3ª rodada (sugestão) ou só antes de começar?
+2. **Agendador**: ok usar o Upstash QStash (grátis) para os tempos exatos?
+3. **StatsBomb**: só vale se a plataforma não for comercial; senão, as escalações históricas ficam 100% curadas.
+4. **Vídeos favoritos do Projeto Trivia**: mande 3 ou 4 links para eu detalhar mais formatos.

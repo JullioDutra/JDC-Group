@@ -165,3 +165,25 @@ test('em produção, sem ADMIN_NUMBERS ninguém ativa; com ele, só o admin', as
   assert.equal(ownerCheck()('5511000000000@s.whatsapp.net'), false);
   delete process.env.ADMIN_NUMBERS;
 });
+
+test('mesmo jogador não pode ser usado de novo, nem por outro time (Alexis: Arsenal → United)', async () => {
+  const { say, store } = setup();
+  await startMatch(say, '1');
+  // Leva a partida direto para a rodada dos meias, com o 2º meia restrito ao Manchester United.
+  const m = (await store.getActiveMatch(G))!;
+  const filler = (k: string) => ({ name: k, key: k, value: 1 });
+  m.state.picks = [
+    [filler('a1'), filler('a2'), filler('a3'), null, null, null],
+    [filler('b1'), filler('b2'), filler('b3'), null, null, null],
+  ];
+  m.state.round = 3;
+  m.state.turn = 1;
+  m.state.restrictions[4] = { kind: 'club', teamId: 'manchester-united' };
+  await store.saveMatch(m);
+
+  assert.match(asText(await say('Bia', 'Alexis')), /Alexis Sánchez/);
+  assert.match(asText(await say('Ana', 'Iniesta')), /Rodada 5\/6 · MEIA[\s\S]*Manchester United/);
+  // Rodada 5 começa por Ana (rodada de índice 4 = par). Alexis já foi usado por Bia.
+  assert.match(asText(await say('Ana', 'Alexis Sanchez')), /já foi escalado nesta partida \(por \*Bia\*\)[\s\S]*nem por outro time/);
+  assert.match(asText(await say('Ana', 'alexis')), /já foi escalado/);
+});

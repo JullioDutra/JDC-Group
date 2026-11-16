@@ -64,6 +64,8 @@ export interface Pick {
   name: string;
   key: string; // nome normalizado, para detectar repetição
   value: number;
+  /** Outras formas pelas quais o mesmo jogador foi pedido (ex.: o que foi digitado). */
+  aliases?: string[];
 }
 
 export type Side = 0 | 1; // 0 = anfitrião, 1 = desafiante

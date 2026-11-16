@@ -35,6 +35,7 @@ const ROWS: Row[] = [
   ['Romário', 'romario', ['ATA'], 'Brasil', '1966-01-29', ['Vasco', 'PSV', 'Barcelona', 'Flamengo', 'Valencia', 'Fluminense'], 167, 750, 150, 15, 70, 55, 5, 9, 25, 1000, 154, 6, 2, 1985],
   ['Neymar', 'neymar jr', ['ATA'], 'Brasil', '1992-02-05', ['Santos', 'Barcelona', 'PSG', 'Al-Hilal'], 175, 450, 280, 180, 128, 79, 8, 43, 30, 740, 40, 14, 3, 2009],
   ['Lamine Yamal', 'yamal', ['ATA'], 'Espanha', '2007-07-13', ['Barcelona'], 180, 45, 50, 200, 25, 6, 0, 8, 6, 150, 0, 0, 1, 2023],
+  ['Alexis Sánchez', 'alexis sanchez', ['MEI', 'ATA'], 'Chile', '1988-12-19', ['Colo-Colo', 'Udinese', 'River Plate', 'Barcelona', 'Arsenal', 'Manchester United', 'Inter de Milão', 'Olympique de Marseille'], 169, 290, 150, 60, 165, 51, 1, 15, 15, 760, 0, 0, 2, 2005],
   ['Haaland', 'erling haaland', ['ATA'], 'Noruega', '2000-07-21', ['Molde', 'RB Salzburg', 'Borussia Dortmund', 'Manchester City'], 195, 330, 60, 200, 45, 50, 0, 55, 10, 360, 0, 0, 1, 2016],
   ['Ronaldo', 'ronaldo fenomeno r9', ['ATA'], 'Brasil', '1976-09-18', ['Cruzeiro', 'PSV', 'Barcelona', 'Inter de Milão', 'Real Madrid', 'Milan', 'Corinthians'], 183, 414, 100, 50, 98, 62, 15, 14, 18, 520, 12, 0, 4, 1993],
 ];

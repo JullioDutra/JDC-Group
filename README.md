@@ -13,7 +13,7 @@ informa o número dele; vence a melhor soma. Cada etapa chega ao grupo como imag
 | [docs/PLATAFORMA.md](docs/PLATAFORMA.md) | Vários jogos no mesmo número: marca, mecânicas, arquitetura multi-jogo, isolamento, fases |
 | [docs/ANIMES.md](docs/ANIMES.md) | Duelo Otaku (planejamento) |
 | [docs/CONHECIMENTOS-GERAIS.md](docs/CONHECIMENTOS-GERAIS.md) | Sabichão: Stop, Volta ao Mundo, Brasil de Ponta a Ponta… (planejamento) |
-| [docs/MODO-GRUPO.md](docs/MODO-GRUPO.md) | Modo em Grupo: sala com `entrar`, 14 modos para futebol, animes e conhecimentos gerais (planejamento) |
+| [docs/MODO-GRUPO.md](docs/MODO-GRUPO.md) | Modo em Grupo: sala de 10–15 com `entrar`, 1 resposta por jogador, respostas repetidas não valem, 14 modos (planejamento) |
 | [docs/EVOLUTION.md](docs/EVOLUTION.md) | Virada do número do RPG na Evolution sem afetar o bot pessoal |
 
 ## Stack
