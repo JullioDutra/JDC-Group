@@ -31,6 +31,7 @@ import {
   warnOnce,
 } from './common';
 import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List } from './top10-lists';
+import { INTRUSO_RULES, finishIntruso, intrusoAnswer, intrusoTimeout, newIntruso, revealRound, startIntruso } from './intruso';
 import { closeQuizRound, finishQuiz, newQuiz, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 
 const LOBBY_TTL_MS = 15 * 60_000;
@@ -57,6 +58,7 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   // Quiz: exige "abrir"/"jogar" na frente, porque "que time é esse?" e "quem é?" aparecem na conversa.
   if (/^(abrir|jogar) (o )?que time e esse$/.test(norm) || /^(abrir|jogar) qual e o time$/.test(norm)) return { game: 'quetime', rest: '' };
   if (/^(abrir|jogar) quem e( o craque)?$/.test(norm)) return { game: 'quemeh', rest: '' };
+  if (/^(abrir|jogar) (o )?(intruso|quem nao pertence)$/.test(norm)) return { game: 'intruso', rest: '' };
   const esc = norm.match(/^(abrir sala|jogo em grupo|escalacao em grupo)( (.*))?$/);
   if (esc) {
     const rest = esc[3] ?? '';
@@ -106,6 +108,8 @@ export async function createParty(
       picks: {},
       used: [],
     };
+  } else if (start.game === 'intruso') {
+    state = { ...base('intruso', host, nowMs), ...newIntruso() };
   } else if (start.game === 'quetime' || start.game === 'quemeh') {
     state = { ...base(start.game, host, nowMs), ...newQuiz(start.game) };
   } else {
@@ -245,6 +249,7 @@ export async function handlePartyMessage(
       }
       if (state.game === 'escalacao') return save(startEscalacao(state, deps));
       if (state.game === 'top10') return save(startTop10(state, deps));
+      if (state.game === 'intruso') return save(startIntruso(state, deps));
       return save(startQuiz(state, deps));
     }
     return [];
@@ -255,11 +260,13 @@ export async function handlePartyMessage(
   if (norm === 'pular' && isHost) {
     if (state.game === 'escalacao') return save(closeRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     if (state.game === 'top10') return save(finishTop10(state, deps, 'Encerrado pelo anfitrião.'));
+    if (state.game === 'intruso') return save(revealRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     return save(closeQuizRound(state, deps, 'Rodada pulada pelo anfitrião.'));
   }
 
   if (state.game === 'escalacao') return escalacaoAnswer(state, player, msg, deps, save);
   if (state.game === 'top10') return top10Answer(state, player, msg, deps, save);
+  if (state.game === 'intruso') return intrusoAnswer(state, player, msg, deps, save);
   return quizAnswer(state, player, msg, deps, save);
 }
 
@@ -285,6 +292,7 @@ export async function handlePartyTick(
 function closeOnTimeout(state: PartyState, deps: PartyDeps): Outgoing[] {
   if (state.game === 'escalacao') return closeRound(state, deps, 'Tempo esgotado.');
   if (state.game === 'top10') return finishTop10(state, deps, 'Tempo esgotado.');
+  if (state.game === 'intruso') return intrusoTimeout(state, deps);
   return quizTimeout(state, deps);
 }
 
@@ -314,6 +322,9 @@ function rulesText(state: PartyState): string {
   }
   if (state.game === 'quetime' || state.game === 'quemeh') {
     return [`*${cfg.name}*`, ...quizRules(state), ...common.slice(0, 2)].join('\n');
+  }
+  if (state.game === 'intruso') {
+    return [`*${cfg.name}*`, 'O bot mostra 5 nomes: 4 têm algo em comum e 1 é o intruso.', ...INTRUSO_RULES, ...common.slice(0, 2)].join('\n');
   }
   return [
     `*${cfg.name}*`,
@@ -608,7 +619,9 @@ async function finishAndSave(
       ? finishEscalacao(state, deps, reason)
       : state.game === 'top10'
         ? finishTop10(state, deps, reason)
-        : finishQuiz(state, deps, reason);
+        : state.game === 'intruso'
+          ? finishIntruso(state, reason)
+          : finishQuiz(state, deps, reason);
   return save(out);
 }
 

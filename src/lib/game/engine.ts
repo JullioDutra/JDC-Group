@@ -81,6 +81,7 @@ const HELP = [
   '• *top 10* — acertem as posições de um ranking (até 10)',
   '• *abrir que time é esse* — adivinhe o time e o ano pela escalação (até 15)',
   '• *abrir quem é* — adivinhe o craque pelas dicas (até 15)',
+  '• *abrir intruso* — marquem X em quem pertence; o que sobrar é o intruso (até 15)',
   '• *entrar* · *sair* · *começar* e *encerrar* (anfitrião)',
   '',
   '*Geral*',

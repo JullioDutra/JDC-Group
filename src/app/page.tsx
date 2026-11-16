@@ -17,6 +17,7 @@ const COMMANDS: Array<[string, string]> = [
   ['top 10', 'acertem as posições de um ranking'],
   ['abrir que time é esse', 'time e ano pela escalação'],
   ['abrir quem é', 'o craque pelas dicas'],
+  ['abrir intruso', 'marquem X; o que sobrar é o intruso'],
   ['entrar · começar', 'entra na sala · anfitrião dá a largada'],
   ['regras', 'explica o jogo'],
   ['modos', 'mostra os temas'],

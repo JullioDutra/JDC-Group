@@ -122,7 +122,7 @@ Como a regra vale em cada tipo de modo:
 | Tipo de modo | Regra |
 |---|---|
 | **Várias respostas certas** (Escalação, Alfabeto, Top 10, Stop, Draft, Sobrevivente) | Cada resposta certa só pode ser usada **uma vez** na partida. Copiar quem respondeu antes é inútil: a resposta copiada é recusada. Repetida ou inválida **não gasta** a resposta do jogador, que tenta outra dentro do tempo |
-| **Uma resposta certa** (Quem é?, Que time é esse?, Emoji, Bandeiraço, Intruso) | Vira **corrida**: só o primeiro que acertar pontua. Quem repetir a resposta de outro é recusado. Aqui **cada jogador tem 1 tentativa por rodada**, e errar gasta a tentativa, para ninguém chutar em metralhadora |
+| **Uma resposta certa** (Quem é?, Que time é esse?, Emoji, Bandeiraço) | Vira **corrida**: só o primeiro que acertar pontua. Quem repetir a resposta de outro é recusado. Aqui **cada jogador tem 1 tentativa por rodada**, e errar gasta a tentativa, para ninguém chutar em metralhadora |
 | **Número** (Chute Certo) | Cada jogador escolhe um número **diferente** dos já ditos, no estilo "O Preço Certo". Quem responde depois não copia; no máximo encosta no número de alguém, o que também é estratégia |
 
 Como o bot reconhece "mesma resposta": compara a **entidade**, não o texto. "Alexis", "Alexis Sanchez" e "alexis sánchez" viram o mesmo jogador pela ficha da IA e pelo que foi digitado. Em palavras abertas (Stop, Alfabeto), a comparação é normalizada: sem acento, sem maiúsculas, singular/plural.
@@ -151,7 +151,8 @@ Para não ficar pesado nem poluir o grupo: **mínimo 2, máximo entre 10 e 15**.
 | Top 10 coletivo | **10** | Só há 10 respostas por lista |
 | Stop coletivo | **10** | Cada jogador manda 6 palavras por rodada |
 | Conexões | **12** | 4 grupos por partida |
-| Quem é? · Que time é esse? · Emoji · Bandeiraço · Intruso | **15** | Corrida, 1 tentativa cada: mensagens limitadas |
+| Quem é? · Que time é esse? · Emoji · Bandeiraço | **15** | Corrida, 1 tentativa cada: mensagens limitadas |
+| Intruso | **15** | No máximo 4 X por rodada, um de cada vez |
 | Alfabeto · Chute Certo · Sobrevivente | **15** | 1 resposta por jogador por rodada |
 
 ## 3. Imagens do Modo em Grupo
@@ -233,9 +234,16 @@ O bot mostra um ranking escondido ("Marcas de carro mais vendidas no Brasil em 2
 
 Do "Qual é a nota?" do Projeto Trivia, no estilo "O Preço Certo". "Quantos gols Romário fez pelo Vasco?", "Quantos episódios tem One Piece até o arco de Wano?", "Qual a altitude de La Paz?". Cada um manda **1 número, diferente de todos os já ditos**; vence o mais próximo (100/60/30, exato +50). Responder por último não é cola: é estratégia ("1 a mais que o Caio").
 
-### 4.8 Intruso · ⚽ 🎌 🧠 · corrida
+### 4.8 Intruso · ⚽ 🎌 🧠 · eliminação coletiva · **implementado (⚽)**
 
-"Quem não pertence à lista?" Cafu · Roberto Carlos · Ronaldinho · Juninho Pernambucano (intruso: Juninho Pernambucano, porque os outros três foram campeões da Copa de 2002). **1 tentativa por jogador**; o primeiro a apontar o intruso **e** dizer o motivo leva 150. Só o nome certo, sem o motivo, vale 50. O motivo é conferido pela IA contra o gabarito.
+`abrir intruso`. O bot mostra **5 nomes (A a E)**: 4 têm algo em comum e 1 é o intruso.
+
+1. Os jogadores marcam **X em quem pertence ao grupo**, mandando a letra (ou o nome). **Ninguém marca duas vezes seguidas**: é preciso esperar outra pessoa marcar.
+2. A cada X, o bot mostra o quadro em texto com o nome riscado e quem marcou (`B) ~Cafu~  X (Ana)`), **sem dizer se está certo**.
+3. Quando sobra **1 nome** (o palpite de intruso do grupo) ou o tempo (60 s) acaba, chega a **imagem da revelação**: cada X marcado como **certo** (verde) ou **errado** (vermelho, quando alguém riscou o intruso), o intruso destacado e a **justificativa** ("Os outros quatro foram campeões da Copa de 2002...").
+4. Pontos: X em quem pertence **+50**; X no intruso **−50**; se o nome que sobrou era mesmo o intruso, todos que marcaram certo ganham **+30**.
+
+5 rodadas; 16 conjuntos curados, cada um com motivo verificável e data de corte quando o fato pode mudar.
 
 ### 4.9 Draft da Resenha · ⚽ 🎌 · ordem de draft
 
@@ -272,7 +280,7 @@ Bandeira desenhada (SVG de domínio público), 1 tentativa por jogador, e o prim
 | **Top 10** ✔ | ✅ | ✅ | ✅ | sem repetir; ninguém responde 2× seguidas | 10 | curado/AniList/IBGE | **1 (pronto)** |
 | Chute Certo | ✅ | ✅ | ✅ | número único | 15 | curado | **2** |
 | Sobrevivente | ✅ | ✅ | ✅ | várias certas + eliminação | 15 | IA | 3 |
-| Intruso | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 3 |
+| **Intruso** ✔ | ✅ | ✅ | ✅ | eliminação coletiva, ninguém marca 2× seguidas | 15 | curado (16 conjuntos) | **pronto** |
 | Conexões | ✅ | ✅ | ✅ | grupos únicos | 12 | curado | 3 |
 | Emoji | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 3 |
 | Stop coletivo | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA | 4 |
@@ -339,7 +347,7 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 |---|---|---|
 | **G1** | Sala (`abrir sala`/`top 10`, `entrar` com limite, `começar`, `sair`, `encerrar`, `pular`), entrada até a 2ª rodada, ausentes, prazo via QStash, respostas únicas, reações ✅/❌, imagens, ranking do grupo. **Escalação em Grupo** (⚽, 17 temas) e **Top 10** (12 listas) | **Pronto** |
 | **G2** | **Que time é esse?** (24 escalações históricas, 6 rodadas, time + ano) e **Quem é?** (22 craques, 8 rodadas, até 5 dicas que saem a cada 12 s) | **Pronto** |
-| **G3** | **Alfabeto**, **Chute Certo**, **Intruso** (só o nome), mais 18 listas de Top 10 | próximo |
+| **G3** | **Intruso** (pronto: X em quem pertence, revelação com certo/errado e justificativa) · **Alfabeto**, **Chute Certo**, mais 18 listas de Top 10 | em andamento |
 | **G4** | Os modos prontos em 🎌 (AniList) e 🧠 (IBGE/REST Countries); `group_seen` para não repetir conteúdo | — |
 | **G5** | **Sobrevivente**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; curadoria `/admin/conteudo` | — |
 
@@ -365,7 +373,7 @@ Revisão de cada modo planejado contra o que já existe (motor de sala, QStash, 
 |---|---|---|---|
 | **Alfabeto** | Sim | Sala, respostas únicas, Maritaca | A validação "é goleiro e começa com C?" sai da ficha que a IA já devolve (posição + nome). Sem custo novo |
 | **Chute Certo** | Sim | Sala, número único | Perguntas precisam de resposta exata e estável: banco curado, como o Top 10 (fonte + data) |
-| **Intruso** | Sim, simplificado | Motor de quiz do G2 | Julgar o *motivo* com IA é subjetivo e gera discussão no grupo. **Mudança:** vale só apontar o intruso; o motivo aparece na revelação |
+| **Intruso** | **Feito** | Sala, QStash, regra "ninguém duas vezes seguidas" do Top 10 | Virou eliminação coletiva: X em quem pertence, revelação com certo/errado e a justificativa no fim (sem a IA julgar motivo) |
 | **Sobrevivente** | Sim | Sala, QStash, respostas únicas | Precisa de um prazo por jogador (15 s), não por rodada: o QStash já suporta, é só agendar a cada vez |
 | **Conexões** | Sim | Motor de quiz, imagem de grade | Precisa de conteúdo curado (4 grupos × 4 nomes por partida). A IA pode rascunhar, mas a revisão é humana |
 | **Emoji** | Sim, com ajuste | Motor de quiz | O gerador de imagem (Satori) baixaria emojis da internet a cada imagem. **Mudança:** os emojis vão em **texto** (o WhatsApp mostra nativo), sem imagem |
@@ -378,7 +386,7 @@ Revisão de cada modo planejado contra o que já existe (motor de sala, QStash, 
 | **Maior ou Menor** (1x1) | Sim | Cache da IA + temas do Duelo | Nenhum |
 | **Copa do Grupo** (mata-mata) | Depois | 1 x 1 inteiro | Orquestrar vários duelos seguidos é o mais complexo; fica para o fim |
 
-Resumo da verificação: **todos os modos continuam viáveis**. Quatro mudam: **Intruso** (sem julgar motivo), **Emoji** (em texto, não imagem), **Caminho do Craque** (vira dica do Quem é?) e **Draft da Resenha** (votação é exceção à regra de respostas únicas).
+Resumo da verificação: **todos os modos continuam viáveis**. Quatro mudam: **Intruso** (eliminação coletiva com X e justificativa no fim), **Emoji** (em texto, não imagem), **Caminho do Craque** (vira dica do Quem é?) e **Draft da Resenha** (votação é exceção à regra de respostas únicas).
 
 ## 8. Decisões
 

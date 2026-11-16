@@ -117,7 +117,7 @@ export interface Match {
 
 // ---------- Modo em Grupo (salas) ----------
 
-export type PartyGame = 'escalacao' | 'top10' | 'quetime' | 'quemeh';
+export type PartyGame = 'escalacao' | 'top10' | 'quetime' | 'quemeh' | 'intruso';
 
 export interface PartyPlayer {
   jid: string;
@@ -205,7 +205,22 @@ export interface QuizParty extends PartyBase {
   roundHits: Array<{ jid: string; name: string; points: number; label: string }>;
 }
 
-export type PartyState = EscalacaoParty | Top10Party | QuizParty;
+/** Intruso: 5 nomes; os jogadores marcam X em quem pertence ao grupo; o que sobra é o palpite de intruso. */
+export interface IntrusoParty extends PartyBase {
+  game: 'intruso';
+  round: number; // -1 no lobby
+  totalRounds: number;
+  order: string[];
+  /** Nomes da rodada, na ordem exibida (A, B, C...). */
+  options: string[];
+  intruderIndex: number;
+  /** X marcados nesta rodada (índice da opção e quem marcou). */
+  marks: Array<{ index: number; jid: string; name: string }>;
+  /** Quem marcou por último: não pode marcar duas vezes seguidas. */
+  lastJid: string | null;
+}
+
+export type PartyState = EscalacaoParty | Top10Party | QuizParty | IntrusoParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -259,4 +274,5 @@ export type ImageSpec =
   | { kind: 'partyTable'; state: EscalacaoParty }
   | { kind: 'top10Board'; state: Top10Party; list: Top10List; final: boolean }
   | { kind: 'lineupQuiz'; state: QuizParty; lines: string[][] }
-  | { kind: 'partyScore'; state: PartyState; title: string; final: boolean };
+  | { kind: 'partyScore'; state: PartyState; title: string; final: boolean }
+  | { kind: 'intrusoBoard'; state: IntrusoParty; reason: string; reveal: boolean };

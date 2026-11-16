@@ -3,7 +3,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { SLOTS, type EscalacaoParty, type ImageSpec, type MatchState, type PartyPlayer, type Top10Party } from '../src/lib/game/types';
 import { getTop10List } from '../src/lib/party/top10-lists';
 import { getLineup } from '../src/lib/party/content/lineups';
-import type { QuizParty } from '../src/lib/game/types';
+import type { IntrusoParty, QuizParty } from '../src/lib/game/types';
+import { getIntrusoSet } from '../src/lib/party/content/intruso';
 import { renderImage } from '../src/lib/images/render';
 
 const base: MatchState = {
@@ -67,7 +68,20 @@ const quiz: QuizParty = {
   players: players.map((p, i) => ({ ...p, score: [450, 210, 150, 120, 60, 0, 0][i], lastHitAt: i })),
 };
 
+const penta = getIntrusoSet('penta-2002')!;
+const intruso: IntrusoParty = {
+  ...partyBase, game: 'intruso', status: 'PLAYING', round: 0, totalRounds: 5, order: ['penta-2002'],
+  options: ['Cafu', 'Juninho Pernambucano', 'Ronaldinho', 'Roberto Carlos', 'Rivaldo'], intruderIndex: 1,
+  marks: [{ index: 0, jid: 'p0', name: 'Júllio' }, { index: 3, jid: 'p1', name: 'Camila' }], lastJid: 'p1',
+};
+const intrusoWrong: IntrusoParty = {
+  ...intruso,
+  marks: [{ index: 0, jid: 'p0', name: 'Júllio' }, { index: 3, jid: 'p1', name: 'Camila' }, { index: 1, jid: 'p2', name: 'Tiago' }, { index: 2, jid: 'p0', name: 'Júllio' }],
+};
+
 const specs: Record<string, ImageSpec> = {
+  '13-intruso': { kind: 'intrusoBoard', state: intruso, reason: '', reveal: false },
+  '13b-intruso-revelacao': { kind: 'intrusoBoard', state: intrusoWrong, reason: penta.reason, reveal: true },
   '10-que-time': { kind: 'lineupQuiz', state: quiz, lines: getLineup('brasil-1994')!.lines },
   '10b-que-time-2002': { kind: 'lineupQuiz', state: quiz, lines: getLineup('brasil-2002')!.lines },
   '11-placar-quiz': { kind: 'partyScore', state: { ...quiz, status: 'FINISHED' }, title: 'Resultado final', final: true },

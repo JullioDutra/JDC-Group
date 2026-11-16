@@ -1,5 +1,5 @@
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
-import type { IncomingMessage, Outgoing, PartyPlayer, QuizParty } from '../game/types';
+import type { IncomingMessage, IntrusoParty, Outgoing, PartyPlayer, QuizParty } from '../game/types';
 import {
   PARTY_CONFIG,
   PartyDeps,
@@ -228,7 +228,7 @@ export function quizStandings(state: QuizParty): PartyPlayer[] {
   return [...state.players].sort((a, b) => b.score - a.score || a.lastHitAt - b.lastHitAt);
 }
 
-export function scoreImage(state: QuizParty, final: boolean): Outgoing {
+export function scoreImage(state: QuizParty | IntrusoParty, final: boolean): Outgoing {
   const title = final ? 'Resultado final' : `Placar após a rodada ${state.round + 1}`;
   return { type: 'image', image: { kind: 'partyScore', state: structuredClone(state), title, final } };
 }

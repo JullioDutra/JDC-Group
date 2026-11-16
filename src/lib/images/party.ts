@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
-import { EscalacaoParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
+import { EscalacaoParty, IntrusoParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
 import { PARTY_CONFIG, standings } from '../party/engine';
 import { BODY, C, DISPLAY, H, W, box, brand, fit, pill, stage, txt } from './theme';
 
@@ -43,6 +43,13 @@ export function partyLobby(state: PartyState): ReactElement {
       'Acerte itens do ranking para revelar a posição.',
       'Ninguém responde duas vezes seguidas: espere outra pessoa.',
       'Vence quem acertar mais posições.',
+    ];
+  } else if (state.game === 'intruso') {
+    subtitle = `${PARTY_CONFIG.intruso.rounds} rodadas · 5 nomes, 1 intruso`;
+    rules = [
+      'Marque com X quem pertence ao grupo (mande a letra).',
+      'Ninguém marca duas vezes seguidas. O que sobrar é o intruso.',
+      'No fim: certo ou errado em cada X e a justificativa.',
     ];
   } else {
     const q = PARTY_CONFIG[state.game];
@@ -307,5 +314,76 @@ export function partyScore(state: PartyState, title: string, final: boolean): Re
       }),
     ),
     txt('1 palpite por pessoa em cada rodada · palpite repetido não vale', { fontSize: 22, color: C.muted, fontWeight: 500, justifyContent: 'center', marginTop: 12 }),
+  );
+}
+
+// ---------- Intruso ----------
+
+const INTRUSO_LETTERS = ['A', 'B', 'C', 'D', 'E'];
+const RED = '#F87171';
+
+export function intrusoBoard(state: IntrusoParty, reason: string, reveal: boolean): ReactElement {
+  const rowH = reveal ? 118 : 138;
+  return stage(
+    box(
+      { justifyContent: 'space-between', alignItems: 'center' },
+      brand(0.75),
+      pill(reveal ? 'REVELAÇÃO' : `RODADA ${state.round + 1} DE ${state.totalRounds}`, reveal ? C.lime : C.panel, reveal ? C.ink : C.lime, 24),
+    ),
+    txt('QUEM É O INTRUSO?', { fontFamily: DISPLAY, fontSize: 80, lineHeight: 1.1, marginTop: 18 }),
+    txt(reveal ? 'Cada X: certo ou errado' : 'Marque com X quem pertence ao grupo', { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: 20 }),
+    box(
+      { flexDirection: 'column', gap: 12 },
+      ...state.options.map((name, i) => {
+        const mark = state.marks.find((m) => m.index === i);
+        const isIntruder = i === state.intruderIndex;
+        let border = C.panelLine;
+        let tag: ReactElement | null = null;
+        if (reveal && isIntruder) {
+          border = C.lime;
+          tag = pill(mark ? 'INTRUSO · X ERRADO' : 'INTRUSO', mark ? RED : C.lime, C.ink, 22);
+        } else if (reveal && mark) {
+          border = '#34D399';
+          tag = pill('X CERTO', '#34D399', C.ink, 22);
+        }
+        return box(
+          {
+            alignItems: 'center', height: rowH, padding: '0 24px', borderRadius: 18, gap: 20,
+            backgroundColor: reveal && isIntruder ? 'rgba(200,255,62,0.12)' : C.panel, border: `3px solid ${border}`,
+          },
+          txt(INTRUSO_LETTERS[i], {
+            width: 64, height: 64, borderRadius: 16, flexShrink: 0, alignItems: 'center', justifyContent: 'center',
+            fontFamily: DISPLAY, fontSize: 36, color: C.ink, backgroundColor: mark ? 'rgba(255,255,255,0.35)' : C.lime,
+          }),
+          box(
+            { flexGrow: 1, flexDirection: 'column', position: 'relative' },
+            txt(name, {
+              fontFamily: DISPLAY, fontSize: 46, letterSpacing: 0.5,
+              color: mark && !(reveal && isIntruder) ? 'rgba(255,255,255,0.45)' : C.white,
+              textDecoration: mark ? 'line-through' : 'none',
+            }),
+            ...(mark ? [txt(`X de ${firstName(mark.name)}`, { fontSize: 22, fontWeight: 700, color: colorOf(state, mark.jid) })] : []),
+          ),
+          ...(mark
+            ? [txt('X', { fontFamily: DISPLAY, fontSize: 64, color: reveal ? (isIntruder ? RED : '#34D399') : C.white, width: 60, justifyContent: 'center' })]
+            : []),
+          ...(tag ? [tag] : []),
+        );
+      }),
+    ),
+    reveal
+      ? box(
+          {
+            flexDirection: 'column', marginTop: 22, flexGrow: 1, backgroundColor: C.panel, borderRadius: 20,
+            border: `2px solid ${C.panelLine}`, padding: '20px 26px',
+          },
+          txt('POR QUÊ', { fontSize: 22, fontWeight: 700, letterSpacing: 3, color: C.lime }),
+          txt(reason, { fontSize: 30, fontWeight: 500, lineHeight: 1.25, marginTop: 8 }),
+        )
+      : box(
+          { flexGrow: 1, alignItems: 'flex-end', justifyContent: 'space-between' },
+          txt('Mande a letra · ninguém marca 2 vezes seguidas', { fontSize: 28, fontWeight: 700, color: C.lime }),
+          txt(`${state.marks.length}/4 X`, { fontSize: 28, color: C.muted, fontWeight: 700 }),
+        ),
   );
 }
