@@ -69,6 +69,23 @@ export const FACTS: FactCard[] = [
   f('ff-stf', 'politica', true, 'O STF tem 11 ministros.', 'Indicados pelo presidente e aprovados pelo Senado.'),
   f('ff-brasilia-plano', 'politica', true, 'O plano de Brasília tem formato que lembra um avião.', 'O Plano Piloto de Lúcio Costa tem duas asas e um eixo central.'),
   f('ff-constituicao-1988-emendas', 'politica', false, 'A Constituição de 1988 nunca foi alterada.', 'Já recebeu mais de 130 emendas.'),
+  // Conhecimentos gerais (lote 2)
+  f('ff-girafa', 'geral', true, 'A girafa tem o mesmo número de vértebras no pescoço que o ser humano.', 'São 7 nos dois. As da girafa é que são enormes.'),
+  f('ff-cachorro', 'geral', false, 'Cachorros enxergam só em preto e branco.', 'Eles veem cores, principalmente azul e amarelo; só têm dificuldade com vermelho e verde.'),
+  f('ff-unhas', 'geral', false, 'Unhas e cabelo continuam crescendo depois da morte.', 'A pele se retrai ao desidratar e dá essa impressão.'),
+  f('ff-chiclete', 'geral', false, 'Chiclete engolido fica 7 anos no estômago.', 'Ele não é digerido, mas sai normalmente em poucos dias.'),
+  f('ff-lua', 'geral', true, 'Da Terra, vemos sempre a mesma face da Lua.', 'A Lua gira em torno de si no mesmo tempo em que dá a volta na Terra.'),
+  f('ff-diamante', 'geral', true, 'Diamante e grafite (o do lápis) são feitos do mesmo elemento.', 'Os dois são carbono puro, só arrumado de jeitos diferentes.'),
+  f('ff-morcego', 'geral', false, 'Morcegos são cegos.', 'Todos enxergam; muitos usam também a ecolocalização.'),
+  f('ff-sydney', 'geral', false, 'Sydney é a capital da Austrália.', 'A capital é Camberra, criada justamente para encerrar a briga entre Sydney e Melbourne.'),
+  f('ff-luz-sol', 'geral', true, 'A luz do Sol leva cerca de 8 minutos para chegar à Terra.', 'Pouco mais de 8 minutos e 20 segundos, em média.'),
+  f('ff-cerebro', 'geral', true, 'O cérebro em si não sente dor.', 'Ele não tem receptores de dor; a dor de cabeça vem de membranas, vasos e músculos em volta.'),
+  f('ff-ouro', 'geral', true, 'Dá para comer ouro.', 'Folhas de ouro comestível são usadas em doces e não fazem mal em pequena quantidade.'),
+  f('ff-tubarao', 'geral', true, 'O esqueleto do tubarão não tem ossos.', 'É todo de cartilagem.'),
+  f('ff-mosca', 'geral', false, 'A mosca doméstica vive só 24 horas.', 'Vive cerca de um mês. Quem vive pouquíssimo é o adulto da efemérida.'),
+  f('ff-everest-cresce', 'geral', true, 'O Everest ainda está crescendo.', 'Alguns milímetros por ano, empurrado pelo choque das placas da Índia e da Ásia.'),
+  f('ff-portugues-9', 'geral', true, 'O português é língua oficial em nove países.', 'Brasil, Portugal, Angola, Moçambique, Cabo Verde, Guiné-Bissau, São Tomé e Príncipe, Timor-Leste e Guiné Equatorial.'),
+  f('ff-polvo-tinta', 'geral', false, 'Todo animal com tentáculos solta tinta.', 'Águas-vivas, por exemplo, não soltam. Polvos e lulas, sim.'),
 ];
 
 export function getFact(id: string): FactCard | undefined {

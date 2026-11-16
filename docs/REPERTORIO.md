@@ -1,6 +1,6 @@
 # Repertório: o que já tem e como crescer
 
-Este documento lista o conteúdo dos jogos, as regras de curadoria e o plano para o acervo crescer sem perder qualidade. Contagens de 16/11/2026, geradas a partir do código (`src/lib/game/teams.ts` e `src/lib/party/content/*`).
+Este documento lista o conteúdo dos jogos, as regras de curadoria e o plano para o acervo crescer sem perder qualidade. Contagens de 16/11/2026 (2ª rodada de conteúdo, com foco em conhecimentos gerais), geradas a partir do código (`src/lib/game/teams.ts` e `src/lib/party/content/*`).
 
 Documentos relacionados: [`MODO-GRUPO.md`](MODO-GRUPO.md) · [`TOP10.md`](TOP10.md) · [`PLATAFORMA.md`](PLATAFORMA.md) · [`ANIMES.md`](ANIMES.md) · [`CONHECIMENTOS-GERAIS.md`](CONHECIMENTOS-GERAIS.md)
 
@@ -13,13 +13,19 @@ Documentos relacionados: [`MODO-GRUPO.md`](MODO-GRUPO.md) · [`TOP10.md`](TOP10.
 | Clubes | **168** | nível 1: 32 · nível 2: 57 · nível 3: 79 | Restrições do 1x1, Escalação em Grupo, Melhor Time, Alfabeto |
 | Seleções | **51** | nível 1: 13 · nível 2: 17 · nível 3: 21 | idem |
 | Temas do 1x1 | **17** | gols, assistências, valor, idade, títulos... | Duelo e Escalação em Grupo |
-| Listas Top 10 | **32** | futebol 13 · geral 13 · política 6 | Top 10 |
-| Grupos do Intruso | **42** | futebol 28 · política 9 · geral 5 | Intruso |
-| Fichas do Quem é? | **49** | futebol 34 · história 15 | Quem é? |
+| Listas Top 10 | **36** | futebol 13 · geral 17 · política 6 | Top 10 |
+| Grupos do Intruso | **58** | futebol 28 · geral 20 · política 9 · história 1 | Intruso |
+| Fichas do Quem é? | **63** | futebol 34 · história 15 · geral 14 (cientistas, artistas, escritores) | Quem é? |
 | Escalações históricas | **33** | futebol | Que time é esse? |
-| Cartas de emoji | **36** | futebol 18 · geral 11 · anime 7 | Emoji |
-| Perguntas relâmpago | **39** | futebol 14 · política 10 · geral 8 · história 7 | Quiz Relâmpago |
-| Perguntas numéricas | **50** | futebol 23 · política 12 · história 9 · geral 6 | Chute Certo |
+| Cartas de emoji | **52** | geral 27 · futebol 18 · anime 7 | Emoji |
+| Perguntas relâmpago | **87** | geral 48 · história 15 · futebol 14 · política 10 | Quiz Relâmpago |
+| Perguntas numéricas | **72** | futebol 23 · geral 21 · história 15 · política 13 | Chute Certo |
+| Bandeiras desenhadas | **58** | América do Sul 7 · Europa 26 · mundo 25 | Bandeiraço |
+| Categorias fechadas | **32** | geral 18 · futebol 11 · política 3 | Sobrevivente |
+| Tabuleiros 4x4 | **17** | geral 8 · futebol 6 · história, política e anime 1 cada | Conexões |
+| Acontecimentos com ano | **110** | história 48 · geral 32 · política 15 · futebol 15 | Linha do Tempo (4 por rodada, combinações sorteadas) |
+| Afirmações explicadas | **65** | geral 34 · futebol 11 · política 12 · história 8 | Fato ou Fake |
+| Palavras do Stop | **~920** | países 199 · animais 189 · cidades 166 · profissões 144 · comidas 94 · frutas 71 · cores 56; time e jogador conferidos pelo acervo e pela IA | Stop |
 
 **Jogadores não têm lista fechada.** Em todo jogo em que o participante digita um nome (1x1, Escalação, Melhor Time, Alfabeto), a IA (Maritaca, `sabia-4`) confere se o jogador existe, a posição, a nacionalidade, os clubes e o número do tema. A resposta fica em cache por 30 dias. Por isso o acervo de jogadores é, na prática, o conhecimento do modelo, e o que fica no código são os **clubes e seleções** usados para sortear restrições.
 
@@ -42,6 +48,8 @@ Com *difícil* a restrição pode cair num clube como Kashima Antlers ou Celtic.
 | história | `história` | Brasil Colônia, Império, Era Vargas, guerras |
 | anime | `anime` | por enquanto só no Emoji (7 cartas) |
 | política | `política` | **só entra quando pedida** (ver §3) |
+
+**Conhecimentos gerais em todos os jogos de grupo.** Some *geral* ao comando: `abrir relâmpago geral`, `abrir quem é geral`, `abrir intruso geral`, `abrir conexões geral`, `abrir sobrevivente geral`, `abrir linha do tempo geral`, `abrir fato ou fake geral`, `top 10 geral`. O Bandeiraço e o Stop já são de conhecimentos gerais por natureza.
 
 Se o grupo pedir uma categoria com menos de 3 itens naquele jogo (ex.: `abrir chute certo anime`), o jogo usa a mistura padrão, que nunca inclui política.
 

@@ -279,14 +279,16 @@ Bandeira desenhada (SVG de domínio público), 1 tentativa por jogador, e o prim
 | **Alfabeto** ✔ | ✅ | ✅ | ✅ | várias certas, sem repetir | 15 | IA | **pronto (⚽)** |
 | **Top 10** ✔ | ✅ | ✅ | ✅ | sem repetir; ninguém responde 2× seguidas | 10 | curado/AniList/IBGE | **1 (pronto)** |
 | **Chute Certo** ✔ | ✅ | ✅ | ✅ | número único | 15 | curado (50) | **pronto** |
-| Sobrevivente | ✅ | ✅ | ✅ | várias certas + eliminação | 15 | IA | 3 |
+| **Sobrevivente** ✔ | ✅ | ✅ | ✅ | um por vez, 2 vidas | 15 | curado (32 categorias fechadas) | **pronto** |
 | **Intruso** ✔ | ✅ | ✅ | ✅ | eliminação coletiva, ninguém marca 2× seguidas | 15 | curado (42 conjuntos) | **pronto** |
-| Conexões | ✅ | ✅ | ✅ | grupos únicos | 12 | curado | 3 |
+| **Conexões** ✔ | ✅ | ✅ | ✅ | 4 números, 3 erros por pessoa, aviso de "quase" | 12 | curado (17 tabuleiros) | **pronto** |
 | **Emoji** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (36) | **pronto** |
-| Stop coletivo | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA | 4 |
-| Draft da Resenha | ✅ | ✅ | — | serpente, sem repetir | 8 | IA | 4 |
-| Bandeiraço | — | — | ✅ | corrida, 1 tentativa | 15 | SVG livre | 4 |
-| **Quiz Relâmpago** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (39) | **pronto** |
+| **Stop coletivo** ✔ | ✅ | ✅ | ✅ | 1 ficha por pessoa; cópia vale zero | 10 | listas + IA | **pronto** |
+| **Draft da Resenha** ✔ | ✅ | ✅ | — | serpente, sem repetir, votação | 8 | IA | **pronto (⚽)** |
+| **Bandeiraço** ✔ | — | — | ✅ | corrida, 1 tentativa | 15 | 58 bandeiras em SVG próprio | **pronto** |
+| **Quiz Relâmpago** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (87) | **pronto** |
+| **Linha do Tempo** ✔ (novo) | ✅ | — | ✅ | todos respondem; pontos por posição | 15 | 110 acontecimentos | **pronto** |
+| **Fato ou Fake** ✔ (novo) | ✅ | — | ✅ | todos respondem; bônus para o 1º | 15 | 65 afirmações | **pronto** |
 
 ---
 
@@ -347,6 +349,7 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 |---|---|---|
 | **G1** | Sala (`abrir sala`/`top 10`, `entrar` com limite, `começar`, `sair`, `encerrar`, `pular`), entrada até a 2ª rodada, ausentes, prazo via QStash, respostas únicas, reações ✅/❌, imagens, ranking do grupo. **Escalação em Grupo** (⚽, 17 temas) e **Top 10** (12 listas) | **Pronto** |
 | **G2** | **Que time é esse?** (24 escalações históricas, 6 rodadas, time + ano) e **Quem é?** (22 craques, 8 rodadas, até 5 dicas que saem a cada 12 s) | **Pronto** |
+| **G4** | **Bandeiraço**, **Sobrevivente**, **Conexões**, **Stop**, **Draft da Resenha**, e os novos **Linha do Tempo** e **Fato ou Fake**. Mais conteúdo de conhecimentos gerais em todos os jogos | **Pronto** |
 | **G3** | **Intruso**, **Alfabeto**, **Chute Certo**, **Emoji**, **Quiz Relâmpago**, categorias (geral, história, anime, política opt-in), 32 listas de Top 10. Acervo em [`REPERTORIO.md`](REPERTORIO.md) | **Pronto** |
 | **G4** | Os modos prontos em 🎌 (AniList) e 🧠 (IBGE/REST Countries); `group_seen` para não repetir conteúdo | — |
 | **G5** | **Sobrevivente**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; curadoria `/admin/conteudo` | — |

@@ -148,6 +148,47 @@ export const CONEXOES: ConexoesPuzzle[] = [
       { label: 'Cavaleiros do Zodíaco', items: ['Seiya', 'Shiryu', 'Hyoga', 'Shun'] },
     ],
   },
+  // ---------- Conhecimentos gerais (lote 2) ----------
+  {
+    id: 'cx-mundo',
+    category: 'geral',
+    groups: [
+      { label: 'Capitais europeias', items: ['Lisboa', 'Viena', 'Praga', 'Oslo'] },
+      { label: 'Moedas', items: ['Iene', 'Rublo', 'Rúpia', 'Peso'] },
+      { label: 'Rios', items: ['Nilo', 'Danúbio', 'Reno', 'Volga'] },
+      { label: 'Línguas oficiais da ONU', items: ['Árabe', 'Chinês', 'Russo', 'Francês'] },
+    ],
+  },
+  {
+    id: 'cx-musica',
+    category: 'geral',
+    groups: [
+      { label: 'Instrumentos de sopro', items: ['Flauta', 'Trompete', 'Saxofone', 'Clarinete'] },
+      { label: 'Ritmos brasileiros', items: ['Samba', 'Forró', 'Frevo', 'Baião'] },
+      { label: 'Nomes da Tropicália', items: ['Caetano', 'Gilberto Gil', 'Gal Costa', 'Tom Zé'] },
+      { label: 'Bandas do rock brasileiro dos anos 80', items: ['Legião Urbana', 'Titãs', 'Paralamas', 'Barão Vermelho'] },
+    ],
+  },
+  {
+    id: 'cx-corpo',
+    category: 'geral',
+    groups: [
+      { label: 'Órgãos', items: ['Fígado', 'Baço', 'Pâncreas', 'Rim'] },
+      { label: 'Sentidos', items: ['Tato', 'Olfato', 'Paladar', 'Audição'] },
+      { label: 'Doenças causadas por vírus', items: ['Gripe', 'Sarampo', 'Dengue', 'Catapora'] },
+      { label: 'Músculos', items: ['Bíceps', 'Tríceps', 'Glúteo', 'Deltoide'] },
+    ],
+  },
+  {
+    id: 'cx-brasil-mapa',
+    category: 'geral',
+    groups: [
+      { label: 'Capitais do Nordeste', items: ['Natal', 'Recife', 'Maceió', 'Teresina'] },
+      { label: 'Estados da Região Norte', items: ['Acre', 'Pará', 'Amapá', 'Roraima'] },
+      { label: 'Ilhas brasileiras', items: ['Fernando de Noronha', 'Ilhabela', 'Marajó', 'Ilha Grande'] },
+      { label: 'Cachoeiras e quedas brasileiras', items: ['Iguaçu', 'Caracol', 'Itiquira', 'Véu da Noiva'] },
+    ],
+  },
 ];
 
 export function getConexoes(id: string): ConexoesPuzzle | undefined {

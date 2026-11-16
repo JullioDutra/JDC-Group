@@ -222,12 +222,7 @@ export const INTRUSO_SETS: IntrusoSet[] = [
     intruder: 'José Sarney',
     reason: 'Os outros quatro foram presidentes da ditadura militar. Sarney foi o primeiro civil a assumir depois dela, em 1985.',
   },
-  {
-    id: 'mercosul', category: 'politica',
-    members: ['Brasil', 'Argentina', 'Uruguai', 'Paraguai'],
-    intruder: 'Chile',
-    reason: 'Os outros quatro fundaram o Mercosul em 1991. O Chile é só país associado.',
-  },
+
   {
     id: 'euro', category: 'politica',
     members: ['Portugal', 'Espanha', 'Itália', 'Alemanha'],
@@ -270,6 +265,109 @@ export const INTRUSO_SETS: IntrusoSet[] = [
     members: ['Cristo Redentor', 'Machu Picchu', 'Coliseu', 'Taj Mahal'],
     intruder: 'Torre Eiffel',
     reason: 'As outras quatro estão entre as Sete Maravilhas do Mundo Moderno (eleitas em 2007). A Torre Eiffel não está.',
+  },
+  // ---------- Conhecimentos gerais (lote 2) ----------
+  {
+    id: 'capitais-nao-maiores', category: 'geral',
+    members: ['Brasília', 'Camberra', 'Ottawa', 'Washington'],
+    intruder: 'Lima',
+    reason: 'As outras quatro são capitais que NÃO são a maior cidade do país. Lima é a maior cidade do Peru.',
+  },
+  {
+    id: 'mamiferos-marinhos', category: 'geral',
+    members: ['Baleia', 'Golfinho', 'Foca', 'Peixe-boi'],
+    intruder: 'Tubarão',
+    reason: 'Os outros quatro são mamíferos. O tubarão é um peixe.',
+  },
+  {
+    id: 'gases-nobres', category: 'geral',
+    members: ['Hélio', 'Neônio', 'Argônio', 'Criptônio'],
+    intruder: 'Hidrogênio',
+    reason: 'Os outros quatro são gases nobres. O hidrogênio não é.',
+  },
+  {
+    id: 'sem-mar', category: 'geral',
+    members: ['Bolívia', 'Paraguai', 'Suíça', 'Áustria'],
+    intruder: 'Uruguai',
+    reason: 'Os outros quatro não têm saída para o mar. O Uruguai tem litoral no Atlântico.',
+  },
+  {
+    id: 'machado-obras', category: 'geral',
+    members: ['Dom Casmurro', 'Quincas Borba', 'Memórias Póstumas de Brás Cubas', 'O Alienista'],
+    intruder: 'O Cortiço',
+    reason: 'Os outros quatro são de Machado de Assis. O Cortiço é de Aluísio Azevedo.',
+  },
+  {
+    id: 'impressionistas', category: 'geral',
+    members: ['Monet', 'Renoir', 'Degas', 'Pissarro'],
+    intruder: 'Picasso',
+    reason: 'Os outros quatro são pintores impressionistas. Picasso é do cubismo.',
+  },
+  {
+    id: 'cordas', category: 'geral',
+    members: ['Violino', 'Viola', 'Violoncelo', 'Contrabaixo'],
+    intruder: 'Clarinete',
+    reason: 'Os outros quatro são instrumentos de corda. O clarinete é de sopro.',
+  },
+  {
+    id: 'romanicas', category: 'geral',
+    members: ['Português', 'Espanhol', 'Italiano', 'Romeno'],
+    intruder: 'Alemão',
+    reason: 'As outras quatro são línguas latinas (românicas). O alemão é germânico.',
+  },
+  {
+    id: 'estados-norte', category: 'geral',
+    members: ['Acre', 'Amapá', 'Roraima', 'Tocantins'],
+    intruder: 'Maranhão',
+    reason: 'Os outros quatro ficam na Região Norte. O Maranhão é do Nordeste.',
+  },
+  {
+    id: 'nordicos', category: 'geral',
+    members: ['Noruega', 'Suécia', 'Dinamarca', 'Finlândia'],
+    intruder: 'Holanda',
+    reason: 'Os outros quatro são países nórdicos (com a Islândia). A Holanda não é.',
+  },
+  {
+    id: 'niemeyer', category: 'geral',
+    members: ['Catedral de Brasília', 'Congresso Nacional', 'MAC de Niterói', 'Igreja da Pampulha'],
+    intruder: 'MASP',
+    reason: 'As outras quatro são obras de Oscar Niemeyer. O MASP é de Lina Bo Bardi.',
+  },
+  {
+    id: 'bossa-nova', category: 'geral',
+    members: ['Tom Jobim', 'João Gilberto', 'Vinicius de Moraes', 'Nara Leão'],
+    intruder: 'Raul Seixas',
+    reason: 'Os outros quatro são nomes da bossa nova. Raul Seixas é do rock.',
+  },
+  {
+    id: 'sedes-olimpicas', category: 'geral',
+    members: ['Atenas', 'Sydney', 'Pequim', 'Barcelona'],
+    intruder: 'Madri',
+    reason: 'As outras quatro já sediaram Olimpíadas de Verão. Madri tentou várias vezes e nunca conseguiu.',
+  },
+  {
+    id: 'citricas', category: 'geral',
+    members: ['Laranja', 'Limão', 'Tangerina', 'Toranja'],
+    intruder: 'Maçã',
+    reason: 'As outras quatro são frutas cítricas. A maçã não é.',
+  },
+  {
+    id: 'lipossoluveis', category: 'geral',
+    members: ['Vitamina A', 'Vitamina D', 'Vitamina E', 'Vitamina K'],
+    intruder: 'Vitamina C',
+    reason: 'As outras quatro são vitaminas lipossolúveis (dissolvem em gordura). A vitamina C dissolve em água.',
+  },
+  {
+    id: 'ex-colonias-pt', category: 'historia',
+    members: ['Angola', 'Moçambique', 'Cabo Verde', 'Timor-Leste'],
+    intruder: 'Senegal',
+    reason: 'Os outros quatro foram colônias portuguesas. O Senegal foi colônia francesa.',
+  },
+  {
+    id: 'mercosul', category: 'politica',
+    members: ['Brasil', 'Argentina', 'Uruguai', 'Paraguai'],
+    intruder: 'Chile',
+    reason: 'Os outros quatro fundaram o Mercosul em 1991. O Chile é só associado.',
   },
 ];
 

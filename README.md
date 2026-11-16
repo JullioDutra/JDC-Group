@@ -15,7 +15,7 @@ informa o número dele; vence a melhor soma. Cada etapa chega ao grupo como imag
 | [docs/CONHECIMENTOS-GERAIS.md](docs/CONHECIMENTOS-GERAIS.md) | Sabichão: Stop, Volta ao Mundo, Brasil de Ponta a Ponta… (planejamento) |
 | [docs/MODO-GRUPO.md](docs/MODO-GRUPO.md) | Modo em Grupo: sala de 10–15 com `entrar`, 1 resposta por jogador, respostas repetidas não valem, jogos prontos e planejados |
 | [docs/TOP10.md](docs/TOP10.md) | Top 10: regras, listas no ar e temas planejados |
-| [docs/REPERTORIO.md](docs/REPERTORIO.md) | Acervo: 168 clubes, 51 seleções, listas, perguntas, curadoria, política opt-in e plano de expansão |
+| [docs/REPERTORIO.md](docs/REPERTORIO.md) | Acervo: 168 clubes, 51 seleções, 58 bandeiras, 110 acontecimentos, ~920 palavras do Stop, listas, perguntas, curadoria, política opt-in e plano de expansão |
 | [docs/VIRADA-VPS.md](docs/VIRADA-VPS.md) | Passo a passo de comandos na VPS: RPG sai, jogo entra, bot pessoal intocado |
 | [docs/EVOLUTION.md](docs/EVOLUTION.md) | Virada do número do RPG na Evolution sem afetar o bot pessoal |
 
@@ -49,6 +49,6 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 
 `ativar grupo` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar grupo`
 
-**Em grupo:** `abrir sala` (Escalação em Grupo), `top 10`, `abrir que time é esse`, `abrir quem é`, `abrir intruso`, `abrir emoji`, `abrir relâmpago`, `abrir alfabeto` ou `abrir chute certo` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`. Categoria no fim do comando: `futebol`, `geral`, `história`, `anime`, `política` (política só quando pedida). Ex.: `abrir relâmpago política`.
+**Em grupo:** `abrir sala` (Escalação em Grupo), `top 10`, `abrir que time é esse`, `abrir quem é`, `abrir intruso`, `abrir emoji`, `abrir relâmpago`, `abrir alfabeto`, `abrir chute certo`, `abrir bandeiraço`, `abrir sobrevivente`, `abrir conexões`, `abrir stop`, `abrir draft`, `abrir linha do tempo` ou `abrir fato ou fake` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`. Categoria no fim do comando: `futebol`, `geral`, `história`, `anime`, `política` (política só quando pedida). Ex.: `abrir relâmpago política`.
 
 `iniciar aleatório` sorteia o tema assim que alguém aceita. `iniciar melhor time` (ou `iniciar melhor time votação`) abre o desafio Melhor Time. Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada), `3 difícil` (clubes e seleções menos óbvios).

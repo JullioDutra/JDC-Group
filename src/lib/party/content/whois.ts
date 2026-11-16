@@ -506,6 +506,148 @@ export const WHOIS: WhoIsCard[] = [
       'Chanceler da Alemanha por 16 anos.',
     ],
   },
+  // ---------- Conhecimentos gerais ----------
+  {
+    id: 'santos-dumont', category: 'geral', answer: 'Santos Dumont', aliases: ['santos dumont', 'dumont', 'alberto santos dumont'],
+    clues: [
+      'Nasceu em Minas Gerais, em 1873, numa cidade que hoje leva o seu nome.',
+      'Viveu boa parte da vida em Paris e ajudou a popularizar o relógio de pulso.',
+      'Contornou a Torre Eiffel com um dirigível em 1901.',
+      'Em 1906, voou com o 14-Bis diante de uma multidão em Paris.',
+      'É chamado no Brasil de Pai da Aviação.',
+    ],
+  },
+  {
+    id: 'niemeyer', category: 'geral', answer: 'Oscar Niemeyer', aliases: ['niemeyer', 'oscar niemeyer'],
+    clues: [
+      'Nasceu no Rio de Janeiro, em 1907, e trabalhou até depois dos 100 anos.',
+      'Ganhou o Prêmio Pritzker em 1988.',
+      'Projetou o conjunto da Pampulha, em Belo Horizonte.',
+      'Desenhou o Museu de Arte Contemporânea de Niterói, em forma de disco voador.',
+      'É o arquiteto dos principais prédios de Brasília.',
+    ],
+  },
+  {
+    id: 'tarsila', category: 'geral', answer: 'Tarsila do Amaral', aliases: ['tarsila', 'tarsila do amaral'],
+    clues: [
+      'Nasceu em Capivari (SP), em 1886.',
+      'Foi casada com o escritor Oswald de Andrade.',
+      'Pintou "Operários" em 1933.',
+      'Sua obra inspirou o Movimento Antropofágico.',
+      'Pintou o "Abaporu", o quadro brasileiro mais famoso.',
+    ],
+  },
+  {
+    id: 'machado', category: 'geral', answer: 'Machado de Assis', aliases: ['machado', 'machado de assis'],
+    clues: [
+      'Nasceu no Morro do Livramento, no Rio de Janeiro, em 1839.',
+      'Foi o primeiro presidente da Academia Brasileira de Letras.',
+      'Escreveu "O Alienista" e "Quincas Borba".',
+      'Criou a personagem Capitu e a dúvida mais famosa da literatura nacional.',
+      'É o autor de "Dom Casmurro".',
+    ],
+  },
+  {
+    id: 'curie', category: 'geral', answer: 'Marie Curie', aliases: ['curie', 'marie curie', 'madame curie'],
+    clues: [
+      'Nasceu em Varsóvia, em 1867.',
+      'Foi a primeira mulher a ganhar um Prêmio Nobel.',
+      'É a única pessoa premiada com o Nobel em duas ciências diferentes (Física e Química).',
+      'Batizou um elemento em homenagem ao seu país natal, o polônio.',
+      'Descobriu o rádio e estudou a radioatividade.',
+    ],
+  },
+  {
+    id: 'einstein', category: 'geral', answer: 'Albert Einstein', aliases: ['einstein', 'albert einstein'],
+    clues: [
+      'Nasceu em Ulm, na Alemanha, em 1879.',
+      'Trabalhou num escritório de patentes em Berna enquanto fazia física nas horas vagas.',
+      'Ganhou o Nobel de 1921 pelo efeito fotoelétrico, e não pela teoria que o deixou famoso.',
+      'A foto dele mostrando a língua é uma das mais conhecidas do século 20.',
+      'Criou a teoria da relatividade e a fórmula E = mc².',
+    ],
+  },
+  {
+    id: 'da-vinci', category: 'geral', answer: 'Leonardo da Vinci', aliases: ['da vinci', 'leonardo', 'leonardo da vinci'],
+    clues: [
+      'Nasceu em 1452, na Toscana.',
+      'Escrevia as anotações espelhadas, da direita para a esquerda.',
+      'Desenhou máquinas voadoras e o "Homem Vitruviano".',
+      'Pintou "A Última Ceia" numa parede em Milão.',
+      'Pintou a Mona Lisa.',
+    ],
+  },
+  {
+    id: 'chico', category: 'geral', answer: 'Chico Buarque', aliases: ['chico', 'chico buarque'],
+    clues: [
+      'Nasceu no Rio de Janeiro, em 1944, filho do historiador Sérgio Buarque de Holanda.',
+      'Ganhou o Prêmio Camões em 2019 e escreveu o romance "Budapeste".',
+      'Teve canções censuradas na ditadura e usou o pseudônimo Julinho da Adelaide.',
+      'Compôs "Construção" e "Cálice" (esta com Gilberto Gil).',
+      'Estourou em 1966 com "A Banda".',
+    ],
+  },
+  {
+    id: 'clarice', category: 'geral', answer: 'Clarice Lispector', aliases: ['clarice', 'clarice lispector'],
+    clues: [
+      'Nasceu na Ucrânia, em 1920, e chegou ao Brasil ainda bebê.',
+      'Cresceu no Recife e depois morou no Rio de Janeiro.',
+      'Escreveu "A Paixão segundo G.H.".',
+      'Criou a personagem Macabéa.',
+      'É a autora de "A Hora da Estrela".',
+    ],
+  },
+  {
+    id: 'carmen', category: 'geral', answer: 'Carmen Miranda', aliases: ['carmen miranda', 'carmen'],
+    clues: [
+      'Nasceu em Portugal, em 1909, e cresceu no Rio de Janeiro.',
+      'Era chamada de "A Pequena Notável".',
+      'Fez carreira em Hollywood nos anos 1940.',
+      'Ficou famosa pelo turbante cheio de frutas.',
+      'Cantava "O que é que a baiana tem?".',
+    ],
+  },
+  {
+    id: 'tesla', category: 'geral', answer: 'Nikola Tesla', aliases: ['tesla', 'nikola tesla'],
+    clues: [
+      'Nasceu em 1856, onde hoje é a Croácia.',
+      'Trabalhou para Thomas Edison e depois virou seu rival.',
+      'Defendia a corrente alternada na "guerra das correntes".',
+      'A unidade de densidade de fluxo magnético leva o seu sobrenome.',
+      'Dá nome a uma famosa marca de carros elétricos.',
+    ],
+  },
+  {
+    id: 'newton', category: 'geral', answer: 'Isaac Newton', aliases: ['newton', 'isaac newton'],
+    clues: [
+      'Nasceu na Inglaterra, em 1643.',
+      'Foi diretor da Casa da Moeda inglesa.',
+      'Criou o cálculo (ao mesmo tempo que Leibniz).',
+      'Escreveu os "Principia" e as três leis do movimento.',
+      'Diz a lenda que uma maçã o levou à lei da gravitação.',
+    ],
+  },
+  {
+    id: 'frida', category: 'geral', answer: 'Frida Kahlo', aliases: ['frida', 'frida kahlo'],
+    clues: [
+      'Nasceu no México, em 1907.',
+      'Sofreu um grave acidente de ônibus aos 18 anos.',
+      'Foi casada com o muralista Diego Rivera.',
+      'Pintou dezenas de autorretratos.',
+      'É lembrada pelas sobrancelhas unidas e pelas flores no cabelo.',
+    ],
+  },
+  {
+    id: 'senna', category: 'geral', answer: 'Ayrton Senna', aliases: ['senna', 'ayrton senna'],
+    clues: [
+      'Nasceu em São Paulo, em 1960.',
+      'Começou no kart e estreou na Fórmula 1 pela Toleman, em 1984.',
+      'Ganhou a primeira corrida debaixo de chuva, em Portugal, em 1985.',
+      'Foi tricampeão mundial pela McLaren (1988, 1990 e 1991).',
+      'Morreu em Ímola, em 1994, e o "Tema da Vitória" virou a sua trilha.',
+    ],
+  },
+
 ];
 
 export function getWhoIs(id: string): WhoIsCard | undefined {

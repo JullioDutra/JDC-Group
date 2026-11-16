@@ -175,6 +175,22 @@ export const SURVIVOR_LISTS: SurvivorList[] = [
     items: [['América', 'america'], ['América do Norte', 'america do norte'], ['América do Sul', 'america do sul'], ['Europa'], ['Ásia', 'asia'], ['África', 'africa'], ['Oceania'], ['Antártida', 'antartida', 'antartica']],
   },
 
+  {
+    id: 's-lusofonia', category: 'geral', level: 2, title: 'países que têm o português como língua oficial',
+    items: [
+      ['Brasil'], ['Portugal'], ['Angola'], ['Moçambique', 'mocambique'], ['Cabo Verde'], ['Guiné-Bissau', 'guine bissau'],
+      ['São Tomé e Príncipe', 'sao tome e principe', 'sao tome'], ['Timor-Leste', 'timor leste', 'timor'], ['Guiné Equatorial', 'guine equatorial'],
+    ],
+  },
+  {
+    id: 's-pecados', category: 'geral', level: 1, title: 'os sete pecados capitais',
+    items: [['Gula'], ['Avareza', 'ganancia'], ['Luxúria', 'luxuria'], ['Ira', 'raiva'], ['Inveja'], ['Preguiça', 'preguica'], ['Soberba', 'orgulho', 'vaidade']],
+  },
+  {
+    id: 's-reino-unido', category: 'geral', level: 1, title: 'nações que formam o Reino Unido',
+    items: [['Inglaterra'], ['Escócia', 'escocia'], ['País de Gales', 'pais de gales', 'gales'], ['Irlanda do Norte']],
+  },
+
   // ---------- Política (só quando pedida) ----------
   {
     id: 's-conselho-seguranca', category: 'politica', level: 2, title: 'membros permanentes do Conselho de Segurança da ONU',

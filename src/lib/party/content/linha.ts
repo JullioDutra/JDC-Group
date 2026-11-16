@@ -121,6 +121,19 @@ export const TIMELINE: TimelineEvent[] = [
   e('t-chape', 'futebol', 2016, 'Acidente aéreo da Chapecoense'),
   e('t-var-copa', 'futebol', 2018, 'Primeira Copa com VAR'),
   e('t-messi-copa', 'futebol', 2022, 'Messi campeão do mundo no Catar'),
+  // Ciência, tecnologia e cultura (lote 2)
+  e('t-cinema', 'geral', 1895, 'Irmãos Lumière fazem a primeira sessão pública de cinema'),
+  e('t-mona-roubo', 'geral', 1911, 'A Mona Lisa é roubada do Louvre'),
+  e('t-radio-br', 'geral', 1922, 'Primeira transmissão de rádio no Brasil'),
+  e('t-tv-cor', 'geral', 1972, 'Primeira transmissão em cores da TV brasileira'),
+  e('t-walkman', 'geral', 1979, 'A Sony lança o Walkman'),
+  e('t-cd', 'geral', 1982, 'O CD chega às lojas'),
+  e('t-hubble', 'geral', 1990, 'Lançamento do telescópio Hubble'),
+  e('t-genoma', 'geral', 2003, 'Concluído o Projeto Genoma Humano'),
+  e('t-plutao', 'geral', 2006, 'Plutão deixa de ser considerado planeta'),
+  e('t-bitcoin', 'geral', 2009, 'Criação do Bitcoin'),
+  e('t-netflix-br', 'geral', 2011, 'A Netflix chega ao Brasil'),
+  e('t-pix', 'geral', 2020, 'Lançamento do Pix'),
 ];
 
 export function getEvent(id: string): TimelineEvent | undefined {

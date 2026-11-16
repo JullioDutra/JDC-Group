@@ -2,6 +2,8 @@
 
 Duelos 1 x 1 no grupo sobre geografia, Brasil, natureza, cinema e cultura geral. Mesma experiência dos outros jogos: imagem de abertura com regras, texto rápido a cada lance, imagem ao fechar cada rodada.
 
+> **No ar (nov/2026), no Modo em Grupo:** Bandeiraço (58 bandeiras), Stop coletivo (com ~920 palavras + IA), Linha do Tempo (110 acontecimentos), Fato ou Fake (65 afirmações explicadas), Sobrevivente (18 categorias gerais) e a categoria *geral* em Quiz Relâmpago (48), Quem é? (14 personalidades), Intruso (20), Conexões (8), Emoji (27), Chute Certo (21) e Top 10 (17). Inventário completo em [`REPERTORIO.md`](REPERTORIO.md). Os duelos 1 x 1 descritos abaixo seguem planejados.
+
 **Princípio:** sempre que existir uma fonte oficial do número (IBGE, REST Countries), usamos ela, e não a IA. A IA entra para entender o que a pessoa digitou ("Sampa", "Rio") e para validar palavras no Stop.
 
 ## 1. Pesquisa: o que já faz sucesso
