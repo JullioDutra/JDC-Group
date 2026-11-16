@@ -30,6 +30,8 @@ fim          ─► IMAGEM do campinho final + vencedor estado: FINISHED      (r
 ```
 
 - **Formação**: goleiro, 2 defensores, 2 meias, 1 atacante — 6 rodadas, 6 escolhas por jogador.
+- **Ordem estrita**: os dois escolhem o goleiro; só então abre a rodada dos defensores, e assim por diante. Quem manda nome fora da vez recebe um aviso (uma vez por vez) e a jogada não vale.
+- **Só os dois jogam**: mensagens de quem está fora da partida nunca escalam; comandos de consulta (`placar`, `regras`, `ranking`) continuam abertos a todos.
 - **Vez**: um de cada vez. Quem abre a rodada alterna (rodadas ímpares o anfitrião, pares o desafiante), porque quem escolhe por último vê o número do outro.
 - **Validação pela IA** (a vez só passa se tudo for válido): o jogador existe? Atua na posição da rodada? Passou pelo clube / é da seleção sorteada? Já foi escalado nesta partida? A IA tem o dado do tema?
 - **Resposta rápida**: no meio da rodada a confirmação é só texto (`✅ Rogério Ceni — 131 gols`); a imagem só é gerada quando os dois escolheram.
@@ -84,7 +86,7 @@ O anfitrião escreve junto do número do tema:
 
 ### Comandos
 
-`ativar grupo` e `desativar grupo` (só os números em `OWNER_NUMBERS`, se definido), `iniciar jogo`, `iniciar jogo`, `aceitar`, `regras`, `modos`, `placar`, `ranking`, `tempo`, `cancelar`/`desistir`, `ajuda`.
+`ativar grupo` e `desativar grupo` (só os números em `ADMIN_NUMBERS`, se definido), `iniciar jogo`, `iniciar aleatório` (o tema é sorteado assim que alguém aceita, sem menu), `iniciar jogo`, `iniciar aleatório` (o tema é sorteado assim que alguém aceita, sem menu), `aceitar`, `regras`, `modos`, `placar`, `ranking`, `tempo`, `cancelar`/`desistir`, `ajuda`.
 
 ## 3. Imagens
 
@@ -163,7 +165,7 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 ### Segurança
 
 - Webhook exige `?token=WEBHOOK_SECRET`; simulador e migração exigem `ADMIN_KEY`. Comparação em tempo constante; segredo não configurado nunca autoriza.
-- O bot só processa grupos ativados e nunca conversas privadas. Com `OWNER_NUMBERS`, só o dono ativa/desativa grupos (importante no número que herda os grupos do RPG).
+- O bot só processa grupos ativados e nunca conversas privadas. Com `ADMIN_NUMBERS`, só o dono ativa/desativa grupos (importante no número que herda os grupos do RPG).
 - O webhook ignora eventos de qualquer instância da Evolution que não seja `EVOLUTION_INSTANCE`, mesmo se o servidor tiver webhook global ligado.
 - Números fora de uma faixa plausível (ex.: 5.000 gols, 2,60 m) são tratados como "sem dado confiável" — protege contra erro da IA e contra quem tenta forçar números no nome.
 - Chaves ficam só em variáveis de ambiente da Vercel.
@@ -208,7 +210,7 @@ Revisão de tudo que foi entregue na primeira versão. Problemas encontrados e o
 | 4 | Webhook aceitava eventos de qualquer instância | Com webhook global ligado no servidor, mensagens do bot pessoal entrariam no jogo | Filtro por `EVOLUTION_INSTANCE` |
 | 5 | Autor da mensagem só lido de `key.participant` | Em versões da v2 ele vem em `data.participant` → mensagens ignoradas | Lê os dois, e prefere `@s.whatsapp.net` ao `@lid` |
 | 6 | Grupos com mensagens temporárias | Texto vem dentro de `ephemeralMessage` → bot "surdo" nesses grupos | Desembrulha a mensagem |
-| 7 | Qualquer pessoa podia `ativar grupo` | No número herdado do RPG, qualquer grupo antigo poderia ligar o bot | `OWNER_NUMBERS` |
+| 7 | Qualquer pessoa podia `ativar grupo` | No número herdado do RPG, qualquer grupo antigo poderia ligar o bot | `ADMIN_NUMBERS` |
 | 8 | Se a Maritaca recusar `response_format` | Jogo travaria em "VAR caiu" | Refaz a chamada sem o parâmetro |
 | 9 | "CR7", "R9" ignorados (dígito bloqueado) | Apelidos comuns não funcionavam | Aceita dígitos curtos; bloqueia só números puros e "900 gols" |
 | 10 | `processed_messages` crescia para sempre | Banco enchendo | Limpeza automática de registros com mais de 3 dias |

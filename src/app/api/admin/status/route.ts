@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { hasMaritacaKey } from '@/lib/ai/maritaca';
 import { secretMatches } from '@/lib/auth';
+import { adminNumbers } from '@/lib/owners';
 import { getStore, hasDatabase } from '@/lib/store';
 import { evolutionConfig, evolutionConnectionState, evolutionWebhook } from '@/lib/whatsapp/evolution';
 
@@ -34,7 +35,10 @@ export async function GET(request: Request) {
     : 'modo demo (MARITACA_API_KEY ausente)';
 
   const evo = evolutionConfig();
-  report.owners = process.env.OWNER_NUMBERS ? 'restrito a OWNER_NUMBERS' : 'qualquer pessoa pode ativar grupos';
+  const admins = adminNumbers();
+  report.admins = admins.length
+    ? `${admins.length} número(s) de admin configurado(s)`
+    : 'ATENÇÃO: ADMIN_NUMBERS vazio, ninguém consegue ativar grupos';
   if (process.env.WHATSAPP_PROVIDER === 'zapi') report.whatsapp = { provider: 'zapi' };
   else if (!evo.url || !evo.instance) report.whatsapp = { provider: 'evolution', configured: false };
   else {

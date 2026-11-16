@@ -81,6 +81,8 @@ export interface MatchOptions {
   blind?: boolean;
   /** Segundos por jogada (padrão 90; relâmpago 45). */
   turnSeconds?: number;
+  /** "iniciar aleatório": o tema é sorteado assim que alguém aceita, sem menu. */
+  autoRandom?: boolean;
 }
 
 export interface MatchState {
@@ -100,6 +102,8 @@ export interface MatchState {
   createdAt: number;
   updatedAt: number;
   winner: Side | 'draw' | null;
+  /** turnStartedAt da vez em que já avisamos "não é sua vez" (1 aviso por vez). */
+  nudgedAt?: number;
 }
 
 export interface Match {

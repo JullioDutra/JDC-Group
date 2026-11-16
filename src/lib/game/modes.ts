@@ -187,6 +187,16 @@ export interface Twists {
   fast: boolean;
 }
 
+const RANDOM_WORDS = ['aleatorio', 'aleatoria', 'sortear', 'sorteio', 'sorteia', 'surpresa', 'tanto faz', '0'];
+
+export function isRandomWord(word: string): boolean {
+  return RANDOM_WORDS.includes(word);
+}
+
+export function randomMode(rng: () => number): GameMode {
+  return MODES[Math.floor(rng() * MODES.length)];
+}
+
 export const FAST_TURN_SECONDS = 45;
 
 /**
@@ -194,7 +204,10 @@ export const FAST_TURN_SECONDS = 45;
  * opcionais "cego" (números escondidos) e "relampago" (45 s por jogada).
  * Ex.: "3 cego", "aleatorio relampago", "12 cego relampago".
  */
-export function parseModeChoice(norm: string, rng: () => number): { mode: GameMode; twists: Twists } | undefined {
+export function parseModeChoice(
+  norm: string,
+  rng: () => number,
+): { mode: GameMode; twists: Twists; random: boolean } | undefined {
   const words = norm.split(' ').filter(Boolean);
   const twists: Twists = { blind: false, fast: false };
   const rest: string[] = [];
@@ -206,12 +219,13 @@ export function parseModeChoice(norm: string, rng: () => number): { mode: GameMo
   const choice = rest.join(' ');
   if (!choice) return undefined;
   let mode: GameMode | undefined;
-  if (['aleatorio', 'sortear', 'sorteio', 'tanto faz', '0'].includes(choice)) {
-    mode = MODES[Math.floor(rng() * MODES.length)];
+  const random = isRandomWord(choice);
+  if (random) {
+    mode = randomMode(rng);
   } else if (/^\d+$/.test(choice)) {
     mode = MODES.find((m) => m.number === Number(choice));
   } else {
     mode = MODES.find((m) => normalize(m.name) === choice || m.id === choice);
   }
-  return mode ? { mode, twists } : undefined;
+  return mode ? { mode, twists, random } : undefined;
 }

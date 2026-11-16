@@ -45,9 +45,11 @@ test('partida completa no modo Artilheiros', async () => {
   const kickoff = await say('Ana', '1');
   assert.match(asText(kickoff), /img:kickoff[\s\S]*Rodada 1\/6 · GOLEIRO[\s\S]*Ana/);
 
-  // Fora da vez e conversa de grupo: ignorados, sem gastar IA.
-  assert.deepEqual(await say('Bia', 'Neuer'), []);
+  // Fora da vez: um único aviso, sem gastar IA. Conversa de grupo e quem está de fora: ignorados.
+  assert.match(asText(await say('Bia', 'Neuer')), /Segura, \*Bia\*! Agora é a vez de \*Ana\* escolher o goleiro/);
+  assert.deepEqual(await say('Bia', 'Alisson'), [], 'só um aviso por vez');
   assert.deepEqual(await say('Ana', 'kkkk'), []);
+  assert.deepEqual(await say('Zé', 'Neuer'), [], 'quem está de fora não escala');
   assert.equal(calls(), 0);
 
   assert.match(asText(await say('Ana', 'Fulano Inexistente')), /Não encontrei/);

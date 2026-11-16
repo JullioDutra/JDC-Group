@@ -1,6 +1,6 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
-import { FAST_TURN_SECONDS, GameMode, MODES, getMode, metricValue, parseModeChoice } from './modes';
+import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { CLUBS, NATIONS, drawDistinct, getTeam, isFromNation, playedForClub } from './teams';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import {
@@ -27,7 +27,7 @@ export interface EngineDeps {
   rng?: () => number;
   /**
    * Quem pode mandar "ativar grupo"/"desativar grupo". Sem a função, qualquer
-   * pessoa pode. Em produção vem de OWNER_NUMBERS.
+   * pessoa pode (simulador e testes). Em produção vem de ADMIN_NUMBERS.
    */
   canManageGroup?: (senderJid: string) => boolean;
 }
@@ -68,6 +68,7 @@ const HELP = [
   `⚽ *${GAME_NAME}* — comandos`,
   '',
   '• *iniciar jogo* — lança um desafio no grupo',
+  '• *iniciar aleatório* — desafio com tema sorteado (ótimo para quem está começando)',
   '• *aceitar* — entra como adversário',
   '• *regras* — como funciona',
   '• *modos* — lista os temas',
@@ -82,11 +83,12 @@ const RULES = [
   `📋 *Como se joga ${GAME_NAME}*`,
   '',
   '1. Alguém manda *iniciar jogo*. O primeiro que responder *aceitar* é o adversário.',
-  '2. O anfitrião escolhe o tema (gols, assistências, valor de mercado, idade...). Extras: some *cego* (números escondidos até o fim) ou *relâmpago* (45s por jogada). Ex.: *3 cego*.',
+  '2. O anfitrião escolhe o tema (ou manda *aleatório* para sortear; com *iniciar aleatório* o sorteio é automático). Temas: gols, assistências, valor de mercado, idade... Extras: some *cego* (números escondidos até o fim) ou *relâmpago* (45s por jogada). Ex.: *3 cego*.',
   '3. São 6 rodadas, uma por posição: goleiro, 2 defensores, 2 meias e 1 atacante.',
-  '4. Na sua vez, mande só o *nome do jogador*. A IA confere se ele existe, se joga na posição e informa o número dele no tema.',
+  '4. Um de cada vez: só depois que os dois escolhem o goleiro a rodada dos defensores é liberada, e assim por diante. Na sua vez, mande só o *nome do jogador*. A IA confere se ele existe, se joga na posição e informa o número dele no tema.',
   '5. Jogador inválido não passa a vez: você tenta de novo. Ninguém pode repetir um jogador já escalado.',
-  '6. No fim, somam-se os números dos 6 escalados. Dependendo do tema, vence a maior ou a menor soma.',
+  '6. Só os dois jogadores da partida podem escalar; mensagens de quem está de fora são ignoradas até o fim do jogo.',
+  '7. No fim, somam-se os números dos 6 escalados. Dependendo do tema, vence a maior ou a menor soma.',
 ].join('\n');
 
 function restrictionLine(restriction: Restriction): string {
@@ -139,6 +141,17 @@ function drawRestrictions(mode: GameMode, rng: () => number): Restriction[] {
   if (mode.restriction === 'none') return SLOTS.map(() => ({ kind: 'none' }));
   const pool = mode.restriction === 'club' ? CLUBS : NATIONS;
   return drawDistinct(pool, SLOTS.length, rng).map((t) => ({ kind: mode.restriction, teamId: t.id }));
+}
+
+/** "iniciar jogo", "iniciar", "novo jogo", com "aleatório"/"surpresa" opcional no fim. */
+function parseStart(norm: string): { random: boolean } | null {
+  const words = norm.split(' ');
+  if (words[0] !== 'iniciar' && words[0] !== 'novo') return null;
+  let rest = words.slice(1);
+  if (rest[0] === 'jogo') rest = rest.slice(1);
+  if (rest.length === 0) return words[0] === 'novo' && words.length === 1 ? null : { random: false };
+  if (rest.length === 1 && isRandomWord(rest[0])) return { random: true };
+  return null;
 }
 
 function isStale(state: MatchState, now: number): boolean {
@@ -207,7 +220,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   if (!(await store.isGroupActive(msg.groupJid))) return [];
   if (norm === 'desativar grupo') {
-    if (!manager) return [text('🔒 Só o dono do bot pode desativar o jogo neste grupo.')];
+    if (!manager) return [text('🔒 Só um admin do bot pode desativar o jogo neste grupo.')];
     await store.setGroupActive(msg.groupJid, msg.groupName, false, msg.senderJid);
     return [text('👋 Bot desativado neste grupo. Para voltar, mande *ativar grupo*.')];
   }
@@ -230,17 +243,22 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     match = null;
   }
 
-  if (norm === 'iniciar jogo' || norm === 'iniciar' || norm === 'novo jogo') {
+  const start = parseStart(norm);
+  if (start) {
     if (match) {
       return [text('⏳ Já existe uma partida em andamento neste grupo. Esperem terminar ou mandem *cancelar*.')];
     }
-    const created = await store.createMatch(msg.groupJid, newLobby(sender, nowMs));
+    const lobby = newLobby(sender, nowMs);
+    if (start.random) lobby.options = { autoRandom: true };
+    const created = await store.createMatch(msg.groupJid, lobby);
     if (!created) return [];
     return [
       {
         type: 'image',
         image: { kind: 'challenge', host: sender.name },
-        caption: `🔥 *${sender.name}* quer jogo! O primeiro que mandar *aceitar* entra em campo.`,
+        caption: start.random
+          ? `🔥 *${sender.name}* quer jogo com *tema surpresa* 🎲! O primeiro que mandar *aceitar* entra em campo.`
+          : `🔥 *${sender.name}* quer jogo! O primeiro que mandar *aceitar* entra em campo.`,
       },
     ];
   }
@@ -269,10 +287,36 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return save([text('🚫 Partida cancelada.')]);
   }
 
+  /** Sorteia restrições, liga os extras e manda a imagem de abertura. */
+  const kickoff = (chosen: GameMode, twists: Twists, random: boolean, lead = ''): Promise<Outgoing[]> => {
+    state.modeId = chosen.id;
+    state.options = {
+      blind: twists.blind,
+      turnSeconds: twists.fast ? FAST_TURN_SECONDS : TURN_SECONDS,
+    };
+    state.restrictions = drawRestrictions(chosen, rng);
+    state.status = 'PLAYING';
+    state.round = 0;
+    state.turn = roundStarter(0);
+    state.turnStartedAt = nowMs;
+    const label = random ? `🎲 Tema sorteado: *${chosen.name}*` : `🎬 Tema: *${chosen.name}*`;
+    return save([
+      {
+        type: 'image',
+        image: { kind: 'kickoff', state: structuredClone(state) },
+        caption: `${lead}${label}${twistLabel(state)}. Bola rolando!`,
+      },
+      text(turnPrompt(state)),
+    ]);
+  };
+
   if (state.status === 'LOBBY') {
     if (norm !== 'aceitar') return [];
     if (side === 0) return [text('😅 Você não pode aceitar o próprio desafio. Chama alguém!')];
     state.players[1] = sender;
+    if (state.options?.autoRandom) {
+      return kickoff(randomMode(rng), { blind: false, fast: false }, true, `🤝 *${sender.name}* aceitou!\n`);
+    }
     state.status = 'MODE_SELECT';
     return save([
       {
@@ -287,25 +331,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     if (side !== 0) return [];
     const parsed = parseModeChoice(norm, rng);
     if (!parsed) return [];
-    const chosen = parsed.mode;
-    state.modeId = chosen.id;
-    state.options = {
-      blind: parsed.twists.blind,
-      turnSeconds: parsed.twists.fast ? FAST_TURN_SECONDS : TURN_SECONDS,
-    };
-    state.restrictions = drawRestrictions(chosen, rng);
-    state.status = 'PLAYING';
-    state.round = 0;
-    state.turn = roundStarter(0);
-    state.turnStartedAt = nowMs;
-    return save([
-      {
-        type: 'image',
-        image: { kind: 'kickoff', state: structuredClone(state) },
-        caption: `🎬 Tema: *${chosen.name}*${twistLabel(state)}. Bola rolando!`,
-      },
-      text(turnPrompt(state)),
-    ]);
+    return kickoff(parsed.mode, parsed.twists, parsed.random);
   }
 
   if (state.status !== 'PLAYING' || !mode) return [];
@@ -328,8 +354,20 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return advance(lead, step);
   }
 
-  // A partir daqui, só interessa a mensagem de quem está na vez.
-  if (side !== state.turn || !looksLikePlayerName(msg.text)) return [];
+  // A partir daqui, só interessa a mensagem de um dos dois jogadores que pareça um nome.
+  // Quem está de fora nunca escala; mensagens dele são ignoradas até o fim do jogo.
+  if (side === null || !looksLikePlayerName(msg.text)) return [];
+
+  // Fora da vez: a jogada não vale. Avisa uma única vez por vez, sem gastar IA.
+  if (side !== state.turn) {
+    if (state.nudgedAt === state.turnStartedAt) return [];
+    state.nudgedAt = state.turnStartedAt;
+    const who = state.players[state.turn]!.name;
+    const slot = POSITION_LABEL[SLOTS[state.round]];
+    return save([
+      text(`⏳ Segura, *${sender.name}*! Agora é a vez de *${who}* escolher o ${slot}. Sua jogada só vale quando chegar a sua vez.`),
+    ]);
+  }
 
   const slot = SLOTS[state.round];
   let profile;

@@ -13,6 +13,7 @@ informa o número dele; vence a melhor soma. Cada etapa chega ao grupo como imag
 | [docs/PLATAFORMA.md](docs/PLATAFORMA.md) | Vários jogos no mesmo número: marca, mecânicas, arquitetura multi-jogo, isolamento, fases |
 | [docs/ANIMES.md](docs/ANIMES.md) | Duelo Otaku (planejamento) |
 | [docs/CONHECIMENTOS-GERAIS.md](docs/CONHECIMENTOS-GERAIS.md) | Sabichão: Stop, Volta ao Mundo, Brasil de Ponta a Ponta… (planejamento) |
+| [docs/MODO-GRUPO.md](docs/MODO-GRUPO.md) | Modo em Grupo: sala com `entrar`, 14 modos para futebol, animes e conhecimentos gerais (planejamento) |
 | [docs/EVOLUTION.md](docs/EVOLUTION.md) | Virada do número do RPG na Evolution sem afetar o bot pessoal |
 
 ## Stack
@@ -45,4 +46,4 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 
 `ativar grupo` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar grupo`
 
-Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).
+`iniciar aleatório` sorteia o tema assim que alguém aceita. Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).

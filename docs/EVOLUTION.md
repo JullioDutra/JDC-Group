@@ -32,7 +32,7 @@ Seis travas, da mais importante para a menos:
 2. **Token da instância, não a chave global.** Em `EVOLUTION_API_KEY` vai o token da instância do RPG. Com ele, a Vercel só consegue operar aquele número. Mesmo se a chave vazar, o bot pessoal está fora de alcance.
 3. **Filtro por instância no código.** Se o servidor tiver webhook global ligado, o jogo descarta qualquer evento cujo campo `instance` não seja o do jogo.
 4. **Só grupos ativados.** O número herda os grupos do RPG, mas o jogo fica mudo em todos até alguém mandar `ativar grupo`.
-5. **Só o dono ativa.** Com `OWNER_NUMBERS`, só os seus números ligam o jogo em um grupo.
+5. **Só o admin ativa.** Só os números em `ADMIN_NUMBERS` ligam o jogo em um grupo (e precisam estar no grupo para mandar o comando). Sem a variável, ninguém ativa.
 6. **Mensagens do próprio número são ignoradas** (`fromMe`), então o bot nunca responde a si mesmo.
 
 ### Cuidado com o webhook global
@@ -70,7 +70,7 @@ Na Vercel (projeto `duelo-de-craques`), configure:
 | `EVOLUTION_API_URL` | `https://SEU-SERVIDOR-EVOLUTION` (público, HTTPS) |
 | `EVOLUTION_API_KEY` | **token da instância do RPG** |
 | `EVOLUTION_INSTANCE` | nome exato da instância do RPG |
-| `OWNER_NUMBERS` | seu número com DDI, ex.: `5511999998888` |
+| `ADMIN_NUMBERS` | seu número com DDI, ex.: `5511999998888` |
 | `MARITACA_API_KEY` | sua chave |
 | `DATABASE_URL` | vem da integração Neon |
 

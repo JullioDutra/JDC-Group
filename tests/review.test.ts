@@ -82,12 +82,12 @@ test('mensagens simultâneas: a segunda é reprocessada, não perdida', async ()
   assert.match(all, /Bia\*, mande o nome do seu goleiro/);
 });
 
-test('só o dono ativa/desativa grupo quando OWNER_NUMBERS está definido', async () => {
+test('só o admin ativa/desativa grupo', async () => {
   const { say } = setup({ owners: ['Ana@s'] });
   assert.deepEqual(await say('Zé', 'ativar grupo'), []);
   assert.deepEqual(await say('Zé', 'iniciar jogo'), [], 'grupo continua desligado');
   assert.match(asText(await say('Ana', 'ativar grupo')), /ativado/);
-  assert.match(asText(await say('Zé', 'desativar grupo')), /Só o dono/);
+  assert.match(asText(await say("Zé", "desativar grupo")), /Só um admin/);
   assert.match(asText(await say('Zé', 'iniciar jogo')), /img:challenge/, 'qualquer um joga');
 });
 
@@ -130,4 +130,38 @@ test('Evolution: filtra instância, lê data.participant, mensagem temporária e
   assert.equal(evolution.parseWebhook({ ...msg({}, { participant: '5511@s.whatsapp.net' }), event: 'MESSAGES_UPSERT' })?.text, 'aceitar');
   assert.equal(evolution.parseWebhook(msg({}, { key: { remoteJid: '5511@s.whatsapp.net', fromMe: false, id: 'X3' } })), null, 'privado é ignorado');
   delete process.env.EVOLUTION_INSTANCE;
+});
+
+test('"iniciar aleatório" sorteia o tema assim que alguém aceita', async () => {
+  const { say } = setup();
+  await say('Ana', 'ativar grupo');
+  assert.match(asText(await say('Ana', 'Iniciar jogo aleatório')), /tema surpresa/);
+  const accepted = asText(await say('Bia', 'aceitar'));
+  assert.match(accepted, /img:kickoff[\s\S]*🎲 Tema sorteado: \*Artilheiros\*[\s\S]*Rodada 1\/6 · GOLEIRO/);
+});
+
+test('"aleatório" no menu também avisa que o tema foi sorteado', async () => {
+  const { say } = setup();
+  assert.match(asText(await startMatch(say, 'aleatorio cego')), /🎲 Tema sorteado: \*Artilheiros\* \(às cegas/);
+});
+
+test('ordem estrita: três nomes seguidos do mesmo jogador contam uma vez só', async () => {
+  const { say } = setup();
+  await startMatch(say, '1');
+  assert.match(asText(await say('Ana', 'ceni')), /Rogério Ceni[\s\S]*Bia/);
+  assert.match(asText(await say('Ana', 'Sergio Ramos')), /Segura, \*Ana\*/);
+  assert.deepEqual(await say('Ana', 'Koeman'), []);
+  // A rodada dos defensores só abre depois que Bia escolhe o goleiro.
+  assert.match(asText(await say('Bia', 'neuer')), /Rodada 2\/6 · DEFENSOR/);
+});
+
+test('em produção, sem ADMIN_NUMBERS ninguém ativa; com ele, só o admin', async () => {
+  const { ownerCheck } = await import('../src/lib/owners');
+  delete process.env.ADMIN_NUMBERS;
+  delete process.env.OWNER_NUMBERS;
+  assert.equal(ownerCheck()('5511999998888@s.whatsapp.net'), false);
+  process.env.ADMIN_NUMBERS = '55 11 99999-8888';
+  assert.equal(ownerCheck()('5511999998888@s.whatsapp.net'), true);
+  assert.equal(ownerCheck()('5511000000000@s.whatsapp.net'), false);
+  delete process.env.ADMIN_NUMBERS;
 });

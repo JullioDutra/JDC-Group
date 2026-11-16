@@ -7,6 +7,7 @@ Documentos relacionados:
 - [`ANIMES.md`](ANIMES.md): Duelo Otaku
 - [`CONHECIMENTOS-GERAIS.md`](CONHECIMENTOS-GERAIS.md): Sabichão
 - [`EVOLUTION.md`](EVOLUTION.md): virada do número do RPG sem afetar o bot pessoal
+- [`MODO-GRUPO.md`](MODO-GRUPO.md): **Modo em Grupo** (sala com `entrar`, todos respondem, nos três jogos)
 
 ## 1. Nome e marca
 
@@ -38,14 +39,14 @@ Atalhos, para quem já sabe o que quer:
 
 As regras de convivência no grupo são as mesmas para todos os jogos:
 - uma partida por grupo de cada vez;
-- só o dono ativa/desativa (`OWNER_NUMBERS`);
+- só o dono ativa/desativa (`ADMIN_NUMBERS`);
 - conversa paralela é ignorada; só a mensagem de quem está na vez vai para a IA;
 - W.O. em desistência; partida parada por 20 min se encerra sozinha;
 - `tempo` cobra quem estourou o relógio.
 
 ## 3. Famílias de mecânica (o que se reaproveita)
 
-Toda partida usa uma de seis mecânicas. Um jogo é só **mecânica + catálogo + fonte de dados + tema visual**:
+Toda partida usa uma de sete mecânicas. Um jogo é só **mecânica + catálogo + fonte de dados + tema visual**:
 
 | Mecânica | Como funciona | ⚽ Futebol | 🎌 Animes | 🧠 Geral |
 |---|---|---|---|---|
@@ -54,7 +55,10 @@ Toda partida usa uma de seis mecânicas. Um jogo é só **mecânica + catálogo 
 | **Dicas** | Item misterioso revelado aos poucos; acertar cedo vale mais | Quem Sou Eu / Caminho do Craque | Quem é esse personagem? / Emoji-Anime | Quem Sou Eu / Bandeiraço |
 | **Lista** | Bot sorteia um Top 10; alternando, cada um chuta itens | Top 10 artilheiros… | Top 10 mais amados… | Top 10 países mais populosos… |
 | **Maior ou Menor** | Dois itens, qual tem mais? Errou, perde vida | Gols, valor | Favoritos, nota | População, área |
+| **Sala (Modo em Grupo)** | Todos que mandam `entrar` jogam; avança quando todos respondem | Que time é esse?, Quem é?, Top 10… | Que grupo é esse?, Emoji… | Chute Certo, Stop coletivo… |
 | **Stop** | Letra sorteada + categorias; IA valida as palavras | Jogador, clube, estádio… | Personagem, anime, golpe… | Adedonha clássica |
+
+Detalhes do Modo em Grupo em [`MODO-GRUPO.md`](MODO-GRUPO.md).
 
 Ordem de construção das mecânicas, pensando em reuso: Escalação (pronta) → Dicas → Stop → Lista → Maior ou Menor → Grade.
 
@@ -129,7 +133,8 @@ O motor atual de futebol já é quase isso: separar o que é "futebol" (posiçõ
 | **3. Duelo Otaku** | Esquadrão (Escalação) com 10 temas via AniList | Fase 2 |
 | **4. Sabichão** | Volta ao Mundo e Brasil de Ponta a Ponta (dados oficiais) + Stop | Fase 2 |
 | **5. Mecânicas extras** | Dicas → Lista → Maior ou Menor → Grade, nos três jogos | Fases 3 e 4 |
-| **6. Social** | 2x2, Copa do Grupo (mata-mata), temporadas mensais | — |
+| **6. Modo em Grupo** | Salas com `entrar`, fases G1–G5 de [`MODO-GRUPO.md`](MODO-GRUPO.md) (começa por Que time é esse? e Quem é?) | Fase 2 |
+| **7. Social** | 2x2, Copa do Grupo (mata-mata), temporadas mensais | — |
 
 ## 6. Decisões em aberto (suas)
 
