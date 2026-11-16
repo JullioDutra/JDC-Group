@@ -40,9 +40,9 @@ test('17 temas com números únicos e sequenciais', () => {
 
 test('escolha de tema com extras', () => {
   const r = () => 0;
-  assert.deepEqual(parseModeChoice('3 cego', r)?.twists, { blind: true, fast: false });
+  assert.deepEqual(parseModeChoice('3 cego', r)?.twists, { blind: true, fast: false, hard: false });
   assert.equal(parseModeChoice('12 as cegas relampago', r)?.mode.id, 'rodados');
-  assert.deepEqual(parseModeChoice('12 as cegas relampago', r)?.twists, { blind: true, fast: true });
+  assert.deepEqual(parseModeChoice('12 as cegas relampago', r)?.twists, { blind: true, fast: true, hard: false });
   assert.equal(parseModeChoice('raiz', r)?.mode.number, 17);
   assert.equal(parseModeChoice('cego', r), undefined);
   assert.equal(parseModeChoice('99', r), undefined);
@@ -186,4 +186,19 @@ test('mesmo jogador não pode ser usado de novo, nem por outro time (Alexis: Ars
   // Rodada 5 começa por Ana (rodada de índice 4 = par). Alexis já foi usado por Bia.
   assert.match(asText(await say('Ana', 'Alexis Sanchez')), /já foi escalado nesta partida \(por \*Bia\*\)[\s\S]*nem por outro time/);
   assert.match(asText(await say('Ana', 'alexis')), /já foi escalado/);
+});
+
+test('extra "difícil" sorteia clubes de nível 2; temas normais só gigantes', async () => {
+  const { parseModeChoice: parse } = await import('../src/lib/game/modes');
+  const { drawRestrictions } = await import('../src/lib/game/validate');
+  const { getTeam } = await import('../src/lib/game/teams');
+  assert.deepEqual(parse('3 dificil', () => 0)?.twists, { blind: false, fast: false, hard: true });
+  const mode = parse('3', () => 0)!.mode;
+  let rolls = 0;
+  const rng = () => ((rolls = (rolls * 7 + 3) % 97) / 97);
+  const normal = drawRestrictions(mode, rng, false).map((r) => getTeam(r.teamId)!.tier);
+  assert.ok(normal.every((t) => t === 1));
+  const tiers = new Set<number>();
+  for (let i = 0; i < 20; i++) for (const r of drawRestrictions(mode, rng, true)) tiers.add(getTeam(r.teamId)!.tier);
+  assert.ok(tiers.has(2) && !tiers.has(3));
 });

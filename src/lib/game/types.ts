@@ -85,6 +85,8 @@ export interface MatchOptions {
   turnSeconds?: number;
   /** "iniciar aleatório": o tema é sorteado assim que alguém aceita, sem menu. */
   autoRandom?: boolean;
+  /** "difícil": sorteio com clubes/seleções de nível 2. */
+  hard?: boolean;
 }
 
 export interface MatchState {
@@ -117,7 +119,17 @@ export interface Match {
 
 // ---------- Modo em Grupo (salas) ----------
 
-export type PartyGame = 'escalacao' | 'top10' | 'quetime' | 'quemeh' | 'intruso' | 'melhortime';
+export type PartyGame =
+  | 'escalacao'
+  | 'top10'
+  | 'quetime'
+  | 'quemeh'
+  | 'intruso'
+  | 'melhortime'
+  | 'emoji'
+  | 'relampago'
+  | 'alfabeto'
+  | 'chute';
 
 export interface PartyPlayer {
   jid: string;
@@ -166,9 +178,11 @@ export interface Top10Item {
   rank: number;
 }
 
+export type ContentCategory = 'futebol' | 'geral' | 'politica' | 'historia' | 'anime';
+
 export interface Top10List {
   id: string;
-  category: 'futebol' | 'geral' | 'anime';
+  category: ContentCategory;
   title: string;
   source: string;
   items: Top10Item[];
@@ -188,7 +202,9 @@ export interface Top10Party extends PartyBase {
 
 /** Quiz em rodadas ("Que time é esse?" e "Quem é?"): corrida, 1 tentativa por rodada. */
 export interface QuizParty extends PartyBase {
-  game: 'quetime' | 'quemeh';
+  game: 'quetime' | 'quemeh' | 'emoji' | 'relampago';
+  /** Categoria do conteúdo; null = padrão do jogo (sem política). */
+  category: ContentCategory | null;
   round: number; // -1 no lobby
   totalRounds: number;
   /** Ids do conteúdo sorteado para cada rodada. */
@@ -208,6 +224,8 @@ export interface QuizParty extends PartyBase {
 /** Intruso: 5 nomes; os jogadores marcam X em quem pertence ao grupo; o que sobra é o palpite de intruso. */
 export interface IntrusoParty extends PartyBase {
   game: 'intruso';
+  /** Categoria escolhida; null = futebol e geral. */
+  category: ContentCategory | null;
   round: number; // -1 no lobby
   totalRounds: number;
   order: string[];
@@ -237,6 +255,8 @@ export interface DraftPick {
 export interface MelhorTimeParty extends PartyBase {
   game: 'melhortime';
   judge: 'ia' | 'votacao';
+  /** "difícil": sorteia também clubes de nível 3. */
+  hard?: boolean;
   phase: 'draft' | 'voting' | 'done';
   round: number; // -1 no lobby, 0..5
   clubs: string[];
@@ -249,7 +269,30 @@ export interface MelhorTimeParty extends PartyBase {
   verdict: { winner: number | 'draw'; reason: string } | null;
 }
 
-export type PartyState = EscalacaoParty | Top10Party | QuizParty | IntrusoParty | MelhorTimeParty;
+/** Alfabeto: categoria + letra por rodada; 1 nome por pessoa, ninguém repete. */
+export interface AlfabetoParty extends PartyBase {
+  game: 'alfabeto';
+  round: number;
+  totalRounds: number;
+  rounds: Array<{ kind: 'pos' | 'nation' | 'club'; value: string; label: string; letter: string }>;
+  /** Resposta aceita de cada um nesta rodada. */
+  answers: Record<string, { name: string; key: string; order: number }>;
+  used: string[];
+}
+
+/** Chute Certo: cada um manda um número diferente; vence o mais perto. */
+export interface ChuteParty extends PartyBase {
+  game: 'chute';
+  category: ContentCategory | null;
+  round: number;
+  totalRounds: number;
+  order: string[];
+  /** Palpites desta rodada (jid → número) e ordem de chegada. */
+  guesses: Record<string, number>;
+  arrival: string[];
+}
+
+export type PartyState = EscalacaoParty | Top10Party | QuizParty | IntrusoParty | MelhorTimeParty | AlfabetoParty | ChuteParty;
 
 export type SessionState = MatchState | PartyState;
 

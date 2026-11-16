@@ -1,5 +1,5 @@
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
-import type { IncomingMessage, IntrusoParty, Outgoing, PartyPlayer, QuizParty } from '../game/types';
+import type { AlfabetoParty, ChuteParty, IncomingMessage, IntrusoParty, Outgoing, PartyPlayer, QuizParty } from '../game/types';
 import {
   PARTY_CONFIG,
   PartyDeps,
@@ -14,6 +14,8 @@ import {
 } from './common';
 import { LINEUPS, Lineup, getLineup } from './content/lineups';
 import { WHOIS, getWhoIs } from './content/whois';
+import { CARDS, getCard } from './content/cards';
+import type { ContentCategory } from '../game/types';
 
 /**
  * "Que time é esse?" e "Quem é?": quiz em rodadas, no formato corrida.
@@ -37,9 +39,18 @@ function shuffle<T>(items: T[], rng: () => number): T[] {
   return copy;
 }
 
-export function newQuiz(game: 'quetime' | 'quemeh'): Pick<QuizParty, 'game' | 'round' | 'totalRounds' | 'order' | 'clue' | 'attempts' | 'guesses' | 'solved' | 'roundHits'> {
+/** Emoji e Quiz Relâmpago: 1 pergunta por rodada, o primeiro que acertar leva. */
+export const CARD_POINTS = 100;
+
+const isCardGame = (game: QuizParty['game']): game is 'emoji' | 'relampago' => game === 'emoji' || game === 'relampago';
+
+export function newQuiz(
+  game: QuizParty['game'],
+  category: ContentCategory | null = null,
+): Pick<QuizParty, 'game' | 'category' | 'round' | 'totalRounds' | 'order' | 'clue' | 'attempts' | 'guesses' | 'solved' | 'roundHits'> {
   return {
     game,
+    category,
     round: -1,
     totalRounds: PARTY_CONFIG[game].rounds!,
     order: [],
@@ -52,6 +63,20 @@ export function newQuiz(game: 'quetime' | 'quemeh'): Pick<QuizParty, 'game' | 'r
 }
 
 export function quizRules(state: QuizParty): string[] {
+  if (state.game === 'emoji') {
+    return [
+      'O bot manda emojis: adivinhe o clube, jogador, filme ou anime.',
+      `1 palpite por pessoa em cada rodada. O primeiro que acertar leva ${CARD_POINTS}.`,
+      'Palpite igual a um já dito não vale. Vence quem somar mais pontos.',
+    ];
+  }
+  if (state.game === 'relampago') {
+    return [
+      'Perguntas de resposta curta, uma por rodada.',
+      `1 palpite por pessoa em cada rodada. O primeiro que acertar leva ${CARD_POINTS}.`,
+      'Palpite igual a um já dito não vale. Vence quem somar mais pontos.',
+    ];
+  }
   if (state.game === 'quetime') {
     return [
       'O bot mostra uma escalação histórica. Diga o time e o ano: *Brasil 94*.',
@@ -67,7 +92,15 @@ export function quizRules(state: QuizParty): string[] {
 }
 
 export function startQuiz(state: QuizParty, deps: PartyDeps): Outgoing[] {
-  const pool = state.game === 'quetime' ? LINEUPS.map((l) => l.id) : WHOIS.map((c) => c.id);
+  // Sem categoria escolhida, política fica de fora (só entra quando pedida).
+  const fits = (category: ContentCategory | undefined) =>
+    state.category ? (category ?? 'futebol') === state.category : (category ?? 'futebol') !== 'politica';
+  const pool =
+    state.game === 'quetime'
+      ? LINEUPS.map((l) => l.id)
+      : state.game === 'quemeh'
+        ? WHOIS.filter((c) => fits(c.category)).map((c) => c.id)
+        : CARDS[state.game].filter((c) => (state.category ? c.category === state.category : c.category !== 'politica')).map((c) => c.id);
   state.order = shuffle(pool, deps.rng).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
@@ -98,6 +131,14 @@ function openRound(state: QuizParty, deps: PartyDeps): Outgoing[] {
         caption: `${header} · Que time é esse? Mande time e ano (ex.: *Brasil 94*). 1 palpite por pessoa.`,
       },
       schedule(state, PARTY_CONFIG.quetime.seconds, nowMs, 'qt'),
+    ];
+  }
+  if (isCardGame(state.game)) {
+    const c = getCard(state.order[state.round])!;
+    const label = state.game === 'emoji' ? 'O que é isso?' : 'Responda rápido:';
+    return [
+      text(`${header} · ${label}\n\n${c.prompt}\n\n1 palpite por pessoa.`),
+      schedule(state, PARTY_CONFIG[state.game].seconds, nowMs, state.game === 'emoji' ? 'em' : 'rl'),
     ];
   }
   const card = getWhoIs(state.order[state.round])!;
@@ -164,6 +205,15 @@ export async function quizAnswer(
       score(state, player, QUETIME_POINTS.teamOnly, `${lineup.team} (ano errado)`, deps);
       out.push(text(`*${who}* acertou o time, mas não o ano (+${QUETIME_POINTS.teamOnly}). Ainda vale descobrir o ano.`));
     }
+  } else if (isCardGame(state.game)) {
+    const c = getCard(state.order[state.round])!;
+    if (answerMatches([c.answer, ...(c.aliases ?? [])], normalizeAnswer(raw))) {
+      score(state, player, CARD_POINTS, c.answer, deps);
+      state.solved = true;
+      out.push(text(`✅ *${who}* acertou: *${c.answer}* (+${CARD_POINTS})`));
+    } else {
+      out.push(react(msg, '❌'));
+    }
   } else {
     const card = getWhoIs(state.order[state.round])!;
     if (answerMatches([card.answer, ...card.aliases], normalizeAnswer(raw))) {
@@ -208,8 +258,9 @@ export function closeQuizRound(state: QuizParty, deps: PartyDeps, reason: string
   for (const p of state.players) {
     if (!state.attempts.includes(p.jid) && p.missed < 99) p.missed += 1;
   }
-  const answer =
-    state.game === 'quetime'
+  const answer = isCardGame(state.game)
+    ? `Era *${getCard(state.order[state.round])!.answer}*.`
+    : state.game === 'quetime'
       ? (() => {
           const l = getLineup(state.order[state.round])!;
           return `Era *${l.team} ${l.year}*, ${l.match}.`;
@@ -228,7 +279,7 @@ export function quizStandings(state: QuizParty): PartyPlayer[] {
   return [...state.players].sort((a, b) => b.score - a.score || a.lastHitAt - b.lastHitAt);
 }
 
-export function scoreImage(state: QuizParty | IntrusoParty, final: boolean): Outgoing {
+export function scoreImage(state: QuizParty | IntrusoParty | AlfabetoParty | ChuteParty, final: boolean): Outgoing {
   const title = final ? 'Resultado final' : `Placar após a rodada ${state.round + 1}`;
   return { type: 'image', image: { kind: 'partyScore', state: structuredClone(state), title, final } };
 }
@@ -254,7 +305,7 @@ export function finishQuiz(state: QuizParty, deps: PartyDeps, reason: string): O
       result: best.score > 0 && p.score === best.score ? (tied.length > 1 ? 'draw' : 'win') : 'loss',
     })),
   );
-  const again = state.game === 'quetime' ? 'abrir que time é esse' : 'abrir quem é';
+  const again = { quetime: 'abrir que time é esse', quemeh: 'abrir quem é', emoji: 'abrir emoji', relampago: 'abrir relâmpago' }[state.game];
   return [
     {
       ...scoreImage(state, true),

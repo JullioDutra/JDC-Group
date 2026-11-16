@@ -274,19 +274,19 @@ Bandeira desenhada (SVG de domínio público), 1 tentativa por jogador, e o prim
 | Modo | ⚽ | 🎌 | 🧠 | Regra | Máx. | Dados | Prioridade |
 |---|---|---|---|---|---|---|---|
 | **Escalação em Grupo** ✔ | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA + cache | **1 (pronto)** |
-| **Que time é esse?** ✔ | ✅ | ✅ (grupo) | — | corrida, 1 tentativa | 15 | curado (24 times) | **pronto** |
-| **Quem é?** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (22 fichas) | **pronto** |
-| Alfabeto | ✅ | ✅ | ✅ | várias certas, sem repetir | 15 | IA | **2** |
+| **Que time é esse?** ✔ | ✅ | ✅ (grupo) | — | corrida, 1 tentativa | 15 | curado (33 times) | **pronto** |
+| **Quem é?** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (49 fichas: futebol e história) | **pronto** |
+| **Alfabeto** ✔ | ✅ | ✅ | ✅ | várias certas, sem repetir | 15 | IA | **pronto (⚽)** |
 | **Top 10** ✔ | ✅ | ✅ | ✅ | sem repetir; ninguém responde 2× seguidas | 10 | curado/AniList/IBGE | **1 (pronto)** |
-| Chute Certo | ✅ | ✅ | ✅ | número único | 15 | curado | **2** |
+| **Chute Certo** ✔ | ✅ | ✅ | ✅ | número único | 15 | curado (50) | **pronto** |
 | Sobrevivente | ✅ | ✅ | ✅ | várias certas + eliminação | 15 | IA | 3 |
-| **Intruso** ✔ | ✅ | ✅ | ✅ | eliminação coletiva, ninguém marca 2× seguidas | 15 | curado (16 conjuntos) | **pronto** |
+| **Intruso** ✔ | ✅ | ✅ | ✅ | eliminação coletiva, ninguém marca 2× seguidas | 15 | curado (42 conjuntos) | **pronto** |
 | Conexões | ✅ | ✅ | ✅ | grupos únicos | 12 | curado | 3 |
-| Emoji | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 3 |
+| **Emoji** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (36) | **pronto** |
 | Stop coletivo | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA | 4 |
 | Draft da Resenha | ✅ | ✅ | — | serpente, sem repetir | 8 | IA | 4 |
 | Bandeiraço | — | — | ✅ | corrida, 1 tentativa | 15 | SVG livre | 4 |
-| Quiz Relâmpago | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 4 |
+| **Quiz Relâmpago** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (39) | **pronto** |
 
 ---
 
@@ -347,7 +347,7 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 |---|---|---|
 | **G1** | Sala (`abrir sala`/`top 10`, `entrar` com limite, `começar`, `sair`, `encerrar`, `pular`), entrada até a 2ª rodada, ausentes, prazo via QStash, respostas únicas, reações ✅/❌, imagens, ranking do grupo. **Escalação em Grupo** (⚽, 17 temas) e **Top 10** (12 listas) | **Pronto** |
 | **G2** | **Que time é esse?** (24 escalações históricas, 6 rodadas, time + ano) e **Quem é?** (22 craques, 8 rodadas, até 5 dicas que saem a cada 12 s) | **Pronto** |
-| **G3** | **Intruso** (pronto: X em quem pertence, revelação com certo/errado e justificativa) · **Alfabeto**, **Chute Certo**, mais 18 listas de Top 10 | em andamento |
+| **G3** | **Intruso**, **Alfabeto**, **Chute Certo**, **Emoji**, **Quiz Relâmpago**, categorias (geral, história, anime, política opt-in), 32 listas de Top 10. Acervo em [`REPERTORIO.md`](REPERTORIO.md) | **Pronto** |
 | **G4** | Os modos prontos em 🎌 (AniList) e 🧠 (IBGE/REST Countries); `group_seen` para não repetir conteúdo | — |
 | **G5** | **Sobrevivente**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; curadoria `/admin/conteudo` | — |
 

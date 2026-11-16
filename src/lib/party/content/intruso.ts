@@ -2,8 +2,12 @@
  * "Intruso": 5 nomes, 4 têm algo em comum e 1 não. Curadoria: o motivo tem
  * que ser verificável e estável (com data de corte quando puder mudar).
  */
+import type { ContentCategory } from '../../game/types';
+
 export interface IntrusoSet {
   id: string;
+  /** Sem categoria = futebol. */
+  category?: ContentCategory;
   /** Os 4 que pertencem ao grupo. */
   members: string[];
   intruder: string;
@@ -107,6 +111,165 @@ export const INTRUSO_SETS: IntrusoSet[] = [
     members: ['Real Madrid', 'Barcelona', 'Bayern', 'Liverpool'],
     intruder: 'Atlético de Madrid',
     reason: 'Os outros quatro já tinham ganhado a Champions até 2025. O Atlético de Madrid perdeu três finais (1974, 2014 e 2016).',
+  },
+  // ---------- Futebol: mais difíceis ----------
+  {
+    id: 'bicampeoes-copa-2026',
+    members: ['Uruguai', 'França', 'Espanha', 'Argentina'],
+    intruder: 'Inglaterra',
+    reason: 'Os outros quatro têm pelo menos dois títulos mundiais (até 2026; a Espanha foi bi em 2026). A Inglaterra tem um, de 1966.',
+  },
+  {
+    id: 'juventus',
+    members: ['Zidane', 'Pirlo', 'Buffon', 'Del Piero'],
+    intruder: 'Maldini',
+    reason: 'Os outros quatro jogaram na Juventus. Maldini jogou a carreira inteira no Milan.',
+  },
+  {
+    id: 'clube-unico',
+    members: ['Maldini', 'Totti', 'Puyol', 'Giggs'],
+    intruder: 'Gerrard',
+    reason: 'Os outros quatro jogaram a carreira inteira em um só clube. Gerrard saiu do Liverpool e foi para o LA Galaxy.',
+  },
+  {
+    id: 'bola-de-ouro-ingleses',
+    members: ['Stanley Matthews', 'Bobby Charlton', 'Kevin Keegan', 'Michael Owen'],
+    intruder: 'Wayne Rooney',
+    reason: 'Os outros quatro são ingleses que ganharam a Bola de Ouro. Rooney nunca ganhou (Harry Kane foi o quinto inglês, em 2026).',
+  },
+  {
+    id: 'chuteira-de-ouro-copa',
+    members: ['Ronaldo', 'Klose', 'James Rodríguez', 'Harry Kane'],
+    intruder: 'Neymar',
+    reason: 'Os outros quatro foram artilheiros de uma Copa (2002, 2006, 2014 e 2018). Neymar nunca foi.',
+  },
+  {
+    id: 'tecnicos-selecao',
+    members: ['Tite', 'Felipão', 'Dunga', 'Mano Menezes'],
+    intruder: 'Abel Ferreira',
+    reason: 'Os outros quatro foram técnicos da Seleção Brasileira. Abel Ferreira nunca treinou a Seleção.',
+  },
+  {
+    id: 'estadios-copa-2014',
+    members: ['Maracanã', 'Mineirão', 'Arena Corinthians', 'Arena da Amazônia'],
+    intruder: 'Morumbi',
+    reason: 'Os outros quatro foram sedes da Copa de 2014. O Morumbi ficou de fora.',
+  },
+  {
+    id: 'alemaes',
+    members: ['Bayern', 'Borussia Dortmund', 'Schalke 04', 'Werder Bremen'],
+    intruder: 'Ajax',
+    reason: 'Os outros quatro são clubes alemães. O Ajax é holandês.',
+  },
+  {
+    id: 'argentina-2022',
+    members: ['Messi', 'Di María', 'Enzo Fernández', 'Julián Álvarez'],
+    intruder: 'Higuaín',
+    reason: 'Os outros quatro foram campeões do mundo com a Argentina em 2022. Higuaín já tinha deixado a seleção.',
+  },
+  {
+    id: 'psg-br',
+    members: ['Ronaldinho', 'Neymar', 'Thiago Silva', 'Marquinhos'],
+    intruder: 'Kaká',
+    reason: 'Os outros quatro jogaram no PSG. Kaká nunca jogou lá.',
+  },
+  {
+    id: 'revelados-gremio',
+    members: ['Ronaldinho', 'Arthur', 'Everton Cebolinha', 'Lucas Leiva'],
+    intruder: 'Alisson',
+    reason: 'Os outros quatro foram revelados pelo Grêmio. Alisson foi revelado pelo rival, o Internacional.',
+  },
+  {
+    id: 'tetra-libertadores-2025',
+    members: ['Independiente', 'Boca Juniors', 'Peñarol', 'Flamengo'],
+    intruder: 'São Paulo',
+    reason: 'Os outros quatro têm 4 ou mais Libertadores (até 2025). O São Paulo tem 3.',
+  },
+  // ---------- Política (só quando pedido: "abrir intruso política") ----------
+  {
+    id: 'g7', category: 'politica',
+    members: ['Japão', 'Alemanha', 'Canadá', 'Itália'],
+    intruder: 'Rússia',
+    reason: 'Os outros quatro fazem parte do G7. A Rússia foi suspensa do antigo G8 em 2014, após a anexação da Crimeia.',
+  },
+  {
+    id: 'conselho-seguranca', category: 'politica',
+    members: ['Estados Unidos', 'China', 'Rússia', 'França'],
+    intruder: 'Alemanha',
+    reason: 'Os outros quatro são membros permanentes do Conselho de Segurança da ONU (com o Reino Unido). A Alemanha não tem assento permanente.',
+  },
+  {
+    id: 'brics-2011', category: 'politica',
+    members: ['Brasil', 'Índia', 'China', 'África do Sul'],
+    intruder: 'Argentina',
+    reason: 'Os outros quatro estavam no BRICS original (com a Rússia, desde 2011). A Argentina foi convidada em 2023 e recusou.',
+  },
+  {
+    id: 'mandato-interrompido', category: 'politica',
+    members: ['Deodoro da Fonseca', 'Jânio Quadros', 'Fernando Collor', 'Dilma Rousseff'],
+    intruder: 'Juscelino Kubitschek',
+    reason: 'Os outros quatro não terminaram o mandato (renúncia ou impeachment). JK governou até o fim, de 1956 a 1961.',
+  },
+  {
+    id: 'mulheres-no-poder', category: 'politica',
+    members: ['Dilma Rousseff', 'Cristina Kirchner', 'Michelle Bachelet', 'Angela Merkel'],
+    intruder: 'Hillary Clinton',
+    reason: 'As outras quatro chefiaram o governo de seus países. Hillary Clinton perdeu a eleição presidencial de 2016.',
+  },
+  {
+    id: 'presidentes-militares', category: 'politica',
+    members: ['Castello Branco', 'Costa e Silva', 'Médici', 'Geisel'],
+    intruder: 'José Sarney',
+    reason: 'Os outros quatro foram presidentes da ditadura militar. Sarney foi o primeiro civil a assumir depois dela, em 1985.',
+  },
+  {
+    id: 'mercosul', category: 'politica',
+    members: ['Brasil', 'Argentina', 'Uruguai', 'Paraguai'],
+    intruder: 'Chile',
+    reason: 'Os outros quatro fundaram o Mercosul em 1991. O Chile é só país associado.',
+  },
+  {
+    id: 'euro', category: 'politica',
+    members: ['Portugal', 'Espanha', 'Itália', 'Alemanha'],
+    intruder: 'Reino Unido',
+    reason: 'Os outros quatro usam o euro. O Reino Unido manteve a libra e saiu da União Europeia em 2020.',
+  },
+  {
+    id: 'armas-nucleares', category: 'politica',
+    members: ['Índia', 'Paquistão', 'Israel', 'Coreia do Norte'],
+    intruder: 'Irã',
+    reason: 'Os outros quatro têm armas nucleares segundo o SIPRI (2025). O Irã não tem arsenal nuclear estimado.',
+  },
+  // ---------- Geral ----------
+  {
+    id: 'planetas-gasosos', category: 'geral',
+    members: ['Júpiter', 'Saturno', 'Urano', 'Netuno'],
+    intruder: 'Marte',
+    reason: 'Os outros quatro são planetas gigantes gasosos/gelados. Marte é rochoso.',
+  },
+  {
+    id: 'fronteira-brasil', category: 'geral',
+    members: ['Argentina', 'Uruguai', 'Paraguai', 'Bolívia'],
+    intruder: 'Chile',
+    reason: 'Os outros quatro fazem fronteira com o Brasil. Na América do Sul, só Chile e Equador não fazem.',
+  },
+  {
+    id: 'capitais-nordeste', category: 'geral',
+    members: ['Recife', 'Salvador', 'Fortaleza', 'São Luís'],
+    intruder: 'Belém',
+    reason: 'As outras quatro são capitais do Nordeste. Belém é capital do Pará, no Norte.',
+  },
+  {
+    id: 'linguas-onu', category: 'geral',
+    members: ['Inglês', 'Francês', 'Espanhol', 'Árabe'],
+    intruder: 'Português',
+    reason: 'As outras quatro são línguas oficiais da ONU (com russo e chinês). O português não é.',
+  },
+  {
+    id: 'sete-maravilhas', category: 'geral',
+    members: ['Cristo Redentor', 'Machu Picchu', 'Coliseu', 'Taj Mahal'],
+    intruder: 'Torre Eiffel',
+    reason: 'As outras quatro estão entre as Sete Maravilhas do Mundo Moderno (eleitas em 2007). A Torre Eiffel não está.',
   },
 ];
 

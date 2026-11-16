@@ -136,6 +136,51 @@ export const LINEUPS: Lineup[] = [
     match: 'Mundial de 2012, 1 x 0 no Chelsea',
     lines: [['Cássio'], ['Alessandro', 'Chicão', 'Paulo André', 'Fábio Santos'], ['Ralf', 'Paulinho'], ['Jorge Henrique', 'Danilo', 'Emerson Sheik'], ['Guerrero']],
   },
+  {
+    id: 'brasil-1982', team: 'Brasil', aliases: ['brasil', 'selecao brasileira', 'selecao'], year: 1982,
+    match: 'jogo contra a Itália na Copa de 1982 (a "Tragédia do Sarriá")',
+    lines: [['Valdir Peres'], ['Leandro', 'Oscar', 'Luizinho', 'Júnior'], ['Toninho Cerezo', 'Falcão', 'Sócrates', 'Zico'], ['Serginho', 'Éder']],
+  },
+  {
+    id: 'uruguai-1950', team: 'Uruguai', aliases: ['uruguai', 'celeste'], year: 1950,
+    match: 'jogo decisivo da Copa de 1950 no Maracanã, 2 x 1 no Brasil',
+    lines: [['Máspoli'], ['Matías González', 'Tejera'], ['Gambetta', 'Obdulio Varela', 'Rodríguez Andrade'], ['Ghiggia', 'Julio Pérez', 'Míguez', 'Schiaffino', 'Morán']],
+  },
+  {
+    id: 'inter-2010', team: 'Inter de Milão', aliases: ['inter', 'inter de milao', 'internazionale', 'inter milan'], year: 2010,
+    match: 'final da Champions de 2010, 2 x 0 no Bayern',
+    lines: [['Júlio César'], ['Maicon', 'Lúcio', 'Samuel', 'Chivu'], ['Zanetti', 'Cambiasso'], ['Eto\'o', 'Sneijder', 'Pandev'], ['Milito']],
+  },
+  {
+    id: 'porto-2004', team: 'Porto', aliases: ['porto', 'fc porto'], year: 2004,
+    match: 'final da Champions de 2004, 3 x 0 no Monaco',
+    lines: [['Vítor Baía'], ['Paulo Ferreira', 'Jorge Costa', 'Ricardo Carvalho', 'Nuno Valente'], ['Costinha', 'Pedro Mendes', 'Maniche'], ['Deco'], ['Carlos Alberto', 'Derlei']],
+  },
+  {
+    id: 'manchester-united-2008', team: 'Manchester United', aliases: ['manchester united', 'man united', 'united', 'manchester utd'], year: 2008,
+    match: 'final da Champions de 2008, contra o Chelsea (pênaltis)',
+    lines: [['Van der Sar'], ['Brown', 'Ferdinand', 'Vidić', 'Evra'], ['Hargreaves', 'Scholes', 'Carrick'], ['Cristiano Ronaldo', 'Rooney', 'Tevez']],
+  },
+  {
+    id: 'barcelona-2015', team: 'Barcelona', aliases: ['barcelona', 'barca', 'fc barcelona'], year: 2015,
+    match: 'final da Champions de 2015, 3 x 1 na Juventus',
+    lines: [['Ter Stegen'], ['Daniel Alves', 'Piqué', 'Mascherano', 'Jordi Alba'], ['Rakitić', 'Busquets', 'Iniesta'], ['Messi', 'Suárez', 'Neymar']],
+  },
+  {
+    id: 'real-madrid-2014', team: 'Real Madrid', aliases: ['real madrid', 'real'], year: 2014,
+    match: 'final da Champions de 2014, 4 x 1 no Atlético de Madrid (a "Décima")',
+    lines: [['Casillas'], ['Carvajal', 'Varane', 'Sergio Ramos', 'Fábio Coentrão'], ['Khedira', 'Modrić', 'Di María'], ['Bale', 'Benzema', 'Cristiano Ronaldo']],
+  },
+  {
+    id: 'palmeiras-2021', team: 'Palmeiras', aliases: ['palmeiras', 'verdao'], year: 2021,
+    match: 'final da Libertadores de 2021, 2 x 1 no Flamengo',
+    lines: [['Weverton'], ['Mayke', 'Gustavo Gómez', 'Luan', 'Piquerez'], ['Danilo', 'Zé Rafael'], ['Gustavo Scarpa', 'Raphael Veiga', 'Dudu'], ['Rony']],
+  },
+  {
+    id: 'flamengo-2022', team: 'Flamengo', aliases: ['flamengo', 'mengao', 'fla'], year: 2022,
+    match: 'final da Libertadores de 2022, 1 x 0 no Athletico-PR',
+    lines: [['Santos'], ['Rodinei', 'David Luiz', 'Léo Pereira', 'Filipe Luís'], ['Thiago Maia', 'João Gomes'], ['Everton Ribeiro', 'Arrascaeta'], ['Gabigol', 'Pedro']],
+  },
 ];
 
 export function getLineup(id: string): Lineup | undefined {

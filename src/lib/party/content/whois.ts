@@ -2,8 +2,12 @@
  * "Quem é?": cada ficha tem 5 dicas, da mais difícil para a mais fácil.
  * Curadoria: só fatos estáveis e conferidos (nada que mude com a temporada).
  */
+import type { ContentCategory } from '../../game/types';
+
 export interface WhoIsCard {
   id: string;
+  /** Sem categoria = futebol. */
+  category?: ContentCategory;
   answer: string;
   aliases: string[];
   clues: [string, string, string, string, string];
@@ -228,6 +232,278 @@ export const WHOIS: WhoIsCard[] = [
       'Jogou no Barcelona, PSG e Al-Hilal.',
       'Passou Pelé como artilheiro da Seleção em 2023.',
       'Camisa 10, revelado pelo Santos.',
+    ],
+  },
+  // ---------- Futebol: lendas mais difíceis ----------
+  {
+    id: 'cruyff', answer: 'Johan Cruyff', aliases: ['cruyff', 'cruijff'],
+    clues: [
+      'Nasceu em Amsterdã, em 1947.',
+      'Símbolo do "futebol total".',
+      'Vice-campeão do mundo com a "Laranja Mecânica" em 1974.',
+      'Ganhou três Bolas de Ouro.',
+      'Ídolo do Ajax e técnico do "Dream Team" do Barcelona.',
+    ],
+  },
+  {
+    id: 'beckenbauer', answer: 'Franz Beckenbauer', aliases: ['beckenbauer', 'kaiser'],
+    clues: [
+      'Nasceu em Munique, em 1945.',
+      'Zagueiro que saía jogando, o líbero mais famoso da história.',
+      'Ídolo do Bayern.',
+      'Campeão do mundo como jogador em 1974 e como técnico em 1990.',
+      'O Kaiser.',
+    ],
+  },
+  {
+    id: 'puskas', answer: 'Puskás', aliases: ['ferenc puskas', 'puskas'],
+    clues: [
+      'Nasceu em Budapeste, em 1927.',
+      'Brilhou no Honvéd antes de deixar a Hungria.',
+      'Vice-campeão do mundo em 1954 com a seleção húngara.',
+      'Fez história no Real Madrid ao lado de Di Stéfano.',
+      'O prêmio da FIFA de gol mais bonito leva o nome dele.',
+    ],
+  },
+  {
+    id: 'eusebio', answer: 'Eusébio', aliases: ['eusebio', 'pantera negra'],
+    clues: [
+      'Nasceu em Moçambique, em 1942.',
+      'Defendeu a seleção de Portugal.',
+      'Artilheiro da Copa de 1966, com 9 gols.',
+      'Maior ídolo da história do Benfica.',
+      'A Pantera Negra.',
+    ],
+  },
+  {
+    id: 'di-stefano', answer: 'Di Stéfano', aliases: ['alfredo di stefano', 'di stefano'],
+    clues: [
+      'Nasceu em Buenos Aires, em 1926.',
+      'Jogou no River Plate e no Millonarios.',
+      'Defendeu mais de uma seleção na carreira, incluindo a Espanha.',
+      'Ganhou as cinco primeiras Copas dos Campeões da Europa (1956 a 1960).',
+      'A "Saeta Rubia", lenda do Real Madrid.',
+    ],
+  },
+  {
+    id: 'socrates', answer: 'Sócrates', aliases: ['socrates', 'doutor socrates', 'doutor'],
+    clues: [
+      'Nasceu em Belém do Pará, em 1954.',
+      'Formado em medicina.',
+      'Capitão da Seleção na Copa de 1982.',
+      'Liderou a Democracia Corinthiana.',
+      'O Doutor, famoso pelo calcanhar.',
+    ],
+  },
+  {
+    id: 'riquelme', answer: 'Riquelme', aliases: ['juan roman riquelme', 'roman'],
+    clues: [
+      'Nasceu em 1978, na Grande Buenos Aires.',
+      'Meia clássico, camisa 10, famoso pela pausa.',
+      'Passou pelo Barcelona e brilhou no Villarreal.',
+      'Ganhou três Libertadores como jogador.',
+      'Ídolo do Boca Juniors, eleito presidente do clube em 2023.',
+    ],
+  },
+  {
+    id: 'totti', answer: 'Totti', aliases: ['francesco totti'],
+    clues: [
+      'Nasceu em Roma, em 1976.',
+      'Jogou a carreira inteira em um só clube.',
+      'Campeão do mundo em 2006.',
+      'Campeão italiano em 2001.',
+      'O eterno capitão da Roma.',
+    ],
+  },
+  {
+    id: 'pirlo', answer: 'Pirlo', aliases: ['andrea pirlo'],
+    clues: [
+      'Nasceu em 1979, perto de Brescia.',
+      'Volante criativo, o "regista".',
+      'Passou pela Inter, mas brilhou no Milan.',
+      'Campeão do mundo em 2006.',
+      'Ganhou quatro títulos italianos seguidos pela Juventus.',
+    ],
+  },
+  {
+    id: 'rivellino', answer: 'Rivellino', aliases: ['rivelino', 'roberto rivellino'],
+    clues: [
+      'Nasceu em São Paulo, em 1946.',
+      'Canhoto de chute fortíssimo, a "Patada Atômica".',
+      'Campeão do mundo em 1970.',
+      'Jogou no Fluminense depois de sair de seu primeiro clube.',
+      'Ídolo do Corinthians, famoso pelo elástico.',
+    ],
+  },
+  {
+    id: 'falcao', answer: 'Falcão', aliases: ['paulo roberto falcao', 'falcao'],
+    clues: [
+      'Nasceu em 1953, em Abelardo Luz (SC).',
+      'Volante elegante, de passe longo.',
+      'Titular da Seleção de 1982.',
+      'Tricampeão brasileiro pelo Internacional.',
+      'O "Rei de Roma".',
+    ],
+  },
+  {
+    id: 'valderrama', answer: 'Valderrama', aliases: ['carlos valderrama', 'el pibe'],
+    clues: [
+      'Nasceu em Santa Marta, em 1961.',
+      'Meia de passe refinado e cabeleira inconfundível.',
+      'Jogou na França, na Espanha e nos Estados Unidos.',
+      'Disputou as Copas de 1990, 1994 e 1998.',
+      'O "Pibe", maior ídolo da seleção da Colômbia.',
+    ],
+  },
+  // ---------- História e política ("abrir quem é história") ----------
+  {
+    id: 'getulio', category: 'historia', answer: 'Getúlio Vargas', aliases: ['getulio', 'vargas'],
+    clues: [
+      'Nasceu em São Borja (RS), em 1882.',
+      'Chegou ao poder com a Revolução de 1930.',
+      'Instaurou o Estado Novo em 1937.',
+      'Criou a CLT em 1943.',
+      'Deixou uma carta-testamento em 1954: "saio da vida para entrar na história".',
+    ],
+  },
+  {
+    id: 'jk', category: 'historia', answer: 'Juscelino Kubitschek', aliases: ['jk', 'juscelino'],
+    clues: [
+      'Nasceu em Diamantina (MG), em 1902.',
+      'Foi prefeito de Belo Horizonte e criou a Pampulha.',
+      'Governou de 1956 a 1961.',
+      'Prometeu "50 anos em 5".',
+      'Construiu Brasília.',
+    ],
+  },
+  {
+    id: 'tiradentes', category: 'historia', answer: 'Tiradentes', aliases: ['joaquim jose da silva xavier'],
+    clues: [
+      'Era alferes e também trabalhava arrancando dentes.',
+      'Participou de uma conspiração contra a Coroa portuguesa.',
+      'O movimento era a Inconfidência Mineira.',
+      'Foi enforcado em 21 de abril de 1792.',
+      'Joaquim José da Silva Xavier.',
+    ],
+  },
+  {
+    id: 'dom-pedro-ii', category: 'historia', answer: 'Dom Pedro II', aliases: ['pedro ii', 'pedro segundo', 'd pedro ii'],
+    clues: [
+      'Nasceu no Rio de Janeiro, em 1825.',
+      'Assumiu o trono ainda adolescente, com a antecipação da maioridade.',
+      'Governou por quase 50 anos.',
+      'Foi deposto pela Proclamação da República, em 1889.',
+      'Último imperador do Brasil.',
+    ],
+  },
+  {
+    id: 'princesa-isabel', category: 'historia', answer: 'Princesa Isabel', aliases: ['isabel'],
+    clues: [
+      'Nasceu em 1846, no Rio de Janeiro.',
+      'Filha de Dom Pedro II.',
+      'Assumiu a regência do Império algumas vezes.',
+      'Assinou a Lei do Ventre Livre em 1871.',
+      'Assinou a Lei Áurea em 1888.',
+    ],
+  },
+  {
+    id: 'zumbi', category: 'historia', answer: 'Zumbi dos Palmares', aliases: ['zumbi'],
+    clues: [
+      'Nasceu em Alagoas no século XVII.',
+      'Liderou a resistência contra a escravidão.',
+      'Comandou o maior quilombo do Brasil colonial.',
+      'Foi morto em 20 de novembro de 1695.',
+      'A data da morte virou o Dia da Consciência Negra.',
+    ],
+  },
+  {
+    id: 'ulysses', category: 'historia', answer: 'Ulysses Guimarães', aliases: ['ulysses', 'ulisses guimaraes'],
+    clues: [
+      'Deputado federal por São Paulo por décadas.',
+      'Foi a principal voz da oposição ao regime militar no MDB.',
+      'Ganhou o apelido de "Senhor Diretas".',
+      'Presidiu a Assembleia Nacional Constituinte.',
+      'Chamou a Constituição de 1988 de "Constituição Cidadã".',
+    ],
+  },
+  {
+    id: 'chico-mendes', category: 'historia', answer: 'Chico Mendes', aliases: ['chico'],
+    clues: [
+      'Nasceu no Acre, em 1944.',
+      'Era seringueiro.',
+      'Virou líder sindical e ambientalista na Amazônia.',
+      'Lutou pelas reservas extrativistas.',
+      'Foi assassinado em Xapuri, em 1988.',
+    ],
+  },
+  {
+    id: 'mandela', category: 'historia', answer: 'Nelson Mandela', aliases: ['mandela', 'madiba'],
+    clues: [
+      'Nasceu em 1918.',
+      'Advogado e líder contra o apartheid.',
+      'Passou 27 anos preso.',
+      'Ganhou o Nobel da Paz em 1993.',
+      'Primeiro presidente negro da África do Sul (1994).',
+    ],
+  },
+  {
+    id: 'gandhi', category: 'historia', answer: 'Gandhi', aliases: ['mahatma gandhi', 'mohandas gandhi'],
+    clues: [
+      'Nasceu em 1869.',
+      'Advogado formado em Londres, atuou na África do Sul.',
+      'Pregava a resistência pela não violência.',
+      'Liderou a independência da Índia, em 1947.',
+      'Foi assassinado em 1948. Chamado de "Mahatma".',
+    ],
+  },
+  {
+    id: 'mlk', category: 'historia', answer: 'Martin Luther King', aliases: ['martin luther king jr', 'luther king', 'mlk'],
+    clues: [
+      'Nasceu em Atlanta, em 1929.',
+      'Era pastor batista.',
+      'Liderou o movimento pelos direitos civis nos EUA.',
+      'Discursou "I Have a Dream" em 1963.',
+      'Nobel da Paz em 1964; foi assassinado em 1968.',
+    ],
+  },
+  {
+    id: 'churchill', category: 'historia', answer: 'Winston Churchill', aliases: ['churchill'],
+    clues: [
+      'Nasceu em 1874, num palácio.',
+      'Ganhou o Nobel de Literatura em 1953.',
+      'Prometeu "sangue, trabalho, lágrimas e suor".',
+      'Liderou o Reino Unido na Segunda Guerra.',
+      'Primeiro-ministro britânico de charuto inseparável.',
+    ],
+  },
+  {
+    id: 'che', category: 'historia', answer: 'Che Guevara', aliases: ['che', 'ernesto guevara'],
+    clues: [
+      'Nasceu na Argentina, em 1928.',
+      'Formou-se em medicina e viajou de moto pela América do Sul.',
+      'Foi um dos líderes da Revolução Cubana.',
+      'Foi morto na Bolívia, em 1967.',
+      'Seu rosto de boina virou uma das fotos mais reproduzidas do mundo.',
+    ],
+  },
+  {
+    id: 'fidel', category: 'historia', answer: 'Fidel Castro', aliases: ['fidel'],
+    clues: [
+      'Nasceu em 1926.',
+      'Era advogado.',
+      'Liderou a revolução que derrubou Batista em 1959.',
+      'Governou seu país até 2008, quando passou o poder ao irmão.',
+      'Líder da Revolução Cubana.',
+    ],
+  },
+  {
+    id: 'merkel', category: 'historia', answer: 'Angela Merkel', aliases: ['merkel'],
+    clues: [
+      'Nasceu em 1954 e cresceu na Alemanha Oriental.',
+      'É doutora em química quântica.',
+      'Foi a primeira mulher a chefiar o governo de seu país.',
+      'Governou de 2005 a 2021.',
+      'Chanceler da Alemanha por 16 anos.',
     ],
   },
 ];

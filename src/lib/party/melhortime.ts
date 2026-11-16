@@ -1,4 +1,4 @@
-import { CLUBS, drawDistinct, getTeam, playedForClub } from '../game/teams';
+import { CLUBS, drawTeams, getTeam, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import { DraftPick, IncomingMessage, MelhorTimeParty, Outgoing, POSITION_LABEL, PartyPlayer, Position, SLOTS } from '../game/types';
 import { JudgeTeam, PARTY_CONFIG, PartyDeps, Save, pendingResults, react, schedule, text, warnOnce } from './common';
@@ -38,8 +38,9 @@ export function parseDraftPick(raw: string): { position: Position | null; name: 
 
 export function newMelhorTime(
   judge: 'ia' | 'votacao',
-): Pick<MelhorTimeParty, 'game' | 'judge' | 'phase' | 'round' | 'clubs' | 'picks' | 'turn' | 'used' | 'votes' | 'verdict'> {
-  return { game: 'melhortime', judge, phase: 'draft', round: -1, clubs: [], picks: {}, turn: 0, used: [], votes: {}, verdict: null };
+  hard = false,
+): Pick<MelhorTimeParty, 'game' | 'judge' | 'hard' | 'phase' | 'round' | 'clubs' | 'picks' | 'turn' | 'used' | 'votes' | 'verdict'> {
+  return { game: 'melhortime', judge, hard, phase: 'draft', round: -1, clubs: [], picks: {}, turn: 0, used: [], votes: {}, verdict: null };
 }
 
 function picksCount(state: MelhorTimeParty, jid: string): number {
@@ -72,7 +73,8 @@ function prompt(state: MelhorTimeParty): string {
 }
 
 export function startMelhorTime(state: MelhorTimeParty, deps: PartyDeps): Outgoing[] {
-  state.clubs = drawDistinct(CLUBS, SLOTS.length, deps.rng).map((c) => c.id);
+  // Gigantes + conhecidos (nível 2); com "difícil", qualquer clube.
+  state.clubs = drawTeams(CLUBS, SLOTS.length, deps.rng, state.hard ? 3 : 2).map((c) => c.id);
   state.status = 'PLAYING';
   state.phase = 'draft';
   state.round = 0;

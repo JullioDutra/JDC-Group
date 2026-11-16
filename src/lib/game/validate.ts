@@ -1,5 +1,5 @@
 import { GameMode, metricValue } from './modes';
-import { CLUBS, NATIONS, drawDistinct, getTeam, isFromNation, playedForClub } from './teams';
+import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from './teams';
 import { PlayerProfile, POSITION_LABEL, Position, Restriction, SLOTS } from './types';
 
 /**
@@ -33,10 +33,11 @@ export function checkPick(
   return { ok: true, value };
 }
 
-export function drawRestrictions(mode: GameMode, rng: () => number): Restriction[] {
+/** `hard` (extra "difícil") inclui clubes/seleções de nível 2 no sorteio. */
+export function drawRestrictions(mode: GameMode, rng: () => number, hard = false): Restriction[] {
   if (mode.restriction === 'none') return SLOTS.map(() => ({ kind: 'none' }));
   const pool = mode.restriction === 'club' ? CLUBS : NATIONS;
-  return drawDistinct(pool, SLOTS.length, rng).map((t) => ({ kind: mode.restriction, teamId: t.id }));
+  return drawTeams(pool, SLOTS.length, rng, hard ? 2 : 1).map((t) => ({ kind: mode.restriction, teamId: t.id }));
 }
 
 export function restrictionLine(restriction: Restriction | undefined): string {

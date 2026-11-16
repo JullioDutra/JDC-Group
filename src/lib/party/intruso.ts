@@ -26,8 +26,10 @@ function shuffle<T>(items: T[], rng: () => number): T[] {
   return copy;
 }
 
-export function newIntruso(): Pick<IntrusoParty, 'game' | 'round' | 'totalRounds' | 'order' | 'options' | 'intruderIndex' | 'marks' | 'lastJid'> {
-  return { game: 'intruso', round: -1, totalRounds: PARTY_CONFIG.intruso.rounds!, order: [], options: [], intruderIndex: -1, marks: [], lastJid: null };
+export function newIntruso(
+  category: IntrusoParty['category'] = null,
+): Pick<IntrusoParty, 'game' | 'category' | 'round' | 'totalRounds' | 'order' | 'options' | 'intruderIndex' | 'marks' | 'lastJid'> {
+  return { game: 'intruso', category, round: -1, totalRounds: PARTY_CONFIG.intruso.rounds!, order: [], options: [], intruderIndex: -1, marks: [], lastJid: null };
 }
 
 export const INTRUSO_RULES = [
@@ -37,7 +39,11 @@ export const INTRUSO_RULES = [
 ];
 
 export function startIntruso(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
-  state.order = shuffle(INTRUSO_SETS.map((s) => s.id), deps.rng).slice(0, state.totalRounds);
+  // Sem categoria: futebol e geral. Política só quando pedida.
+  const pool = INTRUSO_SETS.filter((s) =>
+    state.category ? (s.category ?? 'futebol') === state.category : (s.category ?? 'futebol') !== 'politica',
+  );
+  state.order = shuffle(pool.map((s) => s.id), deps.rng).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;

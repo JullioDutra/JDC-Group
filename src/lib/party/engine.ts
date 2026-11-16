@@ -4,6 +4,8 @@ import { firstName, formatNumber, looksLikePlayerName, normalize } from '../game
 import {
   EscalacaoParty,
   IncomingMessage,
+  IntrusoParty,
+  QuizParty,
   MatchPlayer,
   Outgoing,
   POSITION_LABEL,
@@ -30,8 +32,15 @@ import {
   text,
   warnOnce,
 } from './common';
+import { CHUTE_QUESTIONS } from './content/chute';
+import { EMOJI_CARDS, RELAMPAGO_CARDS } from './content/cards';
+import { INTRUSO_SETS } from './content/intruso';
+import { WHOIS } from './content/whois';
+import type { ContentCategory } from '../game/types';
 import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List } from './top10-lists';
 import { melhorTimeAnswer, melhorTimeTimeout, melhorTimeVote, newMelhorTime, startMelhorTime } from './melhortime';
+import { ALFABETO_RULES, alfabetoAnswer, closeAlfabetoRound, finishAlfabeto, newAlfabeto, startAlfabeto } from './alfabeto';
+import { CHUTE_RULES, chuteAnswer, closeChuteRound, finishChute, newChute, startChute } from './chute';
 import { INTRUSO_RULES, finishIntruso, intrusoAnswer, intrusoTimeout, newIntruso, revealRound, startIntruso } from './intruso';
 import { closeQuizRound, finishQuiz, newQuiz, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 
@@ -53,15 +62,25 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   const top = norm.match(/^(abrir )?top ?10( (.*))?$/);
   if (top) {
     const rest = top[3] ?? '';
-    const ok = !rest || ['futebol', 'geral', 'conhecimentos gerais', 'aleatorio', 'aleatoria', 'surpresa'].includes(rest);
+    const ok = !rest || ['futebol', 'geral', 'conhecimentos gerais', 'politica', 'aleatorio', 'aleatoria', 'surpresa'].includes(rest);
     return ok ? { game: 'top10', rest } : null;
   }
   // Quiz: exige "abrir"/"jogar" na frente, porque "que time é esse?" e "quem é?" aparecem na conversa.
   if (/^(abrir|jogar) (o )?que time e esse$/.test(norm) || /^(abrir|jogar) qual e o time$/.test(norm)) return { game: 'quetime', rest: '' };
-  if (/^(abrir|jogar) quem e( o craque)?$/.test(norm)) return { game: 'quemeh', rest: '' };
-  if (/^(abrir|jogar) (o )?(intruso|quem nao pertence)$/.test(norm)) return { game: 'intruso', rest: '' };
-  const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time( (ia|votacao|votacao do grupo|grupo))?$/);
-  if (mt) return { game: 'melhortime', rest: mt[4] ?? '' };
+  const cats = '(futebol|geral|historia|politica|anime)';
+  const qe = norm.match(new RegExp(`^(abrir|jogar) quem e( o craque)?( ${cats})?$`));
+  if (qe) return { game: 'quemeh', rest: qe[4] ?? '' };
+  const em = norm.match(new RegExp(`^(abrir|jogar) (o )?emoji( ${cats})?$`));
+  if (em) return { game: 'emoji', rest: em[4] ?? '' };
+  if (/^(abrir|jogar) (o )?alfabeto$/.test(norm)) return { game: 'alfabeto', rest: '' };
+  const ch = norm.match(new RegExp(`^(abrir|jogar) (o )?chute certo( ${cats})?$`));
+  if (ch) return { game: 'chute', rest: ch[4] ?? '' };
+  const rl = norm.match(new RegExp(`^(abrir|jogar) (o )?(quiz )?relampago( ${cats})?$`));
+  if (rl) return { game: 'relampago', rest: rl[5] ?? '' };
+  const intr = norm.match(/^(abrir|jogar) (o )?(intruso|quem nao pertence)( (futebol|geral|politica))?$/);
+  if (intr) return { game: 'intruso', rest: intr[5] ?? '' };
+  const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time((?: (?:ia|votacao|grupo|dificil))*)$/);
+  if (mt) return { game: 'melhortime', rest: mt[3].trim() };
   const esc = norm.match(/^(abrir sala|jogo em grupo|escalacao em grupo)( (.*))?$/);
   if (esc) {
     const rest = esc[3] ?? '';
@@ -105,18 +124,27 @@ export async function createParty(
       game: 'escalacao',
       modeId: choice?.mode.id ?? null,
       randomMode: choice?.random ?? false,
-      options: { blind: choice?.twists.blind ?? false, turnSeconds: choice?.twists.fast ? 40 : PARTY_CONFIG.escalacao.seconds },
+      options: { blind: choice?.twists.blind ?? false, turnSeconds: choice?.twists.fast ? 40 : PARTY_CONFIG.escalacao.seconds, hard: choice?.twists.hard ?? false },
       restrictions: [],
       round: -1,
       picks: {},
       used: [],
     };
   } else if (start.game === 'melhortime') {
-    state = { ...base('melhortime', host, nowMs), ...newMelhorTime(start.rest.startsWith('votacao') || start.rest === 'grupo' ? 'votacao' : 'ia') };
+    const words = start.rest.split(' ');
+    state = {
+      ...base('melhortime', host, nowMs),
+      ...newMelhorTime(words.includes('votacao') || words.includes('grupo') ? 'votacao' : 'ia', words.includes('dificil')),
+    };
+  } else if (start.game === 'alfabeto') {
+    state = { ...base('alfabeto', host, nowMs), ...newAlfabeto() };
+  } else if (start.game === 'chute') {
+    state = { ...base('chute', host, nowMs), ...newChute(contentCategory(start.rest, CHUTE_QUESTIONS)) };
   } else if (start.game === 'intruso') {
-    state = { ...base('intruso', host, nowMs), ...newIntruso() };
-  } else if (start.game === 'quetime' || start.game === 'quemeh') {
-    state = { ...base(start.game, host, nowMs), ...newQuiz(start.game) };
+    state = { ...base('intruso', host, nowMs), ...newIntruso(contentCategory(start.rest, INTRUSO_SETS)) };
+  } else if (start.game === 'quetime' || start.game === 'quemeh' || start.game === 'emoji' || start.game === 'relampago') {
+    const pool = start.game === 'quemeh' ? WHOIS : start.game === 'emoji' ? EMOJI_CARDS : start.game === 'relampago' ? RELAMPAGO_CARDS : [];
+    state = { ...base(start.game, host, nowMs), ...newQuiz(start.game, contentCategory(start.rest, pool)) };
   } else {
     const cat = parseCategory(start.rest);
     state = {
@@ -155,7 +183,7 @@ function lobbyCaption(state: PartyState): string {
     );
   } else if (state.game === 'top10') {
     lines.push(
-      `${state.host.name}, escolha a categoria (*futebol*, *geral* ou *aleatório*) e mande *começar*.`,
+      `${state.host.name}, escolha a categoria (*futebol*, *geral*, *política* ou *aleatório*) e mande *começar*.`,
     );
   } else {
     lines.push(`${state.host.name}, mande *começar* quando todos entrarem.`);
@@ -163,8 +191,26 @@ function lobbyCaption(state: PartyState): string {
   return lines.join('\n');
 }
 
+const CATEGORY_WORDS: Array<[string, ContentCategory]> = [
+  ['fut', 'futebol'],
+  ['polit', 'politica'],
+  ['hist', 'historia'],
+  ['anime', 'anime'],
+  ['ger', 'geral'],
+  ['conhec', 'geral'],
+];
+
+/** Categoria pedida no comando, só se o jogo tiver conteúdo suficiente nela; senão, mistura (sem política). */
+function contentCategory(rest: string, pool: ReadonlyArray<{ category?: ContentCategory }>): ContentCategory | null {
+  const word = normalize(rest).split(' ')[0] ?? '';
+  const cat = CATEGORY_WORDS.find(([prefix]) => word.startsWith(prefix))?.[1];
+  if (!cat) return null;
+  return pool.filter((x) => (x.category ?? 'futebol') === cat).length >= 3 ? cat : null;
+}
+
 function parseCategory(rest: string): Top10List['category'] | 'aleatorio' {
   if (rest.startsWith('fut')) return 'futebol';
+  if (rest.startsWith('polit')) return 'politica';
   if (rest.startsWith('ger') || rest.startsWith('conhec')) return 'geral';
   return 'aleatorio';
 }
@@ -262,13 +308,13 @@ export async function handlePartyMessage(
       if (choice) {
         state.modeId = choice.mode.id;
         state.randomMode = choice.random;
-        state.options = { blind: choice.twists.blind, turnSeconds: choice.twists.fast ? 40 : cfg.seconds };
+        state.options = { blind: choice.twists.blind, turnSeconds: choice.twists.fast ? 40 : cfg.seconds, hard: choice.twists.hard };
         return save([react(msg, '✅')]);
       }
     } else if (state.game === 'melhortime' && ['ia', 'votacao', 'votacao do grupo', 'grupo'].includes(norm)) {
       state.judge = norm === 'ia' ? 'ia' : 'votacao';
       return save([react(msg, '✅')]);
-    } else if (state.game === 'top10' && ['futebol', 'geral', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
+    } else if (state.game === 'top10' && ['futebol', 'geral', 'politica', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
       const cat = parseCategory(norm);
       state.category = cat === 'aleatorio' ? null : cat;
       return save([react(msg, '✅')]);
@@ -281,6 +327,8 @@ export async function handlePartyMessage(
       if (state.game === 'top10') return save(startTop10(state, deps));
       if (state.game === 'intruso') return save(startIntruso(state, deps));
       if (state.game === 'melhortime') return save(startMelhorTime(state, deps));
+      if (state.game === 'alfabeto') return save(startAlfabeto(state, deps));
+      if (state.game === 'chute') return save(startChute(state, deps));
       return save(startQuiz(state, deps));
     }
     return [];
@@ -298,6 +346,8 @@ export async function handlePartyMessage(
     if (state.game === 'escalacao') return save(closeRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     if (state.game === 'top10') return save(finishTop10(state, deps, 'Encerrado pelo anfitrião.'));
     if (state.game === 'intruso') return save(revealRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
+    if (state.game === 'alfabeto') return save(closeAlfabetoRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
+    if (state.game === 'chute') return save(closeChuteRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     return save(closeQuizRound(state, deps, 'Rodada pulada pelo anfitrião.'));
   }
 
@@ -305,6 +355,8 @@ export async function handlePartyMessage(
   if (state.game === 'top10') return top10Answer(state, player, msg, deps, save);
   if (state.game === 'intruso') return intrusoAnswer(state, player, msg, deps, save);
   if (state.game === 'melhortime') return melhorTimeAnswer(state, player, msg, deps, save);
+  if (state.game === 'alfabeto') return alfabetoAnswer(state, player, msg, deps, save);
+  if (state.game === 'chute') return chuteAnswer(state, player, msg, deps, save);
   return quizAnswer(state, player, msg, deps, save);
 }
 
@@ -332,6 +384,8 @@ async function closeOnTimeout(state: PartyState, deps: PartyDeps): Promise<Outgo
   if (state.game === 'escalacao') return closeRound(state, deps, 'Tempo esgotado.');
   if (state.game === 'top10') return finishTop10(state, deps, 'Tempo esgotado.');
   if (state.game === 'intruso') return intrusoTimeout(state, deps);
+  if (state.game === 'alfabeto') return closeAlfabetoRound(state, deps, 'Tempo esgotado.');
+  if (state.game === 'chute') return closeChuteRound(state, deps, 'Tempo esgotado.');
   return quizTimeout(state, deps);
 }
 
@@ -360,7 +414,7 @@ function rulesText(state: PartyState): string {
       'No fim, soma os números do tema. Vence a maior soma (ou a menor, conforme o tema).',
     ].join('\n');
   }
-  if (state.game === 'quetime' || state.game === 'quemeh') {
+  if (state.game === 'quetime' || state.game === 'quemeh' || state.game === 'emoji' || state.game === 'relampago') {
     return [`*${cfg.name}*`, ...quizRules(state), ...common.slice(0, 2)].join('\n');
   }
   if (state.game === 'melhortime') {
@@ -371,6 +425,8 @@ function rulesText(state: PartyState): string {
       state.judge === 'ia' ? 'No fim, a IA decide qual time ficou melhor.' : 'No fim, quem não jogou vota: *1* ou *2*.',
     ].join('\n');
   }
+  if (state.game === 'alfabeto') return [`*${cfg.name}*`, ...ALFABETO_RULES, ...common.slice(0, 2)].join('\n');
+  if (state.game === 'chute') return [`*${cfg.name}*`, ...CHUTE_RULES, ...common.slice(0, 2)].join('\n');
   if (state.game === 'intruso') {
     return [`*${cfg.name}*`, 'O bot mostra 5 nomes: 4 têm algo em comum e 1 é o intruso.', ...INTRUSO_RULES, ...common.slice(0, 2)].join('\n');
   }
@@ -400,7 +456,7 @@ function startEscalacao(state: EscalacaoParty, deps: PartyDeps): Outgoing[] {
     state.modeId = mode.id;
     state.randomMode = true;
   }
-  state.restrictions = drawRestrictions(mode, deps.rng);
+  state.restrictions = drawRestrictions(mode, deps.rng, state.options.hard);
   state.status = 'PLAYING';
   state.round = 0;
   state.warned = [];
@@ -542,7 +598,10 @@ function finishEscalacao(state: EscalacaoParty, deps: PartyDeps, reason: string)
 // ---------- Top 10 ----------
 
 function startTop10(state: Top10Party, deps: PartyDeps): Outgoing[] {
-  const pool = TOP10_LISTS.filter((l) => !state.category || l.category === state.category);
+  // "aleatório" sorteia entre futebol e geral; política só quando pedida.
+  const pool = TOP10_LISTS.filter((l) =>
+    state.category ? l.category === state.category : (TOP10_CATEGORIES as readonly string[]).includes(l.category),
+  );
   const list = pool[Math.floor(deps.rng() * pool.length)];
   state.listId = list.id;
   state.category = list.category;
@@ -672,7 +731,11 @@ async function finishAndSave(
           ? finishIntruso(state, reason)
           : state.game === 'melhortime'
             ? []
-            : finishQuiz(state, deps, reason);
+            : state.game === 'alfabeto'
+              ? finishAlfabeto(state, reason)
+              : state.game === 'chute'
+                ? finishChute(state, reason)
+                : finishQuiz(state, deps, reason);
   return save(out);
 }
 

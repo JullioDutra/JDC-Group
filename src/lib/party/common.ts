@@ -26,6 +26,10 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   quetime: { name: 'Que time é esse?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 6 },
   quemeh: { name: 'Quem é?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 12, rounds: 8 },
   intruso: { name: 'Intruso', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 5 },
+  emoji: { name: 'Emoji', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 30, rounds: 8 },
+  relampago: { name: 'Quiz Relâmpago', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
+  alfabeto: { name: 'Alfabeto', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 5 },
+  chute: { name: 'Chute Certo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 6 },
   // 1 x 1: 90 s por escolha; 'joinUntil' 0 = ninguém entra depois de começar.
   melhortime: { name: 'Melhor Time', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 90, rounds: 6 },
 };

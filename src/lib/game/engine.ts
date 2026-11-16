@@ -3,7 +3,8 @@ import type { Store } from '../store/types';
 import type { TeamJudge } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
-import { CLUBS, NATIONS, drawDistinct, getTeam, isFromNation, playedForClub } from './teams';
+import { getTeam, isFromNation, playedForClub } from './teams';
+import { drawRestrictions } from './validate';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import {
@@ -86,7 +87,13 @@ const HELP = [
   '• *abrir que time é esse* — adivinhe o time e o ano pela escalação (até 15)',
   '• *abrir quem é* — adivinhe o craque pelas dicas (até 15)',
   '• *abrir intruso* — marquem X em quem pertence; o que sobrar é o intruso (até 15)',
+  '• *abrir emoji* — adivinhe pelo emoji; 1 palpite por pessoa (até 15)',
+  '• *abrir relâmpago* — perguntas rápidas, quem acertar primeiro leva (até 15)',
+  '• *abrir alfabeto* — letra + categoria, nome repetido não vale (até 15)',
+  '• *abrir chute certo* — chute o número; o mais perto ganha (até 15)',
   '• *entrar* · *sair* · *começar* e *encerrar* (anfitrião)',
+  '',
+  '*Categorias* (some ao comando): *futebol*, *geral*, *história*, *anime*, *política*. Política só aparece quando pedida. Ex.: *abrir relâmpago política*, *top 10 geral*. Some *difícil* em escalação/melhor time para clubes menos óbvios.',
   '',
   '*Geral*',
   '• *regras* · *modos* · *ranking*',
@@ -125,6 +132,7 @@ function twistLabel(state: MatchState): string {
   const parts = [];
   if (state.options?.blind) parts.push('às cegas');
   if (turnSeconds(state) !== TURN_SECONDS) parts.push(`relâmpago, ${turnSeconds(state)}s`);
+  if (state.options?.hard) parts.push('difícil');
   return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
@@ -151,11 +159,6 @@ function newLobby(host: MatchPlayer, now: number): MatchState {
   };
 }
 
-function drawRestrictions(mode: GameMode, rng: () => number): Restriction[] {
-  if (mode.restriction === 'none') return SLOTS.map(() => ({ kind: 'none' }));
-  const pool = mode.restriction === 'club' ? CLUBS : NATIONS;
-  return drawDistinct(pool, SLOTS.length, rng).map((t) => ({ kind: mode.restriction, teamId: t.id }));
-}
 
 /** "iniciar jogo", "iniciar", "novo jogo", com "aleatório"/"surpresa" opcional no fim. */
 function parseStart(norm: string): { random: boolean } | null {
@@ -392,8 +395,9 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     state.options = {
       blind: twists.blind,
       turnSeconds: twists.fast ? FAST_TURN_SECONDS : TURN_SECONDS,
+      hard: twists.hard,
     };
-    state.restrictions = drawRestrictions(chosen, rng);
+    state.restrictions = drawRestrictions(chosen, rng, twists.hard);
     state.status = 'PLAYING';
     state.round = 0;
     state.turn = roundStarter(0);
@@ -414,7 +418,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     if (side === 0) return [text('Você não pode aceitar o próprio desafio. Chama alguém.')];
     state.players[1] = sender;
     if (state.options?.autoRandom) {
-      return kickoff(randomMode(rng), { blind: false, fast: false }, true, `*${sender.name}* aceitou.\n`);
+      return kickoff(randomMode(rng), { blind: false, fast: false, hard: false }, true, `*${sender.name}* aceitou.\n`);
     }
     state.status = 'MODE_SELECT';
     return save([

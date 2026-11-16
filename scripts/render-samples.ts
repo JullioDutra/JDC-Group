@@ -64,7 +64,7 @@ const top10: Top10Party = {
 
 const quiz: QuizParty = {
   ...partyBase, game: 'quetime', status: 'PLAYING', round: 1, totalRounds: 6, order: [], clue: 0, attempts: [], guesses: [],
-  solved: false, roundHits: [],
+  solved: false, roundHits: [], category: null,
   players: players.map((p, i) => ({ ...p, score: [450, 210, 150, 120, 60, 0, 0][i], lastHitAt: i })),
 };
 
@@ -72,7 +72,7 @@ const penta = getIntrusoSet('penta-2002')!;
 const intruso: IntrusoParty = {
   ...partyBase, game: 'intruso', status: 'PLAYING', round: 0, totalRounds: 5, order: ['penta-2002'],
   options: ['Cafu', 'Juninho Pernambucano', 'Ronaldinho', 'Roberto Carlos', 'Rivaldo'], intruderIndex: 1,
-  marks: [{ index: 0, jid: 'p0', name: 'Júllio' }, { index: 3, jid: 'p1', name: 'Camila' }], lastJid: 'p1',
+  marks: [{ index: 0, jid: 'p0', name: 'Júllio' }, { index: 3, jid: 'p1', name: 'Camila' }], lastJid: 'p1', category: null,
 };
 const intrusoWrong: IntrusoParty = {
   ...intruso,

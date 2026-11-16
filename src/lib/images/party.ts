@@ -36,9 +36,8 @@ export function partyLobby(state: PartyState): ReactElement {
       'Vence a melhor soma no tema.',
     ];
   } else if (state.game === 'top10') {
-    subtitle = state.category
-      ? `Categoria: ${state.category === 'futebol' ? 'Futebol' : 'Conhecimentos gerais'}`
-      : 'Categoria: sorteada na hora';
+    const labels: Record<string, string> = { futebol: 'Futebol', geral: 'Conhecimentos gerais', politica: 'Política', historia: 'História', anime: 'Animes' };
+    subtitle = state.category ? `Categoria: ${labels[state.category] ?? state.category}` : 'Categoria: sorteada na hora';
     rules = [
       'Acerte itens do ranking para revelar a posição.',
       'Ninguém responde duas vezes seguidas: espere outra pessoa.',
@@ -60,8 +59,24 @@ export function partyLobby(state: PartyState): ReactElement {
     ];
   } else {
     const q = PARTY_CONFIG[state.game];
-    subtitle = state.game === 'quetime' ? `${q.rounds} escalações históricas` : `${q.rounds} craques misteriosos`;
+    const catLabel: Record<string, string> = { futebol: 'futebol', geral: 'conhecimentos gerais', historia: 'história', politica: 'política', anime: 'animes' };
+    const cat = 'category' in state && state.category ? ` · ${catLabel[state.category] ?? state.category}` : '';
+    subtitle =
+      state.game === 'quetime'
+        ? `${q.rounds} escalações históricas`
+        : state.game === 'quemeh'
+          ? `${q.rounds} personagens misteriosos${cat}`
+          : `${q.rounds} rodadas${cat}`;
     rules =
+      state.game === 'alfabeto'
+        ? ['Cada rodada: categoria + letra ("goleiros com C").', '1 jogador por pessoa. Nome já usado não vale.', 'Quem responde primeiro ganha bônus.']
+        : state.game === 'chute'
+          ? ['Pergunta com resposta em número.', '1 número por pessoa, diferente dos já ditos.', 'O mais perto ganha; cravou leva bônus.']
+          : state.game === 'emoji'
+        ? ['O bot manda emojis: adivinhe o clube, jogador, filme ou anime.', '1 palpite por pessoa em cada rodada. Repetido não vale.', 'O primeiro que acertar leva 100 pontos.']
+        : state.game === 'relampago'
+          ? ['Perguntas de resposta curta, uma por rodada.', '1 palpite por pessoa em cada rodada. Repetido não vale.', 'O primeiro que acertar leva 100 pontos.']
+          : 
       state.game === 'quetime'
         ? ['Veja a escalação e diga o time e o ano: "Brasil 94".', '1 palpite por pessoa em cada rodada. Palpite repetido não vale.', 'Time e ano: 150 pontos. Só o time: 60.']
         : ['O bot solta até 5 dicas sobre um craque.', '1 palpite por pessoa em cada rodada. Palpite repetido não vale.', 'Acertou na 1ª dica: 150 pontos. Na 5ª: 30.'];

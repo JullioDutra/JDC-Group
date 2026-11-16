@@ -185,6 +185,8 @@ export function metricValue(profile: PlayerProfile, metric: MetricKey, now: Date
 export interface Twists {
   blind: boolean;
   fast: boolean;
+  /** "difícil": clubes/seleções menos óbvios no sorteio. */
+  hard: boolean;
 }
 
 const RANDOM_WORDS = ['aleatorio', 'aleatoria', 'sortear', 'sorteio', 'sorteia', 'surpresa', 'tanto faz', '0'];
@@ -209,11 +211,12 @@ export function parseModeChoice(
   rng: () => number,
 ): { mode: GameMode; twists: Twists; random: boolean } | undefined {
   const words = norm.split(' ').filter(Boolean);
-  const twists: Twists = { blind: false, fast: false };
+  const twists: Twists = { blind: false, fast: false, hard: false };
   const rest: string[] = [];
   for (const w of words) {
     if (['cego', 'cega', 'cegas', 'escondido', 'secreto'].includes(w)) twists.blind = true;
     else if (['relampago', 'rapido', 'turbo'].includes(w)) twists.fast = true;
+    else if (['dificil', 'hard', 'raiz', 'hardcore'].includes(w) && words.length > 1) twists.hard = true;
     else if (!['as', 'a', 'modo', 'tema'].includes(w)) rest.push(w);
   }
   const choice = rest.join(' ');

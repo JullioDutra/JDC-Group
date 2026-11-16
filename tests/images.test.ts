@@ -13,7 +13,7 @@ import { MemoryStore } from '../src/lib/store/memory';
  */
 test('todas as imagens do Modo em Grupo renderizam', { timeout: 120_000 }, async () => {
   const kinds = new Set<string>();
-  for (const command of ['abrir sala 1', 'top 10 geral', 'abrir que time é esse', 'abrir quem é', 'abrir intruso', 'iniciar melhor time']) {
+  for (const command of ['abrir sala 1', 'top 10 geral', 'abrir que time é esse', 'abrir quem é', 'abrir intruso', 'iniciar melhor time', 'abrir alfabeto', 'abrir chute certo', 'abrir emoji', 'abrir relampago']) {
     const store = new MemoryStore();
     const G = `img-${command}@g.us`;
     let id = 0;
@@ -25,7 +25,7 @@ test('todas as imagens do Modo em Grupo renderizam', { timeout: 120_000 }, async
     outs.push(...(await say('Ana', command)));
     outs.push(...(await say('Bia', command.includes('melhor time') ? 'aceitar' : 'entrar')));
     if (!command.includes('melhor time')) outs.push(...(await say('Ana', 'começar')));
-    for (let i = 0; i < 12; i++) outs.push(...(await handleTick(G, null, deps, true)));
+    for (let i = 0; i < 14; i++) outs.push(...(await handleTick(G, null, deps, true)));
     for (const out of outs) {
       if (out.type !== 'image') continue;
       const png = await renderImage(out.image);
