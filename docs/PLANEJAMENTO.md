@@ -21,7 +21,7 @@ Fontes: [RenderFoot – Football Tic-Tac-Toe](https://www.renderfoot.com/pt/game
 ### Fluxo de uma partida
 
 ```
-ativar grupo ─► (bot passa a ler o grupo)
+ativar jogos ─► (bot passa a ler o grupo)
 iniciar jogo ─► IMAGEM "Desafio lançado"            estado: LOBBY
 aceitar      ─► IMAGEM "Escolha o tema"             estado: MODE_SELECT   (1º a aceitar entra)
 <nº do tema> ─► IMAGEM "Bola rolando" + regras      estado: PLAYING       (só o anfitrião escolhe)
@@ -86,7 +86,7 @@ O anfitrião escreve junto do número do tema:
 
 ### Comandos
 
-`ativar grupo` e `desativar grupo` (só os números em `ADMIN_NUMBERS`, se definido), `iniciar jogo`, `iniciar aleatório` (o tema é sorteado assim que alguém aceita, sem menu), `iniciar jogo`, `iniciar aleatório` (o tema é sorteado assim que alguém aceita, sem menu), `aceitar`, `regras`, `modos`, `placar`, `ranking`, `tempo`, `cancelar`/`desistir`, `ajuda`.
+`ativar jogos` e `desativar jogos` (só os números em `ADMIN_NUMBERS`, se definido), `iniciar jogo`, `iniciar aleatório` (o tema é sorteado assim que alguém aceita, sem menu), `iniciar jogo`, `iniciar aleatório` (o tema é sorteado assim que alguém aceita, sem menu), `aceitar`, `regras`, `modos`, `placar`, `ranking`, `tempo`, `cancelar`/`desistir`, `ajuda`.
 
 ## 3. Imagens
 
@@ -156,7 +156,7 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 
 | Tabela | Uso |
 |---|---|
-| `wa_groups` | Grupos ativados (`ativar grupo`). Grupo fora daqui é ignorado |
+| `wa_groups` | Grupos ativados (`ativar jogos`). Grupo fora daqui é ignorado |
 | `matches` | Uma linha por partida; estado em `jsonb`; índice único parcial garante **uma partida aberta por grupo**; coluna `version` faz trava otimista contra mensagens simultâneas |
 | `processed_messages` | Deduplicação de webhooks reenviados |
 | `player_cache` | Fichas dos jogadores vindas da IA |
@@ -177,7 +177,7 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 3. **Variáveis**: ver `.env.example` (`MARITACA_API_KEY`, `WEBHOOK_SECRET`, `ADMIN_KEY`, dados do gateway).
 4. **Tabelas**: `curl -X POST https://SEU-APP.vercel.app/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`.
 5. **Gateway (Evolution)**: passo a passo da virada do número do RPG em [`EVOLUTION.md`](EVOLUTION.md). Resumo: configurar `EVOLUTION_*` na Vercel e rodar `POST /api/admin/evolution-setup`, que aponta o webhook **só da instância do jogo**. `GET /api/admin/status` confere banco, IA, conexão e webhook.
-6. Adicionar o número ao grupo e mandar `ativar grupo`.
+6. Adicionar o número ao grupo e mandar `ativar jogos`.
 
 Custo estimado por partida: ~12 consultas de IA na primeira vez (menos com cache) + 8 imagens. Cabe no plano gratuito da Vercel e do Neon para dezenas de grupos.
 
@@ -227,7 +227,7 @@ Revisão de tudo que foi entregue na primeira versão. Problemas encontrados e o
 | 4 | Webhook aceitava eventos de qualquer instância | Com webhook global ligado no servidor, mensagens do bot pessoal entrariam no jogo | Filtro por `EVOLUTION_INSTANCE` |
 | 5 | Autor da mensagem só lido de `key.participant` | Em versões da v2 ele vem em `data.participant` → mensagens ignoradas | Lê os dois, e prefere `@s.whatsapp.net` ao `@lid` |
 | 6 | Grupos com mensagens temporárias | Texto vem dentro de `ephemeralMessage` → bot "surdo" nesses grupos | Desembrulha a mensagem |
-| 7 | Qualquer pessoa podia `ativar grupo` | No número herdado do RPG, qualquer grupo antigo poderia ligar o bot | `ADMIN_NUMBERS` |
+| 7 | Qualquer pessoa podia `ativar jogos` | No número herdado do RPG, qualquer grupo antigo poderia ligar o bot | `ADMIN_NUMBERS` |
 | 8 | Se a Maritaca recusar `response_format` | Jogo travaria em "VAR caiu" | Refaz a chamada sem o parâmetro |
 | 9 | "CR7", "R9" ignorados (dígito bloqueado) | Apelidos comuns não funcionavam | Aceita dígitos curtos; bloqueia só números puros e "900 gols" |
 | 10 | `processed_messages` crescia para sempre | Banco enchendo | Limpeza automática de registros com mais de 3 dias |

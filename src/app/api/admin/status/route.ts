@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   const admins = adminNumbers();
   report.admins = admins.length
     ? `${admins.length} número(s) de admin configurado(s)`
-    : 'ATENÇÃO: ADMIN_NUMBERS vazio, ninguém consegue ativar grupos';
+    : 'ATENÇÃO: ADMIN_NUMBERS vazio, ninguém consegue ativar jogoss';
   if (process.env.WHATSAPP_PROVIDER === 'zapi') report.whatsapp = { provider: 'zapi' };
   else if (!evo.url || !evo.instance) report.whatsapp = { provider: 'evolution', configured: false };
   else {

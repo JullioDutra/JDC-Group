@@ -31,7 +31,7 @@ function setup() {
 }
 
 async function open(say: (w: string, t: string) => Promise<Outgoing[]>, command: string) {
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', command);
   await say('Bia', 'entrar');
   return asText(await say('Ana', 'começar'));

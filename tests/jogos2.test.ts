@@ -37,7 +37,7 @@ function setup(checkWords?: (l: string, items: Array<{ category: string; word: s
 }
 
 async function open(say: (w: string, t: string) => Promise<Outgoing[]>, command: string, extra: string[] = []) {
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', command);
   await say('Bia', 'entrar');
   for (const p of extra) await say(p, 'entrar');

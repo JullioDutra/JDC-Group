@@ -23,7 +23,7 @@ function setup() {
 }
 
 async function openEscalacao(say: (w: string, t: string) => Promise<Outgoing[]>, theme = '1', players = ['Bia', 'Caio']) {
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   const lobby = asText(await say('Ana', 'abrir sala'));
   for (const p of players) await say(p, 'entrar');
   await say('Ana', theme);
@@ -104,7 +104,7 @@ test('entrada tardia só até a 2ª rodada; sala tem limite de 10', async () => 
   assert.deepEqual(await say('Fabi', 'entrar'), [], 'avisa uma vez só');
 
   const big = setup();
-  await big.say('Ana', 'ativar grupo');
+  await big.say('Ana', 'ativar jogos');
   await big.say('Ana', 'abrir sala');
   for (let i = 1; i <= 9; i++) await big.say(`J${i}`, 'entrar');
   assert.match(asText(await big.say('J10', 'entrar')), /Sala cheia \(10\/10\)/);
@@ -112,7 +112,7 @@ test('entrada tardia só até a 2ª rodada; sala tem limite de 10', async () => 
 
 test('Top 10: acertos revelam a posição; ninguém responde duas vezes seguidas', async () => {
   const { say } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   assert.match(asText(await say('Ana', 'top 10 geral')), /Sala aberta: Top 10/);
   await say('Bia', 'entrar');
   await say('Caio', 'entrar');
@@ -131,7 +131,7 @@ test('Top 10: acertos revelam a posição; ninguém responde duas vezes seguidas
 
 test('Top 10: lista completa encerra e grava o ranking; tempo esgotado revela o resto', async () => {
   const { say, tick, store } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'top 10 geral');
   await say('Bia', 'entrar');
   await say('Ana', 'começar');
@@ -142,7 +142,7 @@ test('Top 10: lista completa encerra e grava o ranking; tempo esgotado revela o 
   assert.equal((await store.getRanking(G, 5)).length, 2);
 
   const t = setup();
-  await t.say('Ana', 'ativar grupo');
+  await t.say('Ana', 'ativar jogos');
   await t.say('Ana', 'top 10 futebol');
   await t.say('Bia', 'entrar');
   await t.say('Ana', 'começar');
@@ -163,7 +163,7 @@ test('emojis só nos pontos previstos', async () => {
   const { say, tick } = setup();
   const all: string[] = [];
   const log = async (p: Promise<Outgoing[]>) => all.push(asText(await p));
-  await log(say('Ana', 'ativar grupo'));
+  await log(say('Ana', 'ativar jogos'));
   await log(say('Ana', 'ajuda'));
   await log(say('Ana', 'regras'));
   await log(say('Ana', 'abrir sala aleatorio'));

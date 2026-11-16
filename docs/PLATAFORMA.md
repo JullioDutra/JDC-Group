@@ -35,7 +35,7 @@ partida      ─► texto rápido a cada lance; imagem ao fechar cada rodada; im
 
 Atalhos, para quem já sabe o que quer:
 - `iniciar futebol`, `iniciar anime`, `iniciar quiz` pulam o menu de jogos.
-- `ativar grupo futebol` define um **jogo padrão do grupo**: num grupo só de futebol, o menu de jogos nem aparece.
+- `ativar jogos futebol` define um **jogo padrão do grupo**: num grupo só de futebol, o menu de jogos nem aparece.
 - `ranking` mostra o ranking geral do grupo; `ranking futebol` / `ranking anime` / `ranking quiz`, o de cada jogo.
 
 As regras de convivência no grupo são as mesmas para todos os jogos:
@@ -150,6 +150,6 @@ O motor atual de futebol já é quase isso: separar o que é "futebol" (posiçõ
 ## 6. Decisões em aberto (suas)
 
 1. **Nome da plataforma** (seção 1).
-2. **Menu de jogo sempre ou jogo padrão por grupo?** Sugestão: os dois. Menu por padrão e `ativar grupo <jogo>` para fixar.
+2. **Menu de jogo sempre ou jogo padrão por grupo?** Sugestão: os dois. Menu por padrão e `ativar jogos <jogo>` para fixar.
 3. **Ranking geral** somando todos os jogos, ou só por jogo? Sugestão: por jogo, com um "Rei da Resenha" mensal geral.
 4. **TMDB** (Bilheteria) proíbe uso comercial sem contrato. Se a plataforma for monetizada, esse modo fica de fora ou usa dados curados (ver [`CONHECIMENTOS-GERAIS.md`](CONHECIMENTOS-GERAIS.md)).

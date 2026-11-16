@@ -9,7 +9,7 @@ const STEPS = [
 ];
 
 const COMMANDS: Array<[string, string]> = [
-  ['ativar grupo', 'liga o bot neste grupo'],
+  ['ativar jogos', 'liga o bot neste grupo'],
   ['iniciar jogo', 'lança um desafio'],
   ['iniciar aleatório', 'desafio com tema sorteado'],
   ['iniciar melhor time', 'clubes sorteados; IA ou grupo julga'],
@@ -38,7 +38,7 @@ const COMMANDS: Array<[string, string]> = [
   ['ranking', 'tabela do grupo'],
   ['tempo', 'cobra quem estourou o relógio'],
   ['cancelar', 'desiste da partida'],
-  ['desativar grupo', 'desliga o bot'],
+  ['desativar jogos', 'desliga o bot'],
 ];
 
 const RESTRICTION = { none: 'qualquer jogador', club: 'clube sorteado', country: 'seleção sorteada' } as const;

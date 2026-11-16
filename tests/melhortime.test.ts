@@ -57,7 +57,7 @@ test('comandos e leitura de "posição + nome" em qualquer ordem', () => {
 
 test('desafio 1 x 1: aceitar começa; clube da rodada, posição livre, sem repetir', async () => {
   const { say, fixClubs } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   assert.match(asText(await say('Ana', 'iniciar melhor time')), /img:partyLobby[\s\S]*Desafio: Melhor Time[\s\S]*Juiz: a IA/);
   assert.match(asText(await say('Ana', 'aceitar')), /não pode aceitar o próprio desafio/);
   const start = asText(await say('Bia', 'aceitar'));
@@ -84,7 +84,7 @@ test('juiz IA: decide com justificativa e grava o ranking', async () => {
     return { winner: 0, reason: 'Pelé e Zico decidem.' };
   };
   const { say, tick, fixClubs, store } = setup(judge);
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar melhor time');
   await say('Bia', 'aceitar');
   await fixClubs();
@@ -95,7 +95,7 @@ test('juiz IA: decide com justificativa e grava o ranking', async () => {
 
 test('sem IA configurada: vale a regra de reserva (soma do pico de valor)', async () => {
   const { say, tick, fixClubs } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar melhor time');
   await say('Bia', 'aceitar');
   await fixClubs();
@@ -105,7 +105,7 @@ test('sem IA configurada: vale a regra de reserva (soma do pico de valor)', asyn
 
 test('votação: só quem não jogou vota, um voto por pessoa', async () => {
   const { say, tick, fixClubs, store } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar melhor time');
   await say('Ana', 'votação');
   await say('Bia', 'aceitar');

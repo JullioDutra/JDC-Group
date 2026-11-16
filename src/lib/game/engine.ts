@@ -31,7 +31,7 @@ export interface EngineDeps {
   now?: () => Date;
   rng?: () => number;
   /**
-   * Quem pode mandar "ativar grupo"/"desativar grupo". Sem a função, qualquer
+   * Quem pode mandar "ativar jogos"/"desativar jogos". Sem a função, qualquer
    * pessoa pode (simulador e testes). Em produção vem de ADMIN_NUMBERS.
    */
   canManageGroup?: (senderJid: string) => boolean;
@@ -106,7 +106,7 @@ const HELP = [
   '',
   '*Geral*',
   '• *regras* · *modos* · *ranking*',
-  '• *desativar grupo* — só admin',
+  '• *desativar jogos* — só admin',
 ].join('\n');
 
 const RULES = [
@@ -277,6 +277,9 @@ export async function handleTick(
   return [];
 }
 
+const ACTIVATE = ['ativar jogos', 'ativar jogo', 'ativar duelo'];
+const DEACTIVATE = ['desativar jogos', 'desativar jogo', 'desativar duelo'];
+
 async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
   const { store } = deps;
   const now = (deps.now ?? (() => new Date()))();
@@ -288,19 +291,20 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   const manager = deps.canManageGroup?.(msg.senderJid) ?? true;
 
   // O bot só "enxerga" grupos ativados; em qualquer outro, tudo é ignorado.
-  if (norm === 'ativar grupo') {
+  // "ativar grupo" é do Finanças G&J (bot pessoal no número do admin): o jogo usa outro nome.
+  if (ACTIVATE.includes(norm)) {
     if (!manager) return [];
     await store.setGroupActive(msg.groupJid, msg.groupName, true, msg.senderJid);
     return [text(`✅ *${GAME_NAME}* ativado neste grupo!\nMande *iniciar jogo* para desafiar alguém ou *ajuda* para ver os comandos.`)];
   }
   if (!(await store.isGroupActive(msg.groupJid))) return [];
-  if (norm === 'desativar grupo') {
+  if (DEACTIVATE.includes(norm)) {
     if (!manager) return [text('Só um admin do bot pode desativar o jogo neste grupo.')];
     await store.setGroupActive(msg.groupJid, msg.groupName, false, msg.senderJid);
-    return [text('Bot desativado neste grupo. Para voltar, mande *ativar grupo*.')];
+    return [text('Bot desativado neste grupo. Para voltar, mande *ativar jogos*.')];
   }
 
-  if (norm === 'ajuda' || norm === 'menu' || norm === 'comandos') return [text(HELP)];
+  if (norm === 'ajuda' || norm === 'menu' || norm === 'comandos' || norm === 'jogos' || norm === 'ajuda jogos') return [text(HELP)];
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (norm === 'ranking') {
     const rows = await store.getRanking(msg.groupJid, 10);

@@ -21,7 +21,7 @@ test('todas as imagens do Modo em Grupo renderizam', { timeout: 300_000 }, async
     const say = (who: string, text: string) =>
       handleMessage({ id: `m${++id}`, groupJid: G, senderJid: `${who}@s`, senderName: who, text }, deps);
     const outs: Outgoing[] = [];
-    outs.push(...(await say('Ana', 'ativar grupo')));
+    outs.push(...(await say('Ana', 'ativar jogos')));
     outs.push(...(await say('Ana', command)));
     outs.push(...(await say('Bia', command.includes('melhor time') ? 'aceitar' : 'entrar')));
     if (!command.includes('melhor time')) outs.push(...(await say('Ana', 'começar')));

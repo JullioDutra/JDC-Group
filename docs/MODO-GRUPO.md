@@ -58,7 +58,7 @@ Fontes: [Kahoot – pontos](https://support.kahoot.com/hc/articles/115002303908)
 
 | Regra | Como |
 |---|---|
-| Só admin ativa | `ativar grupo` só vale de um número em `ADMIN_NUMBERS`. **Já implementado:** em produção, sem admin configurado ninguém ativa |
+| Só admin ativa | `ativar jogos` só vale de um número em `ADMIN_NUMBERS`. **Já implementado:** em produção, sem admin configurado ninguém ativa |
 | Admin precisa estar no grupo | O comando é mandado de dentro do grupo, então só ativa quem está nele |
 | Vários grupos | O admin ativa quantos grupos quiser; cada grupo tem as próprias partidas e o próprio ranking |
 | Admin saiu do grupo | *Planejado:* assinar o evento `GROUP_PARTICIPANTS_UPDATE` da Evolution. Se nenhum admin restar no grupo, o bot se desativa sozinho e avisa |

@@ -25,7 +25,7 @@ function setup() {
 }
 
 async function open(say: (w: string, t: string) => Promise<Outgoing[]>, command: string) {
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   const lobby = asText(await say('Ana', command));
   await say('Bia', 'entrar');
   await say('Caio', 'entrar');

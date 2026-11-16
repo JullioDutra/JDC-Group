@@ -1,6 +1,6 @@
 /**
  * Números de administrador: só eles ativam/desativam o bot em um grupo.
- * Como o comando "ativar grupo" é mandado de dentro do grupo, o admin
+ * Como o comando "ativar jogos" é mandado de dentro do grupo, o admin
  * precisa estar no grupo para ativá-lo. Pode ativar quantos grupos quiser.
  *
  * ADMIN_NUMBERS (ou OWNER_NUMBERS, nome antigo): números com DDI, só dígitos,

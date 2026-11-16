@@ -31,13 +31,15 @@ function setup() {
 test('grupo não ativado é ignorado', async () => {
   const { say } = setup();
   assert.deepEqual(await say('Ana', 'iniciar jogo'), []);
-  assert.match(asText(await say('Ana', 'Ativar Grupo')), /ativado/);
+  // "ativar grupo" é do Finanças G&J (mesmo número do admin): o jogo não responde a ele.
+  assert.deepEqual(await say('Ana', 'ativar grupo'), []);
+  assert.match(asText(await say('Ana', 'Ativar Jogos')), /ativado/);
   assert.match(asText(await say('Ana', 'iniciar jogo')), /img:challenge/);
 });
 
 test('partida completa no modo Artilheiros', async () => {
   const { say, store, calls } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar jogo');
   assert.match(asText(await say('Ana', 'aceitar')), /próprio desafio/);
   assert.match(asText(await say('Bia', 'aceitar')), /img:modes/);
@@ -80,7 +82,7 @@ test('partida completa no modo Artilheiros', async () => {
 
 test('tema com clube sorteado e menor soma vence', async () => {
   const { say } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar jogo');
   await say('Bia', 'aceitar');
   const out = asText(await say('Ana', '4')); // Joias; rng 0 => primeiro clube da lista
@@ -90,7 +92,7 @@ test('tema com clube sorteado e menor soma vence', async () => {
 
 test('comando tempo aplica a penalidade só depois do limite', async () => {
   const { say, advance } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar jogo');
   await say('Bia', 'aceitar');
   await say('Ana', '1');
@@ -101,7 +103,7 @@ test('comando tempo aplica a penalidade só depois do limite', async () => {
 
 test('desistência com a bola rolando dá W.O.', async () => {
   const { say, store } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar jogo');
   await say('Bia', 'aceitar');
   await say('Ana', '1');

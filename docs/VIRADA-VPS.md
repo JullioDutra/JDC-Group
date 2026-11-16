@@ -267,7 +267,7 @@ curl -s "$APP/api/admin/status" -H "Authorization: Bearer $ADMIN_KEY" | jq
 Esperado: `connection: "open"`, `webhook.pointsToThisApp: true`, `events: ["MESSAGES_UPSERT"]`, `scheduler` com QStash e `admins: 1 número(s)`.
 
 **Teste no WhatsApp** (num grupo de teste em que você e o número do jogo estejam):
-1. Do seu número: `ativar grupo`. O bot confirma.
+1. Do seu número: `ativar jogos`. O bot confirma.
 2. `iniciar jogo` → alguém manda `aceitar` → escolham o tema → joguem uma rodada.
 3. `abrir quem é` → `entrar` → `começar`. Confira se a rodada fecha sozinha quando o tempo acaba (QStash).
 4. Mande uma mensagem num grupo **não** ativado: o bot deve ficar calado.

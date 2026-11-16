@@ -33,7 +33,7 @@ Seis travas, da mais importante para a menos:
 1. **Webhook por instância.** O jogo só altera o webhook da instância `EVOLUTION_INSTANCE`. A rota `/api/admin/evolution-setup` exige que você digite o nome da instância de novo (`confirmInstance`), então não tem como apontar o bot pessoal por engano.
 2. **Token da instância, não a chave global.** Em `EVOLUTION_API_KEY` vai o token da instância do RPG. Com ele, a Vercel só consegue operar aquele número. Mesmo se a chave vazar, o bot pessoal está fora de alcance.
 3. **Filtro por instância no código.** Se o servidor tiver webhook global ligado, o jogo descarta qualquer evento cujo campo `instance` não seja o do jogo.
-4. **Só grupos ativados.** O número herda os grupos do RPG, mas o jogo fica mudo em todos até alguém mandar `ativar grupo`.
+4. **Só grupos ativados.** O número herda os grupos do RPG, mas o jogo fica mudo em todos até alguém mandar `ativar jogos`.
 5. **Só o admin ativa.** Só os números em `ADMIN_NUMBERS` ligam o jogo em um grupo (e precisam estar no grupo para mandar o comando). Sem a variável, ninguém ativa.
 6. **Mensagens do próprio número são ignoradas** (`fromMe`), então o bot nunca responde a si mesmo.
 
@@ -96,7 +96,7 @@ Esperado nesse momento: `database: ok`, `connection: open` e `webhook.pointsToTh
 | 3 | Desligar integrações internas que o RPG usava nessa instância, se houver | Manager da Evolution |
 | 4 | Apontar o webhook do número para o jogo e liberar grupos | comando abaixo |
 | 5 | Conferir | `GET /api/admin/status` → `pointsToThisApp: true` |
-| 6 | Em um grupo de teste: `ativar grupo` (do seu número) → `iniciar jogo` | WhatsApp |
+| 6 | Em um grupo de teste: `ativar jogos` (do seu número) → `iniciar jogo` | WhatsApp |
 
 ```bash
 curl -s -X POST "$APP/api/admin/evolution-setup" \

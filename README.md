@@ -43,11 +43,11 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 3. Configure as variáveis de `.env.example`.
 4. Crie as tabelas: `curl -X POST https://SEU-APP/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`
 5. Evolution: siga [docs/VIRADA-VPS.md](docs/VIRADA-VPS.md). `POST /api/admin/evolution-setup` aponta o webhook só da instância do jogo; `GET /api/admin/status` confere tudo.
-6. No grupo: `ativar grupo` → `iniciar jogo`.
+6. No grupo: `ativar jogos` → `iniciar jogo`.
 
 ## Comandos no grupo
 
-`ativar grupo` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar grupo`
+`ativar jogos` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar jogos`
 
 **Em grupo:** `abrir sala` (Escalação em Grupo), `top 10`, `abrir que time é esse`, `abrir quem é`, `abrir intruso`, `abrir emoji`, `abrir relâmpago`, `abrir alfabeto`, `abrir chute certo`, `abrir bandeiraço`, `abrir sobrevivente`, `abrir conexões`, `abrir stop`, `abrir draft`, `abrir linha do tempo` ou `abrir fato ou fake` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`. Categoria no fim do comando: `futebol`, `geral`, `história`, `anime`, `política` (política só quando pedida). Ex.: `abrir relâmpago política`.
 

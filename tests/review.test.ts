@@ -26,7 +26,7 @@ function setup(opts: { owners?: string[]; store?: MemoryStore } = {}) {
 }
 
 async function startMatch(say: (w: string, t: string) => Promise<Outgoing[]>, choice: string) {
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   await say('Ana', 'iniciar jogo');
   await say('Bia', 'aceitar');
   return say('Ana', choice);
@@ -84,10 +84,10 @@ test('mensagens simultâneas: a segunda é reprocessada, não perdida', async ()
 
 test('só o admin ativa/desativa grupo', async () => {
   const { say } = setup({ owners: ['Ana@s'] });
-  assert.deepEqual(await say('Zé', 'ativar grupo'), []);
+  assert.deepEqual(await say('Zé', 'ativar jogos'), []);
   assert.deepEqual(await say('Zé', 'iniciar jogo'), [], 'grupo continua desligado');
-  assert.match(asText(await say('Ana', 'ativar grupo')), /ativado/);
-  assert.match(asText(await say("Zé", "desativar grupo")), /Só um admin/);
+  assert.match(asText(await say('Ana', 'ativar jogos')), /ativado/);
+  assert.match(asText(await say("Zé", "desativar jogos")), /Só um admin/);
   assert.match(asText(await say('Zé', 'iniciar jogo')), /img:challenge/, 'qualquer um joga');
 });
 
@@ -134,7 +134,7 @@ test('Evolution: filtra instância, lê data.participant, mensagem temporária e
 
 test('"iniciar aleatório" sorteia o tema assim que alguém aceita', async () => {
   const { say } = setup();
-  await say('Ana', 'ativar grupo');
+  await say('Ana', 'ativar jogos');
   assert.match(asText(await say('Ana', 'Iniciar jogo aleatório')), /tema surpresa/);
   const accepted = asText(await say('Bia', 'aceitar'));
   assert.match(accepted, /img:kickoff[\s\S]*🎲 Tema sorteado: \*Artilheiros\*[\s\S]*Rodada 1\/6 · GOLEIRO/);

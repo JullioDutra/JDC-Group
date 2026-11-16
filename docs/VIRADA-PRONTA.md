@@ -101,7 +101,7 @@ Esperado: `jogos: open`, `financas: open`, as duas linhas "igual" e, no status, 
 ## G. Testar no WhatsApp
 
 Num grupo de teste com você e o número do jogo:
-1. `ativar grupo` (do seu número, 62 9325-9733) → o bot confirma.
+1. `ativar jogos` (do seu número, 62 9325-9733) → o bot confirma.
 2. `ajuda` → lista de comandos.
 3. `abrir fato ou fake` → peça para alguém mandar `entrar` → `começar`.
 4. Mande uma mensagem para o seu bot pessoal e veja se ele responde como sempre.

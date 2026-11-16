@@ -96,7 +96,7 @@ export default function Simulator() {
       <main className="sim">
         <h1 style={{ fontSize: 'clamp(40px, 7vw, 72px)' }}>Simulador de grupo</h1>
         <p className="note">
-          O mesmo motor do WhatsApp. Comece com <code>ativar grupo</code>. Para 1 x 1: <code>iniciar jogo</code> e{' '}
+          O mesmo motor do WhatsApp. Comece com <code>ativar jogos</code>. Para 1 x 1: <code>iniciar jogo</code> e{' '}
           <code>aceitar</code>. Em grupo: <code>abrir sala</code> ou <code>top 10</code>, cada um manda <code>entrar</code>, e o
           anfitrião manda <code>começar</code>.
         </p>
