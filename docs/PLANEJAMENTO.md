@@ -37,7 +37,7 @@ fim          ─► IMAGEM do campinho final + vencedor estado: FINISHED      (r
 - **Desistência** com a bola rolando = derrota por W.O. Partida parada por 20 min é encerrada sozinha.
 - **Conversa de grupo não atrapalha**: só a mensagem de quem está na vez, e só se parecer um nome (curta, sem `?`, sem "kkkk"), vai para a IA.
 
-### Temas (11)
+### Temas (17)
 
 | # | Tema | Dado | Restrição | Vence |
 |---|---|---|---|---|
@@ -52,14 +52,39 @@ fim          ─► IMAGEM do campinho final + vencedor estado: FINISHED      (r
 | 9 | Reis da Copa | gols em Copas | livre | maior |
 | 10 | Noites de Champions | gols na Champions | livre | maior |
 | 11 | Papa-Títulos | títulos oficiais | clube sorteado | maior |
+| 12 | Rodados | clubes na carreira | livre | maior |
+| 13 | Incansáveis | jogos na carreira | livre | maior |
+| 14 | Rei do Brasileirão | gols na Série A | livre | maior |
+| 15 | Libertadores | gols na Libertadores | livre | maior |
+| 16 | Mundialistas | Copas disputadas | seleção sorteada | maior |
+| 17 | Raiz | ano de estreia profissional | clube sorteado | **menor** (mais antigo) |
 
-Pool de sorteio: 32 clubes (12 brasileiros, 18 europeus, Boca e River) e 13 seleções. Criar um tema novo é adicionar um objeto em `src/lib/game/modes.ts`.
+Pool de sorteio: 32 clubes (12 brasileiros, 18 europeus, Boca e River) e 13 seleções. Criar um tema novo é adicionar um objeto em `src/lib/game/modes.ts`; uma consulta à IA devolve a ficha completa, então tema novo baseado em campo já existente não custa nada a mais.
 
 Decisão registrada: "Milionários" usa o **pico** de valor de mercado, não o valor atual — um modelo de linguagem não conhece o valor de hoje, e o pico é estável.
 
+### Extras (combinam com qualquer tema)
+
+O anfitrião escreve junto do número do tema:
+
+| Extra | Exemplo | Efeito |
+|---|---|---|
+| **cego** | `3 cego` | Os números ficam secretos (`?` no campinho, placar `???`) e só aparecem na imagem final. Ninguém sabe se está ganhando: cada revelação vira resenha |
+| **relâmpago** | `5 relâmpago` | 45 s por jogada em vez de 90 |
+| ambos | `aleatório cego relâmpago` | — |
+
+### Próximos extras planejados
+
+| Extra | Regra | Por que é divertido |
+|---|---|---|
+| **Capitão** | Cada um marca 1 escolhido como capitão (`Messi c`): o número dele conta em dobro | Estratégia: guardar o capitão para a posição mais forte |
+| **Mercado da Bola** | Orçamento de €300 mi somando o pico de valor; o placar é por gols. Estourou o orçamento, a escolha é recusada | Dois dados ao mesmo tempo: craque barato vale ouro |
+| **Mesma camisa** | Os 6 de cada um têm que ter passado pelo mesmo clube (sorteado no início) | Força conhecimento profundo de elenco |
+| **Draft roubado** | Quem escolhe primeiro na rodada "bloqueia" o nome; o outro não pode repetir nem jogador do mesmo clube | Disputa direta pelo mesmo craque |
+
 ### Comandos
 
-`ativar grupo`, `desativar grupo`, `iniciar jogo`, `aceitar`, `regras`, `modos`, `placar`, `ranking`, `tempo`, `cancelar`/`desistir`, `ajuda`.
+`ativar grupo` e `desativar grupo` (só os números em `OWNER_NUMBERS`, se definido), `iniciar jogo`, `iniciar jogo`, `aceitar`, `regras`, `modos`, `placar`, `ranking`, `tempo`, `cancelar`/`desistir`, `ajuda`.
 
 ## 3. Imagens
 
@@ -70,9 +95,9 @@ Todas em 1080x1350 (4:5, o formato que mais ocupa a tela no WhatsApp), geradas n
 | Imagem | Quando | Conteúdo |
 |---|---|---|
 | Desafio lançado | `iniciar jogo` | Nome do jogo, quem desafiou, formação, botão "ACEITAR" |
-| Escolha o tema | `aceitar` / `modos` | Os 11 temas numerados, com etiqueta de restrição e "maior/menor vence" |
-| Bola rolando | tema escolhido | Nome do tema, anfitrião x desafiante, **3 regras resumidas**, formação, tempo por jogada |
-| Campinho | fim de cada rodada / `placar` / fim | Placar somado, campo com cada escalado, seu número, clube sorteado da rodada, selo "RODADA n DE 6" ou "VITÓRIA DE …" |
+| Escolha o tema | `aceitar` / `modos` | Os 17 temas em duas colunas, com etiqueta de restrição, "maior/menor vence" e a dica dos extras |
+| Bola rolando | tema escolhido | Nome do tema, selos dos extras (ÀS CEGAS, RELÂMPAGO), anfitrião x desafiante, **regras resumidas**, formação, tempo por jogada |
+| Campinho | fim de cada rodada / `placar` / fim | Placar somado, campo com cada escalado, seu número (ou `?` no modo cego), clube sorteado da rodada, selo "RODADA n DE 6" ou "VITÓRIA DE …" |
 | Ranking | `ranking` | Tabela do grupo (J, V, E, D, pontos) |
 
 Exemplos: `npm run render:samples` gera todas em `./samples`. Sem emojis nem fotos de jogadores (direitos de imagem e tempo de download); nomes e números bastam.
@@ -138,7 +163,9 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 ### Segurança
 
 - Webhook exige `?token=WEBHOOK_SECRET`; simulador e migração exigem `ADMIN_KEY`. Comparação em tempo constante; segredo não configurado nunca autoriza.
-- O bot só processa grupos ativados e nunca conversas privadas.
+- O bot só processa grupos ativados e nunca conversas privadas. Com `OWNER_NUMBERS`, só o dono ativa/desativa grupos (importante no número que herda os grupos do RPG).
+- O webhook ignora eventos de qualquer instância da Evolution que não seja `EVOLUTION_INSTANCE`, mesmo se o servidor tiver webhook global ligado.
+- Números fora de uma faixa plausível (ex.: 5.000 gols, 2,60 m) são tratados como "sem dado confiável" — protege contra erro da IA e contra quem tenta forçar números no nome.
 - Chaves ficam só em variáveis de ambiente da Vercel.
 
 ## 5. Infraestrutura e deploy
@@ -147,15 +174,54 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 2. **Neon**: Vercel → Storage → Create Database → Neon, região São Paulo (`aws-sa-east-1`). As funções rodam em `gru1` (`vercel.json`), perto do banco, da Maritaca e dos jogadores. A integração injeta `DATABASE_URL`.
 3. **Variáveis**: ver `.env.example` (`MARITACA_API_KEY`, `WEBHOOK_SECRET`, `ADMIN_KEY`, dados do gateway).
 4. **Tabelas**: `curl -X POST https://SEU-APP.vercel.app/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`.
-5. **Gateway**: conectar o número (QR code) e apontar o webhook de mensagens recebidas para `https://SEU-APP.vercel.app/api/webhook?token=$WEBHOOK_SECRET`.
+5. **Gateway (Evolution)**: passo a passo da virada do número do RPG em [`EVOLUTION.md`](EVOLUTION.md). Resumo: configurar `EVOLUTION_*` na Vercel e rodar `POST /api/admin/evolution-setup`, que aponta o webhook **só da instância do jogo**. `GET /api/admin/status` confere banco, IA, conexão e webhook.
 6. Adicionar o número ao grupo e mandar `ativar grupo`.
 
 Custo estimado por partida: ~12 consultas de IA na primeira vez (menos com cache) + 8 imagens. Cabe no plano gratuito da Vercel e do Neon para dezenas de grupos.
 
-## 6. Roadmap
+## 6. Próximos jogos de futebol (mesmo estilo: 1x1, no grupo, imagem a cada lance)
 
+Pesquisa de formatos que já fazem sucesso fora do WhatsApp e como cada um vira duelo no grupo:
+
+| Jogo | Inspiração | Como funciona no grupo | Dados | Esforço |
+|---|---|---|---|---|
+| **Grade dos Craques** | Tiki-Taka-Toe / Immaculate Grid / Soccer Grid | Jogo da velha 3x3: linhas e colunas são clubes/seleções. Na vez, você manda `B2 Neymar`; se ele cruza os dois critérios, a casa é sua (imagem da grade com X/O). Três em linha vence; casa errada passa a vez | Mesma ficha da IA (clubes + seleção) — **reaproveita 100% do cache** | Médio |
+| **Caminho do Craque** | Career Path (Footballpark, Football Genius) | Bot mostra a trajetória de clubes de um jogador misterioso, uma etapa por vez. Primeiro a acertar leva o ponto; melhor de 5 | Fichas já em cache (clubes em ordem) | Baixo |
+| **Maior ou Menor** | Higher or Lower | Bot mostra "Haaland — 330 gols" e um segundo nome. Cada um responde `maior`/`menor` em segredo... no grupo é aberto, então vale a **vez alternada**: errou, perde a vida. 3 vidas cada | Cache + tema | Baixo |
+| **Top 10** | Quizzes de lista (Sporcle/JetPunk), "Família" de programa de auditório | Bot sorteia uma lista ("10 maiores artilheiros da história do Brasileirão"). Alternando, cada um chuta um nome; acertou, ganha pontos pela posição (10º = 1 pt, 1º = 10 pts). Errou 3 vezes, sai | Listas curadas (JSON versionado), não IA | Médio |
+| **Quem Sou Eu?** | Who Are Ya / FootballQuest | 5 dicas progressivas (nacionalidade → posição → clubes → títulos → número da camisa). Acertar na dica 1 = 5 pts, na 5 = 1 pt. Corrida: os dois podem chutar | Cache + IA gera dicas a partir da ficha | Baixo |
+| **Copa do Grupo** | Mata-mata | Torneio de 4/8 pessoas do grupo, chaveamento automático, cada confronto é um Duelo de Craques; imagem do chaveamento a cada fase | Reaproveita o duelo | Médio |
+
+Ordem sugerida: Caminho do Craque e Quem Sou Eu (rápidos, só cache) → Grade dos Craques (o mais viral) → Top 10 → Copa do Grupo.
+
+Fontes: [Footballpark – Career Path](https://footballpark.com/football-blogs/how-to-play-guess-the-career-path), [Football Genius – regras](https://footballgenius.app/game/career/rules/), [FootballQuest](https://www.footballdream.in/footballquest/how-to-play), [RenderFoot – Soccer Grid](https://www.renderfoot.com/games/soccer-grid), [CFBTrack – Over/Under](https://cfbtrack.com/games/over-under).
+
+## 7. Revisão técnica (nov/2026)
+
+Revisão de tudo que foi entregue na primeira versão. Problemas encontrados e o que foi feito:
+
+| # | Problema | Impacto | Correção |
+|---|---|---|---|
+| 1 | Duas mensagens ao mesmo tempo: a segunda perdia na trava otimista e era descartada em silêncio | Jogada sumia sem aviso | O motor refaz o processamento sobre o estado novo (até 3 tentativas) |
+| 2 | Nenhum limite de plausibilidade nos números da IA | Erro da IA ou "Messi 5000 gols" virando placar | Faixa por dado; fora dela = "sem dado confiável" e a vez continua |
+| 3 | "Não existe" ficava 30 dias em cache | Um erro pontual da IA bloqueava um jogador real por um mês | Negativo vale 1 dia; positivo, 30 |
+| 4 | Webhook aceitava eventos de qualquer instância | Com webhook global ligado no servidor, mensagens do bot pessoal entrariam no jogo | Filtro por `EVOLUTION_INSTANCE` |
+| 5 | Autor da mensagem só lido de `key.participant` | Em versões da v2 ele vem em `data.participant` → mensagens ignoradas | Lê os dois, e prefere `@s.whatsapp.net` ao `@lid` |
+| 6 | Grupos com mensagens temporárias | Texto vem dentro de `ephemeralMessage` → bot "surdo" nesses grupos | Desembrulha a mensagem |
+| 7 | Qualquer pessoa podia `ativar grupo` | No número herdado do RPG, qualquer grupo antigo poderia ligar o bot | `OWNER_NUMBERS` |
+| 8 | Se a Maritaca recusar `response_format` | Jogo travaria em "VAR caiu" | Refaz a chamada sem o parâmetro |
+| 9 | "CR7", "R9" ignorados (dígito bloqueado) | Apelidos comuns não funcionavam | Aceita dígitos curtos; bloqueia só números puros e "900 gols" |
+| 10 | `processed_messages` crescia para sempre | Banco enchendo | Limpeza automática de registros com mais de 3 dias |
+| 11 | Cache sem versão | Fichas antigas sem os campos novos dariam "sem dado" | Chave versionada (`v2:`) |
+
+Pontos conhecidos que ficam para depois:
+- O nome do grupo não vem no webhook da Evolution; o ranking mostra "Grupo". Dá para buscar com `group/findGroupInfos` e guardar em `wa_groups`.
+- Apelidos ambíguos ("Ronaldo") dependem da escolha da IA; o cache garante que a resposta seja sempre a mesma.
+- Os números ainda são da IA. A base verificada (seção 8) resolve.
+
+## 8. Roadmap
+
+- **Plataforma de jogos no mesmo número** (futebol, animes, conhecimentos gerais): ver [`PLATAFORMA.md`](PLATAFORMA.md), [`ANIMES.md`](ANIMES.md) e [`CONHECIMENTOS-GERAIS.md`](CONHECIMENTOS-GERAIS.md).
 - **2 x 2**: `MatchState.players` vira times; a vez roda entre 4 pessoas. O motor já separa "lado" de "pessoa".
-- **Novos modos de jogo**: Maior ou Menor relâmpago; Quem Sou Eu (dicas progressivas); Jogo da Velha de clubes x seleções.
-- **Base de dados verificada** para os 2–3 mil jogadores mais citados.
+- **Base de dados verificada** para os 2–3 mil jogadores mais citados (semeada no `player_cache`), IA só para o resto.
 - **Menções reais** (@) e reações do bot; temporada mensal com campeão do grupo.
-- **Edição Animes**: o motor é genérico — trocar "posição" por papel (protagonista, vilão, mentor…), "clube" por obra, e os temas por dados do universo (episódios, nível de poder, ano de estreia). Catálogo de temas e prompt novos; o resto é reaproveitado.

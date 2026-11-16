@@ -3,8 +3,9 @@ import type { Match, MatchPlayer, MatchState, PlayerProfile, RankingRow, Side } 
 import { SCHEMA_STATEMENTS } from './schema';
 import type { Store } from './types';
 
-/** Fichas em cache valem 30 dias; depois a IA é consultada de novo. */
+/** Fichas em cache valem 30 dias; "não existe" vale 1 dia (pode ter sido erro da IA). */
 const CACHE_TTL_DAYS = 30;
+const NEGATIVE_TTL_DAYS = 1;
 
 export class NeonStore implements Store {
   private sql: NeonQueryFunction<false, false>;
@@ -71,13 +72,18 @@ export class NeonStore implements Store {
     const rows = await this.sql`
       INSERT INTO processed_messages (id) VALUES (${messageId})
       ON CONFLICT DO NOTHING RETURNING id`;
+    // Limpeza ocasional: só importa deduplicar reenvios recentes.
+    if (Math.random() < 0.01) {
+      await this.sql`DELETE FROM processed_messages WHERE created_at < now() - interval '3 days'`;
+    }
     return rows.length > 0;
   }
 
   async getCachedProfile(key: string): Promise<PlayerProfile | null | undefined> {
     const rows = await this.sql`
       SELECT profile FROM player_cache
-      WHERE key = ${key} AND updated_at > now() - make_interval(days => ${CACHE_TTL_DAYS})`;
+      WHERE key = ${key}
+        AND updated_at > now() - make_interval(days => CASE WHEN profile IS NULL THEN ${NEGATIVE_TTL_DAYS}::int ELSE ${CACHE_TTL_DAYS}::int END)`;
     if (!rows[0]) return undefined;
     return (rows[0].profile as PlayerProfile | null) ?? null;
   }

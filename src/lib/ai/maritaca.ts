@@ -19,7 +19,12 @@ Responda SOMENTE com um objeto JSON, sem texto fora dele, neste formato:
   "intlGoals": 0,
   "worldCupGoals": 0,
   "uclGoals": 0,
-  "titles": 0
+  "titles": 0,
+  "careerApps": 0,
+  "brasileiraoGoals": 0,
+  "libertadoresGoals": 0,
+  "worldCupsPlayed": 0,
+  "debutYear": 0
 }
 
 Regras:
@@ -30,6 +35,9 @@ Regras:
 - intlCaps / intlGoals: jogos e gols pela seleção principal.
 - worldCupGoals: gols em Copas do Mundo. uclGoals: gols na Champions League / Copa dos Campeões da Europa (sem fases preliminares).
 - titles: títulos oficiais como profissional (clubes + seleção principal).
+- careerApps: jogos oficiais na carreira profissional (clubes + seleção principal).
+- brasileiraoGoals: gols na Série A do Campeonato Brasileiro (0 se nunca jogou nela). libertadoresGoals: gols na Copa Libertadores.
+- worldCupsPlayed: quantas Copas do Mundo disputou entrando em campo. debutYear: ano da estreia como profissional.
 - Use números inteiros (peakValueEurM pode ter decimal). Se você realmente não souber um dado, use null — nunca chute. Zero só quando o valor real for zero.`;
 
 const POSITIONS: Position[] = ['GOL', 'DEF', 'MEI', 'ATA'];
@@ -75,6 +83,11 @@ export function parseProfile(raw: unknown): PlayerProfile | null {
     worldCupGoals: num(r.worldCupGoals),
     uclGoals: num(r.uclGoals),
     titles: num(r.titles),
+    careerApps: num(r.careerApps),
+    brasileiraoGoals: num(r.brasileiraoGoals),
+    libertadoresGoals: num(r.libertadoresGoals),
+    worldCupsPlayed: num(r.worldCupsPlayed),
+    debutYear: num(r.debutYear),
   };
 }
 
@@ -83,9 +96,9 @@ export function hasMaritacaKey(): boolean {
 }
 
 /** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
-export async function lookupWithMaritaca(query: string): Promise<PlayerProfile | null> {
+async function chat(query: string, jsonMode: boolean): Promise<Response> {
   const baseUrl = (process.env.MARITACA_BASE_URL || 'https://chat.maritaca.ai/api').replace(/\/$/, '');
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  return fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -94,8 +107,8 @@ export async function lookupWithMaritaca(query: string): Promise<PlayerProfile |
     body: JSON.stringify({
       model: process.env.MARITACA_MODEL || 'sabia-4',
       temperature: 0,
-      max_tokens: 700,
-      response_format: { type: 'json_object' },
+      max_tokens: 800,
+      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `Nome digitado: "${query.replace(/"/g, '')}"` },
@@ -103,6 +116,13 @@ export async function lookupWithMaritaca(query: string): Promise<PlayerProfile |
     }),
     signal: AbortSignal.timeout(15_000),
   });
+}
+
+/** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
+export async function lookupWithMaritaca(query: string): Promise<PlayerProfile | null> {
+  let response = await chat(query, true);
+  // Se o modo JSON não for aceito pelo modelo, tenta de novo sem ele (o prompt já exige JSON).
+  if (response.status === 400 || response.status === 422) response = await chat(query, false);
   if (!response.ok) {
     throw new Error(`Maritaca respondeu ${response.status}: ${(await response.text()).slice(0, 200)}`);
   }

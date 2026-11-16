@@ -1,3 +1,4 @@
+import { normalize } from './text';
 import type { MetricKey, PlayerProfile, RestrictionKind } from './types';
 
 export interface GameMode {
@@ -94,6 +95,36 @@ export const MODES: GameMode[] = [
     metric: 'titles', unit: 'títulos', direction: 'high', restriction: 'club',
     what: 'Escale quem mais levantou taças oficiais na carreira.',
   }),
+  mode({
+    id: 'rodados', number: 12, name: 'Rodados', tagline: 'Clubes na carreira',
+    metric: 'clubsCount', unit: 'clubes', direction: 'high', restriction: 'none',
+    what: 'Escale os andarilhos: conta quantos clubes profissionais cada um defendeu.',
+  }),
+  mode({
+    id: 'incansaveis', number: 13, name: 'Incansáveis', tagline: 'Jogos na carreira',
+    metric: 'careerApps', unit: 'jogos', direction: 'high', restriction: 'none',
+    what: 'Escale quem mais entrou em campo na carreira (clubes + seleção).',
+  }),
+  mode({
+    id: 'brasileirao', number: 14, name: 'Rei do Brasileirão', tagline: 'Gols no Brasileirão',
+    metric: 'brasileiraoGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    what: 'Escale quem mais marcou na Série A do Campeonato Brasileiro.',
+  }),
+  mode({
+    id: 'libertadores', number: 15, name: 'Libertadores', tagline: 'Gols na Libertadores',
+    metric: 'libertadoresGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    what: 'Escale quem mais balançou a rede na Copa Libertadores.',
+  }),
+  mode({
+    id: 'mundialistas', number: 16, name: 'Mundialistas', tagline: 'Copas disputadas · seleção sorteada',
+    metric: 'worldCupsPlayed', unit: 'Copas', direction: 'high', restriction: 'country',
+    what: 'Escale quem mais disputou Copas do Mundo pela seleção sorteada.',
+  }),
+  mode({
+    id: 'raiz', number: 17, name: 'Raiz', tagline: 'Estreia mais antiga · clube sorteado',
+    metric: 'debutYear', unit: 'ano', direction: 'low', restriction: 'club', penalty: new Date().getUTCFullYear(),
+    what: 'Escale os mais antigos: conta o ano de estreia como profissional.',
+  }),
 ];
 
 export function getMode(id: string | null): GameMode | undefined {
@@ -111,9 +142,76 @@ export function ageFromBirthDate(birthDate: string, now: Date): number | null {
   return age >= 10 && age <= 130 ? age : null;
 }
 
-/** Valor do jogador no tema, ou null se a IA não tiver o dado. */
-export function metricValue(profile: PlayerProfile, metric: MetricKey, now: Date): number | null {
+/**
+ * Faixa plausível de cada dado. Valor fora dela é tratado como "sem dado
+ * confiável": protege o jogo de erro da IA e de alguém tentando forçar números.
+ */
+const RANGES: Record<MetricKey, [number, number]> = {
+  careerGoals: [0, 1400],
+  careerAssists: [0, 500],
+  peakValueEurM: [0, 250],
+  age: [14, 100],
+  heightCm: [150, 215],
+  intlCaps: [0, 230],
+  intlGoals: [0, 150],
+  worldCupGoals: [0, 20],
+  uclGoals: [0, 145],
+  titles: [0, 50],
+  careerApps: [0, 1600],
+  brasileiraoGoals: [0, 250],
+  libertadoresGoals: [0, 60],
+  worldCupsPlayed: [0, 6],
+  debutYear: [1900, 2100],
+  clubsCount: [1, 40],
+};
+
+function raw(profile: PlayerProfile, metric: MetricKey, now: Date): number | null {
   if (metric === 'age') return profile.birthDate ? ageFromBirthDate(profile.birthDate, now) : null;
+  if (metric === 'clubsCount') return profile.clubs.length || null;
   const value = profile[metric];
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/** Valor do jogador no tema, ou null se não houver dado confiável. */
+export function metricValue(profile: PlayerProfile, metric: MetricKey, now: Date): number | null {
+  const value = raw(profile, metric, now);
+  if (value === null) return null;
+  const [min, max] = RANGES[metric];
+  if (value < min || value > max) return null;
+  if (metric === 'debutYear' && value > now.getUTCFullYear()) return null;
+  return value;
+}
+
+export interface Twists {
+  blind: boolean;
+  fast: boolean;
+}
+
+export const FAST_TURN_SECONDS = 45;
+
+/**
+ * Lê a escolha do anfitrião: "3", "milionarios", "aleatorio", com extras
+ * opcionais "cego" (números escondidos) e "relampago" (45 s por jogada).
+ * Ex.: "3 cego", "aleatorio relampago", "12 cego relampago".
+ */
+export function parseModeChoice(norm: string, rng: () => number): { mode: GameMode; twists: Twists } | undefined {
+  const words = norm.split(' ').filter(Boolean);
+  const twists: Twists = { blind: false, fast: false };
+  const rest: string[] = [];
+  for (const w of words) {
+    if (['cego', 'cega', 'cegas', 'escondido', 'secreto'].includes(w)) twists.blind = true;
+    else if (['relampago', 'rapido', 'turbo'].includes(w)) twists.fast = true;
+    else if (!['as', 'a', 'modo', 'tema'].includes(w)) rest.push(w);
+  }
+  const choice = rest.join(' ');
+  if (!choice) return undefined;
+  let mode: GameMode | undefined;
+  if (['aleatorio', 'sortear', 'sorteio', 'tanto faz', '0'].includes(choice)) {
+    mode = MODES[Math.floor(rng() * MODES.length)];
+  } else if (/^\d+$/.test(choice)) {
+    mode = MODES.find((m) => m.number === Number(choice));
+  } else {
+    mode = MODES.find((m) => normalize(m.name) === choice || m.id === choice);
+  }
+  return mode ? { mode, twists } : undefined;
 }

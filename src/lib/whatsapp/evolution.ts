@@ -1,37 +1,74 @@
 import type { IncomingMessage } from '../game/types';
 import { postJson, type WhatsAppProvider } from './index';
 
-/** Evolution API v2 (self-hosted, baseada em Baileys). */
+/**
+ * Evolution API v2 (self-hosted, baseada em Baileys).
+ * Formatos conferidos nos tipos do SDK oficial da v2 (evolution-api-sdk).
+ */
+
+interface TextContent {
+  conversation?: string;
+  extendedTextMessage?: { text?: string };
+  /** Grupos com mensagens temporárias embrulham o conteúdo aqui. */
+  ephemeralMessage?: { message?: TextContent };
+}
 
 interface UpsertPayload {
   event?: string;
+  instance?: string;
   data?: {
     key?: { remoteJid?: string; fromMe?: boolean; id?: string; participant?: string; participantAlt?: string };
+    participant?: string;
     pushName?: string;
-    message?: { conversation?: string; extendedTextMessage?: { text?: string } };
+    message?: TextContent;
   };
 }
 
-const config = () => ({
-  url: (process.env.EVOLUTION_API_URL ?? '').replace(/\/$/, ''),
-  instance: encodeURIComponent(process.env.EVOLUTION_INSTANCE ?? ''),
-  headers: { apikey: process.env.EVOLUTION_API_KEY ?? '' },
-});
+export function evolutionConfig() {
+  return {
+    url: (process.env.EVOLUTION_API_URL ?? '').replace(/\/$/, ''),
+    instance: process.env.EVOLUTION_INSTANCE ?? '',
+    headers: { apikey: process.env.EVOLUTION_API_KEY ?? '' },
+  };
+}
+
+function textOf(message: TextContent | undefined, depth = 0): string | undefined {
+  if (!message || depth > 2) return undefined;
+  return (
+    message.conversation ??
+    message.extendedTextMessage?.text ??
+    textOf(message.ephemeralMessage?.message, depth + 1)
+  );
+}
+
+/** Prefere o JID de telefone (@s.whatsapp.net) ao @lid, que muda entre versões. */
+function pickSender(candidates: Array<string | undefined>): string | undefined {
+  const list = candidates.filter((c): c is string => Boolean(c));
+  const phone = list.find((c) => c.endsWith('@s.whatsapp.net'));
+  return (phone ?? list[0])?.replace(/:\d+@/, '@'); // remove sufixo de dispositivo
+}
 
 export const evolution: WhatsAppProvider = {
   parseWebhook(body) {
     const payload = body as UpsertPayload;
-    const event = (payload?.event ?? '').toLowerCase().replace('_', '.');
-    const key = payload?.data?.key;
-    if (event !== 'messages.upsert' || !key?.id || key.fromMe) return null;
+    const event = (payload?.event ?? '').toLowerCase().replace(/_/g, '.');
+    if (event !== 'messages.upsert') return null;
+
+    // Defesa extra: se o servidor Evolution mandar eventos de outras instâncias
+    // (webhook global ligado), o jogo ignora tudo que não for do seu número.
+    const expected = evolutionConfig().instance;
+    if (expected && payload.instance && payload.instance !== expected) return null;
+
+    const key = payload.data?.key;
+    if (!key?.id || key.fromMe) return null;
     if (!key.remoteJid?.endsWith('@g.us')) return null; // só grupos
-    const text = payload.data?.message?.conversation ?? payload.data?.message?.extendedTextMessage?.text;
-    const sender = key.participant ?? key.participantAlt;
+    const text = textOf(payload.data?.message);
+    const sender = pickSender([key.participant, payload.data?.participant, key.participantAlt]);
     if (!text || !sender) return null;
     const message: IncomingMessage = {
       id: key.id,
       groupJid: key.remoteJid,
-      senderJid: sender.replace(/:\d+@/, '@'), // remove sufixo de dispositivo
+      senderJid: sender,
       senderName: payload.data?.pushName?.trim() || 'Jogador',
       text,
     };
@@ -39,13 +76,13 @@ export const evolution: WhatsAppProvider = {
   },
 
   async sendText(groupJid, text) {
-    const { url, instance, headers } = config();
-    await postJson(`${url}/message/sendText/${instance}`, headers, { number: groupJid, text });
+    const { url, instance, headers } = evolutionConfig();
+    await postJson(`${url}/message/sendText/${encodeURIComponent(instance)}`, headers, { number: groupJid, text });
   },
 
   async sendImage(groupJid, png, caption) {
-    const { url, instance, headers } = config();
-    await postJson(`${url}/message/sendMedia/${instance}`, headers, {
+    const { url, instance, headers } = evolutionConfig();
+    await postJson(`${url}/message/sendMedia/${encodeURIComponent(instance)}`, headers, {
       number: groupJid,
       mediatype: 'image',
       mimetype: 'image/png',
@@ -55,3 +92,52 @@ export const evolution: WhatsAppProvider = {
     });
   },
 };
+
+async function evo(method: 'GET' | 'POST', path: string, body?: unknown): Promise<unknown> {
+  const { url, instance, headers } = evolutionConfig();
+  const response = await fetch(`${url}/${path}/${encodeURIComponent(instance)}`, {
+    method,
+    headers: { 'content-type': 'application/json', ...headers },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(10_000),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(`Evolution ${path} ${response.status}: ${JSON.stringify(data).slice(0, 200)}`);
+  return data;
+}
+
+/** Estado da conexão do número ("open", "connecting" ou "close"). */
+export async function evolutionConnectionState(): Promise<string> {
+  const data = (await evo('GET', 'instance/connectionState')) as { instance?: { state?: string } };
+  return data?.instance?.state ?? 'desconhecido';
+}
+
+export async function evolutionWebhook(): Promise<{ url?: string; enabled?: boolean; events?: string[] } | null> {
+  return (await evo('GET', 'webhook/find')) as { url?: string; enabled?: boolean; events?: string[] } | null;
+}
+
+/**
+ * Aponta o webhook DA INSTÂNCIA configurada para o jogo e garante que ela
+ * lê grupos. Mexe só nessa instância; as outras (ex.: bot pessoal) ficam intactas.
+ */
+export async function evolutionSetupInstance(webhookUrl: string): Promise<{ groupsIgnoreWasOn: boolean }> {
+  await evo('POST', 'webhook/set', {
+    webhook: { enabled: true, url: webhookUrl, byEvents: false, base64: false, events: ['MESSAGES_UPSERT'] },
+  });
+  const settings = (await evo('GET', 'settings/find')) as Record<string, unknown> | null;
+  const groupsIgnoreWasOn = settings?.groupsIgnore === true;
+  if (settings && groupsIgnoreWasOn) {
+    const keep = (k: string, fallback: boolean) => (typeof settings[k] === 'boolean' ? settings[k] : fallback);
+    await evo('POST', 'settings/set', {
+      rejectCall: keep('rejectCall', false),
+      msgCall: typeof settings.msgCall === 'string' ? settings.msgCall : '',
+      groupsIgnore: false,
+      alwaysOnline: keep('alwaysOnline', false),
+      readMessages: keep('readMessages', false),
+      readStatus: keep('readStatus', false),
+      syncFullHistory: keep('syncFullHistory', false),
+      ...(typeof settings.wavoipToken === 'string' ? { wavoipToken: settings.wavoipToken } : {}),
+    });
+  }
+  return { groupsIgnoreWasOn };
+}

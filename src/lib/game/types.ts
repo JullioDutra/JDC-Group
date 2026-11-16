@@ -20,7 +20,13 @@ export type MetricKey =
   | 'intlGoals'
   | 'worldCupGoals'
   | 'uclGoals'
-  | 'titles';
+  | 'titles'
+  | 'careerApps'
+  | 'brasileiraoGoals'
+  | 'libertadoresGoals'
+  | 'worldCupsPlayed'
+  | 'debutYear'
+  | 'clubsCount';
 
 /** Ficha de um jogador de futebol, devolvida pela IA e guardada em cache. */
 export interface PlayerProfile {
@@ -39,6 +45,11 @@ export interface PlayerProfile {
   worldCupGoals: number | null;
   uclGoals: number | null;
   titles: number | null;
+  careerApps: number | null;
+  brasileiraoGoals: number | null;
+  libertadoresGoals: number | null;
+  worldCupsPlayed: number | null;
+  debutYear: number | null;
 }
 
 export type RestrictionKind = 'none' | 'club' | 'country';
@@ -64,8 +75,18 @@ export interface MatchPlayer {
   name: string;
 }
 
+/** Variações que o anfitrião pode ligar junto com o tema. */
+export interface MatchOptions {
+  /** Números escondidos até o apito final. */
+  blind?: boolean;
+  /** Segundos por jogada (padrão 90; relâmpago 45). */
+  turnSeconds?: number;
+}
+
 export interface MatchState {
   status: MatchStatus;
+  /** Opcional para manter compatibilidade com partidas já gravadas. */
+  options?: MatchOptions;
   players: [MatchPlayer, MatchPlayer | null];
   modeId: string | null;
   /** Uma restrição por rodada (índice = slot). */

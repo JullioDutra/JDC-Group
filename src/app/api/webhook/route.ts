@@ -3,6 +3,7 @@ import { createLookup } from '@/lib/ai';
 import { secretMatches } from '@/lib/auth';
 import { handleMessage } from '@/lib/game/engine';
 import { renderImage } from '@/lib/images/render';
+import { ownerCheck } from '@/lib/owners';
 import { getStore } from '@/lib/store';
 import { getProvider } from '@/lib/whatsapp';
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
   if (!(await store.markProcessed(message.id))) return NextResponse.json({ ok: true, duplicate: true });
 
   try {
-    const outgoing = await handleMessage(message, { store, lookup: createLookup(store) });
+    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck() });
     for (const out of outgoing) {
       if (out.type === 'text') await provider.sendText(message.groupJid, out.text);
       else await provider.sendImage(message.groupJid, await renderImage(out.image), out.caption);

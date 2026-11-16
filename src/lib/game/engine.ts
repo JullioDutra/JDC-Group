@@ -1,6 +1,6 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
-import { GameMode, MODES, getMode, metricValue } from './modes';
+import { FAST_TURN_SECONDS, GameMode, MODES, getMode, metricValue, parseModeChoice } from './modes';
 import { CLUBS, NATIONS, drawDistinct, getTeam, isFromNation, playedForClub } from './teams';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import {
@@ -25,6 +25,22 @@ export interface EngineDeps {
   lookup: PlayerLookup;
   now?: () => Date;
   rng?: () => number;
+  /**
+   * Quem pode mandar "ativar grupo"/"desativar grupo". Sem a função, qualquer
+   * pessoa pode. Em produção vem de OWNER_NUMBERS.
+   */
+  canManageGroup?: (senderJid: string) => boolean;
+}
+
+/** Outra mensagem alterou a partida no meio do processamento. */
+class ConflictError extends Error {}
+
+export function turnSeconds(state: MatchState): number {
+  return state.options?.turnSeconds ?? TURN_SECONDS;
+}
+
+export function isBlind(state: MatchState): boolean {
+  return Boolean(state.options?.blind) && state.status !== 'FINISHED';
 }
 
 const text = (t: string): Outgoing => ({ type: 'text', text: t });
@@ -57,7 +73,7 @@ const HELP = [
   '• *modos* — lista os temas',
   '• *placar* — campinho da partida atual',
   '• *ranking* — tabela do grupo',
-  `• *tempo* — cobra o adversário que passou de ${TURN_SECONDS}s`,
+  `• *tempo* — cobra o adversário que estourou o tempo da jogada`,
   '• *cancelar* — desiste/encerra a partida',
   '• *desativar grupo* — o bot para de ler este grupo',
 ].join('\n');
@@ -66,7 +82,7 @@ const RULES = [
   `📋 *Como se joga ${GAME_NAME}*`,
   '',
   '1. Alguém manda *iniciar jogo*. O primeiro que responder *aceitar* é o adversário.',
-  '2. O anfitrião escolhe o tema (gols, assistências, valor de mercado, idade...).',
+  '2. O anfitrião escolhe o tema (gols, assistências, valor de mercado, idade...). Extras: some *cego* (números escondidos até o fim) ou *relâmpago* (45s por jogada). Ex.: *3 cego*.',
   '3. São 6 rodadas, uma por posição: goleiro, 2 defensores, 2 meias e 1 atacante.',
   '4. Na sua vez, mande só o *nome do jogador*. A IA confere se ele existe, se joga na posição e informa o número dele no tema.',
   '5. Jogador inválido não passa a vez: você tenta de novo. Ninguém pode repetir um jogador já escalado.',
@@ -87,6 +103,13 @@ function turnPrompt(state: MatchState): string {
     restrictionLine(state.restrictions[state.round]) +
     `👉 *${player.name}*, mande o nome do seu ${POSITION_LABEL[slot]}.`
   );
+}
+
+function twistLabel(state: MatchState): string {
+  const parts = [];
+  if (state.options?.blind) parts.push('às cegas 🙈');
+  if (turnSeconds(state) !== TURN_SECONDS) parts.push(`relâmpago ${turnSeconds(state)}s ⚡`);
+  return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
 function scoreLine(state: MatchState, mode: GameMode): string {
@@ -116,15 +139,6 @@ function drawRestrictions(mode: GameMode, rng: () => number): Restriction[] {
   if (mode.restriction === 'none') return SLOTS.map(() => ({ kind: 'none' }));
   const pool = mode.restriction === 'club' ? CLUBS : NATIONS;
   return drawDistinct(pool, SLOTS.length, rng).map((t) => ({ kind: mode.restriction, teamId: t.id }));
-}
-
-function parseModeChoice(norm: string, rng: () => number): GameMode | undefined {
-  if (['aleatorio', 'sortear', 'sorteio', 'tanto faz', '0'].includes(norm)) {
-    return MODES[Math.floor(rng() * MODES.length)];
-  }
-  const n = Number(norm);
-  if (Number.isInteger(n)) return MODES.find((m) => m.number === n);
-  return MODES.find((m) => normalize(m.name) === norm || m.id === norm);
 }
 
 function isStale(state: MatchState, now: number): boolean {
@@ -159,7 +173,23 @@ function applyPick(state: MatchState, side: Side, pick: { name: string; key: str
 
 // ---------- Motor ----------
 
+/**
+ * Processa uma mensagem do grupo e devolve o que o bot deve responder.
+ * Se outra mensagem mexer na partida ao mesmo tempo (dois webhooks em
+ * paralelo), refaz o processamento sobre o estado novo, em vez de perder a jogada.
+ */
 export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await handleOnce(msg, deps);
+    } catch (error) {
+      if (!(error instanceof ConflictError)) throw error;
+    }
+  }
+  return [];
+}
+
+async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
   const { store } = deps;
   const now = (deps.now ?? (() => new Date()))();
   const nowMs = now.getTime();
@@ -167,13 +197,17 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
   const norm = normalize(msg.text);
   const sender: MatchPlayer = { jid: msg.senderJid, name: msg.senderName };
 
+  const manager = deps.canManageGroup?.(msg.senderJid) ?? true;
+
   // O bot só "enxerga" grupos ativados; em qualquer outro, tudo é ignorado.
   if (norm === 'ativar grupo') {
+    if (!manager) return [];
     await store.setGroupActive(msg.groupJid, msg.groupName, true, msg.senderJid);
     return [text(`✅ *${GAME_NAME}* ativado neste grupo!\nMande *iniciar jogo* para desafiar alguém ou *ajuda* para ver os comandos.`)];
   }
   if (!(await store.isGroupActive(msg.groupJid))) return [];
   if (norm === 'desativar grupo') {
+    if (!manager) return [text('🔒 Só o dono do bot pode desativar o jogo neste grupo.')];
     await store.setGroupActive(msg.groupJid, msg.groupName, false, msg.senderJid);
     return [text('👋 Bot desativado neste grupo. Para voltar, mande *ativar grupo*.')];
   }
@@ -218,7 +252,8 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
 
   const save = async (out: Outgoing[]): Promise<Outgoing[]> => {
     state.updatedAt = nowMs;
-    return (await store.saveMatch(match!)) ? out : [];
+    if (!(await store.saveMatch(match!))) throw new ConflictError();
+    return out;
   };
 
   if (norm === 'cancelar' || norm === 'desistir') {
@@ -243,23 +278,32 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
       {
         type: 'image',
         image: { kind: 'modes' },
-        caption: `🤝 *${sender.name}* aceitou!\n*${state.players[0].name}*, escolha o tema: mande o *número* (1 a ${MODES.length}) ou *aleatório*.`,
+        caption: `🤝 *${sender.name}* aceitou!\n*${state.players[0].name}*, escolha o tema: mande o *número* (1 a ${MODES.length}) ou *aleatório*. Quer tempero? Ex.: *3 cego* ou *5 relâmpago*.`,
       },
     ]);
   }
 
   if (state.status === 'MODE_SELECT') {
     if (side !== 0) return [];
-    const chosen = parseModeChoice(norm, rng);
-    if (!chosen) return [];
+    const parsed = parseModeChoice(norm, rng);
+    if (!parsed) return [];
+    const chosen = parsed.mode;
     state.modeId = chosen.id;
+    state.options = {
+      blind: parsed.twists.blind,
+      turnSeconds: parsed.twists.fast ? FAST_TURN_SECONDS : TURN_SECONDS,
+    };
     state.restrictions = drawRestrictions(chosen, rng);
     state.status = 'PLAYING';
     state.round = 0;
     state.turn = roundStarter(0);
     state.turnStartedAt = nowMs;
     return save([
-      { type: 'image', image: { kind: 'kickoff', state: structuredClone(state) }, caption: `🎬 Tema: *${chosen.name}*. Bola rolando!` },
+      {
+        type: 'image',
+        image: { kind: 'kickoff', state: structuredClone(state) },
+        caption: `🎬 Tema: *${chosen.name}*${twistLabel(state)}. Bola rolando!`,
+      },
       text(turnPrompt(state)),
     ]);
   }
@@ -267,18 +311,20 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
   if (state.status !== 'PLAYING' || !mode) return [];
 
   if (norm === 'placar') {
-    return [{ type: 'image', image: { kind: 'pitch', state }, caption: `${scoreLine(state, mode)}\n\n${turnPrompt(state)}` }];
+    const head = isBlind(state) ? '🙈 Modo cego: os números aparecem no apito final.' : scoreLine(state, mode);
+    return [{ type: 'image', image: { kind: 'pitch', state }, caption: `${head}\n\n${turnPrompt(state)}` }];
   }
 
   if (norm === 'tempo') {
     if (side === null || side === state.turn) return [];
     const elapsed = Math.floor((nowMs - state.turnStartedAt) / 1000);
-    if (elapsed < TURN_SECONDS) {
-      return [text(`⏱️ Calma! *${state.players[state.turn]!.name}* ainda tem ${TURN_SECONDS - elapsed}s.`)];
+    const limit = turnSeconds(state);
+    if (elapsed < limit) {
+      return [text(`⏱️ Calma! *${state.players[state.turn]!.name}* ainda tem ${limit - elapsed}s.`)];
     }
     const late = state.players[state.turn]!;
     const step = applyPick(state, state.turn, { name: 'Tempo esgotado', key: `tempo-${state.round}-${state.turn}`, value: mode.penalty }, nowMs);
-    const lead = `⏱️ *${late.name}* estourou o tempo e ficou com *${formatNumber(mode.penalty)} ${mode.unit}* nesta posição.`;
+    const lead = `⏱️ *${late.name}* estourou o tempo e ficou com a pior nota possível nesta posição (*${formatNumber(mode.penalty)} ${mode.unit}*).`;
     return advance(lead, step);
   }
 
@@ -319,7 +365,10 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
   }
 
   const step = applyPick(state, side, { name: profile.name, key, value }, nowMs);
-  return advance(`✅ *${profile.name}* — *${formatNumber(value)} ${mode.unit}*`, step);
+  const confirmed = isBlind(state)
+    ? `✅ *${profile.name}* escalado! O número fica em segredo até o fim. 🤫`
+    : `✅ *${profile.name}* — *${formatNumber(value)} ${mode.unit}*`;
+  return advance(confirmed, step);
 
   /**
    * Responde a uma escolha. No meio da rodada vai só texto (rápido);
@@ -329,8 +378,9 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
     if (step === 'same-round') return save([text(`${lead}\n\n${turnPrompt(state)}`)]);
     const image = { kind: 'pitch' as const, state: structuredClone(state) };
     if (step === 'round-done') {
+      const head = isBlind(state) ? '🙈 Placar escondido até o apito final.' : scoreLine(state, mode!);
       return save([
-        { type: 'image', image, caption: `${lead}\n${scoreLine(state, mode!)}` },
+        { type: 'image', image, caption: `${lead}\n${head}` },
         text(turnPrompt(state)),
       ]);
     }

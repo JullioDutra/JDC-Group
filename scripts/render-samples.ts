@@ -33,6 +33,8 @@ const specs: Record<string, ImageSpec> = {
   '2-temas': { kind: 'modes' },
   '3-inicio': { kind: 'kickoff', state: { ...base, modeId: 'milionarios' } },
   '4-campinho-parcial': { kind: 'pitch', state: base },
+  '4b-campinho-cego': { kind: 'pitch', state: { ...base, modeId: 'rodados', options: { blind: true, turnSeconds: 45 } } },
+  '3b-inicio-cego-relampago': { kind: 'kickoff', state: { ...base, modeId: 'raiz', options: { blind: true, turnSeconds: 45 } } },
   '5-campinho-final': { kind: 'pitch', state: final },
   '6-ranking': {
     kind: 'ranking', groupName: 'Resenha FC',

@@ -3,7 +3,7 @@ import { MODES } from '@/lib/game/modes';
 
 const STEPS = [
   { img: 'desafio', title: '1. Desafio', text: 'Alguém manda "iniciar jogo". O primeiro que responder "aceitar" entra.' },
-  { img: 'temas', title: '2. Tema', text: 'O anfitrião escolhe entre 11 temas — ou deixa a sorte decidir.' },
+  { img: 'temas', title: '2. Tema', text: `O anfitrião escolhe entre ${MODES.length} temas — ou deixa a sorte decidir. Extras: cego e relâmpago.` },
   { img: 'inicio', title: '3. Regras na tela', text: 'Antes da bola rolar, uma imagem resume o tema e como vencer.' },
   { img: 'campinho', title: '4. Campinho', text: 'A cada rodada o campo é atualizado com os escalados e seus números.' },
 ];
@@ -16,7 +16,7 @@ const COMMANDS: Array<[string, string]> = [
   ['modos', 'mostra os temas'],
   ['placar', 'campinho da partida'],
   ['ranking', 'tabela do grupo'],
-  ['tempo', 'cobra quem passou de 90s'],
+  ['tempo', 'cobra quem estourou o relógio'],
   ['cancelar', 'desiste da partida'],
   ['desativar grupo', 'desliga o bot'],
 ];
@@ -78,7 +78,7 @@ export default function Home() {
 
         <section>
           <p className="eyebrow">Temas</p>
-          <h2>11 jeitos de provar que você sabe</h2>
+          <h2>{MODES.length} jeitos de provar que você sabe</h2>
           <ul className="modes">
             {MODES.map((m) => (
               <li key={m.id}>

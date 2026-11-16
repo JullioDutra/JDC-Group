@@ -5,7 +5,15 @@ Dois jogadores escalam goleiro, 2 defensores, 2 meias e 1 atacante dentro de um 
 (gols, assistências, valor de mercado, idade…). A IA da Maritaca valida cada jogador e
 informa o número dele; vence a melhor soma. Cada etapa chega ao grupo como imagem.
 
-Planejamento completo (pesquisa, regras, imagens, arquitetura, roadmap): [docs/PLANEJAMENTO.md](docs/PLANEJAMENTO.md).
+## Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| [docs/PLANEJAMENTO.md](docs/PLANEJAMENTO.md) | Futebol: pesquisa, 17 temas, extras, imagens, arquitetura, revisão técnica, próximos jogos |
+| [docs/PLATAFORMA.md](docs/PLATAFORMA.md) | Vários jogos no mesmo número: marca, mecânicas, arquitetura multi-jogo, isolamento, fases |
+| [docs/ANIMES.md](docs/ANIMES.md) | Duelo Otaku (planejamento) |
+| [docs/CONHECIMENTOS-GERAIS.md](docs/CONHECIMENTOS-GERAIS.md) | Sabichão: Stop, Volta ao Mundo, Brasil de Ponta a Ponta… (planejamento) |
+| [docs/EVOLUTION.md](docs/EVOLUTION.md) | Virada do número do RPG na Evolution sem afetar o bot pessoal |
 
 ## Stack
 
@@ -30,9 +38,11 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 2. Vercel → Storage → Neon, região **São Paulo (aws-sa-east-1)**, a mesma das funções (`gru1` em `vercel.json`). Isso cria `DATABASE_URL`.
 3. Configure as variáveis de `.env.example`.
 4. Crie as tabelas: `curl -X POST https://SEU-APP/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`
-5. No gateway de WhatsApp, aponte o webhook de mensagens para `https://SEU-APP/api/webhook?token=$WEBHOOK_SECRET`.
+5. Evolution: siga [docs/EVOLUTION.md](docs/EVOLUTION.md). `POST /api/admin/evolution-setup` aponta o webhook só da instância do jogo; `GET /api/admin/status` confere tudo.
 6. No grupo: `ativar grupo` → `iniciar jogo`.
 
 ## Comandos no grupo
 
 `ativar grupo` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar grupo`
+
+Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).

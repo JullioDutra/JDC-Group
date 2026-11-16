@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { TURN_SECONDS, totals } from '../game/engine';
+import { TURN_SECONDS, isBlind, totals, turnSeconds } from '../game/engine';
 import { MODES, getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
@@ -48,32 +48,41 @@ function challenge(host: string): ReactElement {
 const RESTRICTION_TAG = { none: 'LIVRE', club: 'CLUBE', country: 'SELEÇÃO' } as const;
 
 function modesMenu(): ReactElement {
-  return stage(
-    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill('ANFITRIÃO ESCOLHE', C.panel, C.lime, 24)),
-    txt('ESCOLHA O TEMA', { fontFamily: DISPLAY, fontSize: 76, lineHeight: 1.1, marginTop: 26, marginBottom: 16 }),
+  const half = Math.ceil(MODES.length / 2);
+  const card = (m: (typeof MODES)[number]) =>
     box(
-      { flexDirection: 'column', gap: 8, flexGrow: 1 },
-      ...MODES.map((m) =>
+      {
+        alignItems: 'center', gap: 14, backgroundColor: C.panel, border: `2px solid ${C.panelLine}`,
+        borderRadius: 16, padding: '0 14px', height: 100, flexShrink: 0,
+      },
+      txt(m.number, {
+        width: 52, height: 52, borderRadius: 12, backgroundColor: C.lime, color: C.ink, flexShrink: 0,
+        fontFamily: DISPLAY, fontSize: 30, alignItems: 'center', justifyContent: 'center',
+      }),
+      box(
+        { flexDirection: 'column', flexGrow: 1, width: 360 },
+        txt(upper(fit(m.name, 20)), { fontFamily: DISPLAY, fontSize: 30, lineHeight: 1.1, letterSpacing: 0.5 }),
+        txt(m.tagline.split(' · ')[0], { fontSize: 22, color: C.muted, fontWeight: 500, lineHeight: 1.15 }),
         box(
-          {
-            alignItems: 'center', gap: 22, backgroundColor: C.panel, border: `2px solid ${C.panelLine}`,
-            borderRadius: 18, padding: '0 22px', height: 78, flexShrink: 0,
-          },
-          txt(m.number, {
-            width: 58, height: 58, borderRadius: 14, backgroundColor: C.lime, color: C.ink,
-            fontFamily: DISPLAY, fontSize: 36, alignItems: 'center', justifyContent: 'center',
+          { gap: 8, marginTop: 4 },
+          txt(RESTRICTION_TAG[m.restriction], { fontSize: 16, fontWeight: 700, letterSpacing: 1.5, color: C.white, backgroundColor: 'rgba(255,255,255,0.10)', padding: '1px 8px', borderRadius: 6 }),
+          txt(m.direction === 'high' ? 'MAIOR VENCE' : 'MENOR VENCE', {
+            fontSize: 16, fontWeight: 700, letterSpacing: 1.5, color: C.ink, padding: '1px 8px', borderRadius: 6,
+            backgroundColor: m.direction === 'high' ? C.lime : C.guest,
           }),
-          box(
-            { flexDirection: 'column', flexGrow: 1 },
-            txt(upper(m.name), { fontFamily: DISPLAY, fontSize: 34, lineHeight: 1.1, letterSpacing: 1 }),
-            txt(m.tagline.split(' · ')[0], { fontSize: 24, color: C.muted, fontWeight: 500, lineHeight: 1.1 }),
-          ),
-          pill(RESTRICTION_TAG[m.restriction], 'rgba(255,255,255,0.08)', C.white, 20),
-          pill(m.direction === 'high' ? 'MAIOR VENCE' : 'MENOR VENCE', m.direction === 'high' ? C.lime : C.guest, C.ink, 20),
         ),
       ),
+    );
+  const column = (list: typeof MODES) => box({ flexDirection: 'column', gap: 10, width: 476 }, ...list.map(card));
+  return stage(
+    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.8), pill('ANFITRIÃO ESCOLHE', C.panel, C.lime, 22)),
+    txt('ESCOLHA O TEMA', { fontFamily: DISPLAY, fontSize: 66, lineHeight: 1.1, marginTop: 14, marginBottom: 12 }),
+    box({ gap: 16, flexGrow: 1 }, column(MODES.slice(0, half)), column(MODES.slice(half))),
+    box(
+      { flexDirection: 'column', alignItems: 'center', marginTop: 8 },
+      txt('Mande o número do tema ou ALEATÓRIO', { fontSize: 30, fontWeight: 700, color: C.lime }),
+      txt('Extras: some CEGO (números secretos) ou RELÂMPAGO (45s) · ex.: 3 cego', { fontSize: 24, fontWeight: 500, color: C.muted }),
     ),
-    txt('Mande o número do tema ou ALEATÓRIO', { fontSize: 30, fontWeight: 700, color: C.lime, marginTop: 14, justifyContent: 'center' }),
   );
 }
 
@@ -88,7 +97,16 @@ function kickoff(state: MatchState): ReactElement {
       txt(upper(fit(firstName(state.players[side]!.name), 12)), { fontFamily: DISPLAY, fontSize: 60, lineHeight: 1.1 }),
     );
   return stage(
-    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(`TEMA ${mode.number}`, C.lime, C.ink, 26)),
+    box(
+      { justifyContent: 'space-between', alignItems: 'center' },
+      brand(),
+      box(
+        { gap: 10 },
+        ...(state.options?.blind ? [pill('ÀS CEGAS', C.guest, C.ink, 24)] : []),
+        ...(turnSeconds(state) !== TURN_SECONDS ? [pill('RELÂMPAGO', C.host, C.ink, 24)] : []),
+        pill(`TEMA ${mode.number}`, C.lime, C.ink, 24),
+      ),
+    ),
     box(
       { flexDirection: 'column', marginTop: 40 },
       txt('BOLA ROLANDO', { fontSize: 30, fontWeight: 700, letterSpacing: 6, color: C.lime }),
@@ -105,8 +123,8 @@ function kickoff(state: MatchState): ReactElement {
       nameCard(1, 'flex-end'),
     ),
     box(
-      { flexDirection: 'column', gap: 18, marginTop: 34, flexGrow: 1 },
-      ...mode.rules.map((rule, i) =>
+      { flexDirection: 'column', gap: 16, marginTop: 30, flexGrow: 1 },
+      ...[...mode.rules, ...(state.options?.blind ? ['Às cegas: os números ficam secretos até o apito final.'] : [])].map((rule, i) =>
         box(
           { alignItems: 'center', gap: 20 },
           txt(i + 1, {
@@ -121,7 +139,7 @@ function kickoff(state: MatchState): ReactElement {
     box(
       { marginTop: 26, justifyContent: 'space-between' },
       txt('Na sua vez, mande só o nome do jogador', { fontSize: 28, color: C.muted, fontWeight: 500 }),
-      txt(`${TURN_SECONDS}s por jogada`, { fontSize: 28, color: C.lime, fontWeight: 700 }),
+      txt(`${turnSeconds(state)}s por jogada`, { fontSize: 28, color: C.lime, fontWeight: 700 }),
     ),
   );
 }
@@ -133,7 +151,7 @@ const ROW_H = 118;
 const MID_H = 76;
 const SHORT: Record<Position, string> = { GOL: 'GOL', DEF: 'DEF', MEI: 'MEI', ATA: 'ATA' };
 
-function token(pick: Pick | null, position: Position, color: string): ReactElement {
+function token(pick: Pick | null, position: Position, color: string, hidden = false): ReactElement {
   if (!pick) {
     return box(
       { flexDirection: 'column', alignItems: 'center', width: 330 },
@@ -144,7 +162,7 @@ function token(pick: Pick | null, position: Position, color: string): ReactEleme
       txt('aguardando', { fontSize: 22, color: 'rgba(255,255,255,0.7)', fontWeight: 500, marginTop: 4 }),
     );
   }
-  const value = formatNumber(pick.value);
+  const value = hidden ? '?' : formatNumber(pick.value);
   return box(
     { flexDirection: 'column', alignItems: 'center', width: 330 },
     txt(value, {
@@ -165,7 +183,7 @@ function pitchRow(state: MatchState, side: Side, slots: number[]): ReactElement 
   const teams = slots.map((s) => getTeam(state.restrictions[s]?.teamId)?.name).filter(Boolean) as string[];
   return box(
     { height: ROW_H, alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%' },
-    ...slots.map((s) => token(state.picks[side][s], SLOTS[s], SIDE_COLOR[side])),
+    ...slots.map((s) => token(state.picks[side][s], SLOTS[s], SIDE_COLOR[side], isBlind(state))),
     team && side === 0
       ? box(
           { position: 'absolute', right: 14, top: 0, height: ROW_H, flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', gap: 4 },
@@ -186,6 +204,7 @@ function pitch(state: MatchState): ReactElement {
     const color = i % 2 ? C.grassB : C.grassA;
     return `${color} ${i * 12.5}%, ${color} ${(i + 1) * 12.5}%`;
   }).join(', ');
+  const hidden = isBlind(state);
   const best = mode.direction === 'high' ? Math.max(a, b) : Math.min(a, b);
   const scoreBox = (side: Side, total: number) =>
     box(
@@ -195,9 +214,9 @@ function pitch(state: MatchState): ReactElement {
         box({ width: 18, height: 18, borderRadius: 9, backgroundColor: SIDE_COLOR[side] }),
         txt(upper(fit(firstName(state.players[side]!.name), 12)), { fontSize: 32, fontWeight: 700, letterSpacing: 1 }),
       ),
-      txt(formatNumber(total), {
+      txt(hidden ? '???' : formatNumber(total), {
         fontFamily: DISPLAY, fontSize: 92, lineHeight: 1.05,
-        color: a !== b && total === best ? C.lime : C.white,
+        color: !hidden && a !== b && total === best ? C.lime : C.white,
       }),
     );
   const centerLabel = finished
@@ -219,7 +238,7 @@ function pitch(state: MatchState): ReactElement {
         { flexDirection: 'column', alignItems: 'center', width: 330 },
         ball(46),
         txt(upper(mode.name), { fontFamily: DISPLAY, fontSize: mode.name.length > 12 ? 30 : 40, marginTop: 8, color: C.white, letterSpacing: 1 }),
-        txt(`${mode.unit} · ${mode.direction === 'high' ? 'maior soma vence' : 'menor soma vence'}`, { fontSize: 22, color: C.muted, fontWeight: 500 }),
+        txt(hidden ? 'às cegas · revelação no fim' : `${mode.unit} · ${mode.direction === 'high' ? 'maior soma vence' : 'menor soma vence'}`, { fontSize: 22, color: hidden ? C.guest : C.muted, fontWeight: hidden ? 700 : 500 }),
       ),
       scoreBox(1, b),
     ),

@@ -21,9 +21,10 @@ export function containsPhrase(haystack: string, needle: string): boolean {
 export function looksLikePlayerName(raw: string): boolean {
   const text = raw.trim();
   if (text.length < 2 || text.length > 40) return false;
-  if (/[?!@#\d\n]|https?:/i.test(text)) return false;
+  if (/[?!@#\n]|https?:/i.test(text)) return false;
   const norm = normalize(text);
-  if (!norm) return false;
+  if (!norm || /^\d+$/.test(norm.replace(/ /g, ''))) return false; // só números: não é nome
+  if (/\d{3,}/.test(norm)) return false; // "Messi 900 gols" não é um nome
   const words = norm.split(' ');
   if (words.length > 5) return false;
   if (/^(k+|ha+|rs+|a*ha(ha)+|ok|sim|nao|vai|bora|opa|oi|eita|vish|boa|top)$/.test(norm)) return false;
