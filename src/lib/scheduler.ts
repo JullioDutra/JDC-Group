@@ -20,7 +20,8 @@ export function publicOrigin(request: Request): string {
 
 export async function scheduleTick(origin: string, groupJid: string, token: string, delaySeconds: number): Promise<void> {
   if (!hasScheduler()) return;
-  const client = new Client({ token: process.env.QSTASH_TOKEN! });
+  // QSTASH_URL: endpoint da região da conta (a integração da Upstash na Vercel preenche).
+  const client = new Client({ token: process.env.QSTASH_TOKEN!, ...(process.env.QSTASH_URL ? { baseUrl: process.env.QSTASH_URL } : {}) });
   await client.publishJSON({
     url: `${origin}/api/tick`,
     body: { groupJid, token },

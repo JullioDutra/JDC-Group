@@ -129,7 +129,7 @@ Em **Vercel → duelo-de-craques → Settings → Environment Variables** (ambie
 | `ADMIN_NUMBERS` | seu número com DDI, só dígitos: `55DDDNUMERO` (pode ter mais de um, separados por vírgula) |
 | `MARITACA_API_KEY` | sua chave da Maritaca |
 | `MARITACA_MODEL` | `sabia-4` |
-| `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | painel do Upstash → QStash |
+| `QSTASH_URL`, `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | painel do Upstash → QStash |
 | `PUBLIC_APP_URL` | `https://duelo-de-craques-peach.vercel.app` |
 | `DATABASE_URL` | criada pela integração Neon (Storage → Neon, região São Paulo) |
 
@@ -139,7 +139,8 @@ Depois: **Deployments → último deploy → Redeploy**. Em seguida, no seu comp
 APP=https://duelo-de-craques-peach.vercel.app
 ADMIN_KEY=...   # do Passo 0
 
-curl -s -X POST "$APP/api/admin/migrate" -H "Authorization: Bearer $ADMIN_KEY"   # cria as tabelas
+# As tabelas são criadas sozinhas no primeiro uso do banco. Se quiser forçar:
+curl -s -X POST "$APP/api/admin/migrate" -H "Authorization: Bearer $ADMIN_KEY"
 curl -s "$APP/api/admin/status"          -H "Authorization: Bearer $ADMIN_KEY" | jq
 ```
 
