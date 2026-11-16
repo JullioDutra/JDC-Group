@@ -144,7 +144,7 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 ## 5. Infraestrutura e deploy
 
 1. **Vercel**: importar o repositório (Next.js, sem configuração extra).
-2. **Neon**: Vercel → Storage → Create Database → Neon. A integração injeta `DATABASE_URL`.
+2. **Neon**: Vercel → Storage → Create Database → Neon, região São Paulo (`aws-sa-east-1`). As funções rodam em `gru1` (`vercel.json`), perto do banco, da Maritaca e dos jogadores. A integração injeta `DATABASE_URL`.
 3. **Variáveis**: ver `.env.example` (`MARITACA_API_KEY`, `WEBHOOK_SECRET`, `ADMIN_KEY`, dados do gateway).
 4. **Tabelas**: `curl -X POST https://SEU-APP.vercel.app/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`.
 5. **Gateway**: conectar o número (QR code) e apontar o webhook de mensagens recebidas para `https://SEU-APP.vercel.app/api/webhook?token=$WEBHOOK_SECRET`.

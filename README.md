@@ -27,7 +27,7 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 ## Deploy
 
 1. Importe o repositório na Vercel.
-2. Vercel → Storage → Neon (cria `DATABASE_URL`).
+2. Vercel → Storage → Neon, região **São Paulo (aws-sa-east-1)**, a mesma das funções (`gru1` em `vercel.json`). Isso cria `DATABASE_URL`.
 3. Configure as variáveis de `.env.example`.
 4. Crie as tabelas: `curl -X POST https://SEU-APP/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`
 5. No gateway de WhatsApp, aponte o webhook de mensagens para `https://SEU-APP/api/webhook?token=$WEBHOOK_SECRET`.
