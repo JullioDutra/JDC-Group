@@ -9,6 +9,20 @@ Roteiro de comandos, na ordem, para rodar na VPS onde está a Evolution API.
 
 **Por que instância nova em vez de reaproveitar a do RPG:** ela nasce limpa, sem webhook, Typebot/Chatwoot/OpenAI ou configurações herdadas do RPG, com nome certo e token novo. O preço é ler o QR de novo, o que você já disse que pode fazer.
 
+## O seu servidor (levantado em 16/11/2026)
+
+| Item | O que é | Na virada |
+|---|---|---|
+| `~/evolution` → containers `evolution-api-1`, `evolution-postgres-1`, `evolution-redis-1` | **A Evolution v2.3.7 do bot pessoal e do RPG**, porta 8080, HTTP (`http://191.252.221.133:8080`) | Só criamos/desconectamos instâncias pela API. **Nada de `docker compose down/restart` aqui** |
+| Webhook global | Não aparece no `.env` (fica desligado por padrão) | O bot pessoal não recebe eventos do número do jogo. Anexo A não se aplica |
+| `~/rpg-dark` | Código do RPG (o app roda na Vercel) | Nada a fazer na VPS; o webhook dele deixa de ser chamado quando o número sai da instância |
+| Container `rpg-relogio` (porta 8787) | Relógio do RPG | **Parar e tirar do início automático** (pode estar mandando mensagens pelo número) |
+| Containers `cadrius-*` e `cadrius_traefik` | **Outro projeto (Cadrius)**, com Evolution própria | **Não mexer** |
+| `ligar-webhook.sh` | Script do Finanças G&J (bot pessoal) | **Não usar** para o jogo: ele aponta para o app de finanças |
+| "System restart required" | Atualização do Ubuntu pendente | Não reiniciar a VPS durante a virada; deixar para um horário tranquilo (os containers voltam sozinhos, mas o bot pessoal fica fora por alguns minutos) |
+
+Valores para os comandos abaixo: `EVO=http://localhost:8080`, `C=evolution-api-1`, pasta `~/evolution`. Na Vercel: `EVOLUTION_API_URL=http://191.252.221.133:8080`.
+
 **Regras de ouro**
 1. **Não reinicie o container/processo da Evolution.** Nada aqui precisa disso, e um restart derrubaria o bot pessoal por alguns segundos.
 2. Todo comando que **escreve** usa o nome `$RPG` ou `$JOGOS`. O nome `$PESSOAL` só aparece em comandos de **leitura** (`find`, `connectionState`).
