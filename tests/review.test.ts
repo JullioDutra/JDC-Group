@@ -7,10 +7,10 @@ import { MODES, metricValue, parseModeChoice } from '../src/lib/game/modes';
 import { looksLikePlayerName } from '../src/lib/game/text';
 import type { Outgoing, PlayerProfile } from '../src/lib/game/types';
 import { MemoryStore } from '../src/lib/store/memory';
+import { asText } from './helpers';
 import { evolution } from '../src/lib/whatsapp/evolution';
 
 const G = 'grupo@g.us';
-const asText = (out: Outgoing[]) => out.map((o) => (o.type === 'text' ? o.text : `[img:${o.image.kind}] ${o.caption ?? ''}`)).join('\n');
 
 function setup(opts: { owners?: string[]; store?: MemoryStore } = {}) {
   const store = opts.store ?? new MemoryStore();
@@ -51,18 +51,18 @@ test('escolha de tema com extras', () => {
 test('modo cego esconde números até o fim e revela no apito final', async () => {
   const { say } = setup();
   const kickoff = asText(await startMatch(say, '1 cego relampago'));
-  assert.match(kickoff, /às cegas.*relâmpago 45s/);
+  assert.match(kickoff, /às cegas, relâmpago, 45s/);
   const pick = asText(await say('Ana', 'ceni'));
-  assert.match(pick, /escalado! O número fica em segredo/);
+  assert.match(pick, /escalado. O número fica em segredo/);
   assert.doesNotMatch(pick, /131/);
   const round = asText(await say('Bia', 'neuer'));
   assert.match(round, /Placar escondido/);
-  assert.doesNotMatch(round, /📊/);
+  assert.doesNotMatch(round, /Placar:/);
   for (const [who, name] of [['Bia', 'Marcelo'], ['Ana', 'Sergio Ramos'], ['Ana', 'Koeman'], ['Bia', 'Roberto Carlos'], ['Bia', 'Kaká'], ['Ana', 'Zico'], ['Ana', 'Lampard'], ['Bia', 'Iniesta'], ['Bia', 'Pelé']]) {
     await say(who, name);
   }
   const end = asText(await say('Ana', 'cristiano ronaldo'));
-  assert.match(end, /📊 Ana \*2\.291\* x \*1\.258\* Bia[\s\S]*Ana\* venceu/);
+  assert.match(end, /Placar: Ana \*2\.291\* x \*1\.258\* Bia[\s\S]*Ana\* venceu/);
 });
 
 test('temas novos usam os campos novos (Rodados conta clubes)', async () => {
@@ -170,7 +170,7 @@ test('mesmo jogador não pode ser usado de novo, nem por outro time (Alexis: Ars
   const { say, store } = setup();
   await startMatch(say, '1');
   // Leva a partida direto para a rodada dos meias, com o 2º meia restrito ao Manchester United.
-  const m = (await store.getActiveMatch(G))!;
+  const m = (await store.getActiveMatch(G))! as unknown as { state: import('../src/lib/game/types').MatchState; id: string; groupJid: string; version: number };
   const filler = (k: string) => ({ name: k, key: k, value: 1 });
   m.state.picks = [
     [filler('a1'), filler('a2'), filler('a3'), null, null, null],

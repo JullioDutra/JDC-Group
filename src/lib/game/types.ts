@@ -115,6 +115,92 @@ export interface Match {
   state: MatchState;
 }
 
+// ---------- Modo em Grupo (salas) ----------
+
+export type PartyGame = 'escalacao' | 'top10';
+
+export interface PartyPlayer {
+  jid: string;
+  name: string;
+  score: number;
+  /** Rodadas seguidas sem responder; 2 ou mais = ausente (sai da conta de "todos"). */
+  missed: number;
+  hits: number;
+  lastHitAt: number;
+}
+
+export interface PartyBase {
+  kind: 'party';
+  game: PartyGame;
+  status: 'LOBBY' | 'PLAYING' | 'FINISHED' | 'CANCELLED';
+  host: MatchPlayer;
+  players: PartyPlayer[];
+  createdAt: number;
+  updatedAt: number;
+  /** Prazo da rodada atual e o token do agendamento (QStash) que vai fechá-la. */
+  deadline: number | null;
+  timerToken: string | null;
+  seq: number;
+  /** Jids que já foram avisados nesta rodada (evita repetir aviso). */
+  warned: string[];
+}
+
+export interface EscalacaoParty extends PartyBase {
+  game: 'escalacao';
+  modeId: string | null;
+  randomMode: boolean;
+  options: MatchOptions;
+  restrictions: Restriction[];
+  round: number;
+  /** picks[jid][slot] */
+  picks: Record<string, Array<Pick | null>>;
+  /** Chaves normalizadas de tudo que já foi escalado na partida (respostas únicas). */
+  used: string[];
+}
+
+export interface Top10Item {
+  name: string;
+  aliases?: string[];
+  detail?: string;
+  /** Posição oficial (empates repetem a posição). */
+  rank: number;
+}
+
+export interface Top10List {
+  id: string;
+  category: 'futebol' | 'geral' | 'anime';
+  title: string;
+  source: string;
+  items: Top10Item[];
+}
+
+export interface Top10Party extends PartyBase {
+  game: 'top10';
+  category: Top10List['category'] | null;
+  listId: string | null;
+  /** Quem acertou cada item (índice = item da lista). */
+  found: Array<{ jid: string; name: string } | null>;
+  /** Palpites já usados (certos e errados), normalizados: não podem se repetir. */
+  guesses: string[];
+  /** Quem mandou o último palpite válido: não pode mandar dois seguidos. */
+  lastJid: string | null;
+}
+
+export type PartyState = EscalacaoParty | Top10Party;
+
+export type SessionState = MatchState | PartyState;
+
+export interface Session {
+  id: string;
+  groupJid: string;
+  version: number;
+  state: SessionState;
+}
+
+export function isParty(state: SessionState): state is PartyState {
+  return (state as PartyState).kind === 'party';
+}
+
 export interface RankingRow {
   jid: string;
   name: string;
@@ -126,6 +212,7 @@ export interface RankingRow {
 
 /** Mensagem recebida do WhatsApp, já normalizada pelo adaptador. */
 export interface IncomingMessage {
+  /** Id da mensagem no WhatsApp (usado também para reagir a ela). */
   id: string;
   groupJid: string;
   groupName?: string;
@@ -137,11 +224,18 @@ export interface IncomingMessage {
 /** O que o motor quer mandar de volta para o grupo. */
 export type Outgoing =
   | { type: 'text'; text: string }
-  | { type: 'image'; image: ImageSpec; caption?: string };
+  | { type: 'image'; image: ImageSpec; caption?: string }
+  /** Reação (ex.: ✅) na mensagem de um jogador: confirma sem poluir o grupo. */
+  | { type: 'react'; messageId: string; senderJid: string; emoji: string }
+  /** Agenda o fim da rodada (QStash). Não é enviado ao grupo. */
+  | { type: 'schedule'; delaySeconds: number; token: string };
 
 export type ImageSpec =
   | { kind: 'challenge'; host: string }
   | { kind: 'modes' }
   | { kind: 'kickoff'; state: MatchState }
   | { kind: 'pitch'; state: MatchState }
-  | { kind: 'ranking'; groupName: string; rows: RankingRow[] };
+  | { kind: 'ranking'; groupName: string; rows: RankingRow[] }
+  | { kind: 'partyLobby'; state: PartyState }
+  | { kind: 'partyTable'; state: EscalacaoParty }
+  | { kind: 'top10Board'; state: Top10Party; list: Top10List; final: boolean };

@@ -1,13 +1,16 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
+import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { CLUBS, NATIONS, drawDistinct, getTeam, isFromNation, playedForClub } from './teams';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
+import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import {
   IncomingMessage,
   Match,
   MatchPlayer,
   MatchState,
+  isParty,
   Outgoing,
   POSITION_LABEL,
   Restriction,
@@ -32,8 +35,6 @@ export interface EngineDeps {
   canManageGroup?: (senderJid: string) => boolean;
 }
 
-/** Outra mensagem alterou a partida no meio do processamento. */
-class ConflictError extends Error {}
 
 export function turnSeconds(state: MatchState): number {
   return state.options?.turnSeconds ?? TURN_SECONDS;
@@ -65,22 +66,28 @@ function roundStarter(round: number): Side {
 // ---------- Textos ----------
 
 const HELP = [
-  `⚽ *${GAME_NAME}* — comandos`,
+  `*${GAME_NAME}* — comandos`,
   '',
-  '• *iniciar jogo* — lança um desafio no grupo',
-  '• *iniciar aleatório* — desafio com tema sorteado (ótimo para quem está começando)',
+  '*1 x 1*',
+  '• *iniciar jogo* — lança um desafio',
+  '• *iniciar aleatório* — desafio com tema sorteado (bom para começar)',
   '• *aceitar* — entra como adversário',
-  '• *regras* — como funciona',
-  '• *modos* — lista os temas',
-  '• *placar* — campinho da partida atual',
-  '• *ranking* — tabela do grupo',
-  `• *tempo* — cobra o adversário que estourou o tempo da jogada`,
-  '• *cancelar* — desiste/encerra a partida',
-  '• *desativar grupo* — o bot para de ler este grupo',
+  '• *placar* — campinho da partida',
+  '• *tempo* — cobra quem estourou o tempo da jogada',
+  '• *cancelar* — desiste/encerra',
+  '',
+  '*Em grupo (até 10 pessoas)*',
+  '• *abrir sala* — Escalação em Grupo: todos escalam juntos',
+  '• *top 10* — acertem as posições de um ranking',
+  '• *entrar* · *sair* · *começar* e *encerrar* (anfitrião)',
+  '',
+  '*Geral*',
+  '• *regras* · *modos* · *ranking*',
+  '• *desativar grupo* — só admin',
 ].join('\n');
 
 const RULES = [
-  `📋 *Como se joga ${GAME_NAME}*`,
+  `*Como se joga ${GAME_NAME}*`,
   '',
   '1. Alguém manda *iniciar jogo*. O primeiro que responder *aceitar* é o adversário.',
   '2. O anfitrião escolhe o tema (ou manda *aleatório* para sortear; com *iniciar aleatório* o sorteio é automático). Temas: gols, assistências, valor de mercado, idade... Extras: some *cego* (números escondidos até o fim) ou *relâmpago* (45s por jogada). Ex.: *3 cego*.',
@@ -94,7 +101,7 @@ const RULES = [
 function restrictionLine(restriction: Restriction): string {
   const team = getTeam(restriction.teamId);
   if (!team) return '';
-  return restriction.kind === 'club' ? `🏟️ Clube da rodada: *${team.name}*\n` : `🌎 Seleção da rodada: *${team.name}*\n`;
+  return restriction.kind === 'club' ? `Clube da rodada: *${team.name}*\n` : `Seleção da rodada: *${team.name}*\n`;
 }
 
 function turnPrompt(state: MatchState): string {
@@ -103,20 +110,20 @@ function turnPrompt(state: MatchState): string {
   return (
     `*Rodada ${state.round + 1}/${SLOTS.length} · ${POSITION_LABEL[slot].toUpperCase()}*\n` +
     restrictionLine(state.restrictions[state.round]) +
-    `👉 *${player.name}*, mande o nome do seu ${POSITION_LABEL[slot]}.`
+    `*${player.name}*, mande o nome do seu ${POSITION_LABEL[slot]}.`
   );
 }
 
 function twistLabel(state: MatchState): string {
   const parts = [];
-  if (state.options?.blind) parts.push('às cegas 🙈');
-  if (turnSeconds(state) !== TURN_SECONDS) parts.push(`relâmpago ${turnSeconds(state)}s ⚡`);
+  if (state.options?.blind) parts.push('às cegas');
+  if (turnSeconds(state) !== TURN_SECONDS) parts.push(`relâmpago, ${turnSeconds(state)}s`);
   return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
 function scoreLine(state: MatchState, mode: GameMode): string {
   const [a, b] = totals(state);
-  return `📊 ${firstName(state.players[0].name)} *${formatNumber(a)}* x *${formatNumber(b)}* ${firstName(state.players[1]!.name)} (${mode.unit})`;
+  return `Placar: ${firstName(state.players[0].name)} *${formatNumber(a)}* x *${formatNumber(b)}* ${firstName(state.players[1]!.name)} (${mode.unit})`;
 }
 
 // ---------- Estado ----------
@@ -214,6 +221,41 @@ export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Pro
   return [];
 }
 
+/**
+ * Fim de prazo de uma rodada (chamado pelo QStash, ou pelo simulador com force).
+ * Só salas têm prazo automático; no 1 x 1 o relógio é cobrado com "tempo".
+ */
+export async function handleTick(
+  groupJid: string,
+  token: string | null,
+  deps: EngineDeps,
+  force = false,
+): Promise<Outgoing[]> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const session = await deps.store.getActiveMatch(groupJid);
+      if (!session || !isParty(session.state)) return [];
+      const out = await handlePartyTick(
+        session,
+        token,
+        {
+          store: deps.store,
+          lookup: deps.lookup,
+          now: (deps.now ?? (() => new Date()))(),
+          rng: deps.rng ?? Math.random,
+          isAdmin: () => false,
+        },
+        force,
+      );
+      await recordPartyIfFinished(session, deps.store);
+      return out;
+    } catch (error) {
+      if (!(error instanceof ConflictError)) throw error;
+    }
+  }
+  return [];
+}
+
 async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
   const { store } = deps;
   const now = (deps.now ?? (() => new Date()))();
@@ -232,21 +274,57 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   if (!(await store.isGroupActive(msg.groupJid))) return [];
   if (norm === 'desativar grupo') {
-    if (!manager) return [text('🔒 Só um admin do bot pode desativar o jogo neste grupo.')];
+    if (!manager) return [text('Só um admin do bot pode desativar o jogo neste grupo.')];
     await store.setGroupActive(msg.groupJid, msg.groupName, false, msg.senderJid);
-    return [text('👋 Bot desativado neste grupo. Para voltar, mande *ativar grupo*.')];
+    return [text('Bot desativado neste grupo. Para voltar, mande *ativar grupo*.')];
   }
 
   if (norm === 'ajuda' || norm === 'menu' || norm === 'comandos') return [text(HELP)];
-  if (norm === 'regras') return [text(RULES)];
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (norm === 'ranking') {
     const rows = await store.getRanking(msg.groupJid, 10);
-    if (rows.length === 0) return [text('📉 Ainda não há partidas finalizadas neste grupo.')];
+    if (rows.length === 0) return [text('Ainda não há partidas finalizadas neste grupo.')];
     return [{ type: 'image', image: { kind: 'ranking', groupName: msg.groupName ?? 'Grupo', rows } }];
   }
 
-  let match = await store.getActiveMatch(msg.groupJid);
+  const session = await store.getActiveMatch(msg.groupJid);
+  const partyDeps = {
+    store,
+    lookup: deps.lookup,
+    now,
+    rng,
+    isAdmin: (jid: string) => deps.canManageGroup?.(jid) ?? false,
+  };
+
+  // ----- Modo em Grupo (salas) -----
+  if (session && isParty(session.state)) {
+    if (isPartyStale(session.state, nowMs)) {
+      session.state.status = 'CANCELLED';
+      await store.saveMatch(session);
+    } else {
+      if (parseStart(norm) || parsePartyStart(norm)) {
+        return [text('Já existe uma sala em andamento neste grupo. Esperem terminar ou o anfitrião manda *encerrar*.')];
+      }
+      const out = await handlePartyMessage(msg, session, partyDeps);
+      await recordPartyIfFinished(session, store);
+      return out;
+    }
+  }
+  const partyStart = parsePartyStart(norm);
+  if (partyStart) {
+    if (session && !isParty(session.state) && !isStale(session.state, nowMs)) {
+      return [text('Já existe uma partida em andamento neste grupo. Esperem terminar ou mandem *cancelar*.')];
+    }
+    if (session && !isParty(session.state)) {
+      session.state.status = 'CANCELLED';
+      await store.saveMatch(session);
+    }
+    return createParty(msg, partyStart, partyDeps);
+  }
+
+  // ----- 1 x 1 -----
+  let match = session && !isParty(session.state) ? (session as Match) : null;
+  if (norm === 'regras') return [text(RULES)];
 
   // Partida abandonada: encerra para liberar o grupo.
   if (match && isStale(match.state, nowMs)) {
@@ -258,7 +336,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   const start = parseStart(norm);
   if (start) {
     if (match) {
-      return [text('⏳ Já existe uma partida em andamento neste grupo. Esperem terminar ou mandem *cancelar*.')];
+      return [text('Já existe uma partida em andamento neste grupo. Esperem terminar ou mandem *cancelar*.')];
     }
     const lobby = newLobby(sender, nowMs);
     if (start.random) lobby.options = { autoRandom: true };
@@ -269,8 +347,8 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
         type: 'image',
         image: { kind: 'challenge', host: sender.name },
         caption: start.random
-          ? `🔥 *${sender.name}* quer jogo com *tema surpresa* 🎲! O primeiro que mandar *aceitar* entra em campo.`
-          : `🔥 *${sender.name}* quer jogo! O primeiro que mandar *aceitar* entra em campo.`,
+          ? `*${sender.name}* quer jogo com tema surpresa 🎲. O primeiro que mandar *aceitar* entra em campo.`
+          : `*${sender.name}* quer jogo. O primeiro que mandar *aceitar* entra em campo.`,
       },
     ];
   }
@@ -292,11 +370,11 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     if (state.players[1] && mode && state.picks.some((p) => p.some(Boolean))) {
       // Desistir com a bola rolando conta como derrota (W.O.).
       state.winner = (1 - side) as Side;
-      const saved = await save([text(`🏳️ *${sender.name}* desistiu. Vitória de *${state.players[state.winner]!.name}* por W.O.`)]);
+      const saved = await save([text(`*${sender.name}* desistiu. Vitória de *${state.players[state.winner]!.name}* por W.O.`)]);
       if (saved.length) await store.recordResult(msg.groupJid, state.players as [MatchPlayer, MatchPlayer], state.winner);
       return saved;
     }
-    return save([text('🚫 Partida cancelada.')]);
+    return save([text('Partida cancelada.')]);
   }
 
   /** Sorteia restrições, liga os extras e manda a imagem de abertura. */
@@ -311,7 +389,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     state.round = 0;
     state.turn = roundStarter(0);
     state.turnStartedAt = nowMs;
-    const label = random ? `🎲 Tema sorteado: *${chosen.name}*` : `🎬 Tema: *${chosen.name}*`;
+    const label = random ? `🎲 Tema sorteado: *${chosen.name}*` : `Tema: *${chosen.name}*`;
     return save([
       {
         type: 'image',
@@ -324,17 +402,17 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
 
   if (state.status === 'LOBBY') {
     if (norm !== 'aceitar') return [];
-    if (side === 0) return [text('😅 Você não pode aceitar o próprio desafio. Chama alguém!')];
+    if (side === 0) return [text('Você não pode aceitar o próprio desafio. Chama alguém.')];
     state.players[1] = sender;
     if (state.options?.autoRandom) {
-      return kickoff(randomMode(rng), { blind: false, fast: false }, true, `🤝 *${sender.name}* aceitou!\n`);
+      return kickoff(randomMode(rng), { blind: false, fast: false }, true, `*${sender.name}* aceitou.\n`);
     }
     state.status = 'MODE_SELECT';
     return save([
       {
         type: 'image',
         image: { kind: 'modes' },
-        caption: `🤝 *${sender.name}* aceitou!\n*${state.players[0].name}*, escolha o tema: mande o *número* (1 a ${MODES.length}) ou *aleatório*. Quer tempero? Ex.: *3 cego* ou *5 relâmpago*.`,
+        caption: `*${sender.name}* aceitou.\n*${state.players[0].name}*, escolha o tema: mande o *número* (1 a ${MODES.length}) ou *aleatório*. Extras: *3 cego*, *5 relâmpago*.`,
       },
     ]);
   }
@@ -349,7 +427,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (state.status !== 'PLAYING' || !mode) return [];
 
   if (norm === 'placar') {
-    const head = isBlind(state) ? '🙈 Modo cego: os números aparecem no apito final.' : scoreLine(state, mode);
+    const head = isBlind(state) ? 'Modo cego: os números aparecem no apito final.' : scoreLine(state, mode);
     return [{ type: 'image', image: { kind: 'pitch', state }, caption: `${head}\n\n${turnPrompt(state)}` }];
   }
 
@@ -358,11 +436,11 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     const elapsed = Math.floor((nowMs - state.turnStartedAt) / 1000);
     const limit = turnSeconds(state);
     if (elapsed < limit) {
-      return [text(`⏱️ Calma! *${state.players[state.turn]!.name}* ainda tem ${limit - elapsed}s.`)];
+      return [text(`Calma, *${state.players[state.turn]!.name}* ainda tem ${limit - elapsed}s.`)];
     }
     const late = state.players[state.turn]!;
     const step = applyPick(state, state.turn, { name: 'Tempo esgotado', key: `tempo-${state.round}-${state.turn}`, value: mode.penalty }, nowMs);
-    const lead = `⏱️ *${late.name}* estourou o tempo e ficou com a pior nota possível nesta posição (*${formatNumber(mode.penalty)} ${mode.unit}*).`;
+    const lead = `*${late.name}* estourou o tempo e ficou com a pior nota possível nesta posição (*${formatNumber(mode.penalty)} ${mode.unit}*).`;
     return advance(lead, step);
   }
 
@@ -377,7 +455,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     const who = state.players[state.turn]!.name;
     const slot = POSITION_LABEL[SLOTS[state.round]];
     return save([
-      text(`⏳ Segura, *${sender.name}*! Agora é a vez de *${who}* escolher o ${slot}. Sua jogada só vale quando chegar a sua vez.`),
+      text(`Segura, *${sender.name}*: agora é a vez de *${who}* escolher o ${slot}. Sua jogada só vale na sua vez.`),
     ]);
   }
 
@@ -387,7 +465,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     profile = await deps.lookup(msg.text.trim());
   } catch (error) {
     console.error('lookup failed', error);
-    return [text('⚠️ O VAR caiu por um instante (falha na IA). Mande o nome de novo.')];
+    return [text('A consulta falhou por um instante. Mande o nome de novo.')];
   }
   const retry = `A vez continua com *${sender.name}*.`;
   if (!profile) {
@@ -416,12 +494,12 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   const value = metricValue(profile, mode.metric, now);
   if (value === null) {
-    return [text(`🤷 Não tenho um dado confiável de ${mode.tagline.split(' · ')[0].toLowerCase()} para *${profile.name}*. Escolha outro. ${retry}`)];
+    return [text(`❌ Não tenho um dado confiável de ${mode.tagline.split(' · ')[0].toLowerCase()} para *${profile.name}*. Escolha outro. ${retry}`)];
   }
 
   const step = applyPick(state, side, { name: profile.name, key, value, ...(typed !== key ? { aliases: [typed] } : {}) }, nowMs);
   const confirmed = isBlind(state)
-    ? `✅ *${profile.name}* escalado! O número fica em segredo até o fim. 🤫`
+    ? `✅ *${profile.name}* escalado. O número fica em segredo até o fim.`
     : `✅ *${profile.name}* — *${formatNumber(value)} ${mode.unit}*`;
   return advance(confirmed, step);
 
@@ -433,7 +511,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     if (step === 'same-round') return save([text(`${lead}\n\n${turnPrompt(state)}`)]);
     const image = { kind: 'pitch' as const, state: structuredClone(state) };
     if (step === 'round-done') {
-      const head = isBlind(state) ? '🙈 Placar escondido até o apito final.' : scoreLine(state, mode!);
+      const head = isBlind(state) ? 'Placar escondido até o apito final.' : scoreLine(state, mode!);
       return save([
         { type: 'image', image, caption: `${lead}\n${head}` },
         text(turnPrompt(state)),
@@ -443,7 +521,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     image.state.winner = state.winner;
     const result =
       state.winner === 'draw'
-        ? '🤝 *Empate!* Ninguém leva essa.'
+        ? '*Empate.* Ninguém leva essa.'
         : `🏆 *${state.players[state.winner]!.name}* venceu o duelo!`;
     const saved = await save([
       {

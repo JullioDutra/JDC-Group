@@ -1,5 +1,5 @@
 import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
-import type { Match, MatchPlayer, MatchState, PlayerProfile, RankingRow, Side } from '../game/types';
+import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { SCHEMA_STATEMENTS } from './schema';
 import type { Store } from './types';
 
@@ -34,31 +34,31 @@ export class NeonStore implements Store {
             updated_at = now()`;
   }
 
-  async getActiveMatch(groupJid: string): Promise<Match | null> {
+  async getActiveMatch(groupJid: string): Promise<Session | null> {
     const rows = await this.sql`
       SELECT id, version, state FROM matches
       WHERE group_jid = ${groupJid} AND status NOT IN ('FINISHED', 'CANCELLED')
       LIMIT 1`;
     if (!rows[0]) return null;
-    return { id: String(rows[0].id), groupJid, version: rows[0].version, state: rows[0].state as MatchState };
+    return { id: String(rows[0].id), groupJid, version: rows[0].version, state: rows[0].state as SessionState };
   }
 
-  async createMatch(groupJid: string, state: MatchState): Promise<Match | null> {
+  async createMatch(groupJid: string, state: SessionState): Promise<Session | null> {
     const rows = await this.sql`
       INSERT INTO matches (group_jid, status, mode_id, state)
-      VALUES (${groupJid}, ${state.status}, ${state.modeId}, ${JSON.stringify(state)}::jsonb)
+      VALUES (${groupJid}, ${state.status}, ${'modeId' in state ? state.modeId : null}, ${JSON.stringify(state)}::jsonb)
       ON CONFLICT DO NOTHING
       RETURNING id, version`;
     if (!rows[0]) return null;
     return { id: String(rows[0].id), groupJid, version: rows[0].version, state };
   }
 
-  async saveMatch(match: Match): Promise<boolean> {
+  async saveMatch(match: Session): Promise<boolean> {
     const rows = await this.sql`
       UPDATE matches
       SET state = ${JSON.stringify(match.state)}::jsonb,
           status = ${match.state.status},
-          mode_id = ${match.state.modeId},
+          mode_id = ${'modeId' in match.state ? match.state.modeId : null},
           version = version + 1,
           updated_at = now()
       WHERE id = ${match.id} AND version = ${match.version}
@@ -95,11 +95,20 @@ export class NeonStore implements Store {
   }
 
   async recordResult(groupJid: string, players: [MatchPlayer, MatchPlayer], winner: Side | 'draw') {
-    for (const side of [0, 1] as const) {
-      const p = players[side];
-      const win = winner === side ? 1 : 0;
-      const draw = winner === 'draw' ? 1 : 0;
-      const loss = win || draw ? 0 : 1;
+    await this.recordResults(
+      groupJid,
+      players.map((player, side) => ({
+        player,
+        result: winner === 'draw' ? ('draw' as const) : winner === side ? ('win' as const) : ('loss' as const),
+      })),
+    );
+  }
+
+  async recordResults(groupJid: string, rows: Array<{ player: MatchPlayer; result: 'win' | 'draw' | 'loss' }>) {
+    for (const { player: p, result } of rows) {
+      const win = result === 'win' ? 1 : 0;
+      const draw = result === 'draw' ? 1 : 0;
+      const loss = result === 'loss' ? 1 : 0;
       await this.sql`
         INSERT INTO group_stats (group_jid, player_jid, name, games, wins, draws, losses)
         VALUES (${groupJid}, ${p.jid}, ${p.name}, 1, ${win}, ${draw}, ${loss})

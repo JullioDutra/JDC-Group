@@ -1,6 +1,7 @@
 /** Gera PNGs de exemplo de todas as telas em ./samples (npm run render:samples). */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { SLOTS, type ImageSpec, type MatchState } from '../src/lib/game/types';
+import { SLOTS, type EscalacaoParty, type ImageSpec, type MatchState, type PartyPlayer, type Top10Party } from '../src/lib/game/types';
+import { getTop10List } from '../src/lib/party/top10-lists';
 import { renderImage } from '../src/lib/images/render';
 
 const base: MatchState = {
@@ -28,7 +29,42 @@ const final: MatchState = {
   winner: 0,
 };
 
+const names = ['Júllio', 'Camila', 'Tiago', 'Bernardo', 'Lu', 'Marina', 'Pedro'];
+const players: PartyPlayer[] = names.map((n, i) => ({ jid: `p${i}`, name: n, score: 0, missed: 0, hits: 0, lastHitAt: 0 }));
+const partyBase = {
+  kind: 'party' as const, host: { jid: 'p0', name: 'Júllio' }, players, createdAt: 0, updatedAt: 0,
+  deadline: null, timerToken: null, seq: 0, warned: [],
+};
+const pool = [['Rogério Ceni', 131], ['Neuer', 0], ['Alisson', 1], ['Ter Stegen', 0], ['Taffarel', 0], ['Marcos', 0], ['Dida', 0],
+  ['Sergio Ramos', 140], ['Marcelo', 60], ['Roberto Carlos', 113], ['Piqué', 60], ['Lúcio', 30], ['Thiago Silva', 25], ['Cafu', 20],
+  ['Koeman', 250], ['Maldini', 33], ['Daniel Alves', 70], ['Puyol', 21], ['Juan', 15], ['Miranda', 18], ['Marquinhos', 30]] as const;
+const picks: EscalacaoParty['picks'] = {};
+players.forEach((p, i) => {
+  picks[p.jid] = SLOTS.map((_, slot) => {
+    if (slot > 2) return null;
+    const [name, value] = pool[slot * 7 + i];
+    return { name, key: name, value };
+  });
+});
+const escalacao: EscalacaoParty = {
+  ...partyBase, game: 'escalacao', status: 'PLAYING', modeId: 'artilheiros', randomMode: false, options: { blind: false, turnSeconds: 60 },
+  restrictions: SLOTS.map(() => ({ kind: 'none' })), round: 3, picks, used: [],
+};
+const finalPicks = structuredClone(picks);
+players.forEach((p, i) => { for (let s = 3; s < 6; s++) finalPicks[p.jid][s] = { name: ['Zico', 'Kaká', 'Pelé', 'Iniesta', 'Lampard', 'Romário', 'Neymar'][(i + s) % 7], key: `k${i}${s}`, value: 100 + ((i * 37 + s * 53) % 400) }; });
+const list = getTop10List('carros-2025')!;
+const top10: Top10Party = {
+  ...partyBase, game: 'top10', status: 'PLAYING', category: 'geral', listId: list.id,
+  found: [null, { jid: 'p1', name: 'Camila' }, null, null, { jid: 'p0', name: 'Júllio' }, { jid: 'p2', name: 'Tiago' }, null, { jid: 'p1', name: 'Camila' }, null, null],
+  guesses: [], lastJid: 'p1',
+};
+
 const specs: Record<string, ImageSpec> = {
+  '7-sala-aberta': { kind: 'partyLobby', state: { ...escalacao, status: 'LOBBY', round: -1 } },
+  '8-sala-tabela': { kind: 'partyTable', state: escalacao },
+  '8b-sala-final': { kind: 'partyTable', state: { ...escalacao, status: 'FINISHED', round: 5, picks: finalPicks } },
+  '9-top10': { kind: 'top10Board', state: top10, list, final: false },
+  '9b-top10-final': { kind: 'top10Board', state: { ...top10, status: 'FINISHED' }, list, final: true },
   '1-desafio': { kind: 'challenge', host: 'Júllio Dutra' },
   '2-temas': { kind: 'modes' },
   '3-inicio': { kind: 'kickoff', state: { ...base, modeId: 'milionarios' } },

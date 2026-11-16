@@ -9,6 +9,7 @@ import { CLUBS, getTeam, playedForClub } from '../src/lib/game/teams';
 import { looksLikePlayerName } from '../src/lib/game/text';
 import type { Outgoing } from '../src/lib/game/types';
 import { MemoryStore } from '../src/lib/store/memory';
+import { asText } from './helpers';
 
 const G = 'grupo@g.us';
 
@@ -26,7 +27,6 @@ function setup() {
   return { store, say, advance: (s: number) => (clock += s * 1000), calls: () => calls };
 }
 
-const asText = (out: Outgoing[]) => out.map((o) => (o.type === 'text' ? o.text : `[img:${o.image.kind}] ${o.caption ?? ''}`)).join('\n');
 
 test('grupo não ativado é ignorado', async () => {
   const { say } = setup();
@@ -46,7 +46,7 @@ test('partida completa no modo Artilheiros', async () => {
   assert.match(asText(kickoff), /img:kickoff[\s\S]*Rodada 1\/6 · GOLEIRO[\s\S]*Ana/);
 
   // Fora da vez: um único aviso, sem gastar IA. Conversa de grupo e quem está de fora: ignorados.
-  assert.match(asText(await say('Bia', 'Neuer')), /Segura, \*Bia\*! Agora é a vez de \*Ana\* escolher o goleiro/);
+  assert.match(asText(await say('Bia', 'Neuer')), /Segura, \*Bia\*: agora é a vez de \*Ana\* escolher o goleiro/);
   assert.deepEqual(await say('Bia', 'Alisson'), [], 'só um aviso por vez');
   assert.deepEqual(await say('Ana', 'kkkk'), []);
   assert.deepEqual(await say('Zé', 'Neuer'), [], 'quem está de fora não escala');

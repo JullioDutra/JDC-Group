@@ -14,6 +14,7 @@ informa o número dele; vence a melhor soma. Cada etapa chega ao grupo como imag
 | [docs/ANIMES.md](docs/ANIMES.md) | Duelo Otaku (planejamento) |
 | [docs/CONHECIMENTOS-GERAIS.md](docs/CONHECIMENTOS-GERAIS.md) | Sabichão: Stop, Volta ao Mundo, Brasil de Ponta a Ponta… (planejamento) |
 | [docs/MODO-GRUPO.md](docs/MODO-GRUPO.md) | Modo em Grupo: sala de 10–15 com `entrar`, 1 resposta por jogador, respostas repetidas não valem, 14 modos (planejamento) |
+| [docs/TOP10.md](docs/TOP10.md) | Top 10: regras, listas no ar e temas planejados |
 | [docs/EVOLUTION.md](docs/EVOLUTION.md) | Virada do número do RPG na Evolution sem afetar o bot pessoal |
 
 ## Stack
@@ -45,5 +46,7 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 ## Comandos no grupo
 
 `ativar grupo` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar grupo`
+
+**Em grupo (até 10 pessoas):** `abrir sala` (Escalação em Grupo) ou `top 10` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`.
 
 `iniciar aleatório` sorteia o tema assim que alguém aceita. Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).

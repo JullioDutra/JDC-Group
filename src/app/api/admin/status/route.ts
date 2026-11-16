@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { hasMaritacaKey } from '@/lib/ai/maritaca';
 import { secretMatches } from '@/lib/auth';
 import { adminNumbers } from '@/lib/owners';
+import { hasScheduler } from '@/lib/scheduler';
 import { getStore, hasDatabase } from '@/lib/store';
 import { evolutionConfig, evolutionConnectionState, evolutionWebhook } from '@/lib/whatsapp/evolution';
 
@@ -33,6 +34,10 @@ export async function GET(request: Request) {
   report.ai = hasMaritacaKey()
     ? { provider: 'maritaca', model: process.env.MARITACA_MODEL || 'sabia-4' }
     : 'modo demo (MARITACA_API_KEY ausente)';
+
+  report.scheduler = hasScheduler()
+    ? { provider: 'qstash', signingKeys: Boolean(process.env.QSTASH_CURRENT_SIGNING_KEY && process.env.QSTASH_NEXT_SIGNING_KEY), publicUrl: process.env.PUBLIC_APP_URL ?? 'derivado da requisição' }
+    : 'sem QStash: rodadas vencidas fecham na próxima mensagem';
 
   const evo = evolutionConfig();
   const admins = adminNumbers();

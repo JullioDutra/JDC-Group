@@ -85,7 +85,7 @@ Comandos da sala:
 | `abrir sala` / `jogo em grupo` | qualquer membro | abre a sala e vira anfitrião |
 | `abrir sala futebol` / `anime` / `quiz` | qualquer membro | já escolhe o jogo |
 | `aleatório` | anfitrião | sorteia jogo e modo |
-| `entrar` / `entrar no jogo` | qualquer membro | entra na sala, até o limite do modo (aceito até a 3ª rodada, começando com 0) |
+| `entrar` / `entrar no jogo` | qualquer membro | entra na sala, até o limite do modo. Depois de começar, só até a **2ª rodada** (parâmetro `joinUntil` de cada modo); as posições perdidas contam como "sem resposta" |
 | `sair` | jogador | sai da sala |
 | `começar` | anfitrião | fecha as inscrições |
 | `placar` | qualquer um | placar parcial |
@@ -105,9 +105,9 @@ A rodada avança assim que **todos os inscritos tiverem uma resposta aceita**. T
 2. **Ausência**: quem fica 2 rodadas seguidas sem responder vira "ausente" e sai da conta de "todos". Volta assim que responder.
 3. **Anfitrião/admin** pode mandar `pular`.
 
-Sobre o relógio: a função da Vercel só roda quando chega uma mensagem, então ela não "acorda sozinha" quando o tempo acaba. Duas soluções, usadas juntas:
-- **Verificação preguiçosa**: qualquer mensagem no grupo depois do prazo fecha a rodada atrasada.
-- **Agendador externo** (recomendado: Upstash QStash, plano grátis): ao abrir a rodada, agendamos uma chamada a `/api/tick` para o segundo exato do prazo. O cron da Vercel não serve, porque no plano Hobby ele roda só uma vez por dia.
+Sobre o relógio (**decidido: QStash**, já implementado): a função da Vercel só roda quando chega uma mensagem, então ela não "acorda sozinha" quando o tempo acaba. Duas soluções, usadas juntas:
+- **Upstash QStash**: ao abrir a rodada, o bot agenda uma chamada assinada a `/api/tick` para o segundo do prazo. Se todos responderem antes, a chamada chega com um token velho e é ignorada.
+- **Verificação preguiçosa**: se o QStash falhar, qualquer mensagem no grupo depois do prazo fecha a rodada atrasada.
 
 ### 2.5 Regra anti-cola: respostas únicas (decisão tomada)
 
@@ -173,7 +173,7 @@ Mesmo formato (1080x1350) e a identidade do jogo escolhido (verde-estádio, roxo
 
 Cada modo mostra: mecânica, regra anti-cola, dados e em quais jogos aparece (⚽ 🎌 🧠). Todos seguem a §2.5: **uma resposta por jogador por rodada e nada se repete na partida**.
 
-### 4.0 Escalação em Grupo · ⚽ 🎌 🧠 · várias respostas certas · **o modo principal**
+### 4.0 Escalação em Grupo · ⚽ 🎌 🧠 · várias respostas certas · **o modo principal · implementado (⚽)**
 
 O Duelo de Craques para a sala toda. O tema é escolhido pelo anfitrião ou sorteado (`aleatório`): gols, idade, valor, altura etc. Em cada rodada, **todos** escalam a mesma posição:
 
@@ -225,9 +225,9 @@ Inspirado no "Jogo das Conexões" do Projeto Trivia e no Football Connections. O
 
 Do "um goleiro para cada letra" do Projeto Trivia. O bot sorteia **categoria + letra** ("goleiros com a letra C"). Cada jogador manda **1 nome** por rodada; nomes já ditos são recusados, então quem demora precisa ir mais fundo. Válido e único: 100 + ordem de chegada. São 5 letras por partida. Variante **Alfabeto completo**: a sala coopera para cobrir A–Z de uma categoria em 3 minutos, uma letra por mensagem e sem repetir.
 
-### 4.6 Top 10 coletivo · ⚽ 🎌 🧠 · várias respostas certas
+### 4.6 Top 10 · ⚽ 🎌 🧠 · várias respostas certas · **implementado**
 
-"Os 10 maiores artilheiros da história da Champions", "os 10 personagens mais favoritados de One Piece", "os 10 países mais populosos". Imagem com 10 lacunas. Cada rodada, **1 palpite por jogador**; acerto reivindica a posição (1º da lista = 100 … 10º = 10), e posição já revelada não vale de novo. Termina quando a lista fecha ou depois de 3 rodadas. Dados: listas curadas (futebol) e AniList/REST Countries/IBGE (dados reais).
+O bot mostra um ranking escondido ("Marcas de carro mais vendidas no Brasil em 2025") e cada acerto revela a posição ("✅ Ana acertou: 7º lugar — Jeep"). **Ninguém manda dois palpites seguidos: é preciso esperar outra pessoa responder.** Palpite já revelado ou já tentado não vale. Vence quem acertar mais posições, em 4 minutos ou até a lista acabar. Regras completas, 12 listas no ar e mais de 20 temas planejados em [`TOP10.md`](TOP10.md).
 
 ### 4.7 Chute Certo · ⚽ 🎌 🧠 · número único
 
@@ -265,11 +265,11 @@ Bandeira desenhada (SVG de domínio público), 1 tentativa por jogador, e o prim
 
 | Modo | ⚽ | 🎌 | 🧠 | Regra | Máx. | Dados | Prioridade |
 |---|---|---|---|---|---|---|---|
-| **Escalação em Grupo** | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA + cache (pronto) | **1** |
+| **Escalação em Grupo** ✔ | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA + cache | **1 (pronto)** |
 | Que time é esse? | ✅ | ✅ (grupo) | — | corrida, 1 tentativa | 15 | curado | **1** |
 | Quem é? (dicas) | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | cache/AniList/curado | **2** |
 | Alfabeto | ✅ | ✅ | ✅ | várias certas, sem repetir | 15 | IA | **2** |
-| Top 10 coletivo | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | curado/AniList/IBGE | **2** |
+| **Top 10** ✔ | ✅ | ✅ | ✅ | sem repetir; ninguém responde 2× seguidas | 10 | curado/AniList/IBGE | **1 (pronto)** |
 | Chute Certo | ✅ | ✅ | ✅ | número único | 15 | curado | **2** |
 | Sobrevivente | ✅ | ✅ | ✅ | várias certas + eliminação | 15 | IA | 3 |
 | Intruso | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado | 3 |
@@ -335,22 +335,23 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 
 ## 7. Fases
 
-| Fase | Entrega |
-|---|---|
-| **G1** | Sala (`abrir sala`, `entrar` com limite por modo, `começar`, ausentes, timer), regra de respostas únicas, pontuação e imagens base. Primeiro modo: **Escalação em Grupo** de futebol, que reaproveita temas, IA, cache e validações do 1 x 1 já pronto |
-| **G2** | **Que time é esse?** (50 times curados) e **Quem é?** (⚽, usando o cache) |
-| **G3** | **Alfabeto**, **Top 10 coletivo**, **Chute Certo** (⚽) |
-| **G4** | Os mesmos modos em 🎌 (AniList) e 🧠 (IBGE/REST Countries) |
-| **G5** | **Sobrevivente**, **Intruso**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; página de curadoria `/admin/conteudo` |
+| Fase | Entrega | Status |
+|---|---|---|
+| **G1** | Sala (`abrir sala`/`top 10`, `entrar` com limite, `começar`, `sair`, `encerrar`, `pular`), entrada até a 2ª rodada, ausentes, prazo via QStash, respostas únicas, reações ✅/❌, imagens (sala aberta, tabela, quadro do Top 10), ranking do grupo. Modos: **Escalação em Grupo** (⚽, 17 temas) e **Top 10** (12 listas) | **Pronto** |
+| **G2** | **Que time é esse?** (50 times curados) e **Quem é?** (⚽, usando o cache) | próximo |
+| **G3** | **Alfabeto**, **Chute Certo**, mais 18 listas de Top 10 | — |
+| **G4** | Escalação e Top 10 em 🎌 (AniList) e 🧠 (IBGE/REST Countries); `group_seen` para não repetir conteúdo | — |
+| **G5** | **Sobrevivente**, **Intruso**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; curadoria `/admin/conteudo` | — |
 
 ## 8. Decisões
 
 Tomadas:
-- ✅ **Uma resposta por jogador por rodada; respostas repetidas não valem** (nem por outro time). O jogo fica todo no grupo, sem resposta no privado.
+- ✅ **Uma resposta por jogador por rodada; respostas repetidas não valem** (nem por outro time). Tudo acontece no grupo, sem resposta no privado.
 - ✅ **Sala de 10 a 15 jogadores**, conforme o modo (§2.7).
+- ✅ **Entrada tardia até a 2ª rodada** nos jogos com rodadas (parâmetro `joinUntil` por modo; no Top 10, até a 2ª posição revelada). No 1 x 1, só os 2 jogadores.
+- ✅ **Prazos com Upstash QStash.**
+- ✅ **Mensagens limpas**: emoji só em pontos fixos (✅ aceito, ❌ recusado, 🏆 vencedor, 🎲 sorteio). Confirmações viram reação na mensagem, não texto.
 
-Em aberto (suas):
-1. **Entrar no meio**: aceitar até a 3ª rodada (sugestão) ou só antes de começar?
-2. **Agendador**: ok usar o Upstash QStash (grátis) para os tempos exatos?
-3. **StatsBomb**: só vale se a plataforma não for comercial; senão, as escalações históricas ficam 100% curadas.
-4. **Vídeos favoritos do Projeto Trivia**: mande 3 ou 4 links para eu detalhar mais formatos.
+Em aberto:
+1. **StatsBomb**: só vale se a plataforma não for comercial; senão, as escalações históricas do "Que time é esse?" ficam 100% curadas.
+2. **Links do Projeto Trivia**: você vai mandar para eu detalhar mais formatos.

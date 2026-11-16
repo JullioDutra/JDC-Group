@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { createLookup } from '@/lib/ai';
 import { secretMatches } from '@/lib/auth';
 import { handleMessage } from '@/lib/game/engine';
-import { renderImage } from '@/lib/images/render';
+import { dispatch } from '@/lib/dispatch';
 import { ownerCheck } from '@/lib/owners';
 import { getStore } from '@/lib/store';
+import { publicOrigin } from '@/lib/scheduler';
 import { getProvider } from '@/lib/whatsapp';
 
 export const runtime = 'nodejs';
@@ -30,10 +31,7 @@ export async function POST(request: Request) {
 
   try {
     const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck() });
-    for (const out of outgoing) {
-      if (out.type === 'text') await provider.sendText(message.groupJid, out.text);
-      else await provider.sendImage(message.groupJid, await renderImage(out.image), out.caption);
-    }
+    await dispatch(provider, message.groupJid, outgoing, publicOrigin(request));
     return NextResponse.json({ ok: true, sent: outgoing.length });
   } catch (error) {
     console.error('webhook failed', error);

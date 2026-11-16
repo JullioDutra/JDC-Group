@@ -72,6 +72,8 @@ Na Vercel (projeto `duelo-de-craques`), configure:
 | `EVOLUTION_INSTANCE` | nome exato da instância do RPG |
 | `ADMIN_NUMBERS` | seu número com DDI, ex.: `5511999998888` |
 | `MARITACA_API_KEY` | sua chave |
+| `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | do painel do Upstash (QStash): fecham as rodadas do Modo em Grupo na hora |
+| `PUBLIC_APP_URL` | `https://duelo-de-craques-peach.vercel.app` |
 | `DATABASE_URL` | vem da integração Neon |
 
 Depois do redeploy, confira sem mexer em nada:
@@ -120,6 +122,7 @@ curl -s -X POST "$EVO/webhook/set/NOME_DO_RPG" -H "apikey: $GLOBAL" -H "content-
 - **Grupos antigos do RPG:** o bot fica mudo neles. Saia dos que não vão jogar (`group/leaveGroup`) para reduzir eventos inúteis.
 - **Nome da instância:** continua o do RPG, e isso é só cosmético. Para renomear seria preciso criar outra instância e escanear o QR de novo com o mesmo chip, trocando depois `EVOLUTION_INSTANCE` e o token. Só vale se o nome incomodar.
 - **Risco de banimento:** é uso não oficial do WhatsApp. Ajuda que o número já é "aquecido" (meses de uso no RPG). Evite disparar mensagens para quem não pediu. O jogo só fala em grupos ativados e só responde a comandos, o que já é o padrão mais seguro.
+- **Reações:** o Modo em Grupo confirma respostas com reação (✅/❌) via `message/sendReaction`, o que gera menos mensagens no grupo.
 - **Carga no servidor:** a Evolution só repassa texto e imagens (~300 KB cada). As imagens são geradas na Vercel, não no seu servidor.
 
 ## 5. Checklist

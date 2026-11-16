@@ -52,4 +52,9 @@ export const zapi: WhatsAppProvider = {
       caption: caption ?? '',
     });
   },
+
+  async sendReaction(groupJid, messageId, _senderJid, emoji) {
+    const { url, headers } = config();
+    await postJson(`${url}/send-reaction`, headers, { phone: groupJid, messageId, reaction: emoji });
+  },
 };

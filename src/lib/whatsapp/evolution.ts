@@ -91,7 +91,19 @@ export const evolution: WhatsAppProvider = {
       media: png.toString('base64'),
     });
   },
+
+  async sendReaction(groupJid, messageId, _senderJid, emoji) {
+    await evoReaction(groupJid, messageId, emoji);
+  },
 };
+
+async function evoReaction(groupJid: string, messageId: string, emoji: string) {
+  const { url, instance, headers } = evolutionConfig();
+  await postJson(`${url}/message/sendReaction/${encodeURIComponent(instance)}`, headers, {
+    key: { remoteJid: groupJid, fromMe: false, id: messageId },
+    reaction: emoji,
+  });
+}
 
 async function evo(method: 'GET' | 'POST', path: string, body?: unknown): Promise<unknown> {
   const { url, instance, headers } = evolutionConfig();

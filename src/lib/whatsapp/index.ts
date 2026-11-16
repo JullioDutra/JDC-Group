@@ -11,6 +11,8 @@ export interface WhatsAppProvider {
   parseWebhook(body: unknown): IncomingMessage | null;
   sendText(groupJid: string, text: string): Promise<void>;
   sendImage(groupJid: string, png: Buffer, caption?: string): Promise<void>;
+  /** Reage a uma mensagem recebida (ex.: ✅). */
+  sendReaction(groupJid: string, messageId: string, senderJid: string, emoji: string): Promise<void>;
 }
 
 export function getProvider(): WhatsAppProvider {

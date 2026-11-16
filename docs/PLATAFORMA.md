@@ -8,6 +8,7 @@ Documentos relacionados:
 - [`CONHECIMENTOS-GERAIS.md`](CONHECIMENTOS-GERAIS.md): Sabichão
 - [`EVOLUTION.md`](EVOLUTION.md): virada do número do RPG sem afetar o bot pessoal
 - [`MODO-GRUPO.md`](MODO-GRUPO.md): **Modo em Grupo** (sala com `entrar`, todos respondem, nos três jogos)
+- [`TOP10.md`](TOP10.md): **Top 10** (regras, listas e temas)
 
 ## 1. Nome e marca
 
@@ -43,6 +44,16 @@ As regras de convivência no grupo são as mesmas para todos os jogos:
 - conversa paralela é ignorada; só a mensagem de quem está na vez vai para a IA;
 - W.O. em desistência; partida parada por 20 min se encerra sozinha;
 - `tempo` cobra quem estourou o relógio.
+
+### Estilo das mensagens
+
+Texto claro, curto e sem poluição de emoji:
+- **Emoji só em pontos fixos**: ✅ resposta aceita · ❌ recusada · 🏆 vencedor · 🎲 tema/lista sorteado. Nada de 🔥⚽👉⏳ decorativos.
+- **Confirmação vira reação** (✅/❌ na mensagem do jogador) sempre que o texto não acrescenta nada. Texto só quando explica algo (por que foi recusado, quem acertou qual posição).
+- **Negrito** (`*assim*`) para nomes e o que importa; uma ideia por linha.
+- Imagem quando muda o estado do jogo (início, fim de rodada, fim); no meio da rodada, só texto curto ou reação.
+
+Há um teste automático que falha se aparecer um emoji fora dessa lista.
 
 ## 3. Famílias de mecânica (o que se reaproveita)
 
