@@ -15,6 +15,8 @@ const COMMANDS: Array<[string, string]> = [
   ['aceitar', 'entra como adversário'],
   ['abrir sala', 'Escalação em Grupo (até 10)'],
   ['top 10', 'acertem as posições de um ranking'],
+  ['abrir que time é esse', 'time e ano pela escalação'],
+  ['abrir quem é', 'o craque pelas dicas'],
   ['entrar · começar', 'entra na sala · anfitrião dá a largada'],
   ['regras', 'explica o jogo'],
   ['modos', 'mostra os temas'],

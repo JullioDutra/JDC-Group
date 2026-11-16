@@ -191,11 +191,11 @@ Fim: soma de cada um, maior (ou menor) vence
 - Dados e validação: os mesmos do 1 x 1 (Maritaca + cache, restrição por clube/seleção, faixas de plausibilidade). 🎌 usa o Esquadrão (papéis) e 🧠 o Volta ao Mundo / Brasil de Ponta a Ponta.
 - Imagem por rodada: **tabela da sala** (cada jogador numa linha, as 6 posições em colunas, número em cada casa), em vez do campinho, porque o campinho só comporta 2 times. No modo cego, os números ficam escondidos até o fim.
 
-### 4.1 Quem é? (dicas progressivas) · ⚽ 🎌 🧠 · corrida
+### 4.1 Quem é? (dicas progressivas) · ⚽ 🎌 🧠 · corrida · **implementado (⚽)**
 
 O bot revela até 5 dicas, uma a cada 8 s. ⚽ nacionalidade → posição → clubes → títulos → número da camisa. 🎌 obra → papel → aparência → habilidade → ano de estreia. 🧠 personalidade, lugar ou objeto. **1 tentativa por jogador**; o primeiro a acertar leva **pontos conforme a dica**: 1ª 150, 2ª 120, 3ª 90, 4ª 60, 5ª 30. Dados: cache das fichas (futebol), AniList (anime) e lista curada (geral).
 
-### 4.2 Que time é esse? (escalação histórica) · ⚽ 🎌 · corrida
+### 4.2 Que time é esse? (escalação histórica) · ⚽ 🎌 · corrida · **implementado (⚽)**
 
 Pedido seu. O bot mostra uma **escalação em campinho**, só com os nomes:
 
@@ -266,8 +266,8 @@ Bandeira desenhada (SVG de domínio público), 1 tentativa por jogador, e o prim
 | Modo | ⚽ | 🎌 | 🧠 | Regra | Máx. | Dados | Prioridade |
 |---|---|---|---|---|---|---|---|
 | **Escalação em Grupo** ✔ | ✅ | ✅ | ✅ | várias certas, sem repetir | 10 | IA + cache | **1 (pronto)** |
-| Que time é esse? | ✅ | ✅ (grupo) | — | corrida, 1 tentativa | 15 | curado | **1** |
-| Quem é? (dicas) | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | cache/AniList/curado | **2** |
+| **Que time é esse?** ✔ | ✅ | ✅ (grupo) | — | corrida, 1 tentativa | 15 | curado (24 times) | **pronto** |
+| **Quem é?** ✔ | ✅ | ✅ | ✅ | corrida, 1 tentativa | 15 | curado (22 fichas) | **pronto** |
 | Alfabeto | ✅ | ✅ | ✅ | várias certas, sem repetir | 15 | IA | **2** |
 | **Top 10** ✔ | ✅ | ✅ | ✅ | sem repetir; ninguém responde 2× seguidas | 10 | curado/AniList/IBGE | **1 (pronto)** |
 | Chute Certo | ✅ | ✅ | ✅ | número único | 15 | curado | **2** |
@@ -337,11 +337,48 @@ src/app/api/tick/route.ts     chamado pelo agendador no prazo de cada rodada
 
 | Fase | Entrega | Status |
 |---|---|---|
-| **G1** | Sala (`abrir sala`/`top 10`, `entrar` com limite, `começar`, `sair`, `encerrar`, `pular`), entrada até a 2ª rodada, ausentes, prazo via QStash, respostas únicas, reações ✅/❌, imagens (sala aberta, tabela, quadro do Top 10), ranking do grupo. Modos: **Escalação em Grupo** (⚽, 17 temas) e **Top 10** (12 listas) | **Pronto** |
-| **G2** | **Que time é esse?** (50 times curados) e **Quem é?** (⚽, usando o cache) | próximo |
-| **G3** | **Alfabeto**, **Chute Certo**, mais 18 listas de Top 10 | — |
-| **G4** | Escalação e Top 10 em 🎌 (AniList) e 🧠 (IBGE/REST Countries); `group_seen` para não repetir conteúdo | — |
-| **G5** | **Sobrevivente**, **Intruso**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; curadoria `/admin/conteudo` | — |
+| **G1** | Sala (`abrir sala`/`top 10`, `entrar` com limite, `começar`, `sair`, `encerrar`, `pular`), entrada até a 2ª rodada, ausentes, prazo via QStash, respostas únicas, reações ✅/❌, imagens, ranking do grupo. **Escalação em Grupo** (⚽, 17 temas) e **Top 10** (12 listas) | **Pronto** |
+| **G2** | **Que time é esse?** (24 escalações históricas, 6 rodadas, time + ano) e **Quem é?** (22 craques, 8 rodadas, até 5 dicas que saem a cada 12 s) | **Pronto** |
+| **G3** | **Alfabeto**, **Chute Certo**, **Intruso** (só o nome), mais 18 listas de Top 10 | próximo |
+| **G4** | Os modos prontos em 🎌 (AniList) e 🧠 (IBGE/REST Countries); `group_seen` para não repetir conteúdo | — |
+| **G5** | **Sobrevivente**, **Conexões**, **Emoji**, **Stop coletivo**, **Draft da Resenha**, **Bandeiraço**, **Quiz Relâmpago**; curadoria `/admin/conteudo` | — |
+
+### Como jogar os prontos do G2
+
+| | Que time é esse? | Quem é? |
+|---|---|---|
+| Abrir | `abrir que time é esse` (ou `jogar ...`) | `abrir quem é` (ou `jogar quem é o craque`) |
+| Rodada | Imagem da escalação no campinho (ataque em cima, goleiro embaixo) | Texto com a dica 1; uma nova dica a cada 12 s, até 5 |
+| Palpite | Time + ano: `Brasil 94`, `Barça 2011`, `seleção de 70` | Nome do craque: `Ronaldinho`, `R9` |
+| Pontos | Time e ano: 150 · só o time (primeiro a acertar): 60 | 150, 120, 90, 60 ou 30, conforme a dica |
+| Regras | 1 palpite por pessoa por rodada; errar gasta; palpite igual a um já dito é recusado e não gasta | idem |
+| Fim da rodada | Alguém acerta tudo, todos tentaram ou 45 s | Alguém acerta, todos tentaram ou acabaram as 5 dicas |
+| Placar | Imagem a cada 3 rodadas e no fim | idem |
+
+O comando exige `abrir`/`jogar` na frente, porque "que time é esse?" e "quem é?" aparecem muito na conversa normal do grupo.
+
+### Verificação dos próximos modos
+
+Revisão de cada modo planejado contra o que já existe (motor de sala, QStash, respostas únicas, cache da IA, imagens):
+
+| Modo | Viável hoje? | O que reaproveita | Ajuste encontrado na verificação |
+|---|---|---|---|
+| **Alfabeto** | Sim | Sala, respostas únicas, Maritaca | A validação "é goleiro e começa com C?" sai da ficha que a IA já devolve (posição + nome). Sem custo novo |
+| **Chute Certo** | Sim | Sala, número único | Perguntas precisam de resposta exata e estável: banco curado, como o Top 10 (fonte + data) |
+| **Intruso** | Sim, simplificado | Motor de quiz do G2 | Julgar o *motivo* com IA é subjetivo e gera discussão no grupo. **Mudança:** vale só apontar o intruso; o motivo aparece na revelação |
+| **Sobrevivente** | Sim | Sala, QStash, respostas únicas | Precisa de um prazo por jogador (15 s), não por rodada: o QStash já suporta, é só agendar a cada vez |
+| **Conexões** | Sim | Motor de quiz, imagem de grade | Precisa de conteúdo curado (4 grupos × 4 nomes por partida). A IA pode rascunhar, mas a revisão é humana |
+| **Emoji** | Sim, com ajuste | Motor de quiz | O gerador de imagem (Satori) baixaria emojis da internet a cada imagem. **Mudança:** os emojis vão em **texto** (o WhatsApp mostra nativo), sem imagem |
+| **Stop coletivo** | Sim | Sala, Maritaca | Uma chamada de IA por rodada valida todas as palavras de uma vez. "Repetida não vale" já existe |
+| **Draft da Resenha** | Sim | Sala, cache, respostas únicas | A votação final é por número no grupo e é a única exceção à regra "respostas únicas" (votos podem coincidir) |
+| **Bandeiraço** | Sim | Motor de quiz | Bandeiras em SVG de domínio público dentro do projeto (sem baixar nada na hora) |
+| **Quiz Relâmpago** | Sim | Motor de quiz do G2 (é o mesmo do Quem é?, com 1 dica) | Banco de perguntas curado, resposta curta |
+| **Grade dos Craques** (1x1) | Sim | Cache da IA (clubes + seleção de cada jogador) | Nenhum: a ficha da IA já tem tudo para conferir "jogou no clube X e é da seleção Y" |
+| **Caminho do Craque** (1x1) | — | — | **Fundido no Quem é?**: a trajetória de clubes já é uma das dicas. Não precisa de modo separado |
+| **Maior ou Menor** (1x1) | Sim | Cache da IA + temas do Duelo | Nenhum |
+| **Copa do Grupo** (mata-mata) | Depois | 1 x 1 inteiro | Orquestrar vários duelos seguidos é o mais complexo; fica para o fim |
+
+Resumo da verificação: **todos os modos continuam viáveis**. Quatro mudam: **Intruso** (sem julgar motivo), **Emoji** (em texto, não imagem), **Caminho do Craque** (vira dica do Quem é?) e **Draft da Resenha** (votação é exceção à regra de respostas únicas).
 
 ## 8. Decisões
 

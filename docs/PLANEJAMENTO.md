@@ -194,7 +194,7 @@ Pesquisa de formatos que já fazem sucesso fora do WhatsApp e como cada um vira 
 | **Quem Sou Eu?** | Who Are Ya / FootballQuest | 5 dicas progressivas (nacionalidade → posição → clubes → títulos → número da camisa). Acertar na dica 1 = 5 pts, na 5 = 1 pt. Corrida: os dois podem chutar | Cache + IA gera dicas a partir da ficha | Baixo |
 | **Copa do Grupo** | Mata-mata | Torneio de 4/8 pessoas do grupo, chaveamento automático, cada confronto é um Duelo de Craques; imagem do chaveamento a cada fase | Reaproveita o duelo | Médio |
 
-Ordem sugerida: Caminho do Craque e Quem Sou Eu (rápidos, só cache) → Grade dos Craques (o mais viral) → Top 10 → Copa do Grupo.
+Situação (nov/2026): **Quem Sou Eu** e **Top 10** já existem no Modo em Grupo ("Quem é?" e "Top 10"), e o **Caminho do Craque** virou uma das dicas do Quem é?. Próximos no 1 x 1: Grade dos Craques (o mais viral) → Maior ou Menor → Copa do Grupo. Detalhes da verificação em [`MODO-GRUPO.md`](MODO-GRUPO.md) §7.
 
 Fontes: [Footballpark – Career Path](https://footballpark.com/football-blogs/how-to-play-guess-the-career-path), [Football Genius – regras](https://footballgenius.app/game/career/rules/), [FootballQuest](https://www.footballdream.in/footballquest/how-to-play), [RenderFoot – Soccer Grid](https://www.renderfoot.com/games/soccer-grid), [CFBTrack – Over/Under](https://cfbtrack.com/games/over-under).
 

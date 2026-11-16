@@ -117,7 +117,7 @@ export interface Match {
 
 // ---------- Modo em Grupo (salas) ----------
 
-export type PartyGame = 'escalacao' | 'top10';
+export type PartyGame = 'escalacao' | 'top10' | 'quetime' | 'quemeh';
 
 export interface PartyPlayer {
   jid: string;
@@ -186,7 +186,26 @@ export interface Top10Party extends PartyBase {
   lastJid: string | null;
 }
 
-export type PartyState = EscalacaoParty | Top10Party;
+/** Quiz em rodadas ("Que time é esse?" e "Quem é?"): corrida, 1 tentativa por rodada. */
+export interface QuizParty extends PartyBase {
+  game: 'quetime' | 'quemeh';
+  round: number; // -1 no lobby
+  totalRounds: number;
+  /** Ids do conteúdo sorteado para cada rodada. */
+  order: string[];
+  /** Quem é?: dica atual (0 a 4). */
+  clue: number;
+  /** Quem já gastou a tentativa nesta rodada. */
+  attempts: string[];
+  /** Palpites já usados nesta rodada (normalizados): não podem se repetir. */
+  guesses: string[];
+  /** Rodada resolvida (alguém acertou tudo). */
+  solved: boolean;
+  /** Pontos marcados na rodada atual, para a revelação. */
+  roundHits: Array<{ jid: string; name: string; points: number; label: string }>;
+}
+
+export type PartyState = EscalacaoParty | Top10Party | QuizParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -238,4 +257,6 @@ export type ImageSpec =
   | { kind: 'ranking'; groupName: string; rows: RankingRow[] }
   | { kind: 'partyLobby'; state: PartyState }
   | { kind: 'partyTable'; state: EscalacaoParty }
-  | { kind: 'top10Board'; state: Top10Party; list: Top10List; final: boolean };
+  | { kind: 'top10Board'; state: Top10Party; list: Top10List; final: boolean }
+  | { kind: 'lineupQuiz'; state: QuizParty; lines: string[][] }
+  | { kind: 'partyScore'; state: PartyState; title: string; final: boolean };

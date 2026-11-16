@@ -4,7 +4,7 @@ import { MODES, getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
 import { ImageSpec, MatchState, Pick, Position, RankingRow, SLOTS, Side } from '../game/types';
-import { partyLobby, partyTable, top10Board } from './party';
+import { lineupQuiz, partyLobby, partyScore, partyTable, top10Board } from './party';
 import { BODY, C, DISPLAY, H, SIDE_COLOR, W, ball, box, brand, fit, formationStrip, pill, stage, txt } from './theme';
 
 const upper = (s: string) => s.toLocaleUpperCase('pt-BR');
@@ -322,5 +322,9 @@ export function buildImage(spec: ImageSpec): ReactElement {
       return partyTable(spec.state);
     case 'top10Board':
       return top10Board(spec.state, spec.list, spec.final);
+    case 'lineupQuiz':
+      return lineupQuiz(spec.state, spec.lines);
+    case 'partyScore':
+      return partyScore(spec.state, spec.title, spec.final);
   }
 }

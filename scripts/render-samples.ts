@@ -2,6 +2,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { SLOTS, type EscalacaoParty, type ImageSpec, type MatchState, type PartyPlayer, type Top10Party } from '../src/lib/game/types';
 import { getTop10List } from '../src/lib/party/top10-lists';
+import { getLineup } from '../src/lib/party/content/lineups';
+import type { QuizParty } from '../src/lib/game/types';
 import { renderImage } from '../src/lib/images/render';
 
 const base: MatchState = {
@@ -59,7 +61,17 @@ const top10: Top10Party = {
   guesses: [], lastJid: 'p1',
 };
 
+const quiz: QuizParty = {
+  ...partyBase, game: 'quetime', status: 'PLAYING', round: 1, totalRounds: 6, order: [], clue: 0, attempts: [], guesses: [],
+  solved: false, roundHits: [],
+  players: players.map((p, i) => ({ ...p, score: [450, 210, 150, 120, 60, 0, 0][i], lastHitAt: i })),
+};
+
 const specs: Record<string, ImageSpec> = {
+  '10-que-time': { kind: 'lineupQuiz', state: quiz, lines: getLineup('brasil-1994')!.lines },
+  '10b-que-time-2002': { kind: 'lineupQuiz', state: quiz, lines: getLineup('brasil-2002')!.lines },
+  '11-placar-quiz': { kind: 'partyScore', state: { ...quiz, status: 'FINISHED' }, title: 'Resultado final', final: true },
+  '12-sala-quem-e': { kind: 'partyLobby', state: { ...quiz, game: 'quemeh', status: 'LOBBY' } },
   '7-sala-aberta': { kind: 'partyLobby', state: { ...escalacao, status: 'LOBBY', round: -1 } },
   '8-sala-tabela': { kind: 'partyTable', state: escalacao },
   '8b-sala-final': { kind: 'partyTable', state: { ...escalacao, status: 'FINISHED', round: 5, picks: finalPicks } },

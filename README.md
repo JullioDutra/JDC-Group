@@ -47,6 +47,6 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 
 `ativar grupo` · `iniciar jogo` · `aceitar` · `regras` · `modos` · `placar` · `ranking` · `tempo` · `cancelar` · `desativar grupo`
 
-**Em grupo (até 10 pessoas):** `abrir sala` (Escalação em Grupo) ou `top 10` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`.
+**Em grupo:** `abrir sala` (Escalação em Grupo), `top 10`, `abrir que time é esse` ou `abrir quem é` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`.
 
 `iniciar aleatório` sorteia o tema assim que alguém aceita. Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).

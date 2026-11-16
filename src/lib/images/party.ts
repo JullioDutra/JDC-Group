@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
-import { EscalacaoParty, PartyState, SLOTS, Top10List, Top10Party } from '../game/types';
+import { EscalacaoParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
 import { PARTY_CONFIG, standings } from '../party/engine';
 import { BODY, C, DISPLAY, H, W, box, brand, fit, pill, stage, txt } from './theme';
 
@@ -26,26 +26,32 @@ function colorOf(state: PartyState, jid: string): string {
 export function partyLobby(state: PartyState): ReactElement {
   const cfg = PARTY_CONFIG[state.game];
   const mode = state.game === 'escalacao' ? getMode(state.modeId) : undefined;
-  const subtitle =
-    state.game === 'escalacao'
-      ? mode
-        ? `Tema: ${mode.name} · ${mode.tagline.split(' · ')[0]}`
-        : 'Tema: o anfitrião escolhe (ou sorteia)'
-      : state.category
-        ? `Categoria: ${state.category === 'futebol' ? 'Futebol' : 'Conhecimentos gerais'}`
-        : 'Categoria: sorteada na hora';
-  const rules =
-    state.game === 'escalacao'
-      ? [
-          'Todos escalam a mesma posição ao mesmo tempo: GOL, 2 DEF, 2 MEI, 1 ATA.',
-          '1 jogador por pessoa em cada rodada. Nome já usado não vale.',
-          'Vence a melhor soma no tema.',
-        ]
-      : [
-          'Acerte itens do ranking para revelar a posição.',
-          'Ninguém responde duas vezes seguidas: espere outra pessoa.',
-          'Vence quem acertar mais posições.',
-        ];
+  let subtitle: string;
+  let rules: string[];
+  if (state.game === 'escalacao') {
+    subtitle = mode ? `Tema: ${mode.name} · ${mode.tagline.split(' · ')[0]}` : 'Tema: o anfitrião escolhe (ou sorteia)';
+    rules = [
+      'Todos escalam a mesma posição ao mesmo tempo: GOL, 2 DEF, 2 MEI, 1 ATA.',
+      '1 jogador por pessoa em cada rodada. Nome já usado não vale.',
+      'Vence a melhor soma no tema.',
+    ];
+  } else if (state.game === 'top10') {
+    subtitle = state.category
+      ? `Categoria: ${state.category === 'futebol' ? 'Futebol' : 'Conhecimentos gerais'}`
+      : 'Categoria: sorteada na hora';
+    rules = [
+      'Acerte itens do ranking para revelar a posição.',
+      'Ninguém responde duas vezes seguidas: espere outra pessoa.',
+      'Vence quem acertar mais posições.',
+    ];
+  } else {
+    const q = PARTY_CONFIG[state.game];
+    subtitle = state.game === 'quetime' ? `${q.rounds} escalações históricas` : `${q.rounds} craques misteriosos`;
+    rules =
+      state.game === 'quetime'
+        ? ['Veja a escalação e diga o time e o ano: "Brasil 94".', '1 palpite por pessoa em cada rodada. Palpite repetido não vale.', 'Time e ano: 150 pontos. Só o time: 60.']
+        : ['O bot solta até 5 dicas sobre um craque.', '1 palpite por pessoa em cada rodada. Palpite repetido não vale.', 'Acertou na 1ª dica: 150 pontos. Na 5ª: 30.'];
+  }
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(`ATÉ ${cfg.maxPlayers} JOGADORES`, C.panel, C.lime, 24)),
     box(
@@ -87,7 +93,7 @@ export function partyLobby(state: PartyState): ReactElement {
       { marginTop: 28, justifyContent: 'space-between', alignItems: 'center' },
       box(
         { flexDirection: 'column' },
-        txt(`Dá para entrar até ${state.game === 'escalacao' ? `a ${cfg.joinUntil}ª rodada` : `a ${cfg.joinUntil}ª posição revelada`}`, { fontSize: 28, color: C.muted, fontWeight: 500 }),
+        txt(`Dá para entrar até ${state.game === 'top10' ? `a ${cfg.joinUntil}ª posição revelada` : `a ${cfg.joinUntil}ª rodada`}`, { fontSize: 28, color: C.muted, fontWeight: 500 }),
         txt('O anfitrião manda COMEÇAR', { fontSize: 28, color: C.white, fontWeight: 700 }),
       ),
       txt('ENTRAR', {
@@ -220,5 +226,86 @@ export function top10Board(state: Top10Party, list: Top10List, final: boolean): 
       }),
     ),
     txt(`Fonte: ${list.source}`, { fontSize: 20, color: C.muted, fontWeight: 500, marginTop: 14 }),
+  );
+}
+
+// ---------- Que time é esse? ----------
+
+export function lineupQuiz(state: QuizParty, lines: string[][]): ReactElement {
+  // Ataque em cima, goleiro embaixo, como na TV.
+  const rows = [...lines].reverse();
+  const pitchH = 900;
+  const rowH = Math.floor(pitchH / rows.length);
+  const stripes = Array.from({ length: 8 }, (_, i) => {
+    const color = i % 2 ? C.grassB : C.grassA;
+    return `${color} ${i * 12.5}%, ${color} ${(i + 1) * 12.5}%`;
+  }).join(', ');
+  return stage(
+    box(
+      { justifyContent: 'space-between', alignItems: 'center' },
+      brand(0.75),
+      pill(`RODADA ${state.round + 1} DE ${state.totalRounds}`, C.panel, C.lime, 24),
+    ),
+    txt('QUE TIME É ESSE?', { fontFamily: DISPLAY, fontSize: 84, lineHeight: 1.1, marginTop: 18, marginBottom: 18 }),
+    box(
+      {
+        flexDirection: 'column', height: pitchH, borderRadius: 26, border: `4px solid ${C.line}`, overflow: 'hidden',
+        backgroundImage: `linear-gradient(180deg, ${stripes})`,
+      },
+      ...rows.map((names) =>
+        box(
+          { height: rowH, alignItems: 'center', justifyContent: 'space-around', padding: '0 10px' },
+          ...names.map((n) =>
+            txt(fit(n, 16), {
+              fontFamily: DISPLAY, fontSize: names.length >= 5 ? 30 : 36, color: C.white, letterSpacing: 0.5,
+              backgroundColor: 'rgba(6,19,12,0.82)', padding: '6px 16px', borderRadius: 12,
+            }),
+          ),
+        ),
+      ),
+    ),
+    box(
+      { justifyContent: 'space-between', alignItems: 'center', marginTop: 22 },
+      txt('Mande time e ano · ex.: Brasil 94', { fontSize: 30, fontWeight: 700, color: C.lime }),
+      txt('1 palpite por pessoa', { fontSize: 26, color: C.muted, fontWeight: 500 }),
+    ),
+  );
+}
+
+// ---------- Placar dos quizzes ----------
+
+export function partyScore(state: PartyState, title: string, final: boolean): ReactElement {
+  const ranked = [...state.players].sort((a, b) => b.score - a.score || a.lastHitAt - b.lastHitAt);
+  const top = Math.max(1, ranked[0]?.score ?? 1);
+  const rowH = Math.min(84, Math.floor(860 / Math.max(ranked.length, 1)));
+  const cfg = PARTY_CONFIG[state.game];
+  return stage(
+    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(upper(cfg.name), final ? C.lime : C.panel, final ? C.ink : C.lime, 24)),
+    txt(upper(title), { fontFamily: DISPLAY, fontSize: 76, lineHeight: 1.08, marginTop: 22, marginBottom: 22 }),
+    box(
+      { flexDirection: 'column', gap: 8, flexGrow: 1 },
+      ...ranked.map((p, i) => {
+        const lead = i === 0 && p.score > 0;
+        return box(
+          {
+            alignItems: 'center', height: rowH, padding: '0 20px', borderRadius: 16, gap: 18, position: 'relative',
+            backgroundColor: C.panel, border: `2px solid ${lead ? C.lime : C.panelLine}`, overflow: 'hidden',
+          },
+          box({
+            position: 'absolute', left: 0, top: 0, height: rowH, width: `${Math.round((p.score / top) * 100)}%`,
+            backgroundColor: lead ? 'rgba(200,255,62,0.16)' : 'rgba(255,255,255,0.05)',
+          }),
+          txt(i + 1, {
+            width: 48, height: 48, borderRadius: 24, flexShrink: 0, alignItems: 'center', justifyContent: 'center',
+            fontFamily: DISPLAY, fontSize: 26, color: lead ? C.ink : C.white, backgroundColor: lead ? C.lime : 'rgba(255,255,255,0.08)',
+          }),
+          box({ width: 14, height: 14, borderRadius: 7, backgroundColor: colorOf(state, p.jid), flexShrink: 0 }),
+          txt(upper(fit(firstName(p.name), 16)), { flexGrow: 1, fontFamily: DISPLAY, fontSize: 34 }),
+          txt(`${p.score}`, { fontFamily: DISPLAY, fontSize: 40, color: lead ? C.lime : C.white }),
+          txt('pts', { fontSize: 22, color: C.muted, fontWeight: 700 }),
+        );
+      }),
+    ),
+    txt('1 palpite por pessoa em cada rodada · palpite repetido não vale', { fontSize: 22, color: C.muted, fontWeight: 500, justifyContent: 'center', marginTop: 12 }),
   );
 }

@@ -1,4 +1,3 @@
-import type { PlayerLookup } from '../ai';
 import { ConflictError } from '../game/conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, getMode, parseModeChoice, randomMode } from '../game/modes';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from '../game/text';
@@ -19,50 +18,29 @@ import {
 } from '../game/types';
 import { checkPick, drawRestrictions, restrictionLine } from '../game/validate';
 import type { Store } from '../store/types';
+import {
+  LEADING_ARTICLE,
+  PARTY_CONFIG,
+  PartyDeps,
+  activePlayers,
+  editDistance,
+  pendingResults,
+  react,
+  schedule,
+  text,
+  warnOnce,
+} from './common';
 import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List } from './top10-lists';
+import { closeQuizRound, finishQuiz, newQuiz, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
+
+const LOBBY_TTL_MS = 15 * 60_000;
+const IDLE_TTL_MS = 20 * 60_000;
 
 /**
  * Modo em Grupo: uma sala onde quem manda "entrar" joga.
  * Regras comuns: 1 resposta por jogador por rodada, nada se repete na partida,
  * limite de jogadores por jogo e entrada tardia só até a 2ª rodada.
  */
-
-export interface PartyConfig {
-  name: string;
-  maxPlayers: number;
-  minPlayers: number;
-  /**
-   * Até quando dá para entrar depois de começar. Escalação: até a rodada N
-   * (1-based). Top 10: até N posições reveladas.
-   */
-  joinUntil: number;
-  /** Escalação: segundos por rodada. Top 10: duração total. */
-  seconds: number;
-}
-
-export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
-  escalacao: { name: 'Escalação em Grupo', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 60 },
-  top10: { name: 'Top 10', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 240 },
-};
-
-const LOBBY_TTL_MS = 15 * 60_000;
-const IDLE_TTL_MS = 20 * 60_000;
-
-export interface PartyDeps {
-  store: Store;
-  lookup: PlayerLookup;
-  now: Date;
-  rng: () => number;
-  isAdmin: (jid: string) => boolean;
-}
-
-const text = (t: string): Outgoing => ({ type: 'text', text: t });
-const react = (msg: IncomingMessage, emoji: string): Outgoing => ({
-  type: 'react',
-  messageId: msg.id,
-  senderJid: msg.senderJid,
-  emoji,
-});
 
 // ---------- Início ----------
 
@@ -76,6 +54,9 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
     const ok = !rest || ['futebol', 'geral', 'conhecimentos gerais', 'aleatorio', 'aleatoria', 'surpresa'].includes(rest);
     return ok ? { game: 'top10', rest } : null;
   }
+  // Quiz: exige "abrir"/"jogar" na frente, porque "que time é esse?" e "quem é?" aparecem na conversa.
+  if (/^(abrir|jogar) (o )?que time e esse$/.test(norm) || /^(abrir|jogar) qual e o time$/.test(norm)) return { game: 'quetime', rest: '' };
+  if (/^(abrir|jogar) quem e( o craque)?$/.test(norm)) return { game: 'quemeh', rest: '' };
   const esc = norm.match(/^(abrir sala|jogo em grupo|escalacao em grupo)( (.*))?$/);
   if (esc) {
     const rest = esc[3] ?? '';
@@ -125,6 +106,8 @@ export async function createParty(
       picks: {},
       used: [],
     };
+  } else if (start.game === 'quetime' || start.game === 'quemeh') {
+    state = { ...base(start.game, host, nowMs), ...newQuiz(start.game) };
   } else {
     const cat = parseCategory(start.rest);
     state = {
@@ -152,10 +135,12 @@ function lobbyCaption(state: PartyState): string {
         ? `Tema: *${mode.name}*. ${state.host.name}, mande *começar* quando todos entrarem.`
         : `${state.host.name}, escolha o tema (número de 1 a ${MODES.length} ou *aleatório*) e mande *começar*.`,
     );
-  } else {
+  } else if (state.game === 'top10') {
     lines.push(
       `${state.host.name}, escolha a categoria (*futebol*, *geral* ou *aleatório*) e mande *começar*.`,
     );
+  } else {
+    lines.push(`${state.host.name}, mande *começar* quando todos entrarem.`);
   }
   return lines.join('\n');
 }
@@ -217,7 +202,7 @@ export async function handlePartyMessage(
       return warnOnce(state, msg.senderJid, `Sala cheia (${cfg.maxPlayers}/${cfg.maxPlayers}). Fica para a próxima, *${msg.senderName}*.`, save);
     }
     if (state.status === 'PLAYING' && !canJoinLate(state)) {
-      const limit = state.game === 'escalacao' ? `a ${cfg.joinUntil}ª rodada` : `${cfg.joinUntil} posições reveladas`;
+      const limit = state.game === 'top10' ? `${cfg.joinUntil} posições reveladas` : `a ${cfg.joinUntil}ª rodada`;
       return warnOnce(state, msg.senderJid, `As inscrições fecharam (só dava para entrar até ${limit}).`, save);
     }
     const joined = newPlayer({ jid: msg.senderJid, name: msg.senderName });
@@ -249,7 +234,7 @@ export async function handlePartyMessage(
         state.options = { blind: choice.twists.blind, turnSeconds: choice.twists.fast ? 40 : cfg.seconds };
         return save([react(msg, '✅')]);
       }
-    } else if (['futebol', 'geral', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
+    } else if (state.game === 'top10' && ['futebol', 'geral', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
       const cat = parseCategory(norm);
       state.category = cat === 'aleatorio' ? null : cat;
       return save([react(msg, '✅')]);
@@ -258,7 +243,9 @@ export async function handlePartyMessage(
       if (state.players.length < cfg.minPlayers) {
         return [text(`Precisa de pelo menos ${cfg.minPlayers} jogadores. Mandem *entrar*.`)];
       }
-      return save(state.game === 'escalacao' ? startEscalacao(state, deps) : startTop10(state, deps));
+      if (state.game === 'escalacao') return save(startEscalacao(state, deps));
+      if (state.game === 'top10') return save(startTop10(state, deps));
+      return save(startQuiz(state, deps));
     }
     return [];
   }
@@ -266,12 +253,14 @@ export async function handlePartyMessage(
   if (state.status !== 'PLAYING' || !player) return [];
 
   if (norm === 'pular' && isHost) {
-    return save(state.game === 'escalacao' ? closeRound(state, deps, 'Rodada encerrada pelo anfitrião.') : finishTop10(state, deps, 'Encerrado pelo anfitrião.'));
+    if (state.game === 'escalacao') return save(closeRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
+    if (state.game === 'top10') return save(finishTop10(state, deps, 'Encerrado pelo anfitrião.'));
+    return save(closeQuizRound(state, deps, 'Rodada pulada pelo anfitrião.'));
   }
 
-  return state.game === 'escalacao'
-    ? escalacaoAnswer(state, player, msg, deps, save)
-    : top10Answer(state, player, msg, deps, save);
+  if (state.game === 'escalacao') return escalacaoAnswer(state, player, msg, deps, save);
+  if (state.game === 'top10') return top10Answer(state, player, msg, deps, save);
+  return quizAnswer(state, player, msg, deps, save);
 }
 
 /** Chamado pelo agendador (QStash) no prazo da rodada. `force` = simulador. */
@@ -294,33 +283,24 @@ export async function handlePartyTick(
 }
 
 function closeOnTimeout(state: PartyState, deps: PartyDeps): Outgoing[] {
-  return state.game === 'escalacao' ? closeRound(state, deps, 'Tempo esgotado.') : finishTop10(state, deps, 'Tempo esgotado.');
+  if (state.game === 'escalacao') return closeRound(state, deps, 'Tempo esgotado.');
+  if (state.game === 'top10') return finishTop10(state, deps, 'Tempo esgotado.');
+  return quizTimeout(state, deps);
 }
 
 function canJoinLate(state: PartyState): boolean {
   const limit = PARTY_CONFIG[state.game].joinUntil;
-  if (state.game === 'escalacao') return state.round < limit; // round é 0-based: rodadas 1 e 2
-  return state.found.filter(Boolean).length < limit;
+  if (state.game === 'top10') return state.found.filter(Boolean).length < limit;
+  return state.round < limit; // round é 0-based: rodadas 1 e 2
 }
 
-function warnOnce(state: PartyState, jid: string, message: string, save: (o: Outgoing[]) => Promise<Outgoing[]>) {
-  if (state.warned.includes(jid)) return Promise.resolve([] as Outgoing[]);
-  state.warned.push(jid);
-  return save([text(message)]);
-}
 
-function schedule(state: PartyState, seconds: number, nowMs: number, groupKey: string): Outgoing {
-  state.seq += 1;
-  state.timerToken = `${groupKey}:${state.seq}`;
-  state.deadline = nowMs + seconds * 1000;
-  return { type: 'schedule', delaySeconds: seconds + 1, token: state.timerToken };
-}
 
 function rulesText(state: PartyState): string {
   const cfg = PARTY_CONFIG[state.game];
   const common = [
     `Até ${cfg.maxPlayers} jogadores. Para jogar, mande *entrar*.`,
-    `Dá para entrar até ${state.game === 'escalacao' ? `a ${cfg.joinUntil}ª rodada` : `a ${cfg.joinUntil}ª posição revelada`}.`,
+    `Dá para entrar até ${state.game === 'top10' ? `a ${cfg.joinUntil}ª posição revelada` : `a ${cfg.joinUntil}ª rodada`}.`,
     'Respostas repetidas não valem: o que alguém já usou, ninguém mais usa.',
   ];
   if (state.game === 'escalacao') {
@@ -331,6 +311,9 @@ function rulesText(state: PartyState): string {
       ...common,
       'No fim, soma os números do tema. Vence a maior soma (ou a menor, conforme o tema).',
     ].join('\n');
+  }
+  if (state.game === 'quetime' || state.game === 'quemeh') {
+    return [`*${cfg.name}*`, ...quizRules(state), ...common.slice(0, 2)].join('\n');
   }
   return [
     `*${cfg.name}*`,
@@ -343,6 +326,7 @@ function rulesText(state: PartyState): string {
 
 function boardImage(state: PartyState, final: boolean): Outgoing {
   if (state.game === 'escalacao') return { type: 'image', image: { kind: 'partyTable', state: structuredClone(state) } };
+  if (state.game !== 'top10') return scoreImage(state, final);
   const list = getTop10List(state.listId)!;
   return { type: 'image', image: { kind: 'top10Board', state: structuredClone(state), list, final } };
 }
@@ -387,9 +371,6 @@ function roundPrompt(state: EscalacaoParty, mode: GameMode): string {
   );
 }
 
-function activePlayers(state: PartyState): PartyPlayer[] {
-  return state.players.filter((p) => p.missed < 2);
-}
 
 async function escalacaoAnswer(
   state: EscalacaoParty,
@@ -522,18 +503,7 @@ function startTop10(state: Top10Party, deps: PartyDeps): Outgoing[] {
   ];
 }
 
-const LEADING_ARTICLE = /^(o|a|os|as) /;
 
-function editDistance(a: string, b: string): number {
-  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
-  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    }
-  }
-  return dp[a.length][b.length];
-}
 
 /** Índice do item que o palpite acerta, ou -1. Tolera erro de digitação em nomes longos. */
 export function matchTop10(list: Top10List, guess: string): number {
@@ -627,19 +597,18 @@ function finishTop10(state: Top10Party, deps: PartyDeps, reason: string): Outgoi
 
 // ---------- Resultado ----------
 
-/**
- * Resultados calculados no fim da sala. São gravados no ranking só depois que
- * o estado final foi salvo (para não contar duas vezes se houver conflito).
- */
-const pendingResults = new WeakMap<PartyState, Array<{ player: MatchPlayer; result: 'win' | 'draw' | 'loss' }>>();
-
 async function finishAndSave(
   state: PartyState,
   deps: PartyDeps,
   save: (o: Outgoing[]) => Promise<Outgoing[]>,
   reason: string,
 ): Promise<Outgoing[]> {
-  const out = state.game === 'escalacao' ? finishEscalacao(state, deps, reason) : finishTop10(state, deps, reason);
+  const out =
+    state.game === 'escalacao'
+      ? finishEscalacao(state, deps, reason)
+      : state.game === 'top10'
+        ? finishTop10(state, deps, reason)
+        : finishQuiz(state, deps, reason);
   return save(out);
 }
 
@@ -652,4 +621,5 @@ export async function recordPartyIfFinished(match: Session, store: Store): Promi
   await store.recordResults(match.groupJid, rows);
 }
 
-export { TOP10_CATEGORIES };
+export { PARTY_CONFIG, TOP10_CATEGORIES };
+export type { PartyDeps };
