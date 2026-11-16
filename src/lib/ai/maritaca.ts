@@ -95,6 +95,36 @@ export function hasMaritacaKey(): boolean {
   return Boolean(process.env.MARITACA_API_KEY);
 }
 
+/** Chamada genérica que pede JSON (usada pelo juiz do Melhor Time). Devolve o texto da resposta. */
+export async function maritacaJson(system: string, user: string, maxTokens = 400): Promise<string> {
+  const baseUrl = (process.env.MARITACA_BASE_URL || 'https://chat.maritaca.ai/api').replace(/\/$/, '');
+  const body = (json: boolean) =>
+    JSON.stringify({
+      model: process.env.MARITACA_MODEL || 'sabia-4',
+      temperature: 0.2,
+      max_tokens: maxTokens,
+      ...(json ? { response_format: { type: 'json_object' } } : {}),
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    });
+  const call = (json: boolean) =>
+    fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.MARITACA_API_KEY}` },
+      body: body(json),
+      signal: AbortSignal.timeout(15_000),
+    });
+  let response = await call(true);
+  if (response.status === 400 || response.status === 422) response = await call(false);
+  if (!response.ok) throw new Error(`Maritaca respondeu ${response.status}`);
+  const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Maritaca devolveu resposta vazia');
+  return content;
+}
+
 /** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
 async function chat(query: string, jsonMode: boolean): Promise<Response> {
   const baseUrl = (process.env.MARITACA_BASE_URL || 'https://chat.maritaca.ai/api').replace(/\/$/, '');

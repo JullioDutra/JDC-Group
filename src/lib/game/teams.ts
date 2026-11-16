@@ -54,6 +54,20 @@ export const CLUBS: Team[] = [
   // Américas
   club('boca', 'Boca Juniors', ['#103F79', '#F3B229'], ['boca']),
   club('river', 'River Plate', ['#FFFFFF', '#E4002B'], ['river'], ['montevideo', 'montevideu']),
+  // Europa e outros (ampliam o sorteio do Melhor Time)
+  club('fenerbahce', 'Fenerbahçe', ['#163962', '#FFED00']),
+  club('galatasaray', 'Galatasaray', ['#A90432', '#FDB912']),
+  club('napoli', 'Napoli', ['#12A0D7', '#FFFFFF'], ['napoles']),
+  club('roma', 'Roma', ['#8E1F2F', '#F0BC42'], ['as roma']),
+  club('sevilla', 'Sevilla', ['#FFFFFF', '#D71A28'], ['sevilha']),
+  club('valencia', 'Valencia', ['#FFFFFF', '#EE3524'], ['valencia cf']),
+  club('marseille', 'Olympique de Marseille', ['#2FAEE0', '#FFFFFF'], ['marseille', 'olympique marselha', 'marselha']),
+  club('lyon', 'Lyon', ['#1B2F6A', '#DA291C'], ['olympique lyonnais', 'olympique de lyon']),
+  club('monaco', 'Monaco', ['#E30613', '#FFFFFF'], ['as monaco']),
+  club('sporting', 'Sporting', ['#008057', '#FFFFFF'], ['sporting cp', 'sporting lisboa'], ['cristal', 'gijon', 'kansas', 'braga']),
+  club('celtic', 'Celtic', ['#018749', '#FFFFFF']),
+  club('al-nassr', 'Al-Nassr', ['#FFE100', '#1E3D8F'], ['al nassr']),
+  club('al-hilal', 'Al-Hilal', ['#005EB8', '#FFFFFF'], ['al hilal']),
 ];
 
 const nation = (id: string, name: string, colors: [string, string], aliases: string[] = []): Team => ({

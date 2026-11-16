@@ -49,4 +49,4 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 
 **Em grupo:** `abrir sala` (Escalação em Grupo), `top 10`, `abrir que time é esse`, `abrir quem é` ou `abrir intruso` → cada um manda `entrar` → o anfitrião manda `começar`. Também: `sair`, `placar`, `encerrar`, `pular`.
 
-`iniciar aleatório` sorteia o tema assim que alguém aceita. Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).
+`iniciar aleatório` sorteia o tema assim que alguém aceita. `iniciar melhor time` (ou `iniciar melhor time votação`) abre o desafio Melhor Time. Na escolha do tema, extras opcionais: `3 cego` (números secretos até o fim), `5 relâmpago` (45 s por jogada).

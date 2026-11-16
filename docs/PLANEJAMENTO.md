@@ -181,6 +181,23 @@ Fontes: [Maritaca – API](https://www.maritaca.ai/en/api), [Maritaca docs – C
 
 Custo estimado por partida: ~12 consultas de IA na primeira vez (menos com cache) + 8 imagens. Cabe no plano gratuito da Vercel e do Neon para dezenas de grupos.
 
+## 5b. Melhor Time (1 x 1) · implementado
+
+Desafio entre dois: a cada rodada o bot **sorteia um clube** (ex.: Fenerbahçe) e cada um, na sua vez, escolhe **um jogador que passou por aquele clube** e **a posição em que quer colocá-lo**. Exclusivamente neste jogo, a **ordem das posições é livre**.
+
+| Item | Regra |
+|---|---|
+| Abrir | `iniciar melhor time` (juiz: IA) · `iniciar melhor time votação` (juiz: grupo). No lobby, o anfitrião ainda pode trocar mandando `ia` ou `votação` |
+| Entrar | O primeiro que mandar `aceitar` entra, e o jogo começa na hora |
+| Rodadas | 6 clubes sorteados (45 no total: brasileiros, europeus, Turquia, Escócia, Arábia…). Quem abre a rodada alterna |
+| Escolha | `atacante Dzeko`, `Dzeko atacante`, `lateral esquerdo Roberto Carlos` ou só o nome (a posição é deduzida da ficha). A IA confere se o jogador existe, se passou pelo clube e se joga na posição |
+| Vagas | GOL, 2 DEF, 2 MEI, 1 ATA. Posição já preenchida é recusada, com aviso das vagas livres |
+| Sem repetir | O mesmo jogador não pode ser escolhido de novo na partida, por ninguém |
+| Tempo | 90 s por escolha (QStash). Estourou, a vaga fica vazia |
+| **Juiz IA** | A Maritaca compara os dois times (cada jogador no auge, equilíbrio, posição certa) e devolve o vencedor e o motivo em até 2 frases. Sem a chave configurada, vale a regra de reserva: soma do pico de valor de mercado |
+| **Juiz grupo** | Votação de 60 s: **só quem não jogou** vota, mandando `1`, `2` ou o nome. Um voto por pessoa; os dois jogadores não votam |
+| Fim | Imagem com os dois times lado a lado e o veredito; vale para o ranking do grupo. `desistir` = W.O. |
+
 ## 6. Próximos jogos de futebol (mesmo estilo: 1x1, no grupo, imagem a cada lance)
 
 Pesquisa de formatos que já fazem sucesso fora do WhatsApp e como cada um vira duelo no grupo:

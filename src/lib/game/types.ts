@@ -117,7 +117,7 @@ export interface Match {
 
 // ---------- Modo em Grupo (salas) ----------
 
-export type PartyGame = 'escalacao' | 'top10' | 'quetime' | 'quemeh' | 'intruso';
+export type PartyGame = 'escalacao' | 'top10' | 'quetime' | 'quemeh' | 'intruso' | 'melhortime';
 
 export interface PartyPlayer {
   jid: string;
@@ -220,7 +220,36 @@ export interface IntrusoParty extends PartyBase {
   lastJid: string | null;
 }
 
-export type PartyState = EscalacaoParty | Top10Party | QuizParty | IntrusoParty;
+/** Escolha do Melhor Time: jogador, clube da rodada e "força" (pico de valor, para o desempate sem IA). */
+export interface DraftPick {
+  name: string;
+  key: string;
+  club: string;
+  strength: number;
+  aliases?: string[];
+}
+
+/**
+ * Melhor Time (1 x 1): a cada rodada sorteia um clube; cada um escolhe um
+ * jogador que passou por ele e a posição que quer preencher, em qualquer ordem.
+ * No fim, a IA ou a votação do grupo decide o melhor time.
+ */
+export interface MelhorTimeParty extends PartyBase {
+  game: 'melhortime';
+  judge: 'ia' | 'votacao';
+  phase: 'draft' | 'voting' | 'done';
+  round: number; // -1 no lobby, 0..5
+  clubs: string[];
+  /** picks[jid][slot] (slot = índice em SLOTS) */
+  picks: Record<string, Array<DraftPick | null>>;
+  /** Quem está na vez (índice em players). */
+  turn: number;
+  used: string[];
+  votes: Record<string, number>;
+  verdict: { winner: number | 'draw'; reason: string } | null;
+}
+
+export type PartyState = EscalacaoParty | Top10Party | QuizParty | IntrusoParty | MelhorTimeParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -275,4 +304,5 @@ export type ImageSpec =
   | { kind: 'top10Board'; state: Top10Party; list: Top10List; final: boolean }
   | { kind: 'lineupQuiz'; state: QuizParty; lines: string[][] }
   | { kind: 'partyScore'; state: PartyState; title: string; final: boolean }
-  | { kind: 'intrusoBoard'; state: IntrusoParty; reason: string; reveal: boolean };
+  | { kind: 'intrusoBoard'; state: IntrusoParty; reason: string; reveal: boolean }
+  | { kind: 'draftBoard'; state: MelhorTimeParty };

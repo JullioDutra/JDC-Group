@@ -13,7 +13,7 @@ import { MemoryStore } from '../src/lib/store/memory';
  */
 test('todas as imagens do Modo em Grupo renderizam', { timeout: 120_000 }, async () => {
   const kinds = new Set<string>();
-  for (const command of ['abrir sala 1', 'top 10 geral', 'abrir que time é esse', 'abrir quem é', 'abrir intruso']) {
+  for (const command of ['abrir sala 1', 'top 10 geral', 'abrir que time é esse', 'abrir quem é', 'abrir intruso', 'iniciar melhor time']) {
     const store = new MemoryStore();
     const G = `img-${command}@g.us`;
     let id = 0;
@@ -23,8 +23,8 @@ test('todas as imagens do Modo em Grupo renderizam', { timeout: 120_000 }, async
     const outs: Outgoing[] = [];
     outs.push(...(await say('Ana', 'ativar grupo')));
     outs.push(...(await say('Ana', command)));
-    outs.push(...(await say('Bia', 'entrar')));
-    outs.push(...(await say('Ana', 'começar')));
+    outs.push(...(await say('Bia', command.includes('melhor time') ? 'aceitar' : 'entrar')));
+    if (!command.includes('melhor time')) outs.push(...(await say('Ana', 'começar')));
     for (let i = 0; i < 12; i++) outs.push(...(await handleTick(G, null, deps, true)));
     for (const out of outs) {
       if (out.type !== 'image') continue;
@@ -33,5 +33,5 @@ test('todas as imagens do Modo em Grupo renderizam', { timeout: 120_000 }, async
       kinds.add(out.image.kind);
     }
   }
-  for (const k of ['partyLobby', 'partyTable', 'top10Board', 'lineupQuiz', 'partyScore', 'intrusoBoard']) assert.ok(kinds.has(k), `não renderizou ${k}`);
+  for (const k of ['partyLobby', 'partyTable', 'top10Board', 'lineupQuiz', 'partyScore', 'intrusoBoard', 'draftBoard']) assert.ok(kinds.has(k), `não renderizou ${k}`);
 });

@@ -31,6 +31,7 @@ import {
   warnOnce,
 } from './common';
 import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List } from './top10-lists';
+import { melhorTimeAnswer, melhorTimeTimeout, melhorTimeVote, newMelhorTime, startMelhorTime } from './melhortime';
 import { INTRUSO_RULES, finishIntruso, intrusoAnswer, intrusoTimeout, newIntruso, revealRound, startIntruso } from './intruso';
 import { closeQuizRound, finishQuiz, newQuiz, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 
@@ -59,6 +60,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (/^(abrir|jogar) (o )?que time e esse$/.test(norm) || /^(abrir|jogar) qual e o time$/.test(norm)) return { game: 'quetime', rest: '' };
   if (/^(abrir|jogar) quem e( o craque)?$/.test(norm)) return { game: 'quemeh', rest: '' };
   if (/^(abrir|jogar) (o )?(intruso|quem nao pertence)$/.test(norm)) return { game: 'intruso', rest: '' };
+  const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time( (ia|votacao|votacao do grupo|grupo))?$/);
+  if (mt) return { game: 'melhortime', rest: mt[4] ?? '' };
   const esc = norm.match(/^(abrir sala|jogo em grupo|escalacao em grupo)( (.*))?$/);
   if (esc) {
     const rest = esc[3] ?? '';
@@ -108,6 +111,8 @@ export async function createParty(
       picks: {},
       used: [],
     };
+  } else if (start.game === 'melhortime') {
+    state = { ...base('melhortime', host, nowMs), ...newMelhorTime(start.rest.startsWith('votacao') || start.rest === 'grupo' ? 'votacao' : 'ia') };
   } else if (start.game === 'intruso') {
     state = { ...base('intruso', host, nowMs), ...newIntruso() };
   } else if (start.game === 'quetime' || start.game === 'quemeh') {
@@ -131,6 +136,15 @@ export async function createParty(
 
 function lobbyCaption(state: PartyState): string {
   const cfg = PARTY_CONFIG[state.game];
+  if (state.game === 'melhortime') {
+    return [
+      `*Desafio: Melhor Time*`,
+      `*${state.host.name}* quer jogo. O primeiro que mandar *aceitar* entra.`,
+      state.judge === 'ia'
+        ? 'Juiz: a IA. Para a votação do grupo decidir, o anfitrião manda *votação* antes.'
+        : 'Juiz: votação de quem não jogar. Para a IA decidir, o anfitrião manda *ia* antes.',
+    ].join('\n');
+  }
   const lines = [`*Sala aberta: ${cfg.name}*`, `Quem quiser jogar, mande *entrar* (até ${cfg.maxPlayers} pessoas).`];
   if (state.game === 'escalacao') {
     const mode = getMode(state.modeId);
@@ -181,7 +195,7 @@ export async function handlePartyMessage(
 
   // Rodada vencida sem o agendador ter chegado: fecha antes de qualquer coisa.
   if (state.status === 'PLAYING' && state.deadline !== null && nowMs >= state.deadline) {
-    return save(closeOnTimeout(state, deps));
+    return save(await closeOnTimeout(state, deps));
   }
 
   if (norm === 'regras') return [text(rulesText(state))];
@@ -192,6 +206,10 @@ export async function handlePartyMessage(
       state.status = 'CANCELLED';
       return save([text('Sala cancelada.')]);
     }
+    if (state.game === 'melhortime') {
+      state.status = 'CANCELLED';
+      return save([text('Partida cancelada.')]);
+    }
     return finishAndSave(state, deps, save, 'Partida encerrada pelo anfitrião.');
   }
 
@@ -200,9 +218,15 @@ export async function handlePartyMessage(
     return [boardImage(state, false)];
   }
 
-  if (['entrar', 'entrar no jogo', 'eu', 'eu jogo', 'to dentro', 'quero jogar'].includes(norm)) {
-    if (player) return [];
+  const joinWords = ['entrar', 'entrar no jogo', 'eu', 'eu jogo', 'to dentro', 'quero jogar'];
+  if (joinWords.includes(norm) || (state.game === 'melhortime' && norm === 'aceitar')) {
+    if (player) {
+      return state.game === 'melhortime' && player.jid === state.host.jid && state.status === 'LOBBY'
+        ? [text('Você não pode aceitar o próprio desafio. Chama alguém.')]
+        : [];
+    }
     if (state.players.length >= cfg.maxPlayers) {
+      if (state.game === 'melhortime') return []; // desafio 1 x 1 já fechado
       return warnOnce(state, msg.senderJid, `Sala cheia (${cfg.maxPlayers}/${cfg.maxPlayers}). Fica para a próxima, *${msg.senderName}*.`, save);
     }
     if (state.status === 'PLAYING' && !canJoinLate(state)) {
@@ -217,6 +241,9 @@ export async function handlePartyMessage(
       state.picks[joined.jid] = SLOTS.map((_, i) =>
         i < state.round ? { name: 'Entrou depois', key: `late-${joined.jid}-${i}`, value: mode.penalty } : null,
       );
+    }
+    if (state.game === 'melhortime' && state.status === 'LOBBY' && state.players.length === 2) {
+      return save([text(`*${joined.name}* aceitou.`), ...startMelhorTime(state, deps)]);
     }
     return save([react(msg, '✅')]);
   }
@@ -238,6 +265,9 @@ export async function handlePartyMessage(
         state.options = { blind: choice.twists.blind, turnSeconds: choice.twists.fast ? 40 : cfg.seconds };
         return save([react(msg, '✅')]);
       }
+    } else if (state.game === 'melhortime' && ['ia', 'votacao', 'votacao do grupo', 'grupo'].includes(norm)) {
+      state.judge = norm === 'ia' ? 'ia' : 'votacao';
+      return save([react(msg, '✅')]);
     } else if (state.game === 'top10' && ['futebol', 'geral', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
       const cat = parseCategory(norm);
       state.category = cat === 'aleatorio' ? null : cat;
@@ -250,14 +280,21 @@ export async function handlePartyMessage(
       if (state.game === 'escalacao') return save(startEscalacao(state, deps));
       if (state.game === 'top10') return save(startTop10(state, deps));
       if (state.game === 'intruso') return save(startIntruso(state, deps));
+      if (state.game === 'melhortime') return save(startMelhorTime(state, deps));
       return save(startQuiz(state, deps));
     }
     return [];
   }
 
+  // Melhor Time: na votação, quem decide é quem NÃO jogou.
+  if (state.status === 'PLAYING' && state.game === 'melhortime' && state.phase === 'voting') {
+    return melhorTimeVote(state, msg, save);
+  }
+
   if (state.status !== 'PLAYING' || !player) return [];
 
   if (norm === 'pular' && isHost) {
+    if (state.game === 'melhortime') return [];
     if (state.game === 'escalacao') return save(closeRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     if (state.game === 'top10') return save(finishTop10(state, deps, 'Encerrado pelo anfitrião.'));
     if (state.game === 'intruso') return save(revealRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
@@ -267,6 +304,7 @@ export async function handlePartyMessage(
   if (state.game === 'escalacao') return escalacaoAnswer(state, player, msg, deps, save);
   if (state.game === 'top10') return top10Answer(state, player, msg, deps, save);
   if (state.game === 'intruso') return intrusoAnswer(state, player, msg, deps, save);
+  if (state.game === 'melhortime') return melhorTimeAnswer(state, player, msg, deps, save);
   return quizAnswer(state, player, msg, deps, save);
 }
 
@@ -283,13 +321,14 @@ export async function handlePartyTick(
     if (token !== state.timerToken) return []; // rodada já mudou
     if (state.deadline !== null && deps.now.getTime() < state.deadline - 1500) return [];
   }
-  const out = closeOnTimeout(state, deps);
+  const out = await closeOnTimeout(state, deps);
   state.updatedAt = deps.now.getTime();
   if (!(await deps.store.saveMatch(match))) throw new ConflictError();
   return out;
 }
 
-function closeOnTimeout(state: PartyState, deps: PartyDeps): Outgoing[] {
+async function closeOnTimeout(state: PartyState, deps: PartyDeps): Promise<Outgoing[]> {
+  if (state.game === 'melhortime') return melhorTimeTimeout(state, deps);
   if (state.game === 'escalacao') return closeRound(state, deps, 'Tempo esgotado.');
   if (state.game === 'top10') return finishTop10(state, deps, 'Tempo esgotado.');
   if (state.game === 'intruso') return intrusoTimeout(state, deps);
@@ -298,6 +337,7 @@ function closeOnTimeout(state: PartyState, deps: PartyDeps): Outgoing[] {
 
 function canJoinLate(state: PartyState): boolean {
   const limit = PARTY_CONFIG[state.game].joinUntil;
+  if (state.game === 'melhortime') return false;
   if (state.game === 'top10') return state.found.filter(Boolean).length < limit;
   return state.round < limit; // round é 0-based: rodadas 1 e 2
 }
@@ -323,6 +363,14 @@ function rulesText(state: PartyState): string {
   if (state.game === 'quetime' || state.game === 'quemeh') {
     return [`*${cfg.name}*`, ...quizRules(state), ...common.slice(0, 2)].join('\n');
   }
+  if (state.game === 'melhortime') {
+    return [
+      `*${cfg.name}* (1 x 1)`,
+      'A cada rodada sai um clube. Na sua vez, escolha um jogador que passou por ele e a posição: *atacante Fulano*.',
+      'A ordem das posições é livre: GOL, 2 DEF, 2 MEI e 1 ATA. Ninguém repete jogador.',
+      state.judge === 'ia' ? 'No fim, a IA decide qual time ficou melhor.' : 'No fim, quem não jogou vota: *1* ou *2*.',
+    ].join('\n');
+  }
   if (state.game === 'intruso') {
     return [`*${cfg.name}*`, 'O bot mostra 5 nomes: 4 têm algo em comum e 1 é o intruso.', ...INTRUSO_RULES, ...common.slice(0, 2)].join('\n');
   }
@@ -337,6 +385,7 @@ function rulesText(state: PartyState): string {
 
 function boardImage(state: PartyState, final: boolean): Outgoing {
   if (state.game === 'escalacao') return { type: 'image', image: { kind: 'partyTable', state: structuredClone(state) } };
+  if (state.game === 'melhortime') return { type: 'image', image: { kind: 'draftBoard', state: structuredClone(state) } };
   if (state.game !== 'top10') return scoreImage(state, final);
   const list = getTop10List(state.listId)!;
   return { type: 'image', image: { kind: 'top10Board', state: structuredClone(state), list, final } };
@@ -621,7 +670,9 @@ async function finishAndSave(
         ? finishTop10(state, deps, reason)
         : state.game === 'intruso'
           ? finishIntruso(state, reason)
-          : finishQuiz(state, deps, reason);
+          : state.game === 'melhortime'
+            ? []
+            : finishQuiz(state, deps, reason);
   return save(out);
 }
 

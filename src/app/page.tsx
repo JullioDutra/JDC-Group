@@ -12,6 +12,7 @@ const COMMANDS: Array<[string, string]> = [
   ['ativar grupo', 'liga o bot neste grupo'],
   ['iniciar jogo', 'lança um desafio'],
   ['iniciar aleatório', 'desafio com tema sorteado'],
+  ['iniciar melhor time', 'clubes sorteados; IA ou grupo julga'],
   ['aceitar', 'entra como adversário'],
   ['abrir sala', 'Escalação em Grupo (até 10)'],
   ['top 10', 'acertem as posições de um ranking'],

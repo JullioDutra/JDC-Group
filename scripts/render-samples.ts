@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { SLOTS, type EscalacaoParty, type ImageSpec, type MatchState, type PartyPlayer, type Top10Party } from '../src/lib/game/types';
 import { getTop10List } from '../src/lib/party/top10-lists';
 import { getLineup } from '../src/lib/party/content/lineups';
-import type { IntrusoParty, QuizParty } from '../src/lib/game/types';
+import type { IntrusoParty, MelhorTimeParty, QuizParty } from '../src/lib/game/types';
 import { getIntrusoSet } from '../src/lib/party/content/intruso';
 import { renderImage } from '../src/lib/images/render';
 
@@ -79,7 +79,21 @@ const intrusoWrong: IntrusoParty = {
   marks: [{ index: 0, jid: 'p0', name: 'Júllio' }, { index: 3, jid: 'p1', name: 'Camila' }, { index: 1, jid: 'p2', name: 'Tiago' }, { index: 2, jid: 'p0', name: 'Júllio' }],
 };
 
+const two = players.slice(0, 2);
+const dp = (name: string, club: string) => ({ name, key: name, club, strength: 50 });
+const draft: MelhorTimeParty = {
+  ...partyBase, players: two, game: 'melhortime', judge: 'votacao', phase: 'voting', status: 'PLAYING', round: 5,
+  clubs: ['fenerbahce', 'santos', 'flamengo', 'barcelona', 'real-madrid', 'milan'], turn: 0, used: [], votes: {},
+  verdict: null,
+  picks: {
+    p0: [dp('Volkan Demirel', 'Fenerbahçe'), dp('Lugano', 'Fenerbahçe'), dp('Piqué', 'Barcelona'), dp('Zico', 'Flamengo'), dp('Seedorf', 'Milan'), dp('Pelé', 'Santos')],
+    p1: [dp('Casillas', 'Real Madrid'), dp('Roberto Carlos', 'Real Madrid'), dp('Maldini', 'Milan'), dp('Alex', 'Fenerbahçe'), dp('Neymar', 'Santos'), dp('Romário', 'Flamengo')],
+  },
+};
+
 const specs: Record<string, ImageSpec> = {
+  '14-melhor-time-votacao': { kind: 'draftBoard', state: draft },
+  '14b-melhor-time-final': { kind: 'draftBoard', state: { ...draft, status: 'FINISHED', phase: 'done', judge: 'ia', verdict: { winner: 1, reason: 'Defesa com Maldini e Roberto Carlos e ataque com Neymar e Romário pesam mais que o meio de Zico e Seedorf.' } } },
   '13-intruso': { kind: 'intrusoBoard', state: intruso, reason: '', reveal: false },
   '13b-intruso-revelacao': { kind: 'intrusoBoard', state: intrusoWrong, reason: penta.reason, reveal: true },
   '10-que-time': { kind: 'lineupQuiz', state: quiz, lines: getLineup('brasil-1994')!.lines },

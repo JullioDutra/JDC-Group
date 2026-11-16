@@ -26,6 +26,8 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   quetime: { name: 'Que time é esse?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 6 },
   quemeh: { name: 'Quem é?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 12, rounds: 8 },
   intruso: { name: 'Intruso', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 5 },
+  // 1 x 1: 90 s por escolha; 'joinUntil' 0 = ninguém entra depois de começar.
+  melhortime: { name: 'Melhor Time', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 90, rounds: 6 },
 };
 
 export interface PartyDeps {
@@ -34,7 +36,16 @@ export interface PartyDeps {
   now: Date;
   rng: () => number;
   isAdmin: (jid: string) => boolean;
+  /** Juiz do Melhor Time (IA). Sem ele, usa a regra de reserva (soma do pico de valor). */
+  judge?: TeamJudge;
 }
+
+export interface JudgeTeam {
+  player: string;
+  lineup: Array<{ position: string; name: string; club: string }>;
+}
+
+export type TeamJudge = (teams: [JudgeTeam, JudgeTeam]) => Promise<{ winner: 0 | 1 | 'draw'; reason: string }>;
 
 export type Save = (out: Outgoing[]) => Promise<Outgoing[]>;
 

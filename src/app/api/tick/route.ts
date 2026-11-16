@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createLookup } from '@/lib/ai';
+import { defaultJudge } from '@/lib/ai/judge';
 import { dispatch } from '@/lib/dispatch';
 import { handleTick } from '@/lib/game/engine';
 import { publicOrigin, verifyTick } from '@/lib/scheduler';
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
 
   const store = getStore();
   try {
-    const outgoing = await handleTick(body.groupJid, body.token, { store, lookup: createLookup(store) });
+    const outgoing = await handleTick(body.groupJid, body.token, { store, lookup: createLookup(store), judge: defaultJudge() });
     await dispatch(getProvider(), body.groupJid, outgoing, origin);
     return NextResponse.json({ ok: true, sent: outgoing.length });
   } catch (error) {

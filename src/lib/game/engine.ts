@@ -1,5 +1,6 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
+import type { TeamJudge } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { CLUBS, NATIONS, drawDistinct, getTeam, isFromNation, playedForClub } from './teams';
@@ -33,6 +34,8 @@ export interface EngineDeps {
    * pessoa pode (simulador e testes). Em produção vem de ADMIN_NUMBERS.
    */
   canManageGroup?: (senderJid: string) => boolean;
+  /** Juiz por IA do Melhor Time (sem ele, vale a regra de reserva). */
+  judge?: TeamJudge;
 }
 
 
@@ -71,6 +74,7 @@ const HELP = [
   '*1 x 1*',
   '• *iniciar jogo* — lança um desafio',
   '• *iniciar aleatório* — desafio com tema sorteado (bom para começar)',
+  '• *iniciar melhor time* — clubes sorteados, montem o melhor time; a IA julga (ou *iniciar melhor time votação*: o grupo vota)',
   '• *aceitar* — entra como adversário',
   '• *placar* — campinho da partida',
   '• *tempo* — cobra quem estourou o tempo da jogada',
@@ -247,6 +251,7 @@ export async function handleTick(
           now: (deps.now ?? (() => new Date()))(),
           rng: deps.rng ?? Math.random,
           isAdmin: () => false,
+          judge: deps.judge,
         },
         force,
       );
@@ -297,6 +302,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     now,
     rng,
     isAdmin: (jid: string) => deps.canManageGroup?.(jid) ?? false,
+    judge: deps.judge,
   };
 
   // ----- Modo em Grupo (salas) -----

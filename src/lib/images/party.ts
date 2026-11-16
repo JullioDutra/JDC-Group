@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
-import { EscalacaoParty, IntrusoParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
+import { EscalacaoParty, IntrusoParty, MelhorTimeParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
 import { PARTY_CONFIG, standings } from '../party/engine';
 import { BODY, C, DISPLAY, H, W, box, brand, fit, pill, stage, txt } from './theme';
 
@@ -43,6 +43,13 @@ export function partyLobby(state: PartyState): ReactElement {
       'Acerte itens do ranking para revelar a posição.',
       'Ninguém responde duas vezes seguidas: espere outra pessoa.',
       'Vence quem acertar mais posições.',
+    ];
+  } else if (state.game === 'melhortime') {
+    subtitle = `1 x 1 · 6 clubes sorteados · juiz: ${state.judge === 'ia' ? 'IA' : 'votação do grupo'}`;
+    rules = [
+      'A cada rodada sai um clube: escolha um jogador que passou por ele.',
+      'Diga a posição junto: "atacante Fulano". A ordem é livre.',
+      state.judge === 'ia' ? 'No fim, a IA decide o melhor time.' : 'No fim, quem não jogou vota no melhor time.',
     ];
   } else if (state.game === 'intruso') {
     subtitle = `${PARTY_CONFIG.intruso.rounds} rodadas · 5 nomes, 1 intruso`;
@@ -100,10 +107,10 @@ export function partyLobby(state: PartyState): ReactElement {
       { marginTop: 28, justifyContent: 'space-between', alignItems: 'center' },
       box(
         { flexDirection: 'column' },
-        txt(`Dá para entrar até ${state.game === 'top10' ? `a ${cfg.joinUntil}ª posição revelada` : `a ${cfg.joinUntil}ª rodada`}`, { fontSize: 28, color: C.muted, fontWeight: 500 }),
-        txt('O anfitrião manda COMEÇAR', { fontSize: 28, color: C.white, fontWeight: 700 }),
+        txt(state.game === 'melhortime' ? 'Desafio 1 x 1' : `Dá para entrar até ${state.game === 'top10' ? `a ${cfg.joinUntil}ª posição revelada` : `a ${cfg.joinUntil}ª rodada`}`, { fontSize: 28, color: C.muted, fontWeight: 500 }),
+        txt(state.game === 'melhortime' ? 'Começa assim que alguém aceitar' : 'O anfitrião manda COMEÇAR', { fontSize: 28, color: C.white, fontWeight: 700 }),
       ),
-      txt('ENTRAR', {
+      txt(state.game === 'melhortime' ? 'ACEITAR' : 'ENTRAR', {
         fontFamily: DISPLAY, fontSize: 56, color: C.ink, backgroundColor: C.lime, padding: '10px 40px', borderRadius: 20, letterSpacing: 2,
       }),
     ),
@@ -384,6 +391,72 @@ export function intrusoBoard(state: IntrusoParty, reason: string, reveal: boolea
           { flexGrow: 1, alignItems: 'flex-end', justifyContent: 'space-between' },
           txt('Mande a letra · ninguém marca 2 vezes seguidas', { fontSize: 28, fontWeight: 700, color: C.lime }),
           txt(`${state.marks.length}/4 X`, { fontSize: 28, color: C.muted, fontWeight: 700 }),
+        ),
+  );
+}
+
+// ---------- Melhor Time ----------
+
+export function draftBoard(state: MelhorTimeParty): ReactElement {
+  const [a, b] = state.players;
+  const v = state.verdict;
+  const finished = state.status === 'FINISHED';
+  const rowH = 118;
+  const status = finished ? 'RESULTADO' : state.phase === 'voting' ? 'VOTAÇÃO' : `RODADA ${state.round + 1} DE 6`;
+  const cell = (jid: string | undefined, i: number, align: 'flex-start' | 'flex-end') => {
+    const pick = jid ? state.picks[jid]?.[i] : null;
+    const empty = !pick || pick.name === '—';
+    return box(
+      { flexDirection: 'column', alignItems: align, width: 380 },
+      txt(pick ? fit(pick.name, 20) : '—', { fontFamily: DISPLAY, fontSize: 34, color: empty ? C.muted : C.white }),
+      txt(pick && !empty ? pick.club : pick ? 'vaga vazia' : ' ', { fontSize: 20, color: C.muted, fontWeight: 500 }),
+    );
+  };
+  const nameTag = (i: 0 | 1) => {
+    const p = state.players[i];
+    const won = finished && v && v.winner === i;
+    return box(
+      { flexDirection: 'column', alignItems: i === 0 ? 'flex-start' : 'flex-end', width: 380 },
+      txt(`${i + 1} · ${upper(fit(firstName(p?.name ?? ''), 12))}`, { fontFamily: DISPLAY, fontSize: 44, color: won ? C.lime : colorOf(state, p?.jid ?? '') }),
+      ...(won ? [txt('MELHOR TIME', { fontSize: 20, fontWeight: 700, letterSpacing: 2, color: C.lime })] : []),
+    );
+  };
+  return stage(
+    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(status, finished ? C.lime : C.panel, finished ? C.ink : C.lime, 24)),
+    txt('MELHOR TIME', { fontFamily: DISPLAY, fontSize: 80, lineHeight: 1.1, marginTop: 14 }),
+    txt(state.judge === 'ia' ? 'Quem decide: a IA' : 'Quem decide: o grupo (quem não jogou)', { fontSize: 28, color: C.muted, fontWeight: 500, marginBottom: 18 }),
+    box({ justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 20px', marginBottom: 10 }, nameTag(0), nameTag(1)),
+    box(
+      { flexDirection: 'column', gap: 8 },
+      ...SLOTS.map((slot, i) =>
+        box(
+          {
+            height: rowH, alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderRadius: 16,
+            backgroundColor: C.panel, border: `2px solid ${C.panelLine}`,
+          },
+          cell(a?.jid, i, 'flex-start'),
+          txt(slot, {
+            width: 92, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
+            fontFamily: DISPLAY, fontSize: 26, color: C.ink, backgroundColor: C.lime,
+          }),
+          cell(b?.jid, i, 'flex-end'),
+        ),
+      ),
+    ),
+    finished && v
+      ? box(
+          { flexDirection: 'column', marginTop: 16, flexGrow: 1, backgroundColor: C.panel, borderRadius: 18, border: `2px solid ${C.lime}`, padding: '16px 22px' },
+          txt(v.winner === 'draw' ? 'EMPATE' : `VENCEU: ${upper(state.players[v.winner].name)}`, { fontFamily: DISPLAY, fontSize: 34, color: C.lime }),
+          txt(v.reason, { fontSize: 26, fontWeight: 500, lineHeight: 1.2, marginTop: 6 }),
+        )
+      : box(
+          { flexGrow: 1, alignItems: 'flex-end', justifyContent: 'center' },
+          txt(
+            state.phase === 'voting'
+              ? 'Quem não jogou: mande 1 ou 2'
+              : `Clube da rodada: ${getTeam(state.clubs[state.round])?.name ?? ''}`,
+            { fontSize: 32, fontWeight: 700, color: C.lime },
+          ),
         ),
   );
 }
