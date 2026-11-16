@@ -2,6 +2,8 @@
 
 Roteiro de comandos, na ordem, para rodar na VPS onde está a Evolution API.
 
+> **Versão com os nomes reais do seu servidor:** [`VIRADA-PRONTA.md`](VIRADA-PRONTA.md).
+
 | Número | Hoje | Depois |
 |---|---|---|
 | Pessoal | instância própria + seu bot pessoal | **igual. Nenhum comando abaixo escreve nele** |
