@@ -16,6 +16,7 @@ informa o número dele; vence a melhor soma. Cada etapa chega ao grupo como imag
 | [docs/MODO-GRUPO.md](docs/MODO-GRUPO.md) | Modo em Grupo: sala de 10–15 com `entrar`, 1 resposta por jogador, respostas repetidas não valem, jogos prontos e planejados |
 | [docs/TOP10.md](docs/TOP10.md) | Top 10: regras, listas no ar e temas planejados |
 | [docs/REPERTORIO.md](docs/REPERTORIO.md) | Acervo: 168 clubes, 51 seleções, listas, perguntas, curadoria, política opt-in e plano de expansão |
+| [docs/VIRADA-VPS.md](docs/VIRADA-VPS.md) | Passo a passo de comandos na VPS: RPG sai, jogo entra, bot pessoal intocado |
 | [docs/EVOLUTION.md](docs/EVOLUTION.md) | Virada do número do RPG na Evolution sem afetar o bot pessoal |
 
 ## Stack
@@ -41,7 +42,7 @@ de demonstração com números aproximados. O simulador `/jogar` exige `ADMIN_KE
 2. Vercel → Storage → Neon, região **São Paulo (aws-sa-east-1)**, a mesma das funções (`gru1` em `vercel.json`). Isso cria `DATABASE_URL`.
 3. Configure as variáveis de `.env.example`.
 4. Crie as tabelas: `curl -X POST https://SEU-APP/api/admin/migrate -H "Authorization: Bearer $ADMIN_KEY"`
-5. Evolution: siga [docs/EVOLUTION.md](docs/EVOLUTION.md). `POST /api/admin/evolution-setup` aponta o webhook só da instância do jogo; `GET /api/admin/status` confere tudo.
+5. Evolution: siga [docs/VIRADA-VPS.md](docs/VIRADA-VPS.md). `POST /api/admin/evolution-setup` aponta o webhook só da instância do jogo; `GET /api/admin/status` confere tudo.
 6. No grupo: `ativar grupo` → `iniciar jogo`.
 
 ## Comandos no grupo

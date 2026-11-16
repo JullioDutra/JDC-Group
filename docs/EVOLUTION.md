@@ -1,5 +1,7 @@
 # Evolution API: usar o número do RPG sem afetar o bot pessoal
 
+> **Roteiro de comandos da virada:** [`VIRADA-VPS.md`](VIRADA-VPS.md). Como o QR pode ser lido de novo, o caminho recomendado agora é criar uma instância nova `jogos` e aposentar a do RPG. Este documento explica o isolamento e a alternativa de reaproveitar a instância do RPG sem reler o QR.
+
 Situação: um servidor Evolution API com **dois números conectados**:
 
 | Número | Hoje | Depois |
