@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createLookup } from '@/lib/ai';
-import { defaultJudge } from '@/lib/ai/judge';
+import { defaultJudge, defaultWordCheck } from '@/lib/ai/judge';
 import { secretMatches } from '@/lib/auth';
 import { handleMessage } from '@/lib/game/engine';
 import { dispatch } from '@/lib/dispatch';
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   if (!(await store.markProcessed(message.id))) return NextResponse.json({ ok: true, duplicate: true });
 
   try {
-    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck(), judge: defaultJudge() });
+    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck(), judge: defaultJudge(), checkWords: defaultWordCheck() });
     await dispatch(provider, message.groupJid, outgoing, publicOrigin(request));
     return NextResponse.json({ ok: true, sent: outgoing.length });
   } catch (error) {

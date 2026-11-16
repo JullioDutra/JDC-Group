@@ -1,5 +1,5 @@
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
-import type { AlfabetoParty, ChuteParty, IncomingMessage, IntrusoParty, Outgoing, PartyPlayer, QuizParty } from '../game/types';
+import type { IncomingMessage, Outgoing, PartyPlayer, QuizParty } from '../game/types';
 import {
   PARTY_CONFIG,
   PartyDeps,
@@ -10,11 +10,14 @@ import {
   pendingResults,
   react,
   schedule,
+  scoreImage,
+  shuffle,
   text,
 } from './common';
 import { LINEUPS, Lineup, getLineup } from './content/lineups';
 import { WHOIS, getWhoIs } from './content/whois';
 import { CARDS, getCard } from './content/cards';
+import { FLAGS, getFlag } from './content/flags';
 import type { ContentCategory } from '../game/types';
 
 /**
@@ -30,19 +33,28 @@ export const WHOIS_POINTS = [150, 120, 90, 60, 30];
 /** Que time é esse?: time e ano exatos / só o time. */
 export const QUETIME_POINTS = { full: 150, teamOnly: 60 };
 
-function shuffle<T>(items: T[], rng: () => number): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 /** Emoji e Quiz Relâmpago: 1 pergunta por rodada, o primeiro que acertar leva. */
 export const CARD_POINTS = 100;
 
-const isCardGame = (game: QuizParty['game']): game is 'emoji' | 'relampago' => game === 'emoji' || game === 'relampago';
+const isCardGame = (game: QuizParty['game']): game is 'emoji' | 'relampago' | 'bandeira' =>
+  game === 'emoji' || game === 'relampago' || game === 'bandeira';
+
+/** Resposta e apelidos da carta da rodada (Emoji, Relâmpago e Bandeiraço). */
+function cardOf(state: QuizParty, id: string): { answer: string; aliases: string[]; note?: string } {
+  if (state.game === 'bandeira') {
+    const f = getFlag(id)!;
+    return { answer: f.answer, aliases: f.aliases ?? [], note: f.note };
+  }
+  const c = getCard(id)!;
+  return { answer: c.answer, aliases: c.aliases ?? [] };
+}
+
+/** Bandeiraço: 2 da América do Sul, 4 da Europa e o resto do mundo, nessa ordem. */
+function flagOrder(total: number, rng: () => number): string[] {
+  const pick = (region: string, n: number) => shuffle(FLAGS.filter((f) => f.region === region).map((f) => f.id), rng).slice(0, n);
+  return [...pick('sul', 2), ...pick('europa', 4), ...pick('mundo', Math.max(0, total - 6))];
+}
 
 export function newQuiz(
   game: QuizParty['game'],
@@ -77,6 +89,13 @@ export function quizRules(state: QuizParty): string[] {
       'Palpite igual a um já dito não vale. Vence quem somar mais pontos.',
     ];
   }
+  if (state.game === 'bandeira') {
+    return [
+      'O bot mostra uma bandeira desenhada (sem brasões nem estrelas). Diga o país.',
+      `1 palpite por pessoa em cada rodada. O primeiro que acertar leva ${CARD_POINTS}.`,
+      'Fases: América do Sul, Europa e mundo. Palpite igual a um já dito não vale.',
+    ];
+  }
   if (state.game === 'quetime') {
     return [
       'O bot mostra uma escalação histórica. Diga o time e o ano: *Brasil 94*.',
@@ -100,8 +119,10 @@ export function startQuiz(state: QuizParty, deps: PartyDeps): Outgoing[] {
       ? LINEUPS.map((l) => l.id)
       : state.game === 'quemeh'
         ? WHOIS.filter((c) => fits(c.category)).map((c) => c.id)
-        : CARDS[state.game].filter((c) => (state.category ? c.category === state.category : c.category !== 'politica')).map((c) => c.id);
-  state.order = shuffle(pool, deps.rng).slice(0, state.totalRounds);
+        : state.game === 'bandeira'
+          ? flagOrder(state.totalRounds, deps.rng)
+          : CARDS[state.game].filter((c) => (state.category ? c.category === state.category : c.category !== 'politica')).map((c) => c.id);
+  state.order = state.game === 'bandeira' ? pool : shuffle(pool, deps.rng).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;
@@ -131,6 +152,18 @@ function openRound(state: QuizParty, deps: PartyDeps): Outgoing[] {
         caption: `${header} · Que time é esse? Mande time e ano (ex.: *Brasil 94*). 1 palpite por pessoa.`,
       },
       schedule(state, PARTY_CONFIG.quetime.seconds, nowMs, 'qt'),
+    ];
+  }
+  if (state.game === 'bandeira') {
+    const f = getFlag(state.order[state.round])!;
+    const phase = f.region === 'sul' ? 'América do Sul' : f.region === 'europa' ? 'Europa' : 'Mundo';
+    return [
+      {
+        type: 'image',
+        image: { kind: 'flagQuiz', state: structuredClone(state), flag: f.flag },
+        caption: `${header} · Bandeiraço (${phase})\nDe que país é esta bandeira? 1 palpite por pessoa.`,
+      },
+      schedule(state, PARTY_CONFIG.bandeira.seconds, nowMs, 'bd'),
     ];
   }
   if (isCardGame(state.game)) {
@@ -206,8 +239,8 @@ export async function quizAnswer(
       out.push(text(`*${who}* acertou o time, mas não o ano (+${QUETIME_POINTS.teamOnly}). Ainda vale descobrir o ano.`));
     }
   } else if (isCardGame(state.game)) {
-    const c = getCard(state.order[state.round])!;
-    if (answerMatches([c.answer, ...(c.aliases ?? [])], normalizeAnswer(raw))) {
+    const c = cardOf(state, state.order[state.round]);
+    if (answerMatches([c.answer, ...c.aliases], normalizeAnswer(raw))) {
       score(state, player, CARD_POINTS, c.answer, deps);
       state.solved = true;
       out.push(text(`✅ *${who}* acertou: *${c.answer}* (+${CARD_POINTS})`));
@@ -259,7 +292,10 @@ export function closeQuizRound(state: QuizParty, deps: PartyDeps, reason: string
     if (!state.attempts.includes(p.jid) && p.missed < 99) p.missed += 1;
   }
   const answer = isCardGame(state.game)
-    ? `Era *${getCard(state.order[state.round])!.answer}*.`
+    ? (() => {
+        const c = cardOf(state, state.order[state.round]);
+        return `Era *${c.answer}*${c.note ? ` (${c.note})` : ''}.`;
+      })()
     : state.game === 'quetime'
       ? (() => {
           const l = getLineup(state.order[state.round])!;
@@ -279,10 +315,7 @@ export function quizStandings(state: QuizParty): PartyPlayer[] {
   return [...state.players].sort((a, b) => b.score - a.score || a.lastHitAt - b.lastHitAt);
 }
 
-export function scoreImage(state: QuizParty | IntrusoParty | AlfabetoParty | ChuteParty, final: boolean): Outgoing {
-  const title = final ? 'Resultado final' : `Placar após a rodada ${state.round + 1}`;
-  return { type: 'image', image: { kind: 'partyScore', state: structuredClone(state), title, final } };
-}
+export { scoreImage };
 
 export function finishQuiz(state: QuizParty, deps: PartyDeps, reason: string): Outgoing[] {
   state.status = 'FINISHED';
@@ -305,7 +338,7 @@ export function finishQuiz(state: QuizParty, deps: PartyDeps, reason: string): O
       result: best.score > 0 && p.score === best.score ? (tied.length > 1 ? 'draw' : 'win') : 'loss',
     })),
   );
-  const again = { quetime: 'abrir que time é esse', quemeh: 'abrir quem é', emoji: 'abrir emoji', relampago: 'abrir relâmpago' }[state.game];
+  const again = { quetime: 'abrir que time é esse', quemeh: 'abrir quem é', emoji: 'abrir emoji', relampago: 'abrir relâmpago', bandeira: 'abrir bandeiraço' }[state.game];
   return [
     {
       ...scoreImage(state, true),

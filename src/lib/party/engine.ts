@@ -6,6 +6,7 @@ import {
   IncomingMessage,
   IntrusoParty,
   QuizParty,
+  RodadaParty,
   MatchPlayer,
   Outgoing,
   POSITION_LABEL,
@@ -26,6 +27,7 @@ import {
   PartyDeps,
   activePlayers,
   editDistance,
+  finishByScore,
   pendingResults,
   react,
   schedule,
@@ -42,6 +44,15 @@ import { melhorTimeAnswer, melhorTimeTimeout, melhorTimeVote, newMelhorTime, sta
 import { ALFABETO_RULES, alfabetoAnswer, closeAlfabetoRound, finishAlfabeto, newAlfabeto, startAlfabeto } from './alfabeto';
 import { CHUTE_RULES, chuteAnswer, closeChuteRound, finishChute, newChute, startChute } from './chute';
 import { INTRUSO_RULES, finishIntruso, intrusoAnswer, intrusoTimeout, newIntruso, revealRound, startIntruso } from './intruso';
+import { SOBREVIVENTE_RULES, finishSobrevivente, newSobrevivente, sobreviventeAnswer, sobreviventeTimeout, startSobrevivente } from './sobrevivente';
+import { CONEXOES_RULES, closeConexoesRound, conexoesAnswer, newConexoes, startConexoes } from './conexoes';
+import { STOP_RULES, closeStopRound, newStop, startStop, stopAnswer } from './stop';
+import { DRAFT_RULES, closeVoting, draftAnswer, draftRows, draftTimeout, draftVote, newDraft, startDraft } from './draft';
+import { FATO_RULES, LINHA_RULES, closeRodadaRound, newRodada, rodadaAnswer, startRodada } from './rodada';
+import { CONEXOES } from './content/conexoes';
+import { FACTS } from './content/fato';
+import { TIMELINE } from './content/linha';
+import { SURVIVOR_LISTS } from './content/sobrevivente';
 import { closeQuizRound, finishQuiz, newQuiz, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 
 const LOBBY_TTL_MS = 15 * 60_000;
@@ -79,6 +90,17 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (rl) return { game: 'relampago', rest: rl[5] ?? '' };
   const intr = norm.match(/^(abrir|jogar) (o )?(intruso|quem nao pertence)( (futebol|geral|politica))?$/);
   if (intr) return { game: 'intruso', rest: intr[5] ?? '' };
+  if (/^(abrir|jogar) (o )?(bandeiraco|bandeiras|bandeira)$/.test(norm)) return { game: 'bandeira', rest: '' };
+  const sv = norm.match(new RegExp(`^(abrir|jogar) (o )?sobrevivente( ${cats})?$`));
+  if (sv) return { game: 'sobrevivente', rest: sv[4] ?? '' };
+  const cx = norm.match(new RegExp(`^(abrir|jogar) (o )?(conexoes|jogo das conexoes)( ${cats})?$`));
+  if (cx) return { game: 'conexoes', rest: cx[5] ?? '' };
+  if (/^(abrir|jogar) (o )?(stop|adedonha|adedanha)$/.test(norm)) return { game: 'stop', rest: '' };
+  if (/^(abrir|jogar) (o )?draft( da resenha)?$/.test(norm)) return { game: 'draft', rest: '' };
+  const lt = norm.match(new RegExp(`^(abrir|jogar) (a )?linha do tempo( ${cats})?$`));
+  if (lt) return { game: 'linha', rest: lt[4] ?? '' };
+  const ff = norm.match(new RegExp(`^(abrir|jogar) (o )?fato ou fake( ${cats})?$`));
+  if (ff) return { game: 'fato', rest: ff[4] ?? '' };
   const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time((?: (?:ia|votacao|grupo|dificil))*)$/);
   if (mt) return { game: 'melhortime', rest: mt[3].trim() };
   const esc = norm.match(/^(abrir sala|jogo em grupo|escalacao em grupo)( (.*))?$/);
@@ -138,11 +160,23 @@ export async function createParty(
     };
   } else if (start.game === 'alfabeto') {
     state = { ...base('alfabeto', host, nowMs), ...newAlfabeto() };
+  } else if (start.game === 'sobrevivente') {
+    state = { ...base('sobrevivente', host, nowMs), ...newSobrevivente(contentCategory(start.rest, SURVIVOR_LISTS)) };
+  } else if (start.game === 'conexoes') {
+    state = { ...base('conexoes', host, nowMs), ...newConexoes(contentCategory(start.rest, CONEXOES, 1)) };
+  } else if (start.game === 'stop') {
+    state = { ...base('stop', host, nowMs), ...newStop() };
+  } else if (start.game === 'draft') {
+    state = { ...base('draft', host, nowMs), ...newDraft() };
+  } else if (start.game === 'linha') {
+    state = { ...base('linha', host, nowMs), ...newRodada('linha', contentCategory(start.rest, TIMELINE, 16)) };
+  } else if (start.game === 'fato') {
+    state = { ...base('fato', host, nowMs), ...newRodada('fato', contentCategory(start.rest, FACTS)) };
   } else if (start.game === 'chute') {
     state = { ...base('chute', host, nowMs), ...newChute(contentCategory(start.rest, CHUTE_QUESTIONS)) };
   } else if (start.game === 'intruso') {
     state = { ...base('intruso', host, nowMs), ...newIntruso(contentCategory(start.rest, INTRUSO_SETS)) };
-  } else if (start.game === 'quetime' || start.game === 'quemeh' || start.game === 'emoji' || start.game === 'relampago') {
+  } else if (start.game === 'quetime' || start.game === 'quemeh' || start.game === 'emoji' || start.game === 'relampago' || start.game === 'bandeira') {
     const pool = start.game === 'quemeh' ? WHOIS : start.game === 'emoji' ? EMOJI_CARDS : start.game === 'relampago' ? RELAMPAGO_CARDS : [];
     state = { ...base(start.game, host, nowMs), ...newQuiz(start.game, contentCategory(start.rest, pool)) };
   } else {
@@ -201,11 +235,11 @@ const CATEGORY_WORDS: Array<[string, ContentCategory]> = [
 ];
 
 /** Categoria pedida no comando, só se o jogo tiver conteúdo suficiente nela; senão, mistura (sem política). */
-function contentCategory(rest: string, pool: ReadonlyArray<{ category?: ContentCategory }>): ContentCategory | null {
+function contentCategory(rest: string, pool: ReadonlyArray<{ category?: ContentCategory }>, min = 3): ContentCategory | null {
   const word = normalize(rest).split(' ')[0] ?? '';
   const cat = CATEGORY_WORDS.find(([prefix]) => word.startsWith(prefix))?.[1];
   if (!cat) return null;
-  return pool.filter((x) => (x.category ?? 'futebol') === cat).length >= 3 ? cat : null;
+  return pool.filter((x) => (x.category ?? 'futebol') === cat).length >= min ? cat : null;
 }
 
 function parseCategory(rest: string): Top10List['category'] | 'aleatorio' {
@@ -329,6 +363,11 @@ export async function handlePartyMessage(
       if (state.game === 'melhortime') return save(startMelhorTime(state, deps));
       if (state.game === 'alfabeto') return save(startAlfabeto(state, deps));
       if (state.game === 'chute') return save(startChute(state, deps));
+      if (state.game === 'sobrevivente') return save(startSobrevivente(state, deps));
+      if (state.game === 'conexoes') return save(startConexoes(state, deps));
+      if (state.game === 'stop') return save(startStop(state, deps));
+      if (state.game === 'draft') return save(startDraft(state, deps));
+      if (isRodada(state)) return save(startRodada(state, deps));
       return save(startQuiz(state, deps));
     }
     return [];
@@ -337,6 +376,12 @@ export async function handlePartyMessage(
   // Melhor Time: na votação, quem decide é quem NÃO jogou.
   if (state.status === 'PLAYING' && state.game === 'melhortime' && state.phase === 'voting') {
     return melhorTimeVote(state, msg, save);
+  }
+
+  // Draft da Resenha: na votação, qualquer pessoa do grupo vota.
+  if (state.status === 'PLAYING' && state.game === 'draft' && state.phase === 'voting') {
+    if (norm === 'pular' && isHost) return save(closeVoting(state, 'Votação encerrada pelo anfitrião.'));
+    return draftVote(state, msg, save);
   }
 
   if (state.status !== 'PLAYING' || !player) return [];
@@ -348,6 +393,11 @@ export async function handlePartyMessage(
     if (state.game === 'intruso') return save(revealRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     if (state.game === 'alfabeto') return save(closeAlfabetoRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     if (state.game === 'chute') return save(closeChuteRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
+    if (state.game === 'sobrevivente') return save(sobreviventeTimeout(state, deps));
+    if (state.game === 'conexoes') return save(closeConexoesRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
+    if (state.game === 'stop') return save(await closeStopRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
+    if (state.game === 'draft') return save(draftTimeout(state, deps));
+    if (isRodada(state)) return save(closeRodadaRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
     return save(closeQuizRound(state, deps, 'Rodada pulada pelo anfitrião.'));
   }
 
@@ -357,6 +407,11 @@ export async function handlePartyMessage(
   if (state.game === 'melhortime') return melhorTimeAnswer(state, player, msg, deps, save);
   if (state.game === 'alfabeto') return alfabetoAnswer(state, player, msg, deps, save);
   if (state.game === 'chute') return chuteAnswer(state, player, msg, deps, save);
+  if (state.game === 'sobrevivente') return sobreviventeAnswer(state, player, msg, deps, save);
+  if (state.game === 'conexoes') return conexoesAnswer(state, player, msg, deps, save);
+  if (state.game === 'stop') return stopAnswer(state, player, msg, deps, save);
+  if (state.game === 'draft') return draftAnswer(state, player, msg, deps, save);
+  if (isRodada(state)) return rodadaAnswer(state, player, msg, deps, save);
   return quizAnswer(state, player, msg, deps, save);
 }
 
@@ -386,6 +441,11 @@ async function closeOnTimeout(state: PartyState, deps: PartyDeps): Promise<Outgo
   if (state.game === 'intruso') return intrusoTimeout(state, deps);
   if (state.game === 'alfabeto') return closeAlfabetoRound(state, deps, 'Tempo esgotado.');
   if (state.game === 'chute') return closeChuteRound(state, deps, 'Tempo esgotado.');
+  if (state.game === 'sobrevivente') return sobreviventeTimeout(state, deps);
+  if (state.game === 'conexoes') return closeConexoesRound(state, deps, 'Tempo esgotado.');
+  if (state.game === 'stop') return closeStopRound(state, deps, 'Tempo esgotado.');
+  if (state.game === 'draft') return draftTimeout(state, deps);
+  if (isRodada(state)) return closeRodadaRound(state, deps, 'Tempo esgotado.');
   return quizTimeout(state, deps);
 }
 
@@ -414,9 +474,19 @@ function rulesText(state: PartyState): string {
       'No fim, soma os números do tema. Vence a maior soma (ou a menor, conforme o tema).',
     ].join('\n');
   }
-  if (state.game === 'quetime' || state.game === 'quemeh' || state.game === 'emoji' || state.game === 'relampago') {
+  if (state.game === 'quetime' || state.game === 'quemeh' || state.game === 'emoji' || state.game === 'relampago' || state.game === 'bandeira') {
     return [`*${cfg.name}*`, ...quizRules(state), ...common.slice(0, 2)].join('\n');
   }
+  const extra: Partial<Record<PartyGame, string[]>> = {
+    sobrevivente: SOBREVIVENTE_RULES,
+    conexoes: CONEXOES_RULES,
+    stop: STOP_RULES,
+    draft: DRAFT_RULES,
+    linha: LINHA_RULES,
+    fato: FATO_RULES,
+  };
+  const own = extra[state.game];
+  if (own) return [`*${cfg.name}*`, ...own, common[0], cfg.joinUntil > 0 ? common[1] : 'Ninguém entra depois de começar.'].join('\n');
   if (state.game === 'melhortime') {
     return [
       `*${cfg.name}* (1 x 1)`,
@@ -442,6 +512,10 @@ function rulesText(state: PartyState): string {
 function boardImage(state: PartyState, final: boolean): Outgoing {
   if (state.game === 'escalacao') return { type: 'image', image: { kind: 'partyTable', state: structuredClone(state) } };
   if (state.game === 'melhortime') return { type: 'image', image: { kind: 'draftBoard', state: structuredClone(state) } };
+  if (state.game === 'draft') {
+    return { type: 'image', image: { kind: 'textBoard', game: 'draft', title: 'Os times', subtitle: `Rodada ${state.round + 1} de ${state.totalRounds}`, rows: draftRows(state, false) } };
+  }
+  if (state.game === 'conexoes' && !final) return { type: 'image', image: { kind: 'conexoesBoard', state: structuredClone(state), reveal: false } };
   if (state.game !== 'top10') return scoreImage(state, final);
   const list = getTop10List(state.listId)!;
   return { type: 'image', image: { kind: 'top10Board', state: structuredClone(state), list, final } };
@@ -716,6 +790,17 @@ function finishTop10(state: Top10Party, deps: PartyDeps, reason: string): Outgoi
 
 // ---------- Resultado ----------
 
+const AGAIN: Partial<Record<PartyGame, string>> = {
+  conexoes: 'abrir conexões',
+  stop: 'abrir stop',
+  linha: 'abrir linha do tempo',
+  fato: 'abrir fato ou fake',
+};
+
+function isRodada(state: PartyState): state is RodadaParty {
+  return state.game === 'linha' || state.game === 'fato';
+}
+
 async function finishAndSave(
   state: PartyState,
   deps: PartyDeps,
@@ -735,7 +820,13 @@ async function finishAndSave(
               ? finishAlfabeto(state, reason)
               : state.game === 'chute'
                 ? finishChute(state, reason)
-                : finishQuiz(state, deps, reason);
+                : state.game === 'sobrevivente'
+                  ? finishSobrevivente(state, reason)
+                  : state.game === 'draft'
+                    ? closeVoting(state, reason)
+                    : state.game === 'conexoes' || state.game === 'stop' || isRodada(state)
+                      ? finishByScore(state, reason, AGAIN[state.game] ?? 'ajuda')
+                      : finishQuiz(state, deps, reason);
   return save(out);
 }
 

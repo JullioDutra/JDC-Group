@@ -30,6 +30,15 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   relampago: { name: 'Quiz Relâmpago', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
   alfabeto: { name: 'Alfabeto', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 5 },
   chute: { name: 'Chute Certo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 6 },
+  bandeira: { name: 'Bandeiraço', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
+  // Sobrevivente: 20 s por vez; ninguém entra depois de começar (a ordem é fixa).
+  sobrevivente: { name: 'Sobrevivente', maxPlayers: 15, minPlayers: 2, joinUntil: 0, seconds: 20, rounds: 8 },
+  conexoes: { name: 'Conexões', maxPlayers: 12, minPlayers: 2, joinUntil: 1, seconds: 180, rounds: 2 },
+  stop: { name: 'Stop', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 90, rounds: 3 },
+  // Draft: 60 s por escolha, 5 rodadas em serpente, até 8 pessoas.
+  draft: { name: 'Draft da Resenha', maxPlayers: 8, minPlayers: 2, joinUntil: 0, seconds: 60, rounds: 5 },
+  linha: { name: 'Linha do Tempo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 6 },
+  fato: { name: 'Fato ou Fake', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
   // 1 x 1: 90 s por escolha; 'joinUntil' 0 = ninguém entra depois de começar.
   melhortime: { name: 'Melhor Time', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 90, rounds: 6 },
 };
@@ -42,7 +51,12 @@ export interface PartyDeps {
   isAdmin: (jid: string) => boolean;
   /** Juiz do Melhor Time (IA). Sem ele, usa a regra de reserva (soma do pico de valor). */
   judge?: TeamJudge;
+  /** Stop: confere palavras fora das listas curadas (IA). Sem ele, só vale o que está nas listas. */
+  checkWords?: WordCheck;
 }
+
+/** Recebe a letra e os pares (categoria, palavra); devolve se cada palavra vale. */
+export type WordCheck = (letter: string, items: Array<{ category: string; word: string }>) => Promise<boolean[]>;
 
 export interface JudgeTeam {
   player: string;
@@ -50,6 +64,59 @@ export interface JudgeTeam {
 }
 
 export type TeamJudge = (teams: [JudgeTeam, JudgeTeam]) => Promise<{ winner: 0 | 1 | 'draw'; reason: string }>;
+
+export function shuffle<T>(items: T[], rng: () => number): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+export function scoreImage(state: PartyState, final: boolean): Outgoing {
+  const round = 'round' in state ? state.round : 0;
+  const title = final ? 'Resultado final' : `Placar após a rodada ${round + 1}`;
+  return { type: 'image', image: { kind: 'partyScore', state: structuredClone(state), title, final } };
+}
+
+/** Fim de jogo por pontos: placar final, manchete e resultados para o ranking. */
+export function finishByScore(state: PartyState, reason: string, again: string, unit = 'pontos'): Outgoing[] {
+  state.status = 'FINISHED';
+  state.deadline = null;
+  state.timerToken = null;
+  const ranked = [...state.players].sort((a, b) => b.score - a.score || a.lastHitAt - b.lastHitAt);
+  const best = ranked[0];
+  const tied = ranked.filter((p) => p.score === best.score);
+  const headline =
+    best.score === 0
+      ? 'Ninguém pontuou desta vez.'
+      : tied.length > 1
+        ? `🏆 Empate: ${tied.map((p) => `*${p.name}*`).join(' e ')}, com ${best.score} ${unit}.`
+        : `🏆 *${best.name}* venceu com ${best.score} ${unit}.`;
+  pendingResults.set(
+    state,
+    ranked.map((p) => ({
+      player: { jid: p.jid, name: p.name },
+      result: best.score > 0 && p.score === best.score ? (tied.length > 1 ? 'draw' : 'win') : 'loss',
+    })),
+  );
+  const lines = ranked.map((p, i) => `${i + 1}º ${p.name} — ${p.score}`);
+  return [
+    {
+      ...scoreImage(state, true),
+      caption: [reason, headline, lines.join('\n'), `Mande *${again}* para jogar de novo.`].filter(Boolean).join('\n\n'),
+    } as Outgoing,
+  ];
+}
+
+/** Soma pontos a um jogador. */
+export function award(player: PartyPlayer, points: number, nowMs: number): void {
+  if (points <= 0) return;
+  player.score += points;
+  player.hits += 1;
+  player.lastHitAt = nowMs;
+}
 
 export type Save = (out: Outgoing[]) => Promise<Outgoing[]>;
 

@@ -1,6 +1,6 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
-import type { TeamJudge } from '../party/common';
+import type { TeamJudge, WordCheck } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
@@ -37,6 +37,8 @@ export interface EngineDeps {
   canManageGroup?: (senderJid: string) => boolean;
   /** Juiz por IA do Melhor Time (sem ele, vale a regra de reserva). */
   judge?: TeamJudge;
+  /** Stop: juiz de palavras (IA). */
+  checkWords?: WordCheck;
 }
 
 
@@ -91,6 +93,13 @@ const HELP = [
   '• *abrir relâmpago* — perguntas rápidas, quem acertar primeiro leva (até 15)',
   '• *abrir alfabeto* — letra + categoria, nome repetido não vale (até 15)',
   '• *abrir chute certo* — chute o número; o mais perto ganha (até 15)',
+  '• *abrir bandeiraço* — de que país é a bandeira? (até 15)',
+  '• *abrir sobrevivente* — um item por vez; errou, perde vida (até 15)',
+  '• *abrir conexões* — 16 nomes, ache os 4 grupos (até 12)',
+  '• *abrir stop* — a Adedonha do grupo (até 10)',
+  '• *abrir draft* — draft em serpente e o grupo vota (até 8)',
+  '• *abrir linha do tempo* — ponha 4 fatos em ordem (até 15)',
+  '• *abrir fato ou fake* — verdade ou mito? (até 15)',
   '• *entrar* · *sair* · *começar* e *encerrar* (anfitrião)',
   '',
   '*Categorias* (some ao comando): *futebol*, *geral*, *história*, *anime*, *política*. Política só aparece quando pedida. Ex.: *abrir relâmpago política*, *top 10 geral*. Some *difícil* em escalação/melhor time para clubes menos óbvios.',
@@ -255,6 +264,7 @@ export async function handleTick(
           rng: deps.rng ?? Math.random,
           isAdmin: () => false,
           judge: deps.judge,
+          checkWords: deps.checkWords,
         },
         force,
       );
@@ -306,6 +316,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     rng,
     isAdmin: (jid: string) => deps.canManageGroup?.(jid) ?? false,
     judge: deps.judge,
+    checkWords: deps.checkWords,
   };
 
   // ----- Modo em Grupo (salas) -----

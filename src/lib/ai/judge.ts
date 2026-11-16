@@ -1,4 +1,4 @@
-import type { JudgeTeam, TeamJudge } from '../party/common';
+import type { JudgeTeam, TeamJudge, WordCheck } from '../party/common';
 import { extractJson, hasMaritacaKey, maritacaJson } from './maritaca';
 
 const JUDGE_PROMPT = `Você é um comentarista de futebol imparcial julgando um desafio entre amigos.
@@ -24,4 +24,22 @@ export const maritacaJudge: TeamJudge = async (teams) => {
 
 export function defaultJudge(): TeamJudge | undefined {
   return hasMaritacaKey() ? maritacaJudge : undefined;
+}
+
+const WORDS_PROMPT = `Você é o juiz de uma partida de Stop (Adedonha) em português do Brasil.
+Para cada item, diga se a palavra é um exemplo válido e real da categoria e começa com a letra pedida.
+Seja justo: aceite grafias comuns e nomes populares; recuse palavras inventadas ou de outra categoria.
+Responda SOMENTE com JSON: {"validas": [true, false, ...]} na mesma ordem dos itens.`;
+
+/** Juiz de palavras do Stop (Maritaca), em lote: 1 chamada por rodada. */
+export const maritacaWordCheck: WordCheck = async (letter, items) => {
+  const list = items.map((it, i) => `${i + 1}. categoria: ${it.category} · palavra: ${it.word}`).join('\n');
+  const content = await maritacaJson(WORDS_PROMPT, `Letra: ${letter}\n${list}`, 60 + items.length * 8);
+  const raw = extractJson(content) as { validas?: unknown };
+  const arr = Array.isArray(raw.validas) ? raw.validas : [];
+  return items.map((_, i) => arr[i] === true);
+};
+
+export function defaultWordCheck(): WordCheck | undefined {
+  return hasMaritacaKey() ? maritacaWordCheck : undefined;
 }

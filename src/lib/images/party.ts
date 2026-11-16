@@ -23,6 +23,37 @@ function colorOf(state: PartyState, jid: string): string {
 
 // ---------- Sala aberta ----------
 
+const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: string[] }>> = {
+  bandeira: {
+    subtitle: `${PARTY_CONFIG.bandeira.rounds} bandeiras · América do Sul, Europa e mundo`,
+    rules: ['O bot desenha uma bandeira (sem brasões nem estrelas).', '1 palpite por pessoa em cada rodada. Repetido não vale.', 'O primeiro que acertar o país leva 100 pontos.'],
+  },
+  sobrevivente: {
+    subtitle: `Até ${PARTY_CONFIG.sobrevivente.rounds} categorias · 2 vidas`,
+    rules: ['Uma categoria por volta. Na ordem da sala, cada um diz 1 item novo.', `Errou, repetiu ou passou de ${PARTY_CONFIG.sobrevivente.seconds}s: perde uma vida.`, 'O último de pé vence.'],
+  },
+  conexoes: {
+    subtitle: `${PARTY_CONFIG.conexoes.rounds} tabuleiros · 16 nomes, 4 grupos`,
+    rules: ['Ache 4 nomes com algo em comum e mande os números.', 'Grupo achado vale pontos; o mais difícil vale mais.', 'Cada um tem 3 erros por tabuleiro.'],
+  },
+  stop: {
+    subtitle: `${PARTY_CONFIG.stop.rounds} rodadas · letra + 5 categorias`,
+    rules: ['Mande as 5 respostas numa mensagem só, separadas por vírgula.', 'Quem manda primeiro encurta o tempo dos outros.', 'Resposta igual à de quem mandou antes vale zero.'],
+  },
+  draft: {
+    subtitle: '5 rodadas em serpente · o grupo vota',
+    rules: ['Na sua vez, escolha um jogador que cumpra a regra da rodada.', 'A ordem inverte a cada rodada. Ninguém repete jogador.', 'No fim, o grupo vota no melhor time.'],
+  },
+  linha: {
+    subtitle: `${PARTY_CONFIG.linha.rounds} rodadas · 4 acontecimentos`,
+    rules: ['Ponha os 4 acontecimentos em ordem: do mais antigo ao mais recente.', 'Mande as letras: CADB. 1 resposta por pessoa.', 'Pontos por posição certa; acertou tudo, bônus.'],
+  },
+  fato: {
+    subtitle: `${PARTY_CONFIG.fato.rounds} afirmações`,
+    rules: ['Uma afirmação por rodada: é fato ou fake?', '1 resposta por pessoa. O primeiro a acertar ganha bônus.', 'Na revelação, o bot explica o porquê.'],
+  },
+};
+
 export function partyLobby(state: PartyState): ReactElement {
   const cfg = PARTY_CONFIG[state.game];
   const mode = state.game === 'escalacao' ? getMode(state.modeId) : undefined;
@@ -57,6 +88,12 @@ export function partyLobby(state: PartyState): ReactElement {
       'Ninguém marca duas vezes seguidas. O que sobrar é o intruso.',
       'No fim: certo ou errado em cada X e a justificativa.',
     ];
+  } else if (NEW_LOBBY[state.game]) {
+    const info = NEW_LOBBY[state.game]!;
+    const catLabel: Record<string, string> = { futebol: 'futebol', geral: 'conhecimentos gerais', historia: 'história', politica: 'política', anime: 'animes' };
+    const cat = 'category' in state && state.category ? ` · ${catLabel[state.category] ?? state.category}` : '';
+    subtitle = `${info.subtitle}${cat}`;
+    rules = info.rules;
   } else {
     const q = PARTY_CONFIG[state.game];
     const catLabel: Record<string, string> = { futebol: 'futebol', geral: 'conhecimentos gerais', historia: 'história', politica: 'política', anime: 'animes' };

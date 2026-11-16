@@ -129,7 +129,14 @@ export type PartyGame =
   | 'emoji'
   | 'relampago'
   | 'alfabeto'
-  | 'chute';
+  | 'chute'
+  | 'bandeira'
+  | 'sobrevivente'
+  | 'conexoes'
+  | 'stop'
+  | 'draft'
+  | 'linha'
+  | 'fato';
 
 export interface PartyPlayer {
   jid: string;
@@ -202,7 +209,7 @@ export interface Top10Party extends PartyBase {
 
 /** Quiz em rodadas ("Que time é esse?" e "Quem é?"): corrida, 1 tentativa por rodada. */
 export interface QuizParty extends PartyBase {
-  game: 'quetime' | 'quemeh' | 'emoji' | 'relampago';
+  game: 'quetime' | 'quemeh' | 'emoji' | 'relampago' | 'bandeira';
   /** Categoria do conteúdo; null = padrão do jogo (sem política). */
   category: ContentCategory | null;
   round: number; // -1 no lobby
@@ -292,7 +299,106 @@ export interface ChuteParty extends PartyBase {
   arrival: string[];
 }
 
-export type PartyState = EscalacaoParty | Top10Party | QuizParty | IntrusoParty | MelhorTimeParty | AlfabetoParty | ChuteParty;
+/**
+ * Sobrevivente: categoria fechada ("capitais da América do Sul"); na ordem da
+ * sala, cada um diz um item novo. Errou, repetiu ou estourou o tempo: perde vida.
+ */
+export interface SobreviventeParty extends PartyBase {
+  game: 'sobrevivente';
+  category: ContentCategory | null;
+  /** Ids das categorias, da mais fácil para a mais difícil (uma por volta). */
+  order: string[];
+  /** Volta atual (índice em order). Também serve de "rodada" para a entrada tardia. */
+  round: number;
+  totalRounds: number;
+  /** Índice (em players) de quem está na vez. */
+  turn: number;
+  lives: Record<string, number>;
+  /** Itens já ditos na categoria atual (índices na lista). */
+  used: number[];
+  /** Quem já jogou nesta volta. */
+  played: string[];
+  /** Respostas certas de cada um (desempate). */
+  answers: Record<string, number>;
+  /** Ordem de eliminação (o último eliminado fica em 2º). */
+  out: string[];
+}
+
+/** Conexões: 16 nomes, 4 grupos escondidos de 4. Cada um manda 4 números. */
+export interface ConexoesParty extends PartyBase {
+  game: 'conexoes';
+  category: ContentCategory | null;
+  round: number;
+  totalRounds: number;
+  order: string[];
+  /** Os 16 nomes da rodada, embaralhados (o número exibido é índice + 1). */
+  tiles: string[];
+  /** Grupos achados (índice no puzzle) e por quem (null = revelado pelo bot). */
+  solved: Array<{ group: number; jid: string | null; name: string }>;
+  /** Erros de cada um nesta rodada (3 = sem palpites). */
+  errors: Record<string, number>;
+  /** Combinações erradas já tentadas (não contam de novo). */
+  tried: string[];
+  lastJid: string | null;
+}
+
+/** Stop coletivo (Adedonha): letra + categorias; resposta igual à de quem mandou antes não vale. */
+export interface StopParty extends PartyBase {
+  game: 'stop';
+  round: number;
+  totalRounds: number;
+  letters: string[];
+  /** Ids das categorias de cada rodada. */
+  cats: string[][];
+  /** Ficha de cada um nesta rodada (na ordem das categorias) e ordem de chegada. */
+  sheets: Record<string, string[]>;
+  arrival: string[];
+  /** Alguém já mandou a ficha: o prazo encurtou. */
+  stopped: boolean;
+}
+
+/** Draft da Resenha: até 8 pessoas, ordem em serpente, a IA valida, o grupo vota. */
+export interface DraftParty extends PartyBase {
+  game: 'draft';
+  phase: 'draft' | 'voting';
+  round: number;
+  totalRounds: number;
+  /** Regra de cada rodada: posição + restrição (letra, clube ou seleção). */
+  rules: Array<{ pos: Position; kind: 'letter' | 'club' | 'nation' | 'none'; value: string; label: string }>;
+  /** Ordem de quem escolhe nesta rodada (serpente) e quem está na vez. */
+  sequence: string[];
+  pick: number;
+  picks: Record<string, Array<{ name: string; key: string } | null>>;
+  used: string[];
+  /** Votos: quem votou → índice do time (em players). */
+  votes: Record<string, number>;
+}
+
+/** Jogos em que todos respondem a mesma pergunta (Linha do Tempo, Fato ou Fake). */
+export interface RodadaParty extends PartyBase {
+  game: 'linha' | 'fato';
+  category: ContentCategory | null;
+  round: number;
+  totalRounds: number;
+  /** Linha do Tempo: ids dos 4 eventos de cada rodada, separados por vírgula. Fato ou Fake: id da afirmação. */
+  order: string[];
+  answers: Record<string, string>;
+  arrival: string[];
+}
+
+export type PartyState =
+  | EscalacaoParty
+  | Top10Party
+  | QuizParty
+  | IntrusoParty
+  | MelhorTimeParty
+  | AlfabetoParty
+  | ChuteParty
+  | SobreviventeParty
+  | ConexoesParty
+  | StopParty
+  | DraftParty
+  | RodadaParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -348,4 +454,27 @@ export type ImageSpec =
   | { kind: 'lineupQuiz'; state: QuizParty; lines: string[][] }
   | { kind: 'partyScore'; state: PartyState; title: string; final: boolean }
   | { kind: 'intrusoBoard'; state: IntrusoParty; reason: string; reveal: boolean }
-  | { kind: 'draftBoard'; state: MelhorTimeParty };
+  | { kind: 'draftBoard'; state: MelhorTimeParty }
+  | { kind: 'flagQuiz'; state: QuizParty; flag: FlagSpec }
+  | { kind: 'conexoesBoard'; state: ConexoesParty; reveal: boolean }
+  | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> };
+
+/** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */
+export interface FlagSpec {
+  /** Faixas: direção, cores e pesos (padrão: iguais). */
+  dir: 'h' | 'v';
+  colors: string[];
+  weights?: number[];
+  /** Círculo: cor, centro horizontal (0 a 1) e diâmetro em fração da altura. */
+  circle?: { color: string; cx?: number; size?: number };
+  /** Cruz nórdica (deslocada), centralizada de ponta a ponta ou curta (Suíça); contorno opcional. */
+  cross?: { color: string; kind: 'nordic' | 'center' | 'plus'; outline?: string };
+  /** Triângulo encostado no mastro: cor e quanto da largura ocupa. */
+  triangle?: { color: string; depth?: number };
+  /** Faixa vertical no mastro (Emirados): cor e fração da largura. */
+  hoist?: { color: string; width: number };
+  /** Cantão (canto superior esquerdo) com uma bandeira simples dentro. */
+  canton?: { flag: FlagSpec; width: number; height: number };
+  /** Losango central (Brasil). */
+  diamond?: { color: string };
+}

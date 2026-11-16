@@ -338,3 +338,10 @@ export function drawDistinct<T>(pool: T[], count: number, rng: () => number = Ma
   }
   return out;
 }
+
+/** Clube ou seleção pelo nome digitado (nome ou apelido exato, sem acento). */
+export function findTeamByName(raw: string): Team | undefined {
+  const value = normalize(raw);
+  if (!value) return undefined;
+  return [...CLUBS, ...NATIONS].find((t) => normalize(t.name) === value || t.aliases.includes(value));
+}
