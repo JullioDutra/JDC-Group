@@ -202,3 +202,12 @@ test('extra "difícil" sorteia clubes de nível 2; temas normais só gigantes', 
   for (let i = 0; i < 20; i++) for (const r of drawRestrictions(mode, rng, true)) tiers.add(getTeam(r.teamId)!.tier);
   assert.ok(tiers.has(2) && !tiers.has(3));
 });
+
+test('admin: aceita número com ou sem DDI e com ou sem o 9º dígito', async () => {
+  const { isAdminJid } = await import('../src/lib/owners');
+  for (const jid of ['5562993259733@s.whatsapp.net', '556293259733@s.whatsapp.net', '556293259733:12@s.whatsapp.net']) {
+    assert.ok(isAdminJid(jid, ['62993259733']), jid);
+    assert.ok(isAdminJid(jid, ['5562993259733']), jid);
+  }
+  assert.equal(isAdminJid('5562993259734@s.whatsapp.net', ['62993259733']), false);
+});

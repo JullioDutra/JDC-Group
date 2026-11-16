@@ -13,8 +13,21 @@ export function adminNumbers(): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Forma canônica de um número brasileiro: com DDI 55 e sem o 9º dígito do
+ * celular. O WhatsApp identifica muitas contas antigas sem o 9
+ * (556293259733), enquanto a pessoa digita com ele (62993259733).
+ */
+export function canonicalNumber(raw: string): string {
+  let n = raw.replace(/\D/g, '');
+  if (n.length === 10 || n.length === 11) n = `55${n}`; // sem DDI
+  if (n.startsWith('55') && n.length === 13 && n[4] === '9') n = n.slice(0, 4) + n.slice(5);
+  return n;
+}
+
 export function isAdminJid(jid: string, admins: string[] = adminNumbers()): boolean {
-  return admins.includes(jid.split('@')[0].replace(/\D/g, ''));
+  const sender = canonicalNumber(jid.split('@')[0].split(':')[0]);
+  return admins.some((a) => canonicalNumber(a) === sender);
 }
 
 /**
