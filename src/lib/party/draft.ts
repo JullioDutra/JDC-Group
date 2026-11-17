@@ -1,3 +1,4 @@
+import { lookupHint } from '../game/validate';
 import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { DraftParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
@@ -11,7 +12,6 @@ import { PARTY_CONFIG, PartyDeps, Save, award, pendingResults, react, schedule, 
  */
 export const DRAFT_POSITIONS: Position[] = ['GOL', 'DEF', 'MEI', 'ATA', 'ATA'];
 export const DRAFT_VOTE_SECONDS = 90;
-const LETTERS = 'ABCDEFGHIJLMNPRSTV'.split('');
 
 export function newDraft(): Pick<DraftParty, 'game' | 'phase' | 'round' | 'totalRounds' | 'rules' | 'sequence' | 'pick' | 'picks' | 'used' | 'votes'> {
   return { game: 'draft', phase: 'draft', round: -1, totalRounds: PARTY_CONFIG.draft.rounds!, rules: [], sequence: [], pick: 0, picks: {}, used: [], votes: {} };
@@ -19,19 +19,18 @@ export function newDraft(): Pick<DraftParty, 'game' | 'phase' | 'round' | 'total
 
 export const DRAFT_RULES = [
   'Ordem em serpente (1→último, último→1). 5 rodadas: GOL, DEF, MEI e 2 ATA.',
-  'Cada rodada tem uma regra extra: letra, clube ou seleção. Na sua vez, mande o nome.',
+  'Cada rodada tem um clube ou uma seleção sorteada. Na sua vez, mande o nome.',
   'No fim, todo o grupo vota no melhor time (ninguém vota no próprio).',
 ];
 
 function drawRules(rng: () => number): DraftParty['rules'] {
-  const kinds = shuffle<DraftParty['rules'][number]['kind']>(['letter', 'club', 'nation', 'letter', 'club'], rng);
+  // Toda rodada tem um time (clube ou seleção): não existe rodada "livre" nem só de letra.
+  const kinds = shuffle<DraftParty['rules'][number]['kind']>(['club', 'nation', 'club', 'nation', 'club'], rng);
   const clubs = drawTeams(CLUBS, 3, rng, 1);
   const nations = drawTeams(NATIONS, 2, rng, 1);
-  const letters = shuffle(LETTERS, rng);
   return DRAFT_POSITIONS.map((pos, i) => {
     const kind = kinds[i];
     const posLabel = POSITION_LABEL[pos];
-    if (kind === 'letter') return { pos, kind, value: letters[i], label: `${posLabel} com a letra ${letters[i]}` };
     if (kind === 'club') {
       const c = clubs.shift()!;
       return { pos, kind, value: c.id, label: `${posLabel} que passou pelo ${c.name}` };
@@ -88,7 +87,8 @@ export async function draftAnswer(state: DraftParty, player: PartyPlayer, msg: I
   const typed = msg.text.trim();
   let profile;
   try {
-    profile = await deps.lookup(typed);
+    const rule = state.rules[state.round];
+    profile = await deps.lookup(typed, lookupHint(rule.pos, { kind: rule.kind, value: rule.value }));
   } catch (error) {
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda de novo.`)];

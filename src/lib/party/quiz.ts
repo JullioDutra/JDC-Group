@@ -12,8 +12,7 @@ import {
   schedule,
   scoreImage,
   shuffle,
-  text,
-} from './common';
+  text, pauseBeforeNext } from './common';
 import { LINEUPS, Lineup, getLineup } from './content/lineups';
 import { WHOIS, getWhoIs } from './content/whois';
 import { CARDS, getCard } from './content/cards';
@@ -129,11 +128,11 @@ export function startQuiz(state: QuizParty, deps: PartyDeps): Outgoing[] {
   const cfg = PARTY_CONFIG[state.game];
   return [
     text(`*${cfg.name}* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`),
-    ...openRound(state, deps),
+    ...openQuizRound(state, deps),
   ];
 }
 
-function openRound(state: QuizParty, deps: PartyDeps): Outgoing[] {
+export function openQuizRound(state: QuizParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   state.clue = 0;
   state.attempts = [];
@@ -308,7 +307,7 @@ export function closeQuizRound(state: QuizParty, deps: PartyDeps, reason: string
 
   const out: Outgoing[] = [text(reveal)];
   if ((state.round + 1) % 3 === 0) out.push(scoreImage(state, false));
-  return [...out, ...openRound(state, deps)];
+  return [...out, ...pauseBeforeNext(state, deps)];
 }
 
 export function quizStandings(state: QuizParty): PartyPlayer[] {

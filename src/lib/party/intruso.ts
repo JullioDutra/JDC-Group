@@ -1,6 +1,6 @@
 import { firstName, normalize } from '../game/text';
 import type { IncomingMessage, IntrusoParty, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, answerMatches, pendingResults, schedule, text, warnOnce } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, answerMatches, pendingResults, schedule, text, warnOnce, pauseBeforeNext } from './common';
 import { INTRUSO_SETS, getIntrusoSet } from './content/intruso';
 
 /**
@@ -47,10 +47,10 @@ export function startIntruso(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`*Intruso* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openRound(state, deps)];
+  return [text(`*Intruso* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openIntrusoRound(state, deps)];
 }
 
-function openRound(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
+export function openIntrusoRound(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   const set = getIntrusoSet(state.order[state.round])!;
   state.options = shuffle([...set.members, set.intruder], deps.rng);
@@ -156,7 +156,7 @@ export function revealRound(state: IntrusoParty, deps: PartyDeps, reason: string
   };
 
   if (state.round >= state.totalRounds - 1) return [reveal, ...finishIntruso(state)];
-  return [reveal, ...openRound(state, deps)];
+  return [reveal, ...pauseBeforeNext(state, deps)];
 }
 
 export function intrusoTimeout(state: IntrusoParty, deps: PartyDeps): Outgoing[] {

@@ -126,7 +126,7 @@ export async function maritacaJson(system: string, user: string, maxTokens = 400
 }
 
 /** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
-async function chat(query: string, jsonMode: boolean): Promise<Response> {
+async function chat(query: string, jsonMode: boolean, hint?: string): Promise<Response> {
   const baseUrl = (process.env.MARITACA_BASE_URL || 'https://chat.maritaca.ai/api').replace(/\/$/, '');
   return fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
@@ -141,18 +141,28 @@ async function chat(query: string, jsonMode: boolean): Promise<Response> {
       ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `Nome digitado: "${query.replace(/"/g, '')}"` },
+        { role: 'user', content: userMessage(query, hint) },
       ],
     }),
     signal: AbortSignal.timeout(15_000),
   });
 }
 
+function userMessage(query: string, hint?: string): string {
+  const name = `Nome digitado: "${query.replace(/"/g, '')}"`;
+  if (!hint) return name;
+  return (
+    `${name}\nContexto da jogada: o jogador procurado é ${hint.replace(/"/g, '')}.\n` +
+    'Se mais de um futebolista tiver esse nome ou apelido, devolva o que se encaixa no contexto ' +
+    '(ex.: "Victor" + goleiro do Atlético-MG = Victor Bagy). Se nenhum se encaixar, devolva o mais conhecido.'
+  );
+}
+
 /** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
-export async function lookupWithMaritaca(query: string): Promise<PlayerProfile | null> {
-  let response = await chat(query, true);
+export async function lookupWithMaritaca(query: string, hint?: string): Promise<PlayerProfile | null> {
+  let response = await chat(query, true, hint);
   // Se o modo JSON não for aceito pelo modelo, tenta de novo sem ele (o prompt já exige JSON).
-  if (response.status === 400 || response.status === 422) response = await chat(query, false);
+  if (response.status === 400 || response.status === 422) response = await chat(query, false, hint);
   if (!response.ok) {
     throw new Error(`Maritaca respondeu ${response.status}: ${(await response.text()).slice(0, 200)}`);
   }

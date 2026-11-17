@@ -1,6 +1,6 @@
 import { firstName, normalize } from '../game/text';
 import type { ContentCategory, IncomingMessage, Outgoing, PartyPlayer, RodadaParty } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, pauseBeforeNext } from './common';
 import { FACTS, getFact } from './content/fato';
 import { TIMELINE, getEvent } from './content/linha';
 
@@ -63,10 +63,10 @@ export function startRodada(state: RodadaParty, deps: PartyDeps): Outgoing[] {
   state.status = 'PLAYING';
   state.round = -1;
   const name = PARTY_CONFIG[state.game].name;
-  return [text(`*${name}* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openRound(state, deps)];
+  return [text(`*${name}* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openRodadaRound(state, deps)];
 }
 
-function openRound(state: RodadaParty, deps: PartyDeps): Outgoing[] {
+export function openRodadaRound(state: RodadaParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   state.answers = {};
   state.arrival = [];
@@ -150,5 +150,5 @@ export function closeRodadaRound(state: RodadaParty, deps: PartyDeps, reason: st
   }
   const out: Outgoing[] = [text(reveal)];
   if ((state.round + 1) % 3 === 0) out.push(scoreImage(state, false));
-  return [...out, ...openRound(state, deps)];
+  return [...out, ...pauseBeforeNext(state, deps)];
 }

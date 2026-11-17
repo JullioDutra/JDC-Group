@@ -1,7 +1,7 @@
 import { findTeamByName } from '../game/teams';
 import { firstName, normalize } from '../game/text';
 import type { IncomingMessage, Outgoing, PartyPlayer, StopParty } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, answerMatches, award, finishByScore, react, schedule, shuffle, text, warnOnce } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, answerMatches, award, finishByScore, react, schedule, shuffle, text, warnOnce, pauseBeforeNext } from './common';
 import { STOP_CATEGORIES, STOP_LETTERS, getStopCategory } from './content/stop';
 
 /**
@@ -11,7 +11,7 @@ import { STOP_CATEGORIES, STOP_LETTERS, getStopCategory } from './content/stop';
  */
 export const STOP_CATS_PER_ROUND = 5;
 export const STOP_POINTS = 10;
-export const STOP_RUSH_SECONDS = 20;
+export const STOP_RUSH_SECONDS = 30;
 
 export function newStop(): Pick<StopParty, 'game' | 'round' | 'totalRounds' | 'letters' | 'cats' | 'sheets' | 'arrival' | 'stopped'> {
   return { game: 'stop', round: -1, totalRounds: PARTY_CONFIG.stop.rounds!, letters: [], cats: [], sheets: {}, arrival: [], stopped: false };
@@ -28,10 +28,10 @@ export function startStop(state: StopParty, deps: PartyDeps): Outgoing[] {
   state.cats = state.letters.map(() => shuffle(STOP_CATEGORIES.map((c) => c.id), deps.rng).slice(0, STOP_CATS_PER_ROUND));
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`*Stop* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openRound(state, deps)];
+  return [text(`*Stop* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openStopRound(state, deps)];
 }
 
-function openRound(state: StopParty, deps: PartyDeps): Outgoing[] {
+export function openStopRound(state: StopParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   state.sheets = {};
   state.arrival = [];
@@ -164,5 +164,5 @@ export async function closeStopRound(state: StopParty, deps: PartyDeps, reason: 
     },
   ];
   if (state.round >= state.totalRounds - 1) return [...out, ...finishByScore(state, '', 'abrir stop')];
-  return [...out, ...openRound(state, deps)];
+  return [...out, ...pauseBeforeNext(state, deps)];
 }

@@ -4,7 +4,11 @@ import type { Store } from '../store/types';
 import { lookupDemo } from './demo';
 import { hasMaritacaKey, lookupWithMaritaca } from './maritaca';
 
-export type PlayerLookup = (query: string) => Promise<PlayerProfile | null>;
+/**
+ * `hint` é o contexto da jogada ("goleiro que jogou no Atlético-MG"): resolve
+ * nomes comuns ("Victor", "Marcos", "Ronaldo") para o jogador que se encaixa.
+ */
+export type PlayerLookup = (query: string, hint?: string) => Promise<PlayerProfile | null>;
 
 /** Mude quando a ficha ganhar campos novos: invalida o cache antigo. */
 const PROFILE_VERSION = 'v2';
@@ -16,14 +20,15 @@ const PROFILE_VERSION = 'v2';
  */
 export function createLookup(store: Store, source?: PlayerLookup): PlayerLookup {
   const fetchProfile = source ?? (hasMaritacaKey() ? lookupWithMaritaca : lookupDemo);
-  return async (query) => {
-    const key = `${PROFILE_VERSION}:${normalize(query)}`;
+  return async (query, hint) => {
+    const base = `${PROFILE_VERSION}:${normalize(query)}`;
+    const key = hint ? `${base}#${normalize(hint)}` : base;
     const cached = await store.getCachedProfile(key);
     if (cached !== undefined) return cached;
-    const profile = await fetchProfile(query);
+    const profile = await fetchProfile(query, hint);
     await store.putCachedProfile(key, profile);
     // Guarda também pelo nome canônico: "ceni" e "rogerio ceni" viram a mesma ficha.
-    if (profile) {
+    if (profile && !hint) {
       const canonical = `${PROFILE_VERSION}:${normalize(profile.name)}`;
       if (canonical !== key) await store.putCachedProfile(canonical, profile);
     }

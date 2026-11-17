@@ -19,7 +19,7 @@ import {
   Top10List,
   Top10Party,
 } from '../game/types';
-import { checkPick, drawRestrictions, restrictionLine } from '../game/validate';
+import { checkPick, drawRestrictions, lookupHint, restrictionLine } from '../game/validate';
 import type { Store } from '../store/types';
 import {
   LEADING_ARTICLE,
@@ -28,6 +28,7 @@ import {
   activePlayers,
   editDistance,
   finishByScore,
+  pauseBeforeNext,
   pendingResults,
   react,
   schedule,
@@ -41,19 +42,19 @@ import { WHOIS } from './content/whois';
 import type { ContentCategory } from '../game/types';
 import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List } from './top10-lists';
 import { melhorTimeAnswer, melhorTimeTimeout, melhorTimeVote, newMelhorTime, startMelhorTime } from './melhortime';
-import { ALFABETO_RULES, alfabetoAnswer, closeAlfabetoRound, finishAlfabeto, newAlfabeto, startAlfabeto } from './alfabeto';
-import { CHUTE_RULES, chuteAnswer, closeChuteRound, finishChute, newChute, startChute } from './chute';
-import { INTRUSO_RULES, finishIntruso, intrusoAnswer, intrusoTimeout, newIntruso, revealRound, startIntruso } from './intruso';
+import { ALFABETO_RULES, alfabetoAnswer, closeAlfabetoRound, finishAlfabeto, newAlfabeto, openAlfabetoRound, startAlfabeto } from './alfabeto';
+import { CHUTE_RULES, chuteAnswer, closeChuteRound, finishChute, newChute, openChuteRound, startChute } from './chute';
+import { INTRUSO_RULES, finishIntruso, intrusoAnswer, intrusoTimeout, newIntruso, openIntrusoRound, revealRound, startIntruso } from './intruso';
 import { SOBREVIVENTE_RULES, finishSobrevivente, newSobrevivente, sobreviventeAnswer, sobreviventeTimeout, startSobrevivente } from './sobrevivente';
-import { CONEXOES_RULES, closeConexoesRound, conexoesAnswer, newConexoes, startConexoes } from './conexoes';
-import { STOP_RULES, closeStopRound, newStop, startStop, stopAnswer } from './stop';
+import { CONEXOES_RULES, closeConexoesRound, conexoesAnswer, newConexoes, openConexoesRound, startConexoes } from './conexoes';
+import { STOP_RULES, closeStopRound, newStop, openStopRound, startStop, stopAnswer } from './stop';
 import { DRAFT_RULES, closeVoting, draftAnswer, draftRows, draftTimeout, draftVote, newDraft, startDraft } from './draft';
-import { FATO_RULES, LINHA_RULES, closeRodadaRound, newRodada, rodadaAnswer, startRodada } from './rodada';
+import { FATO_RULES, LINHA_RULES, closeRodadaRound, newRodada, openRodadaRound, rodadaAnswer, startRodada } from './rodada';
 import { CONEXOES } from './content/conexoes';
 import { FACTS } from './content/fato';
 import { TIMELINE } from './content/linha';
 import { SURVIVOR_LISTS } from './content/sobrevivente';
-import { closeQuizRound, finishQuiz, newQuiz, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
+import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 
 const LOBBY_TTL_MS = 15 * 60_000;
 const IDLE_TTL_MS = 20 * 60_000;
@@ -267,7 +268,8 @@ export async function handlePartyMessage(
   const player = state.players.find((p) => p.jid === msg.senderJid);
   const isHost = state.host.jid === msg.senderJid || deps.isAdmin(msg.senderJid);
 
-  const save = async (out: Outgoing[]): Promise<Outgoing[]> => {
+  const save = async (raw: Outgoing[]): Promise<Outgoing[]> => {
+    const out = skipPauseIfDisabled(state, deps, raw);
     state.updatedAt = nowMs;
     if (!(await deps.store.saveMatch(match))) throw new ConflictError();
     return out;
@@ -386,6 +388,22 @@ export async function handlePartyMessage(
 
   if (state.status !== 'PLAYING' || !player) return [];
 
+  // Pausa entre rodadas: só "próxima" (de quem joga) adianta; o resto é ignorado.
+  if (state.intermission) {
+    if (NEXT_WORDS.includes(norm) || (norm === 'pular' && isHost)) return save(resumeNext(state, deps));
+    return [];
+  }
+
+  // "próxima" no meio da rodada (anfitrião): revela e já abre a seguinte, sem pausa.
+  if (NEXT_WORDS.includes(norm) && isHost && !['melhortime', 'top10', 'sobrevivente', 'draft'].includes(state.game)) {
+    const out = await skipRound(state, deps);
+    if (state.status === 'PLAYING' && state.intermission) {
+      const next = resumeNext(state, deps);
+      return save([...out.filter((o) => o.type !== 'schedule' && !(o.type === 'text' && o.text.startsWith('Próxima rodada em'))), ...next]);
+    }
+    return save(out);
+  }
+
   if (norm === 'pular' && isHost) {
     if (state.game === 'melhortime') return [];
     if (state.game === 'escalacao') return save(closeRound(state, deps, 'Rodada encerrada pelo anfitrião.'));
@@ -428,13 +446,85 @@ export async function handlePartyTick(
     if (token !== state.timerToken) return []; // rodada já mudou
     if (state.deadline !== null && deps.now.getTime() < state.deadline - 1500) return [];
   }
-  const out = await closeOnTimeout(state, deps);
+  const out = skipPauseIfDisabled(state, deps, await closeOnTimeout(state, deps));
   state.updatedAt = deps.now.getTime();
   if (!(await deps.store.saveMatch(match))) throw new ConflictError();
   return out;
 }
 
+/** Encerra a rodada atual como o "pular" do anfitrião. */
+async function skipRound(state: PartyState, deps: PartyDeps): Promise<Outgoing[]> {
+  const reason = 'Rodada encerrada pelo anfitrião.';
+  switch (state.game) {
+    case 'escalacao':
+      return closeRound(state, deps, reason);
+    case 'intruso':
+      return revealRound(state, deps, reason);
+    case 'alfabeto':
+      return closeAlfabetoRound(state, deps, reason);
+    case 'chute':
+      return closeChuteRound(state, deps, reason);
+    case 'conexoes':
+      return closeConexoesRound(state, deps, reason);
+    case 'stop':
+      return closeStopRound(state, deps, reason);
+    case 'linha':
+    case 'fato':
+      return closeRodadaRound(state, deps, reason);
+    case 'quetime':
+    case 'quemeh':
+    case 'emoji':
+    case 'relampago':
+    case 'bandeira':
+      return closeQuizRound(state, deps, 'Rodada pulada pelo anfitrião.');
+    default:
+      return [];
+  }
+}
+
+/** Fim da pausa entre rodadas: abre a próxima rodada do jogo. */
+function resumeNext(state: PartyState, deps: PartyDeps): Outgoing[] {
+  state.intermission = false;
+  switch (state.game) {
+    case 'escalacao': {
+      const mode = getMode(state.modeId)!;
+      return [text(roundPrompt(state, mode)), schedule(state, state.options.turnSeconds ?? PARTY_CONFIG.escalacao.seconds, deps.now.getTime(), 'esc')];
+    }
+    case 'quetime':
+    case 'quemeh':
+    case 'emoji':
+    case 'relampago':
+    case 'bandeira':
+      return openQuizRound(state, deps);
+    case 'chute':
+      return openChuteRound(state, deps);
+    case 'alfabeto':
+      return openAlfabetoRound(state, deps);
+    case 'intruso':
+      return openIntrusoRound(state, deps);
+    case 'conexoes':
+      return openConexoesRound(state, deps);
+    case 'stop':
+      return openStopRound(state, deps);
+    case 'linha':
+    case 'fato':
+      return openRodadaRound(state, deps);
+    default:
+      return [];
+  }
+}
+
+/** PARTY_PAUSE=0 (testes antigos): sem pausa, a próxima rodada abre na hora. */
+function skipPauseIfDisabled(state: PartyState, deps: PartyDeps, out: Outgoing[]): Outgoing[] {
+  if (process.env.PARTY_PAUSE !== '0' || !state.intermission || state.status !== 'PLAYING') return out;
+  const kept = out.filter((o) => o.type !== 'schedule' && !(o.type === 'text' && o.text.startsWith('Próxima rodada em')));
+  return [...kept, ...resumeNext(state, deps)];
+}
+
+const NEXT_WORDS = ['proxima', 'proximo', 'prox', 'proxima rodada', 'proxima pergunta', 'seguir', 'next'];
+
 async function closeOnTimeout(state: PartyState, deps: PartyDeps): Promise<Outgoing[]> {
+  if (state.intermission) return resumeNext(state, deps);
   if (state.game === 'melhortime') return melhorTimeTimeout(state, deps);
   if (state.game === 'escalacao') return closeRound(state, deps, 'Tempo esgotado.');
   if (state.game === 'top10') return finishTop10(state, deps, 'Tempo esgotado.');
@@ -577,7 +667,7 @@ async function escalacaoAnswer(
 
   let profile;
   try {
-    profile = await deps.lookup(msg.text.trim());
+    profile = await deps.lookup(msg.text.trim(), lookupHint(SLOTS[state.round], state.restrictions[state.round]));
   } catch (error) {
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda o nome de novo.`)];
@@ -638,8 +728,7 @@ function closeRound(state: EscalacaoParty, deps: PartyDeps, reason: string): Out
       image: { kind: 'partyTable', state: structuredClone(state) },
       caption: `${reason} Fim da rodada ${finished}.${note}`,
     },
-    text(roundPrompt(state, mode)),
-    schedule(state, state.options.turnSeconds ?? PARTY_CONFIG.escalacao.seconds, deps.now.getTime(), 'esc'),
+    ...pauseBeforeNext(state, deps),
   ];
 }
 

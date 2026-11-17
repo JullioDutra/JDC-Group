@@ -44,7 +44,7 @@ test('conteúdo do Intruso: 4 membros + 1 intruso + motivo, ids únicos', () => 
 test('X aparece na hora, sem dizer se está certo; ninguém marca duas vezes seguidas', async () => {
   const { say, state } = setup();
   const out = await start(say);
-  assert.match(out, /Intruso\* valendo![\s\S]*img:intrusoBoard[\s\S]*Rodada 1\/5 · Quem é o intruso\?[\s\S]*timer:61s/);
+  assert.match(out, /Intruso\* valendo![\s\S]*img:intrusoBoard[\s\S]*Rodada 1\/5 · Quem é o intruso\?[\s\S]*timer:76s/);
 
   const s = await state();
   const members = s.options.map((_, i) => i).filter((i) => i !== s.intruderIndex);

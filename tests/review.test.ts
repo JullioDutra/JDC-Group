@@ -9,6 +9,8 @@ import type { Outgoing, PlayerProfile } from '../src/lib/game/types';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
 import { evolution } from '../src/lib/whatsapp/evolution';
+import { freePlayForTests } from './helpers';
+freePlayForTests();
 
 const G = 'grupo@g.us';
 

@@ -1,6 +1,6 @@
 import { firstName, formatNumber } from '../game/text';
 import type { ChuteParty, ContentCategory, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text, pauseBeforeNext } from './common';
 import { CHUTE_QUESTIONS, getChute } from './content/chute';
 import { scoreImage } from './quiz';
 
@@ -36,10 +36,10 @@ export function startChute(state: ChuteParty, deps: PartyDeps): Outgoing[] {
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`*Chute Certo* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openRound(state, deps)];
+  return [text(`*Chute Certo* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openChuteRound(state, deps)];
 }
 
-function openRound(state: ChuteParty, deps: PartyDeps): Outgoing[] {
+export function openChuteRound(state: ChuteParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   state.guesses = {};
   state.arrival = [];
@@ -100,7 +100,7 @@ export function closeChuteRound(state: ChuteParty, deps: PartyDeps, reason: stri
   if (state.round >= state.totalRounds - 1) return finishChute(state, summary);
   const out: Outgoing[] = [text(summary)];
   if ((state.round + 1) % 3 === 0) out.push(scoreImage(state, false));
-  return [...out, ...openRound(state, deps)];
+  return [...out, ...pauseBeforeNext(state, deps)];
 }
 
 export function finishChute(state: ChuteParty, reason = ''): Outgoing[] {

@@ -1,7 +1,8 @@
+import { lookupHint } from '../game/validate';
 import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { AlfabetoParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text, pauseBeforeNext } from './common';
 import { scoreImage } from './quiz';
 
 /**
@@ -11,13 +12,6 @@ import { scoreImage } from './quiz';
  */
 export const ALFABETO_ORDER_BONUS = [50, 30, 15];
 const LETTERS = 'ABCDEFGHIJLMNOPRSTVZ'.split('');
-
-const POSITION_CATS: Array<[Position, string]> = [
-  ['GOL', 'goleiros'],
-  ['DEF', 'defensores (zagueiros e laterais)'],
-  ['MEI', 'meias e volantes'],
-  ['ATA', 'atacantes'],
-];
 
 function shuffle<T>(items: T[], rng: () => number): T[] {
   const copy = [...items];
@@ -33,7 +27,7 @@ export function newAlfabeto(): Pick<AlfabetoParty, 'game' | 'round' | 'totalRoun
 }
 
 export const ALFABETO_RULES = [
-  'Cada rodada tem uma categoria e uma letra: "goleiros com a letra C".',
+  'Cada rodada tem um clube ou seleção e uma letra: "jogadores do Flamengo com a letra R".',
   '1 jogador por pessoa. Nome que alguém já usou não vale.',
   'Quem responde primeiro ganha bônus. Vence quem somar mais.',
 ];
@@ -43,10 +37,10 @@ function drawRounds(state: AlfabetoParty, rng: () => number) {
   const letters = shuffle(LETTERS, rng);
   const clubs = drawTeams(CLUBS, 3, rng, 1);
   const nations = drawTeams(NATIONS, 2, rng, 1);
+  // Toda rodada tem um time (clube ou seleção) além da letra.
   const options: AlfabetoParty['rounds'] = [
-    ...shuffle(POSITION_CATS, rng).slice(0, 2).map(([p, label]) => ({ kind: 'pos' as const, value: p, label, letter: '' })),
-    ...nations.slice(0, 1).map((n) => ({ kind: 'nation' as const, value: n.id, label: `jogadores da seleção ${n.name === 'Brasil' ? 'brasileira' : `da ${n.name}`}`, letter: '' })),
-    ...clubs.slice(0, 2).map((c) => ({ kind: 'club' as const, value: c.id, label: `jogadores que passaram pelo ${c.name}`, letter: '' })),
+    ...nations.slice(0, 2).map((n) => ({ kind: 'nation' as const, value: n.id, label: `jogadores da seleção ${n.name === 'Brasil' ? 'brasileira' : `de ${n.name}`}`, letter: '' })),
+    ...clubs.slice(0, 3).map((c) => ({ kind: 'club' as const, value: c.id, label: `jogadores que passaram pelo ${c.name}`, letter: '' })),
   ];
   state.rounds = shuffle(options, rng)
     .slice(0, state.totalRounds)
@@ -58,10 +52,10 @@ export function startAlfabeto(state: AlfabetoParty, deps: PartyDeps): Outgoing[]
   drawRounds(state, deps.rng);
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`*Alfabeto* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openRound(state, deps)];
+  return [text(`*Alfabeto* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openAlfabetoRound(state, deps)];
 }
 
-function openRound(state: AlfabetoParty, deps: PartyDeps): Outgoing[] {
+export function openAlfabetoRound(state: AlfabetoParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   state.answers = {};
   state.warned = [];
@@ -101,7 +95,7 @@ export async function alfabetoAnswer(
   const typed = msg.text.trim();
   let profile;
   try {
-    profile = await deps.lookup(typed);
+    profile = await deps.lookup(typed, r.kind === 'pos' ? lookupHint(r.value as Position) : lookupHint(null, { kind: r.kind, value: r.value }));
   } catch (error) {
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda de novo.`)];
@@ -145,7 +139,7 @@ export function closeAlfabetoRound(state: AlfabetoParty, deps: PartyDeps, reason
   if (state.round >= state.totalRounds - 1) return finishAlfabeto(state, summary);
   const out: Outgoing[] = [text(summary)];
   if ((state.round + 1) % 3 === 0) out.push(scoreImage(state, false));
-  return [...out, ...openRound(state, deps)];
+  return [...out, ...pauseBeforeNext(state, deps)];
 }
 
 export function finishAlfabeto(state: AlfabetoParty, reason = ''): Outgoing[] {

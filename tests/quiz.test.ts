@@ -58,7 +58,7 @@ test('Que time é esse?: 1 palpite por pessoa, repetido não gasta, time sem ano
   const { say, state } = setup();
   const { lobby, start } = await open(say, 'abrir que time é esse');
   assert.match(lobby, /img:partyLobby[\s\S]*Sala aberta: Que time é esse\?/);
-  assert.match(start, /valendo! 3 jogadores, 6 rodadas[\s\S]*img:lineupQuiz[\s\S]*Rodada 1\/6[\s\S]*timer:46s/);
+  assert.match(start, /valendo! 3 jogadores, 6 rodadas[\s\S]*img:lineupQuiz[\s\S]*Rodada 1\/6[\s\S]*timer:61s/);
 
   const lineup = getLineup((await state()).order[0])!;
   const wrongTeam = lineup.team === 'Chelsea' ? 'Ajax 1995' : 'Chelsea 2012';
@@ -94,7 +94,7 @@ test('Quem é?: dicas vão saindo no tempo e o acerto vale menos a cada dica', a
   const { say, tick, state } = setup();
   const { start } = await open(say, 'abrir quem é');
   const card = getWhoIs((await state()).order[0])!;
-  assert.match(start, new RegExp(`Rodada 1\\/8\\* · Quem é\\?\\nDica 1: ${card.clues[0].replace(/[.()]/g, '\\$&')}[\\s\\S]*timer:13s`));
+  assert.match(start, new RegExp(`Rodada 1\\/8\\* · Quem é\\?\\nDica 1: ${card.clues[0].replace(/[.()]/g, '\\$&')}[\\s\\S]*timer:21s`));
   assert.equal(asText(await say('Caio', 'Taffarel')), '[react:❌]', 'Taffarel não está nas fichas');
   const clue2 = asText(await tick());
   assert.match(clue2, /^Dica 2: /);

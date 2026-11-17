@@ -21,24 +21,24 @@ export interface PartyConfig {
 }
 
 export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
-  escalacao: { name: 'Escalação em Grupo', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 60 },
+  escalacao: { name: 'Escalação em Grupo', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 75 },
   top10: { name: 'Top 10', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 240 },
-  quetime: { name: 'Que time é esse?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 6 },
-  quemeh: { name: 'Quem é?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 12, rounds: 8 },
-  intruso: { name: 'Intruso', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 5 },
-  emoji: { name: 'Emoji', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 30, rounds: 8 },
-  relampago: { name: 'Quiz Relâmpago', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
-  alfabeto: { name: 'Alfabeto', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 5 },
-  chute: { name: 'Chute Certo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 6 },
-  bandeira: { name: 'Bandeiraço', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
+  quetime: { name: 'Que time é esse?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 6 },
+  quemeh: { name: 'Quem é?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 20, rounds: 8 },
+  intruso: { name: 'Intruso', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 75, rounds: 5 },
+  emoji: { name: 'Emoji', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 8 },
+  relampago: { name: 'Quiz Relâmpago', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 10 },
+  alfabeto: { name: 'Alfabeto', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 5 },
+  chute: { name: 'Chute Certo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 50, rounds: 6 },
+  bandeira: { name: 'Bandeiraço', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 10 },
   // Sobrevivente: 20 s por vez; ninguém entra depois de começar (a ordem é fixa).
-  sobrevivente: { name: 'Sobrevivente', maxPlayers: 15, minPlayers: 2, joinUntil: 0, seconds: 20, rounds: 8 },
-  conexoes: { name: 'Conexões', maxPlayers: 12, minPlayers: 2, joinUntil: 1, seconds: 180, rounds: 2 },
-  stop: { name: 'Stop', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 90, rounds: 3 },
-  // Draft: 60 s por escolha, 5 rodadas em serpente, até 8 pessoas.
-  draft: { name: 'Draft da Resenha', maxPlayers: 8, minPlayers: 2, joinUntil: 0, seconds: 60, rounds: 5 },
-  linha: { name: 'Linha do Tempo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 6 },
-  fato: { name: 'Fato ou Fake', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 10 },
+  sobrevivente: { name: 'Sobrevivente', maxPlayers: 15, minPlayers: 2, joinUntil: 0, seconds: 30, rounds: 8 },
+  conexoes: { name: 'Conexões', maxPlayers: 12, minPlayers: 2, joinUntil: 1, seconds: 240, rounds: 2 },
+  stop: { name: 'Stop', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 120, rounds: 3 },
+  // Draft: 90 s por escolha, 5 rodadas em serpente, até 8 pessoas.
+  draft: { name: 'Draft da Resenha', maxPlayers: 8, minPlayers: 2, joinUntil: 0, seconds: 90, rounds: 5 },
+  linha: { name: 'Linha do Tempo', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 6 },
+  fato: { name: 'Fato ou Fake', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 10 },
   // 1 x 1: 90 s por escolha; 'joinUntil' 0 = ninguém entra depois de começar.
   melhortime: { name: 'Melhor Time', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 90, rounds: 6 },
 };
@@ -116,6 +116,19 @@ export function award(player: PartyPlayer, points: number, nowMs: number): void 
   player.score += points;
   player.hits += 1;
   player.lastHitAt = nowMs;
+}
+
+/** Pausa entre rodadas, para dar tempo de ler a revelação. */
+export const PAUSE_SECONDS = 12;
+
+/** Encerra a rodada com uma pausa; a próxima abre no prazo ou com "próxima". */
+export function pauseBeforeNext(state: PartyState, deps: PartyDeps): Outgoing[] {
+  state.intermission = true;
+  state.warned = [];
+  return [
+    text(`Próxima rodada em ${PAUSE_SECONDS}s. Para adiantar, mande *próxima*.`),
+    schedule(state, PAUSE_SECONDS, deps.now.getTime(), 'px'),
+  ];
 }
 
 export type Save = (out: Outgoing[]) => Promise<Outgoing[]>;

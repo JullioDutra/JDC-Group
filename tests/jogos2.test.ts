@@ -142,7 +142,7 @@ test('Stop: letra, lista, IA e resposta repetida (quem mandou depois leva zero)'
     s.totalRounds = 1;
   });
   const first = asText(await say('Ana', 'Maria, Marrocos, Mexilhão, manga, Milan'));
-  assert.match(first, /STOP! \*Ana\* mandou\. Os outros têm 20s\./);
+  assert.match(first, /STOP! \*Ana\* mandou\. Os outros têm 30s\./);
   await say('Bia', 'Mário, marrocos, macaco, Banana, Mamute de pelúcia');
   const end = asText(await say('Caio', 'Marcos, México, -, melão, Manchester United'));
   assert.match(end, /Todos mandaram\./);

@@ -4,7 +4,7 @@ import type { TeamJudge, WordCheck } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
-import { drawRestrictions } from './validate';
+import { drawRestrictions, lookupHint } from './validate';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import {
@@ -490,7 +490,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   const slot = SLOTS[state.round];
   let profile;
   try {
-    profile = await deps.lookup(msg.text.trim());
+    profile = await deps.lookup(msg.text.trim(), lookupHint(slot, state.restrictions[state.round]));
   } catch (error) {
     console.error('lookup failed', error);
     return [text('A consulta falhou por um instante. Mande o nome de novo.')];

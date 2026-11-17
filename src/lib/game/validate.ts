@@ -1,5 +1,5 @@
 import { GameMode, metricValue } from './modes';
-import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from './teams';
+import { CLUBS, NATIONS, clubsIn, drawTeams, getTeam, isFromNation, playedForClub } from './teams';
 import { PlayerProfile, POSITION_LABEL, Position, Restriction, SLOTS } from './types';
 
 /**
@@ -35,13 +35,26 @@ export function checkPick(
 
 /** `hard` (extra "difícil") inclui clubes/seleções de nível 2 no sorteio. */
 export function drawRestrictions(mode: GameMode, rng: () => number, hard = false): Restriction[] {
+  // Nenhum tema do jogo usa "livre" (teste garante); 'none' fica só para os testes do motor.
   if (mode.restriction === 'none') return SLOTS.map(() => ({ kind: 'none' }));
-  const pool = mode.restriction === 'club' ? CLUBS : NATIONS;
-  return drawTeams(pool, SLOTS.length, rng, hard ? 2 : 1).map((t) => ({ kind: mode.restriction, teamId: t.id }));
+  const kind = mode.restriction;
+  const pool = kind === 'club' ? clubsIn(mode.region) : NATIONS;
+  return drawTeams(pool, SLOTS.length, rng, hard ? 2 : 1).map((t) => ({ kind, teamId: t.id }));
 }
 
 export function restrictionLine(restriction: Restriction | undefined): string {
   const team = getTeam(restriction?.teamId);
   if (!team) return '';
   return restriction?.kind === 'club' ? `Clube da rodada: *${team.name}*\n` : `Seleção da rodada: *${team.name}*\n`;
+}
+
+/** Contexto da jogada para a IA desambiguar nomes: "goleiro que jogou no Atlético-MG". */
+export function lookupHint(position: Position | null | undefined, restriction?: Restriction | { kind: string; teamId?: string; value?: string }): string | undefined {
+  const pos = position ? POSITION_LABEL[position] : 'jogador';
+  const teamId = (restriction as { teamId?: string; value?: string } | undefined)?.teamId ?? (restriction as { value?: string } | undefined)?.value;
+  const team = getTeam(teamId);
+  if (!team) return position ? pos : undefined;
+  if (restriction?.kind === 'club') return `${pos} que jogou no ${team.name}`;
+  if (restriction?.kind === 'country' || restriction?.kind === 'nation') return `${pos} da seleção ${team.name === 'Brasil' ? 'brasileira' : `de ${team.name}`}`;
+  return pos;
 }

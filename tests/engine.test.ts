@@ -10,6 +10,8 @@ import { looksLikePlayerName } from '../src/lib/game/text';
 import type { Outgoing } from '../src/lib/game/types';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
+import { freePlayForTests } from './helpers';
+freePlayForTests();
 
 const G = 'grupo@g.us';
 
@@ -124,4 +126,10 @@ test('utilitários', () => {
   assert.equal(parseProfile(extractJson('```json\n{"exists": false}\n```')), null);
   const p = parseProfile({ exists: true, name: 'X', positions: ['GOL', 'ZZZ'], careerGoals: '12', heightCm: -1 });
   assert.deepEqual([p?.positions, p?.careerGoals, p?.heightCm], [['GOL'], 12, null]);
+});
+
+test('nenhum tema é "livre": todos sorteiam clube ou seleção', async () => {
+  const src = (await import('node:fs')).readFileSync('src/lib/game/modes.ts', 'utf8');
+  assert.equal((src.match(/restriction: 'none'/g) ?? []).length, 0);
+  assert.equal((src.match(/restriction: '(club|country)'/g) ?? []).length, 17);
 });

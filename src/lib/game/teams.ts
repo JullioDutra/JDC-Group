@@ -345,3 +345,15 @@ export function findTeamByName(raw: string): Team | undefined {
   if (!value) return undefined;
   return [...CLUBS, ...NATIONS].find((t) => normalize(t.name) === value || t.aliases.includes(value));
 }
+
+/** Regiões para temas que só fazem sentido com certos clubes (Brasileirão, Libertadores, Champions). */
+const BR_IDS = 'flamengo palmeiras corinthians sao-paulo santos gremio internacional atletico-mg cruzeiro vasco fluminense botafogo athletico-pr bahia vitoria sport ceara fortaleza goias coritiba bragantino america-mg atletico-go juventude chapecoense ponte-preta guarani portuguesa nautico santa-cruz paysandu remo criciuma avai figueirense cuiaba mirassol'.split(' ');
+const SA_IDS = [...BR_IDS, ...'boca river independiente racing san-lorenzo estudiantes velez newells rosario-central lanus penarol nacional-uru atletico-nacional millonarios america-cali colo-colo universidad-chile olimpia cerro-porteno ldu barcelona-sc independiente-valle alianza-lima universitario'.split(' ')];
+const EU_IDS = 'real-madrid barcelona atletico-madrid manchester-united manchester-city liverpool chelsea arsenal tottenham bayern dortmund juventus milan inter psg porto benfica ajax fenerbahce galatasaray napoli roma sevilla valencia marseille lyon monaco sporting celtic newcastle aston-villa west-ham everton leeds nottingham leicester southampton fulham wolves crystal-palace brighton athletic real-sociedad villarreal betis celta deportivo espanyol malaga lazio fiorentina atalanta torino parma sampdoria udinese bologna leverkusen schalke wolfsburg hamburgo werder stuttgart eintracht leipzig gladbach lille nice rennes bordeaux saint-etienne braga psv feyenoord rangers besiktas trabzonspor zenit cska spartak shakhtar dynamo-kiev olympiacos panathinaikos anderlecht brugge salzburg basel'.split(' ');
+
+export type ClubRegion = 'br' | 'sa' | 'eu';
+const REGIONS: Record<ClubRegion, Set<string>> = { br: new Set(BR_IDS), sa: new Set(SA_IDS), eu: new Set(EU_IDS) };
+
+export function clubsIn(region: ClubRegion | undefined): Team[] {
+  return region ? CLUBS.filter((t) => REGIONS[region].has(t.id)) : CLUBS;
+}

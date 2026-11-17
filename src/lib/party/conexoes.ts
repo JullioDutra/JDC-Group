@@ -1,6 +1,6 @@
 import { firstName, normalize } from '../game/text';
 import type { ConexoesParty, ContentCategory, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, warnOnce } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, warnOnce, pauseBeforeNext } from './common';
 import { CONEXOES, getConexoes } from './content/conexoes';
 
 /**
@@ -29,10 +29,10 @@ export function startConexoes(state: ConexoesParty, deps: PartyDeps): Outgoing[]
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`*Conexões* valendo! ${state.players.length} jogadores, ${state.totalRounds} tabuleiros.`), ...openRound(state, deps)];
+  return [text(`*Conexões* valendo! ${state.players.length} jogadores, ${state.totalRounds} tabuleiros.`), ...openConexoesRound(state, deps)];
 }
 
-function openRound(state: ConexoesParty, deps: PartyDeps): Outgoing[] {
+export function openConexoesRound(state: ConexoesParty, deps: PartyDeps): Outgoing[] {
   state.round += 1;
   const puzzle = getConexoes(state.order[state.round])!;
   state.tiles = shuffle(puzzle.groups.flatMap((g) => g.items), deps.rng);
@@ -135,5 +135,5 @@ export function closeConexoesRound(state: ConexoesParty, deps: PartyDeps, reason
     },
   ];
   if (state.round >= state.totalRounds - 1) return [...out, ...finishByScore(state, '', 'abrir conexões')];
-  return [...out, scoreImage(state, false), ...openRound(state, deps)];
+  return [...out, scoreImage(state, false), ...pauseBeforeNext(state, deps)];
 }

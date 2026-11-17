@@ -42,7 +42,7 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
   },
   draft: {
     subtitle: '5 rodadas em serpente · o grupo vota',
-    rules: ['Na sua vez, escolha um jogador que cumpra a regra da rodada.', 'A ordem inverte a cada rodada. Ninguém repete jogador.', 'No fim, o grupo vota no melhor time.'],
+    rules: ['Na sua vez, escolha um jogador do clube ou seleção da rodada.', 'A ordem inverte a cada rodada. Ninguém repete jogador.', 'No fim, o grupo vota no melhor time.'],
   },
   linha: {
     subtitle: `${PARTY_CONFIG.linha.rounds} rodadas · 4 acontecimentos`,
@@ -106,7 +106,7 @@ export function partyLobby(state: PartyState): ReactElement {
           : `${q.rounds} rodadas${cat}`;
     rules =
       state.game === 'alfabeto'
-        ? ['Cada rodada: categoria + letra ("goleiros com C").', '1 jogador por pessoa. Nome já usado não vale.', 'Quem responde primeiro ganha bônus.']
+        ? ['Cada rodada: clube ou seleção + letra ("Flamengo com R").', '1 jogador por pessoa. Nome já usado não vale.', 'Quem responde primeiro ganha bônus.']
         : state.game === 'chute'
           ? ['Pergunta com resposta em número.', '1 número por pessoa, diferente dos já ditos.', 'O mais perto ganha; cravou leva bônus.']
           : state.game === 'emoji'

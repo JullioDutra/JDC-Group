@@ -8,6 +8,8 @@ import { getTop10List } from '../src/lib/party/top10-lists';
 import type { Outgoing } from '../src/lib/game/types';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
+import { freePlayForTests } from './helpers';
+freePlayForTests();
 
 const G = 'sala@g.us';
 
@@ -42,7 +44,7 @@ test('Escalação em Grupo: rodada fecha quando todos respondem; nomes repetidos
   const { say } = setup();
   const { lobby, start } = await openEscalacao(say);
   assert.match(lobby, /img:partyLobby[\s\S]*Sala aberta: Escalação em Grupo/);
-  assert.match(start, /img:partyTable[\s\S]*Tema: \*Artilheiros\*[\s\S]*3 jogadores[\s\S]*Rodada 1\/6 · GOLEIRO[\s\S]*timer:61s/);
+  assert.match(start, /img:partyTable[\s\S]*Tema: \*Artilheiros\*[\s\S]*3 jogadores[\s\S]*Rodada 1\/6 · GOLEIRO[\s\S]*timer:76s/);
 
   assert.match(asText(await say('Ana', 'ceni')), /react:✅/);
   assert.deepEqual(await say('Ana', 'Neuer'), [], 'uma resposta por rodada');

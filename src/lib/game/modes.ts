@@ -1,5 +1,6 @@
 import { normalize } from './text';
 import type { MetricKey, PlayerProfile, RestrictionKind } from './types';
+import type { ClubRegion } from './teams';
 
 export interface GameMode {
   id: string;
@@ -14,6 +15,8 @@ export interface GameMode {
   /** 'high' = maior soma vence · 'low' = menor soma vence */
   direction: 'high' | 'low';
   restriction: RestrictionKind;
+  /** Só sorteia clubes desta região (Brasileirão, Libertadores, Champions). */
+  region?: ClubRegion;
   /** Valor lançado quando o jogador estoura o tempo (o pior possível no tema). */
   penalty: number;
   /** Regras resumidas (3 linhas) para a imagem de início. */
@@ -41,13 +44,13 @@ function mode(m: Omit<GameMode, 'rules' | 'penalty'> & { what: string; penalty?:
 
 export const MODES: GameMode[] = [
   mode({
-    id: 'artilheiros', number: 1, name: 'Artilheiros', tagline: 'Gols na carreira',
-    metric: 'careerGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    id: 'artilheiros', number: 1, name: 'Artilheiros', tagline: 'Gols na carreira · clube sorteado',
+    metric: 'careerGoals', unit: 'gols', direction: 'high', restriction: 'club',
     what: 'Escale quem mais fez gols na carreira (clubes + seleção).',
   }),
   mode({
-    id: 'garcons', number: 2, name: 'Garçons', tagline: 'Assistências na carreira',
-    metric: 'careerAssists', unit: 'assist.', direction: 'high', restriction: 'none',
+    id: 'garcons', number: 2, name: 'Garçons', tagline: 'Assistências na carreira · clube sorteado',
+    metric: 'careerAssists', unit: 'assist.', direction: 'high', restriction: 'club',
     what: 'Escale quem mais deu assistências na carreira.',
   }),
   mode({
@@ -61,8 +64,8 @@ export const MODES: GameMode[] = [
     what: 'Escale os jogadores mais novos que você lembrar.',
   }),
   mode({
-    id: 'gigantes', number: 5, name: 'Gigantes', tagline: 'Os mais altos',
-    metric: 'heightCm', unit: 'cm', direction: 'high', restriction: 'none',
+    id: 'gigantes', number: 5, name: 'Gigantes', tagline: 'Os mais altos · clube sorteado',
+    metric: 'heightCm', unit: 'cm', direction: 'high', restriction: 'club',
     what: 'Escale os jogadores mais altos, centímetro por centímetro.',
   }),
   mode({
@@ -81,13 +84,13 @@ export const MODES: GameMode[] = [
     what: 'Escale quem mais marcou pela seleção sorteada.',
   }),
   mode({
-    id: 'copa', number: 9, name: 'Reis da Copa', tagline: 'Gols em Copas do Mundo',
-    metric: 'worldCupGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    id: 'copa', number: 9, name: 'Reis da Copa', tagline: 'Gols em Copas do Mundo · seleção sorteada',
+    metric: 'worldCupGoals', unit: 'gols', direction: 'high', restriction: 'country',
     what: 'Escale quem mais fez gols em Copas do Mundo.',
   }),
   mode({
-    id: 'champions', number: 10, name: 'Noites de Champions', tagline: 'Gols na Champions League',
-    metric: 'uclGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    id: 'champions', number: 10, name: 'Noites de Champions', tagline: 'Gols na Champions League · clube europeu sorteado',
+    metric: 'uclGoals', unit: 'gols', direction: 'high', restriction: 'club', region: 'eu',
     what: 'Escale quem mais marcou na Champions League.',
   }),
   mode({
@@ -96,23 +99,23 @@ export const MODES: GameMode[] = [
     what: 'Escale quem mais levantou taças oficiais na carreira.',
   }),
   mode({
-    id: 'rodados', number: 12, name: 'Rodados', tagline: 'Clubes na carreira',
-    metric: 'clubsCount', unit: 'clubes', direction: 'high', restriction: 'none',
+    id: 'rodados', number: 12, name: 'Rodados', tagline: 'Clubes na carreira · clube sorteado',
+    metric: 'clubsCount', unit: 'clubes', direction: 'high', restriction: 'club',
     what: 'Escale os andarilhos: conta quantos clubes profissionais cada um defendeu.',
   }),
   mode({
-    id: 'incansaveis', number: 13, name: 'Incansáveis', tagline: 'Jogos na carreira',
-    metric: 'careerApps', unit: 'jogos', direction: 'high', restriction: 'none',
+    id: 'incansaveis', number: 13, name: 'Incansáveis', tagline: 'Jogos na carreira · clube sorteado',
+    metric: 'careerApps', unit: 'jogos', direction: 'high', restriction: 'club',
     what: 'Escale quem mais entrou em campo na carreira (clubes + seleção).',
   }),
   mode({
-    id: 'brasileirao', number: 14, name: 'Rei do Brasileirão', tagline: 'Gols no Brasileirão',
-    metric: 'brasileiraoGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    id: 'brasileirao', number: 14, name: 'Rei do Brasileirão', tagline: 'Gols no Brasileirão · clube brasileiro sorteado',
+    metric: 'brasileiraoGoals', unit: 'gols', direction: 'high', restriction: 'club', region: 'br',
     what: 'Escale quem mais marcou na Série A do Campeonato Brasileiro.',
   }),
   mode({
-    id: 'libertadores', number: 15, name: 'Libertadores', tagline: 'Gols na Libertadores',
-    metric: 'libertadoresGoals', unit: 'gols', direction: 'high', restriction: 'none',
+    id: 'libertadores', number: 15, name: 'Libertadores', tagline: 'Gols na Libertadores · clube sul-americano sorteado',
+    metric: 'libertadoresGoals', unit: 'gols', direction: 'high', restriction: 'club', region: 'sa',
     what: 'Escale quem mais balançou a rede na Copa Libertadores.',
   }),
   mode({

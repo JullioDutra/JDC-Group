@@ -162,6 +162,8 @@ export interface PartyBase {
   seq: number;
   /** Jids que já foram avisados nesta rodada (evita repetir aviso). */
   warned: string[];
+  /** Pausa entre rodadas: a resposta foi revelada e a próxima ainda não começou. */
+  intermission?: boolean;
 }
 
 export interface EscalacaoParty extends PartyBase {
