@@ -29,6 +29,13 @@ interface Binding {
 
 export class WikidataTimeout extends Error {}
 
+/** Cota do serviço estourada (429): espere `retryAfter` segundos antes de tentar de novo. */
+export class WikidataRateLimit extends Error {
+  constructor(public retryAfter: number) {
+    super(`cota do Wikidata (429): esperar ${retryAfter}s`);
+  }
+}
+
 export async function sparql(query: string, fetcher: Fetcher = fetch): Promise<Binding[]> {
   const response = await fetcher(WDQS_URL, {
     method: 'POST',
@@ -43,7 +50,10 @@ export async function sparql(query: string, fetcher: Fetcher = fetch): Promise<B
   if (!response.ok) {
     const text = (await response.text()).slice(0, 400);
     if (response.status === 500 && /TimeoutException|timeout/i.test(text)) throw new WikidataTimeout('consulta passou de 60 s');
-    if (response.status === 429) throw new WikidataTimeout('cota do Wikidata (429)');
+    if (response.status === 429) {
+      const wait = Number(response.headers.get('retry-after'));
+      throw new WikidataRateLimit(Number.isFinite(wait) && wait > 0 ? Math.min(wait, 600) : 60);
+    }
     throw new Error(`Wikidata respondeu ${response.status}: ${text}`);
   }
   const data = (await response.json()) as { results?: { bindings?: Binding[] } };
@@ -269,6 +279,8 @@ export interface ImportState {
   steps: number;
   done: boolean;
   lastError?: string;
+  /** Segundos para esperar antes do próximo lote (cota do Wikidata). */
+  retryAfter?: number;
   updatedAt?: string;
 }
 
@@ -317,35 +329,39 @@ export async function importStep(
   save: (records: PlayerRecord[]) => Promise<void>,
   fetcher: Fetcher = fetch,
 ): Promise<ImportState> {
-  let next: ImportState = { ...state, steps: state.steps + 1, lastError: undefined, updatedAt: new Date().toISOString() };
+  let next: ImportState = { ...state, steps: state.steps + 1, lastError: undefined, retryAfter: undefined, updatedAt: new Date().toISOString() };
   if (state.done) return next;
   if (Number(state.cursor.slice(0, 4)) > state.untilYear) return nextPart(next);
   const part = state.plan[state.part];
   const to = addDays(state.cursor, state.spanDays);
-  let rows: Binding[];
+  let list: Array<{ id: string; sitelinks: number; birth: string | null }>;
+  let imported = 0;
   try {
-    rows = await sparql(listQuery(state.cursor, to, part.minSitelinks, PAGE, state.offset, part.clubCountry), fetcher);
-  } catch (error) {
-    if (error instanceof WikidataTimeout && state.spanDays > 7) {
-      return { ...next, spanDays: Math.ceil(state.spanDays / 2), lastError: (error as Error).message };
+    const rows = await sparql(listQuery(state.cursor, to, part.minSitelinks, PAGE, state.offset, part.clubCountry), fetcher);
+    list = rows
+      .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
+      .filter((x) => /^Q\d+$/.test(x.id));
+    // Detalhes uma consulta de cada vez: respeita a cota do serviço.
+    for (let i = 0; i < list.length; i += CHUNK) {
+      const chunk = list.slice(i, i + CHUNK);
+      const ids = chunk.map((x) => x.id);
+      const identity = await sparql(identityQuery(ids), fetcher);
+      const names = await sparql(namesQuery(ids), fetcher);
+      const teams = await sparql(teamsQuery(ids), fetcher);
+      const records = buildRecords(chunk, identity, names, teams);
+      await save(records);
+      imported += records.length;
     }
-    return { ...next, lastError: (error as Error).message };
+  } catch (error) {
+    // Erro em qualquer consulta: não avança (refaz a página depois; gravar de novo não duplica).
+    const message = (error as Error).message;
+    if (error instanceof WikidataRateLimit) return { ...next, lastError: message, retryAfter: error.retryAfter };
+    if (error instanceof WikidataTimeout && state.spanDays > 7) {
+      return { ...next, spanDays: Math.ceil(state.spanDays / 2), lastError: message };
+    }
+    return { ...next, lastError: message };
   }
-  const list = rows
-    .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
-    .filter((x) => /^Q\d+$/.test(x.id));
-  for (let i = 0; i < list.length; i += CHUNK) {
-    const chunk = list.slice(i, i + CHUNK);
-    const ids = chunk.map((x) => x.id);
-    const [identity, names, teams] = await Promise.all([
-      sparql(identityQuery(ids), fetcher),
-      sparql(namesQuery(ids), fetcher),
-      sparql(teamsQuery(ids), fetcher),
-    ]);
-    const records = buildRecords(chunk, identity, names, teams);
-    await save(records);
-    next.imported += records.length;
-  }
+  next.imported += imported;
   if (list.length === PAGE) return { ...next, offset: state.offset + PAGE };
   // Janela concluída: segue; se veio pouca gente, a próxima janela é maior.
   const grow = list.length < PAGE / 4 ? state.spanDays * 2 : state.spanDays;

@@ -265,3 +265,23 @@ test('na partida: Escalação, goleiro, Atlético-MG → "Victor" vale (e não o
   const after = (await store.getActiveMatch('esc@g.us'))!.state as { picks: Record<string, Array<{ name: string } | null>> };
   assert.equal(after.picks['Ana@s'][0]?.name, 'Victor');
 });
+
+test('Wikidata: cota estourada (429) no meio dos detalhes não quebra: guarda o erro e o tempo de espera', async () => {
+  const { WikidataRateLimit } = await import('../src/lib/players/wikidata');
+  let saved = 0;
+  const fetcher: Fetcher = async (_url, init) => {
+    const query = new URLSearchParams(String(init.body)).get('query') ?? '';
+    if (query.includes('GROUP BY ?p')) {
+      return new Response(JSON.stringify({ results: { bindings: [{ p: uri('Q9'), links: lit(40), born: lit('1990-05-01T00:00:00Z') }] } }));
+    }
+    return new Response('Too Many Requests', { status: 429, headers: { 'retry-after': '90' } });
+  };
+  const s0 = newImportState({ untilYear: 1991, plan: [{ label: 'teste', minSitelinks: 3, fromYear: 1990 }] });
+  const s1 = await importStep(s0, async () => void saved++, fetcher);
+  assert.equal(saved, 0);
+  assert.equal(s1.cursor, s0.cursor, 'não avança: refaz depois');
+  assert.equal(s1.offset, 0);
+  assert.equal(s1.retryAfter, 90);
+  assert.match(s1.lastError ?? '', /429/);
+  assert.ok(new WikidataRateLimit(5) instanceof Error);
+});

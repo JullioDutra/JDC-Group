@@ -49,21 +49,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: 'cadeia antiga (outra carga começou depois)' });
   }
 
-  // Vários lotes por chamada (até ~25 s), para gastar menos mensagens do QStash.
+  // Vários lotes por chamada (até ~20 s), para gastar menos mensagens do QStash.
+  // Qualquer erro é gravado e a cadeia segue (nunca para no meio sem salvar).
   const started = Date.now();
   let next: ImportState = state;
-  do {
-    next = await importStep(next, (records) => store.upsertPlayers(records));
-  } while (!next.done && !next.lastError && Date.now() - started < 25_000);
+  try {
+    do {
+      next = await importStep(next, (records) => store.upsertPlayers(records));
+    } while (!next.done && !next.lastError && Date.now() - started < 20_000);
+  } catch (error) {
+    next = { ...next, lastError: (error as Error).message.slice(0, 200) };
+  }
   const errors = next.lastError ? (state.errors ?? 0) + 1 : 0;
   const saved = { ...next, errors };
   await store.setImportState(STATE_ID, saved);
 
-  // Continua sozinho: falha passageira espera mais; 6 falhas seguidas param a cadeia.
+  // Continua sozinho. Cota do Wikidata: espera o que ele pedir. Outras falhas:
+  // espera cada vez mais; 10 falhas seguidas param a cadeia (retome com "step").
   let chained = false;
-  if (!saved.done && errors < 6) {
+  if (!saved.done && errors < 10) {
     const url = `${publicOrigin(request)}/api/admin/players/import`;
-    chained = await scheduleAdminCall(url, { action: 'step', runId: saved.runId }, errors ? 30 * errors : 2).catch((error) => {
+    const delay = saved.retryAfter ?? (errors ? Math.min(600, 30 * errors) : 5);
+    chained = await scheduleAdminCall(url, { action: 'step', runId: saved.runId }, delay).catch((error) => {
       console.error('agendar próximo lote falhou', error);
       return false;
     });
