@@ -77,12 +77,3 @@ export const SCHEMA_STATEMENTS: string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS lookup_log_created ON lookup_log (created_at DESC)`,
 ];
-
-/**
- * Opcionais: se o banco não permitir (extensão), o jogo segue sem a busca
- * por semelhança (erro de digitação longo).
- */
-export const OPTIONAL_SCHEMA_STATEMENTS: string[] = [
-  `CREATE EXTENSION IF NOT EXISTS pg_trgm`,
-  `CREATE INDEX IF NOT EXISTS players_name_trgm ON players USING gin (name_norm gin_trgm_ops)`,
-];

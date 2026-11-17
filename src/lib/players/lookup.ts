@@ -63,6 +63,13 @@ export function toProfile(r: PlayerRecord): PlayerProfile {
   };
 }
 
+/** Nomes que valem para este jogador: o nome conhecido e o nome completo (nunca apelidos). */
+function acceptedNames(p: PlayerProfile): string[] {
+  const names = [p.name];
+  if (p.fullName && normalize(p.fullName) !== normalize(p.name)) names.push(p.fullName);
+  return names;
+}
+
 /** Números que vieram na ficha da IA (ignora vazios). */
 function statsFrom(p: PlayerProfile): PlayerRecord['stats'] {
   const out: PlayerRecord['stats'] = {};
@@ -98,14 +105,14 @@ async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRe
       heightCm: same.heightCm ?? profile.heightCm,
       debutYear: same.debutYear ?? profile.debutYear,
       clubs,
-      aliases: [...new Set([...same.aliases, ...(profile.aliases ?? [])])].slice(0, 15),
+      aliases: [...new Set([...same.aliases, ...acceptedNames(profile).slice(1)])].slice(0, 6),
       stats: { ...fromAi, ...same.stats },
     };
   } else {
     record = {
       id: `ai:${name}:${profile.birthDate ?? ''}`,
       name: profile.name,
-      aliases: (profile.aliases ?? []).filter((a) => normalize(a) !== name).slice(0, 10),
+      aliases: acceptedNames(profile).slice(1),
       positions: profile.positions,
       nationality: profile.nationality,
       birthDate: profile.birthDate,
@@ -123,9 +130,10 @@ async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRe
 
 /**
  * Busca de jogador:
- * 1. Base própria (Wikidata + o que a IA já pesquisou): nome, apelido,
- *    sobrenome ou erro de digitação, com o contexto da jogada (posição +
- *    clube/seleção) desempatando homônimos e a fama no empate.
+ * 1. Base própria (Wikidata + o que a IA já pesquisou). Só vale nome
+ *    coerente: o nome conhecido, o completo, ou partes dele (sobrenome; nome
+ *    + sobrenome). Nada de erro de digitação nem apelido informal. O contexto
+ *    da jogada (posição + clube/seleção) desempata homônimos; no empate, a fama.
  * 2. Não achou quem cumpra o contexto: a IA pesquisa (com o contexto). Só vale
  *    se o nome devolvido bater com o digitado; aí entra na base.
  * 3. Falta o número do tema: pergunta focada só nele, que fica gravada.
@@ -147,10 +155,6 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       candidates = [...candidates, ...(await store.findPlayers(tokens, 120))];
       ranked = rankCandidates(candidates, q, ctx);
     }
-    if (ranked.length === 0) {
-      candidates = await store.fuzzyPlayers(q, 20);
-      ranked = rankCandidates(candidates, q, ctx);
-    }
     let record: PlayerRecord | null = ranked.find((r) => r.fits)?.record ?? null;
     let outcome = 'base';
 
@@ -159,7 +163,7 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       const negative = await store.getCachedProfile(negKey);
       if (negative === undefined) {
         const profile = await identify(query, desc);
-        if (profile && nameMatchesQuery(query, [profile.name, ...(profile.aliases ?? [])])) {
+        if (profile && nameMatchesQuery(query, acceptedNames(profile))) {
           record = await saveFromAi(store, profile, candidates);
           outcome = 'ia';
         } else {
@@ -184,7 +188,7 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
     if (record.positions.length === 0) {
       try {
         const extra = await identify(record.name, record.birthDate ? `nascido em ${record.birthDate}` : desc);
-        if (extra && nameMatchesQuery(record.name, [extra.name, ...(extra.aliases ?? [])]) && extra.positions.length) {
+        if (extra && nameMatchesQuery(record.name, acceptedNames(extra)) && extra.positions.length) {
           record = { ...record, positions: extra.positions };
           await store.upsertPlayers([record]);
         }

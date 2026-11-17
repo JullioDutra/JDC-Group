@@ -1,8 +1,6 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
 import type { PlayerRecord, StatKey } from '../players/types';
-import { editDistance } from '../party/common';
-import { normalize } from '../game/text';
 import type { Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
@@ -72,16 +70,6 @@ export class MemoryStore implements Store {
       .map((p) => structuredClone(p.record))
       .sort((a, b) => b.sitelinks - a.sitelinks)
       .slice(0, limit);
-  }
-
-  async fuzzyPlayers(text: string, limit: number) {
-    const q = normalize(text);
-    return [...this.players.values()]
-      .map((p) => ({ p, d: Math.min(...p.keys.map((k) => editDistance(k, q))) }))
-      .filter((x) => x.d <= Math.max(1, Math.floor(q.length / 4)))
-      .sort((a, b) => a.d - b.d || b.p.record.sitelinks - a.p.record.sitelinks)
-      .slice(0, limit)
-      .map((x) => structuredClone(x.p.record));
   }
 
   async upsertPlayers(records: PlayerRecord[]) {

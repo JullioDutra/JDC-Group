@@ -1,6 +1,6 @@
 import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
-import { OPTIONAL_SCHEMA_STATEMENTS, SCHEMA_STATEMENTS } from './schema';
+import { SCHEMA_STATEMENTS } from './schema';
 import { nameKeys } from '../players/keys';
 import type { PlayerRecord, StatKey } from '../players/types';
 import { normalize } from '../game/text';
@@ -18,18 +18,8 @@ export class NeonStore implements Store {
     this.sql = neon(databaseUrl);
   }
 
-  private trigram = true;
-
   async migrate(): Promise<void> {
     for (const statement of SCHEMA_STATEMENTS) await this.sql.query(statement);
-    for (const statement of OPTIONAL_SCHEMA_STATEMENTS) {
-      try {
-        await this.sql.query(statement);
-      } catch (error) {
-        this.trigram = false;
-        console.warn('busca por semelhança indisponível', (error as Error).message);
-      }
-    }
   }
 
   async isGroupActive(groupJid: string) {
@@ -133,19 +123,6 @@ export class NeonStore implements Store {
     if (keys.length === 0) return [];
     const rows = await this.sql`SELECT * FROM players WHERE keys && ${keys}::text[] ORDER BY sitelinks DESC LIMIT ${limit}`;
     return rows.map((r) => NeonStore.toRecord(r));
-  }
-
-  async fuzzyPlayers(text: string, limit: number): Promise<PlayerRecord[]> {
-    if (!this.trigram || !text) return [];
-    try {
-      const rows = await this.sql`
-        SELECT * FROM players WHERE name_norm % ${text}
-        ORDER BY similarity(name_norm, ${text}) DESC, sitelinks DESC LIMIT ${limit}`;
-      return rows.map((r) => NeonStore.toRecord(r));
-    } catch (error) {
-      console.warn('busca por semelhança falhou', (error as Error).message);
-      return [];
-    }
   }
 
   async upsertPlayers(records: PlayerRecord[]): Promise<void> {

@@ -34,19 +34,38 @@ Fontes: [limites do WDQS e política de User-Agent](https://www.wikidata.org/wik
 | Jogos e gols pela seleção principal | Wikidata (soma das passagens), quando houver |
 | Gols e jogos na carreira, assistências, valor de mercado, títulos, gols em Copa/Champions/Libertadores/Brasileirão, Copas disputadas | IA, numa **pergunta focada** (um número por vez, com a soma do Wikidata como referência), e fica gravado |
 
-## 3. Como a busca funciona agora
+## 3. Regra de nomes (17/11)
+
+| Vale | Exemplo |
+|---|---|
+| O nome pelo qual o jogador é famoso | Ronaldinho, Hulk, Kaká, Neymar, Victor |
+| O nome completo | Ronaldo de Assis Moreira, Givanildo Vieira de Sousa |
+| Sobrenome | Sule (Niklas Süle), Osimhen, Ceni |
+| Nome + sobrenome, ou partes do nome completo na ordem | Niklas Süle, Ronaldo Nazário |
+| Sem acento e sem maiúscula | sule = Süle |
+
+| Não vale | Exemplo |
+|---|---|
+| Erro de digitação | Ronaldiho, Osimen |
+| Apelido informal | R9, Fenômeno, CR7, Gabigol (se não for o nome conhecido) |
+| Só o primeiro nome de quem é conhecido por nome e sobrenome | Niklas, Cristiano, Alexis |
+| Palavras fora de ordem | Sule Niklas |
+
+"Júnior", "Filho", "Neto", "da", "de" e outras partículas não contam como palavra do nome ("Vinicius" = Vinícius Júnior). A mesma regra vale para a base e para a IA: ela também não corrige erro nem interpreta apelido, e um nome que não segue a regra é recusado.
+
+## 4. Como a busca funciona agora
 
 ```
 nome digitado + contexto da rodada (posição, clube/seleção, número do tema)
         │
         ▼
-1. BASE (tabela players): chave exata (nome, apelido, sobrenome, primeiro+último)
-   → partes do nome ("pedro guilherme") → semelhança (erro de digitação, pg_trgm)
-   → ordena: cumpre o contexto > nome mais parecido > mais famoso
+1. BASE (tabela players): só nome coerente (regra acima): nome conhecido,
+   completo, sobrenome, partes do nome completo na ordem
+   → ordena: cumpre o contexto > nome exato > partes > sobrenome > mais famoso
         │ achou quem cumpre o contexto? ── sim ──► usa
         ▼ não
 2. IA pesquisa com o contexto ("goleiro que jogou no Atlético-MG")
-   → só vale se o nome devolvido bater com o digitado (senão: "não achei")
+   → só vale se o nome devolvido seguir a regra de nomes (senão: "não achei")
    → entra na base (completa a ficha se a pessoa já existia)
    → "não achei" fica guardado só 10 min
         │ IA também não achou?
@@ -59,7 +78,18 @@ nome digitado + contexto da rodada (posição, clube/seleção, número do tema)
 
 Toda busca é registrada (`lookup_log`) com o resultado: `base`, `ia`, `ia-nome-diferente`, `ia-nao-achou`, `base-fora-do-contexto`, `nao-achou-recente`, com `+dado` quando completou o número do tema.
 
-## 4. Operação
+## 5. Tamanho da base (plano de carga)
+
+A carga segue um plano de 28 partes:
+
+1. **Mundo**: todo futebolista com 3 ou mais artigos na Wikipédia, nascido de 1920 a 2011.
+2. **Profundidade por país do clube**: todo jogador que passou por clubes do país, incluindo quem tem um único artigo na Wikipédia (comum nas Séries A e B).
+   - **A partir de 1 artigo:** Brasil, Argentina, Uruguai, Portugal, México, Chile, Colômbia, Paraguai, Equador, Peru, Arábia Saudita, Catar e Emirados.
+   - **A partir de 2 artigos:** Espanha, Reino Unido, Itália, Alemanha, França, Holanda, EUA, Turquia, Japão, Bélgica, Rússia, Ucrânia, Grécia e China.
+
+Quem já entrou numa parte só é atualizado nas seguintes, sem duplicar. Janelas de nascimento com pouca gente crescem até 10 anos, e cada chamada roda vários lotes (cerca de 25 s), para gastar poucas mensagens do QStash. Estimativa: **de 100 a 200 mil jogadores**.
+
+## 6. Operação
 
 Na VPS (as chaves estão em `~/jogos/segredos`):
 
@@ -71,13 +101,13 @@ APP=https://duelo-de-craques-peach.vercel.app
 **Começar a carga** (uma vez; ela continua sozinha em lotes, pelo QStash):
 ```bash
 curl -s -X POST "$APP/api/admin/players/import" -H "Authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
-  -d '{"action":"start","fromYear":1925,"untilYear":2010,"minSitelinks":5}' | jq '{ok, chained, players, cursor: .state.cursor, erro: .state.lastError}'
+  -d '{"action":"start"}' | jq '{ok, chained, parte, players, cursor: .state.cursor, erro: .state.lastError}'
 ```
 
 **Acompanhar:**
 ```bash
 curl -s -X POST "$APP/api/admin/players/import" -H "Authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
-  -d '{"action":"status"}' | jq '{players, cursor: .state.cursor, imported: .state.imported, erros: .state.errors, erro: .state.lastError, done: .state.done}'
+  -d '{"action":"status"}' | jq '{players, parte: .state.part, cursor: .state.cursor, imported: .state.imported, erros: .state.errors, erro: .state.lastError, done: .state.done}'
 ```
 
 **Se a cadeia parar** (6 erros seguidos ou cota do QStash): `-d '{"action":"step"}'` retoma de onde parou. **Parar:** `-d '{"action":"stop"}'`.
@@ -89,7 +119,9 @@ curl -s "$APP/api/admin/players?q=victor&pos=GOL&club=atletico-mg" -H "Authoriza
 
 **Números no status:** `GET /api/admin/status` mostra `players.base` (quantos na base), `players.carga` (andamento) e `players.buscas24h` (resultados das buscas das últimas 24 h).
 
-## 5. Metas e próximos passos
+**Só uma parte:** `-d '{"action":"start","onlyParts":[1]}'` (1 = clubes do Brasil).
+
+## 7. Metas e próximos passos
 
 **Metas:**
 - ≥ 95% de identidade correta;

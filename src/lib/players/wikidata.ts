@@ -6,9 +6,13 @@ import type { PlayerRecord } from './types';
  *
  * - Lista: futebolistas (ocupação Q937857) nascidos numa janela de datas, com
  *   pelo menos N artigos na Wikipédia (sitelinks = fama), dos mais famosos aos menos.
- * - Detalhes (em lotes de até 200): nome em português/inglês, apelidos,
- *   posições (P413), seleção (P1532, ou cidadania P27), altura (P2048) e as
- *   passagens por times (P54) com início, fim, jogos (P1350) e gols (P1351).
+ * - Detalhes (em lotes de até 200): nome conhecido (rótulo pt/en/es), nome
+ *   completo de registro (P1477), posições (P413), seleção (P1532, ou
+ *   cidadania P27), altura (P2048) e as passagens por times (P54) com início,
+ *   fim, jogos (P1350) e gols (P1351). Apelidos (altLabel) NÃO entram: só
+ *   valem nomes coerentes (regra do jogo).
+ * - Profundidade: além dos mais famosos do mundo, todos os jogadores com
+ *   artigo na Wikipédia que passaram por clubes de um país (P54 → time com P17).
  *
  * Limites do serviço: 60 s por consulta e cota por cliente; pede um
  * User-Agent que identifique o app.
@@ -51,10 +55,12 @@ const val = (b: Binding, k: string) => b[k]?.value;
 
 // ---------- Consultas ----------
 
-export function listQuery(from: string, to: string, minSitelinks: number, limit: number, offset: number): string {
+export function listQuery(from: string, to: string, minSitelinks: number, limit: number, offset: number, clubCountry?: string): string {
+  // clubCountry: só quem passou por um time daquele país (ex.: Q155 = Brasil).
+  const country = clubCountry ? `\n  FILTER EXISTS { ?p wdt:P54 ?team . ?team wdt:P17 wd:${clubCountry} . }` : '';
   return `SELECT ?p (MAX(?sl) AS ?links) (MIN(?birth) AS ?born) WHERE {
   ?p wdt:P106 wd:Q937857 ; wdt:P569 ?birth ; wikibase:sitelinks ?sl .
-  FILTER(?birth >= "${from}T00:00:00Z"^^xsd:dateTime && ?birth < "${to}T00:00:00Z"^^xsd:dateTime && ?sl >= ${minSitelinks})
+  FILTER(?birth >= "${from}T00:00:00Z"^^xsd:dateTime && ?birth < "${to}T00:00:00Z"^^xsd:dateTime && ?sl >= ${minSitelinks})${country}
 } GROUP BY ?p ORDER BY DESC(?links) ?p LIMIT ${limit} OFFSET ${offset}`;
 }
 
@@ -72,10 +78,12 @@ export function identityQuery(ids: string[]): string {
 }`;
 }
 
-export function aliasQuery(ids: string[]): string {
-  return `SELECT ?p ?alias WHERE {
+/** Nome em espanhol e nome completo de registro (P1477). */
+export function namesQuery(ids: string[]): string {
+  return `SELECT ?p ?es ?full WHERE {
   VALUES ?p { ${values(ids)} }
-  ?p skos:altLabel ?alias FILTER(LANG(?alias) IN ("pt", "en", "es"))
+  OPTIONAL { ?p rdfs:label ?es FILTER(LANG(?es) = "es") }
+  OPTIONAL { ?p wdt:P1477 ?full }
 }`;
 }
 
@@ -118,7 +126,7 @@ const year = (iso: string | undefined) => (iso ? Number(iso.slice(0, 4)) : null)
 export function buildRecords(
   list: Array<{ id: string; sitelinks: number; birth: string | null }>,
   identity: Binding[],
-  aliases: Binding[],
+  names: Binding[],
   teams: Binding[],
 ): PlayerRecord[] {
   const byId = new Map<string, PlayerRecord & { _teams: Map<string, { label: string; start: number | null; nat: boolean; apps: number; goals: number }> }>();
@@ -149,10 +157,12 @@ export function buildRecords(
     const cit = val(b, 'citizen');
     if (cit && !citizen.has(r.id)) citizen.set(r.id, cit);
   }
-  for (const b of aliases) {
+  for (const b of names) {
     const r = byId.get(qid(val(b, 'p')));
-    const a = val(b, 'alias');
-    if (r && a && a !== r.name && !r.aliases.includes(a) && r.aliases.length < 12) r.aliases.push(a);
+    if (!r) continue;
+    for (const a of [val(b, 'es'), val(b, 'full')]) {
+      if (a && a !== r.name && !r.aliases.includes(a) && r.aliases.length < 6) r.aliases.push(a);
+    }
   }
   for (const b of teams) {
     const r = byId.get(qid(val(b, 'p')));
@@ -201,14 +211,60 @@ export function buildRecords(
 
 // ---------- Passo da importação ----------
 
+/**
+ * Plano da carga: primeiro os conhecidos do mundo todo; depois, em
+ * profundidade, quem passou por clubes de cada país (inclui jogadores com
+ * um único artigo na Wikipédia, comuns nas Séries A e B do Brasil).
+ */
+export interface ImportPart {
+  label: string;
+  /** País dos clubes (Q-id); sem país = mundo todo. */
+  clubCountry?: string;
+  minSitelinks: number;
+  fromYear: number;
+}
+
+export const DEFAULT_PLAN: ImportPart[] = [
+  { label: 'mundo (mais conhecidos)', minSitelinks: 3, fromYear: 1920 },
+  { label: 'clubes do Brasil', clubCountry: 'Q155', minSitelinks: 1, fromYear: 1930 },
+  { label: 'clubes da Argentina', clubCountry: 'Q414', minSitelinks: 1, fromYear: 1940 },
+  { label: 'clubes do Uruguai', clubCountry: 'Q77', minSitelinks: 1, fromYear: 1940 },
+  { label: 'clubes de Portugal', clubCountry: 'Q45', minSitelinks: 1, fromYear: 1950 },
+  { label: 'clubes da Espanha', clubCountry: 'Q29', minSitelinks: 2, fromYear: 1950 },
+  { label: 'clubes do Reino Unido', clubCountry: 'Q145', minSitelinks: 2, fromYear: 1950 },
+  { label: 'clubes da Itália', clubCountry: 'Q38', minSitelinks: 2, fromYear: 1950 },
+  { label: 'clubes da Alemanha', clubCountry: 'Q183', minSitelinks: 2, fromYear: 1950 },
+  { label: 'clubes da França', clubCountry: 'Q142', minSitelinks: 2, fromYear: 1950 },
+  { label: 'clubes da Holanda', clubCountry: 'Q55', minSitelinks: 2, fromYear: 1950 },
+  { label: 'clubes do México', clubCountry: 'Q96', minSitelinks: 1, fromYear: 1955 },
+  { label: 'clubes do Chile', clubCountry: 'Q298', minSitelinks: 1, fromYear: 1955 },
+  { label: 'clubes da Colômbia', clubCountry: 'Q739', minSitelinks: 1, fromYear: 1955 },
+  { label: 'clubes do Paraguai', clubCountry: 'Q733', minSitelinks: 1, fromYear: 1955 },
+  { label: 'clubes do Equador', clubCountry: 'Q736', minSitelinks: 1, fromYear: 1955 },
+  { label: 'clubes do Peru', clubCountry: 'Q419', minSitelinks: 1, fromYear: 1955 },
+  { label: 'clubes dos EUA', clubCountry: 'Q30', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes da Arábia Saudita', clubCountry: 'Q851', minSitelinks: 1, fromYear: 1965 },
+  { label: 'clubes da Turquia', clubCountry: 'Q43', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes do Japão', clubCountry: 'Q17', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes da Bélgica', clubCountry: 'Q31', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes da Rússia', clubCountry: 'Q159', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes da Ucrânia', clubCountry: 'Q212', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes da Grécia', clubCountry: 'Q41', minSitelinks: 2, fromYear: 1960 },
+  { label: 'clubes do Catar', clubCountry: 'Q846', minSitelinks: 1, fromYear: 1965 },
+  { label: 'clubes dos Emirados', clubCountry: 'Q878', minSitelinks: 1, fromYear: 1965 },
+  { label: 'clubes da China', clubCountry: 'Q148', minSitelinks: 2, fromYear: 1965 },
+];
+
 export interface ImportState {
   runId: string;
-  /** Início da janela atual (AAAA-MM-DD) e tamanho em dias. */
+  plan: ImportPart[];
+  /** Parte do plano em andamento. */
+  part: number;
+  /** Início da janela atual de nascimento (AAAA-MM-DD) e tamanho em dias. */
   cursor: string;
   spanDays: number;
   offset: number;
   untilYear: number;
-  minSitelinks: number;
   imported: number;
   steps: number;
   done: boolean;
@@ -218,6 +274,8 @@ export interface ImportState {
 
 export const PAGE = 400;
 const CHUNK = 200;
+/** Janelas vazias crescem até 10 anos (menos passos onde há poucos jogadores). */
+const MAX_SPAN = 3650;
 
 function addDays(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -225,35 +283,48 @@ function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function newImportState(opts: { fromYear?: number; untilYear?: number; minSitelinks?: number } = {}): ImportState {
+export function newImportState(opts: { untilYear?: number; plan?: ImportPart[]; onlyParts?: number[] } = {}): ImportState {
+  const base = opts.plan ?? DEFAULT_PLAN;
+  const plan = opts.onlyParts ? base.filter((_, i) => opts.onlyParts!.includes(i)) : base;
   return {
     runId: Math.random().toString(36).slice(2, 10),
-    cursor: `${opts.fromYear ?? 1925}-01-01`,
+    plan,
+    part: 0,
+    cursor: `${plan[0]?.fromYear ?? 1920}-01-01`,
     spanDays: 365,
     offset: 0,
-    untilYear: opts.untilYear ?? 2010,
-    minSitelinks: opts.minSitelinks ?? 5,
+    untilYear: opts.untilYear ?? 2011,
     imported: 0,
     steps: 0,
-    done: false,
+    done: plan.length === 0,
   };
 }
 
+/** Próxima parte do plano (ou fim). */
+function nextPart(state: ImportState): ImportState {
+  const part = state.part + 1;
+  if (part >= state.plan.length) return { ...state, done: true };
+  return { ...state, part, cursor: `${state.plan[part].fromYear}-01-01`, spanDays: 365, offset: 0 };
+}
+
 /**
- * Um passo: uma página (até 400 jogadores) de uma janela de nascimento.
- * Janela pesada demais (estouro de 60 s) é dividida ao meio e tentada de novo.
+ * Um passo: uma página (até 400 jogadores) de uma janela de nascimento,
+ * na parte atual do plano. Janela pesada demais (estouro de 60 s) é dividida
+ * ao meio e tentada de novo; janela leve cresce.
  */
 export async function importStep(
   state: ImportState,
   save: (records: PlayerRecord[]) => Promise<void>,
   fetcher: Fetcher = fetch,
 ): Promise<ImportState> {
-  const next: ImportState = { ...state, steps: state.steps + 1, lastError: undefined, updatedAt: new Date().toISOString() };
-  if (state.done || Number(state.cursor.slice(0, 4)) > state.untilYear) return { ...next, done: true };
+  let next: ImportState = { ...state, steps: state.steps + 1, lastError: undefined, updatedAt: new Date().toISOString() };
+  if (state.done) return next;
+  if (Number(state.cursor.slice(0, 4)) > state.untilYear) return nextPart(next);
+  const part = state.plan[state.part];
   const to = addDays(state.cursor, state.spanDays);
   let rows: Binding[];
   try {
-    rows = await sparql(listQuery(state.cursor, to, state.minSitelinks, PAGE, state.offset), fetcher);
+    rows = await sparql(listQuery(state.cursor, to, part.minSitelinks, PAGE, state.offset, part.clubCountry), fetcher);
   } catch (error) {
     if (error instanceof WikidataTimeout && state.spanDays > 7) {
       return { ...next, spanDays: Math.ceil(state.spanDays / 2), lastError: (error as Error).message };
@@ -264,18 +335,20 @@ export async function importStep(
     .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
     .filter((x) => /^Q\d+$/.test(x.id));
   for (let i = 0; i < list.length; i += CHUNK) {
-    const part = list.slice(i, i + CHUNK);
-    const ids = part.map((x) => x.id);
-    const [identity, aliases, teams] = await Promise.all([
+    const chunk = list.slice(i, i + CHUNK);
+    const ids = chunk.map((x) => x.id);
+    const [identity, names, teams] = await Promise.all([
       sparql(identityQuery(ids), fetcher),
-      sparql(aliasQuery(ids), fetcher),
+      sparql(namesQuery(ids), fetcher),
       sparql(teamsQuery(ids), fetcher),
     ]);
-    const records = buildRecords(part, identity, aliases, teams);
+    const records = buildRecords(chunk, identity, names, teams);
     await save(records);
     next.imported += records.length;
   }
   if (list.length === PAGE) return { ...next, offset: state.offset + PAGE };
-  // Janela concluída: segue para a próxima; janelas pequenas voltam a crescer.
-  return { ...next, cursor: to, offset: 0, spanDays: Math.min(365, state.spanDays * 2) };
+  // Janela concluída: segue; se veio pouca gente, a próxima janela é maior.
+  const grow = list.length < PAGE / 4 ? state.spanDays * 2 : state.spanDays;
+  next = { ...next, cursor: to, offset: 0, spanDays: Math.min(MAX_SPAN, Math.max(grow, 30)) };
+  return Number(to.slice(0, 4)) > state.untilYear ? nextPart(next) : next;
 }

@@ -13,7 +13,8 @@ const STATE_ID = 'wikidata';
  * Carga da base de jogadores a partir do Wikidata, em lotes.
  *
  * POST /api/admin/players/import  (Authorization: Bearer ADMIN_KEY)
- *   {"action": "start", "fromYear": 1925, "untilYear": 2010, "minSitelinks": 5}  começa do zero
+ *   {"action": "start"}   começa do zero com o plano padrão (mundo + clubes de 27 países)
+ *   {"action": "start", "onlyParts": [1]}   só uma parte do plano (ex.: 1 = clubes do Brasil)
  *   {"action": "step"}    roda o próximo lote (o QStash chama sozinho, em cadeia)
  *   {"action": "stop"}    para a cadeia
  *   {"action": "status"}  mostra o andamento
@@ -27,9 +28,8 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     action?: string;
     runId?: string;
-    fromYear?: number;
     untilYear?: number;
-    minSitelinks?: number;
+    onlyParts?: number[];
   };
   const action = body.action ?? 'status';
   let state = (await store.getImportState(STATE_ID)) as (ImportState & { stopped?: boolean; errors?: number }) | null;
@@ -47,7 +47,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: 'cadeia antiga (outra carga começou depois)' });
   }
 
-  const next = await importStep(state, (records) => store.upsertPlayers(records));
+  // Vários lotes por chamada (até ~25 s), para gastar menos mensagens do QStash.
+  const started = Date.now();
+  let next: ImportState = state;
+  do {
+    next = await importStep(next, (records) => store.upsertPlayers(records));
+  } while (!next.done && !next.lastError && Date.now() - started < 25_000);
   const errors = next.lastError ? (state.errors ?? 0) + 1 : 0;
   const saved = { ...next, errors };
   await store.setImportState(STATE_ID, saved);
@@ -61,5 +66,12 @@ export async function POST(request: Request) {
       return false;
     });
   }
-  return NextResponse.json({ ok: !saved.lastError, chained, state: saved, players: await store.countPlayers() });
+  const { plan, ...summary } = saved;
+  return NextResponse.json({
+    ok: !saved.lastError,
+    chained,
+    parte: plan[saved.part]?.label ?? 'fim',
+    state: summary,
+    players: await store.countPlayers(),
+  });
 }

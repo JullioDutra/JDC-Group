@@ -21,8 +21,6 @@ export interface Store {
   // ----- Base de jogadores -----
   /** Jogadores com alguma das chaves de busca, dos mais famosos para os menos. */
   findPlayers(keys: string[], limit: number): Promise<PlayerRecord[]>;
-  /** Busca por semelhança do nome (erros de digitação). */
-  fuzzyPlayers(text: string, limit: number): Promise<PlayerRecord[]>;
   upsertPlayers(records: PlayerRecord[]): Promise<void>;
   setPlayerStat(id: string, stat: StatKey, value: number | null): Promise<void>;
   countPlayers(): Promise<number>;

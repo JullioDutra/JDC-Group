@@ -30,12 +30,12 @@ const OSIMHEN = rec({
   clubs: ['Wolfsburg', 'Lille', 'Napoli', 'Galatasaray'], sitelinks: 60, stats: { careerGoals: 150 },
 });
 const RONALDO = rec({
-  id: 'Q3', name: 'Ronaldo', aliases: ['Ronaldo Nazário', 'Ronaldo Fenômeno', 'R9'], positions: ['ATA'], nationality: 'Brasil',
+  id: 'Q3', name: 'Ronaldo', aliases: ['Ronaldo Luís Nazário de Lima'], positions: ['ATA'], nationality: 'Brasil',
   birthDate: '1976-09-18', clubs: ['Cruzeiro', 'PSV', 'Barcelona', 'Inter de Milão', 'Real Madrid', 'Milan', 'Corinthians'], sitelinks: 120,
 });
 
 const profile = (name: string, over: Partial<PlayerProfile> = {}): PlayerProfile => ({
-  exists: true, name, aliases: [], positions: ['ATA'], nationality: 'Brasil', birthDate: '1990-01-01', clubs: ['Flamengo'],
+  exists: true, name, positions: ['ATA'], nationality: 'Brasil', birthDate: '1990-01-01', clubs: ['Flamengo'],
   heightCm: 180, careerGoals: 100, careerAssists: null, peakValueEurM: null, intlCaps: null, intlGoals: null,
   worldCupGoals: null, uclGoals: null, titles: null, careerApps: null, brasileiraoGoals: null, libertadoresGoals: null,
   worldCupsPlayed: null, debutYear: 2008, ...over,
@@ -55,36 +55,55 @@ test('chaves de busca: nome completo, sobrenome, primeiro + último; partículas
   assert.deepEqual(queryKeys('Ronaldo de Assis'), ['ronaldo de assis', 'ronaldo assis']);
 });
 
-test('homônimos: o contexto da rodada escolhe; sem contexto, o mais famoso', () => {
+test('homônimos: o contexto da rodada escolhe; sem contexto, o nome exato e depois o mais famoso', () => {
   const galo = rankCandidates([OSIMHEN, VICTOR_GALO], 'Victor', { position: 'GOL', kind: 'club', teamId: 'atletico-mg' });
   assert.equal(galo[0].record.id, 'Q1');
   assert.equal(galo[0].fits, true);
-  assert.equal(galo[1].fits, false);
+  assert.equal(galo.length, 1, '"Victor" é só o primeiro nome do Osimhen: não vale para ele');
   assert.equal(rankCandidates([OSIMHEN, VICTOR_GALO], 'Victor')[0].record.id, 'Q1', 'sem contexto: o nome exato vence');
   const xavi = rec({ id: 'Q7', name: 'Xavi', sitelinks: 90 });
   const xaviB = rec({ id: 'Q8', name: 'Xavi', sitelinks: 5 });
   assert.equal(rankCandidates([xaviB, xavi], 'xavi')[0].record.id, 'Q7', 'nomes iguais: o mais famoso');
-  assert.equal(rankCandidates([OSIMHEN, VICTOR_GALO], 'Victor', { position: 'ATA', kind: 'club', teamId: 'napoli' })[0].record.id, 'Q2');
+  assert.equal(rankCandidates([OSIMHEN, VICTOR_GALO], 'Osimhen', { position: 'ATA', kind: 'club', teamId: 'napoli' })[0].record.id, 'Q2');
+  const ronaldos = [RONALDO, rec({ id: 'Q4', name: 'Cristiano Ronaldo', aliases: ['Cristiano Ronaldo dos Santos Aveiro'], sitelinks: 200 })];
+  assert.equal(rankCandidates(ronaldos, 'Ronaldo')[0].record.id, 'Q3', '"Ronaldo" exato vence o sobrenome do Cristiano');
 });
 
-test('nome devolvido pela IA tem que bater com o digitado', () => {
-  assert.ok(nameMatchesQuery('Victor', ['Victor Leandro Bagy']));
-  assert.ok(nameMatchesQuery('Ronaldiho', ['Ronaldinho', 'Ronaldo de Assis Moreira']), 'erro de digitação');
-  assert.ok(nameMatchesQuery('Fenômeno', ['Ronaldo', 'Ronaldo Fenômeno']), 'apelido nos aliases');
+test('regra de nomes: nome conhecido, completo ou partes coerentes; nada de erro nem apelido', () => {
+  // Valem
+  assert.ok(nameMatchesQuery('Ronaldinho', ['Ronaldinho', 'Ronaldo de Assis Moreira']), 'nome famoso');
+  assert.ok(nameMatchesQuery('Hulk', ['Hulk', 'Givanildo Vieira de Sousa']), 'nome famoso');
+  assert.ok(nameMatchesQuery('Sule', ['Niklas Süle']), 'sobrenome, sem acento');
+  assert.ok(nameMatchesQuery('niklas süle', ['Niklas Süle']), 'nome + sobrenome');
+  assert.ok(nameMatchesQuery('Ronaldo Nazario', ['Ronaldo', 'Ronaldo Luís Nazário de Lima']), 'partes do nome completo');
+  assert.ok(nameMatchesQuery('Vinicius Junior', ['Vinícius Júnior']));
+  assert.ok(nameMatchesQuery('Vinicius', ['Vinícius Júnior']), '"Júnior" não conta como nome');
+  assert.ok(nameMatchesQuery('Victor', ['Victor', 'Victor Leandro Bagy']));
+  // Não valem
+  assert.ok(!nameMatchesQuery('Ronaldiho', ['Ronaldinho', 'Ronaldo de Assis Moreira']), 'erro de digitação');
+  assert.ok(!nameMatchesQuery('Osimen', ['Victor Osimhen']), 'erro de digitação');
+  assert.ok(!nameMatchesQuery('Fenômeno', ['Ronaldo', 'Ronaldo Luís Nazário de Lima']), 'apelido informal');
+  assert.ok(!nameMatchesQuery('R9', ['Ronaldo', 'Ronaldo Luís Nazário de Lima']), 'apelido informal');
+  assert.ok(!nameMatchesQuery('Niklas', ['Niklas Süle']), 'só o primeiro nome de quem é conhecido por nome e sobrenome');
+  assert.ok(!nameMatchesQuery('Sule Niklas', ['Niklas Süle']), 'fora de ordem');
   assert.ok(!nameMatchesQuery('Victor', ['Vinícius Júnior']), 'digitei X e veio Y: recusa');
   assert.ok(!nameMatchesQuery('Dida', ['Taffarel']));
 });
 
-test('busca: acha na base sem chamar a IA, por apelido, sobrenome e erro de digitação', async () => {
+test('busca na base: nome conhecido, completo e sobrenome valem; erro e apelido não', async () => {
   const store = await base(VICTOR_GALO, OSIMHEN, RONALDO);
   let calls = 0;
   const lookup = createLookup(store, async () => (calls++, null));
   assert.equal((await lookup('Victor', { position: 'GOL', kind: 'club', teamId: 'atletico-mg' }))?.name, 'Victor');
-  assert.equal((await lookup('R9'))?.name, 'Ronaldo');
-  assert.equal((await lookup('Fenômeno'))?.name, 'Ronaldo');
   assert.equal((await lookup('osimhen'))?.name, 'Victor Osimhen');
-  assert.equal((await lookup('Osimen'))?.name, 'Victor Osimhen', 'erro de digitação');
-  assert.equal(calls, 0, 'nada disso precisou da IA');
+  assert.equal((await lookup('Victor Osimhen'))?.name, 'Victor Osimhen');
+  assert.equal((await lookup('Ronaldo Nazário'))?.name, 'Ronaldo');
+  assert.equal((await lookup('Bagy'))?.name, 'Victor');
+  assert.equal(calls, 0, 'tudo isso veio da base, sem IA');
+  assert.equal(await lookup('R9'), null);
+  assert.equal(await lookup('Fenômeno'), null);
+  assert.equal(await lookup('Osimen'), null);
+  assert.equal(calls, 3, 'o que não vale vai para a IA, que também recusa');
 });
 
 test('quem não está na base: a IA pesquisa, entra na base e a próxima busca não chama a IA', async () => {
@@ -92,7 +111,7 @@ test('quem não está na base: a IA pesquisa, entra na base e a próxima busca n
   const asked: Array<string | undefined> = [];
   const lookup = createLookup(store, async (q, hint) => {
     asked.push(hint);
-    return q.toLowerCase().includes('pedro') ? profile('Pedro', { aliases: ['Pedro Guilherme Abreu dos Santos'], clubs: ['Fluminense', 'Flamengo'] }) : null;
+    return q.toLowerCase().includes('pedro') ? profile('Pedro', { fullName: 'Pedro Guilherme Abreu dos Santos', clubs: ['Fluminense', 'Flamengo'] }) : null;
   });
   const ctx = { position: 'ATA' as const, kind: 'club' as const, teamId: 'flamengo' };
   assert.equal((await lookup('Pedro', ctx))?.name, 'Pedro');
@@ -116,7 +135,7 @@ test('IA devolve outro jogador: recusa ("digitei X, veio Y") e guarda o "não ac
 test('na base mas fora do contexto: a IA tenta; se não achar, devolve o da base para o jogo explicar', async () => {
   const store = await base(OSIMHEN);
   const lookup = createLookup(store, async () => null);
-  const p = await lookup('Victor', { position: 'GOL', kind: 'club', teamId: 'atletico-mg' });
+  const p = await lookup('Osimhen', { position: 'GOL', kind: 'club', teamId: 'atletico-mg' });
   assert.equal(p?.name, 'Victor Osimhen');
   assert.equal(store.lookups.at(-1)?.outcome, 'base-fora-do-contexto');
 });
@@ -153,7 +172,7 @@ test('Wikidata: posições, altura, apelidos, clubes sem base, seleção e estre
     [
       { p: uri('Q1'), pt: lit('Victor'), en: lit('Victor Leandro Bagy'), height: lit('1.93'), pos: lit('goalkeeper'), citizen: lit('Brasil') },
     ],
-    [{ p: uri('Q1'), alias: lit('Victor Bagy') }],
+    [{ p: uri('Q1'), es: lit('Victor'), full: lit('Victor Leandro Bagy') }],
     [
       { p: uri('Q1'), team: uri('T1'), pt: lit('Paulista Futebol Clube'), start: lit('2003-01-01T00:00:00Z'), apps: lit(100), goals: lit(0), nat: lit('false') },
       { p: uri('Q1'), team: uri('T2'), pt: lit('Grêmio'), start: lit('2008-01-01T00:00:00Z'), apps: lit(150), goals: lit(0), nat: lit('false') },
@@ -165,7 +184,7 @@ test('Wikidata: posições, altura, apelidos, clubes sem base, seleção e estre
   assert.equal(records.length, 1);
   const r = records[0];
   assert.equal(r.name, 'Victor');
-  assert.deepEqual(r.aliases, ['Victor Leandro Bagy', 'Victor Bagy']);
+  assert.deepEqual(r.aliases, ['Victor Leandro Bagy'], 'nome conhecido + completo; apelidos não entram');
   assert.deepEqual(r.positions, ['GOL']);
   assert.equal(r.heightCm, 193);
   assert.equal(r.birthDate, '1983-01-21');
@@ -192,14 +211,15 @@ test('Wikidata: um passo da carga grava jogadores e avança a janela; estouro de
   const store = new MemoryStore();
   const fetcher = fakeWdqs((q) => {
     if (q.includes('GROUP BY ?p')) return [{ p: uri('Q9'), links: lit(40), born: lit('1990-05-01T00:00:00Z') }];
-    if (q.includes('skos:altLabel')) return [];
+    if (q.includes('P1477')) return [];
     if (q.includes('P54')) return [{ p: uri('Q9'), team: uri('T9'), pt: lit('Clube de Regatas do Flamengo'), start: lit('2010-01-01T00:00:00Z'), nat: lit('false') }];
     return [{ p: uri('Q9'), pt: lit('Fulano'), pos: lit('forward'), country: lit('Brasil') }];
   });
-  const s0 = newImportState({ fromYear: 1990, untilYear: 1991 });
+  const s0 = newImportState({ untilYear: 1991, plan: [{ label: 'teste', minSitelinks: 3, fromYear: 1990 }] });
   const s1 = await importStep(s0, (r) => store.upsertPlayers(r), fetcher);
   assert.equal(s1.imported, 1);
   assert.equal(s1.cursor, '1991-01-01');
+  assert.equal(s1.spanDays, 730, 'janela com pouca gente cresce');
   assert.equal(s1.offset, 0);
   assert.equal(await store.countPlayers(), 1);
   const found = await createLookup(store, async () => null)('Fulano', { position: 'ATA', kind: 'club', teamId: 'flamengo' });
@@ -212,7 +232,17 @@ test('Wikidata: um passo da carga grava jogadores e avança a janela; estouro de
   assert.ok(new WikidataTimeout('x') instanceof Error);
 
   const end = await importStep({ ...s0, cursor: '2011-01-01', untilYear: 2010 }, async () => undefined, fetcher);
-  assert.equal(end.done, true);
+  assert.equal(end.done, true, 'última parte do plano terminou');
+
+  // Plano com duas partes: ao terminar a primeira, passa para a segunda (clubes do Brasil).
+  const two = newImportState({ untilYear: 1990, plan: [{ label: 'mundo', minSitelinks: 3, fromYear: 1990 }, { label: 'Brasil', clubCountry: 'Q155', minSitelinks: 1, fromYear: 1985 }] });
+  const queries: string[] = [];
+  const spy = fakeWdqs((q) => (queries.push(q), q.includes('GROUP BY ?p') ? [] : []));
+  const afterFirst = await importStep(two, async () => undefined, spy);
+  assert.equal(afterFirst.part, 1);
+  assert.equal(afterFirst.cursor, '1985-01-01');
+  await importStep(afterFirst, async () => undefined, spy);
+  assert.match(queries.at(-1)!, /\?team wdt:P17 wd:Q155/, 'segunda parte filtra por clubes do Brasil');
 });
 
 test('na partida: Escalação, goleiro, Atlético-MG → "Victor" vale (e não o Osimhen)', async () => {

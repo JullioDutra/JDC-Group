@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createLookup } from '@/lib/ai';
 import { secretMatches } from '@/lib/auth';
-import { queryKeys } from '@/lib/players/keys';
+import { queryKeys, queryTokens } from '@/lib/players/keys';
 import { describeContext } from '@/lib/players/lookup';
 import { rankCandidates } from '@/lib/players/rank';
 import type { LookupContext } from '@/lib/players/types';
 import type { MetricKey, Position } from '@/lib/game/types';
 import { getStore } from '@/lib/store';
-import { normalize } from '@/lib/game/text';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -34,8 +33,9 @@ export async function GET(request: Request) {
   };
   const store = getStore();
   const candidates = await store.findPlayers(queryKeys(q), 80);
-  const fuzzy = candidates.length ? [] : await store.fuzzyPlayers(normalize(q), 20);
-  const ranked = rankCandidates([...candidates, ...fuzzy], q, ctx).slice(0, 8);
+  const parts = queryTokens(q);
+  const more = parts.length > 1 ? await store.findPlayers(parts, 120) : [];
+  const ranked = rankCandidates([...candidates, ...more], q, ctx).slice(0, 8);
   const result = params.get('ia') === '1' ? await createLookup(store)(q, ctx) : null;
   return NextResponse.json({
     contexto: describeContext(ctx) ?? null,

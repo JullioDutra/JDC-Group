@@ -183,11 +183,11 @@ test('mesmo jogador não pode ser usado de novo, nem por outro time (Alexis: Ars
   m.state.restrictions[4] = { kind: 'club', teamId: 'manchester-united' };
   await store.saveMatch(m);
 
-  assert.match(asText(await say('Bia', 'Alexis')), /Alexis Sánchez/);
+  assert.match(asText(await say('Bia', 'Alexis Sánchez')), /Alexis Sánchez/);
   assert.match(asText(await say('Ana', 'Iniesta')), /Rodada 5\/6 · MEIA[\s\S]*Manchester United/);
   // Rodada 5 começa por Ana (rodada de índice 4 = par). Alexis já foi usado por Bia.
   assert.match(asText(await say('Ana', 'Alexis Sanchez')), /já foi escalado nesta partida \(por \*Bia\*\)[\s\S]*nem por outro time/);
-  assert.match(asText(await say('Ana', 'alexis')), /já foi escalado/);
+  assert.match(asText(await say('Ana', 'sanchez')), /já foi escalado/);
 });
 
 test('extra "difícil" sorteia clubes de nível 2; temas normais só gigantes', async () => {
