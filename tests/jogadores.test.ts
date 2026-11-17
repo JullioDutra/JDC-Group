@@ -296,3 +296,26 @@ test('Wikidata: sem tempo para a próxima consulta, o passo devolve o estado sem
   assert.equal(out.cursor, s0.cursor);
   assert.equal(out.lastError, undefined);
 });
+
+test('Wikidata: consulta lenta adapta (janela menor ou lote menor) em vez de errar', async () => {
+  const slow = (match: string): Fetcher => async (_url, init) => {
+    const query = new URLSearchParams(String(init.body)).get('query') ?? '';
+    if (query.includes(match)) {
+      const e = new Error('The operation was aborted due to timeout');
+      e.name = 'TimeoutError';
+      throw e;
+    }
+    const bindings = query.includes('GROUP BY ?p') ? [{ p: uri('Q9'), links: lit(40), born: lit('1990-05-01T00:00:00Z') }] : [];
+    return new Response(JSON.stringify({ results: { bindings } }));
+  };
+  const s0 = newImportState({ untilYear: 1995, plan: [{ label: 'teste', minSitelinks: 3, fromYear: 1990 }] });
+  const listSlow = await importStep(s0, async () => undefined, slow('GROUP BY ?p'));
+  assert.equal(listSlow.spanDays, 183);
+  assert.equal(listSlow.lastError, undefined, 'adaptação não conta como erro');
+  assert.match(listSlow.note ?? '', /janela menor/);
+  const detailSlow = await importStep(s0, async () => undefined, slow('P54'));
+  assert.equal(detailSlow.pageSize, 100);
+  assert.equal(detailSlow.cursor, s0.cursor);
+  const ok = await importStep({ ...s0, pageSize: 50 }, async () => undefined, slow('NADA'));
+  assert.equal(ok.pageSize, 100, 'deu certo: o lote volta a crescer');
+});

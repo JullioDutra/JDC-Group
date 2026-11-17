@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   try {
     do {
       next = await importStep(next, (records) => store.upsertPlayers(records), fetch, deadline);
-    } while (!next.done && !next.lastError && !next.yielded && Date.now() - started < 30_000);
+    } while (!next.done && !next.lastError && !next.yielded && Date.now() - started < 20_000);
   } catch (error) {
     next = { ...next, lastError: (error as Error).message.slice(0, 200) };
   }

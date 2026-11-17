@@ -39,6 +39,16 @@ export class WikidataRateLimit extends Error {
 /** Acabou o tempo desta chamada: salve o andamento e continue na próxima. */
 export class OutOfTime extends Error {}
 
+/** A consulta usou todo o tempo dela (lenta de verdade): a carga se adapta. */
+export class SlowQuery extends Error {
+  constructor(public kind: 'list' | 'detail') {
+    super(kind === 'list' ? 'lista lenta: janela menor' : 'detalhes lentos: lote menor');
+  }
+}
+
+const isAbortTimeout = (error: unknown) =>
+  error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError' || /aborted due to timeout/i.test(error.message));
+
 export async function sparql(query: string, fetcher: Fetcher = fetch, timeoutMs = 58_000): Promise<Binding[]> {
   const response = await fetcher(WDQS_URL, {
     method: 'POST',
@@ -286,12 +296,16 @@ export interface ImportState {
   retryAfter?: number;
   /** A chamada acabou o tempo antes de terminar o lote: continua na próxima (sem erro). */
   yielded?: boolean;
+  /** Jogadores por lote (diminui se os detalhes ficarem lentos; volta a crescer depois). */
+  pageSize?: number;
+  /** Ajuste automático feito no último passo (não é erro). */
+  note?: string;
   updatedAt?: string;
 }
 
 /** Uma página = um lote de detalhes: cada passo é curto (4 consultas). */
 export const PAGE = 200;
-const CHUNK = 200;
+const MIN_PAGE = 25;
 /** Cada consulta tem no máximo isto; e só começa se sobrar tempo para ela. */
 const QUERY_TIMEOUT = 25_000;
 /** Janelas vazias crescem até 10 anos (menos passos onde há poucos jogadores). */
@@ -339,13 +353,22 @@ export async function importStep(
   deadline = Number.POSITIVE_INFINITY,
 ): Promise<ImportState> {
   let next: ImportState = {
-    ...state, steps: state.steps + 1, lastError: undefined, retryAfter: undefined, yielded: undefined, updatedAt: new Date().toISOString(),
+    ...state, steps: state.steps + 1, lastError: undefined, retryAfter: undefined, yielded: undefined, note: undefined,
+    updatedAt: new Date().toISOString(),
   };
+  const page = state.pageSize ?? PAGE;
   // Cada consulta só começa se couber no tempo que resta da chamada (a Vercel corta em 60 s).
-  const query = (q: string) => {
+  // Cortada por falta de tempo da chamada → continua na próxima; por lentidão própria → adapta.
+  const query = async (q: string, kind: 'list' | 'detail') => {
     const left = deadline - Date.now();
     if (left < 8_000) throw new OutOfTime();
-    return sparql(q, fetcher, Math.min(QUERY_TIMEOUT, left - 3_000));
+    const budget = Math.min(QUERY_TIMEOUT, left - 3_000);
+    try {
+      return await sparql(q, fetcher, budget);
+    } catch (error) {
+      if (isAbortTimeout(error)) throw budget < QUERY_TIMEOUT ? new OutOfTime() : new SlowQuery(kind);
+      throw error;
+    }
   };
   if (state.done) return next;
   if (Number(state.cursor.slice(0, 4)) > state.untilYear) return nextPart(next);
@@ -354,18 +377,17 @@ export async function importStep(
   let list: Array<{ id: string; sitelinks: number; birth: string | null }>;
   let imported = 0;
   try {
-    const rows = await query(listQuery(state.cursor, to, part.minSitelinks, PAGE, state.offset, part.clubCountry));
+    const rows = await query(listQuery(state.cursor, to, part.minSitelinks, page, state.offset, part.clubCountry), 'list');
     list = rows
       .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
       .filter((x) => /^Q\d+$/.test(x.id));
     // Detalhes uma consulta de cada vez: respeita a cota do serviço.
-    for (let i = 0; i < list.length; i += CHUNK) {
-      const chunk = list.slice(i, i + CHUNK);
-      const ids = chunk.map((x) => x.id);
-      const identity = await query(identityQuery(ids));
-      const names = await query(namesQuery(ids));
-      const teams = await query(teamsQuery(ids));
-      const records = buildRecords(chunk, identity, names, teams);
+    if (list.length) {
+      const ids = list.map((x) => x.id);
+      const identity = await query(identityQuery(ids), 'detail');
+      const names = await query(namesQuery(ids), 'detail');
+      const teams = await query(teamsQuery(ids), 'detail');
+      const records = buildRecords(list, identity, names, teams);
       await save(records);
       imported += records.length;
     }
@@ -373,6 +395,11 @@ export async function importStep(
     // Erro em qualquer consulta: não avança (refaz a página depois; gravar de novo não duplica).
     if (error instanceof OutOfTime) return { ...state, yielded: true, updatedAt: next.updatedAt };
     const message = (error as Error).message;
+    if (error instanceof SlowQuery) {
+      if (error.kind === 'list' && state.spanDays > 7) return { ...next, spanDays: Math.ceil(state.spanDays / 2), note: message };
+      if (page > MIN_PAGE) return { ...next, pageSize: Math.max(MIN_PAGE, Math.floor(page / 2)), note: message };
+      return { ...next, lastError: message };
+    }
     if (error instanceof WikidataRateLimit) return { ...next, lastError: message, retryAfter: error.retryAfter };
     if (error instanceof WikidataTimeout && state.spanDays > 7) {
       return { ...next, spanDays: Math.ceil(state.spanDays / 2), lastError: message };
@@ -380,7 +407,9 @@ export async function importStep(
     return { ...next, lastError: message };
   }
   next.imported += imported;
-  if (list.length === PAGE) return { ...next, offset: state.offset + PAGE };
+  // Deu certo: o lote volta a crescer aos poucos.
+  if (page < PAGE) next.pageSize = Math.min(PAGE, page * 2);
+  if (list.length === page) return { ...next, offset: state.offset + page };
   // Janela concluída: segue; se veio pouca gente, a próxima janela é maior.
   const grow = list.length < PAGE / 4 ? state.spanDays * 2 : state.spanDays;
   next = { ...next, cursor: to, offset: 0, spanDays: Math.min(MAX_SPAN, Math.max(grow, 30)) };
