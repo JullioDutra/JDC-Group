@@ -7,7 +7,8 @@ import { handleMessage, handleTick } from '../src/lib/game/engine';
 import { isChatter, looksLikePlayerName } from '../src/lib/game/text';
 import { MODES } from '../src/lib/game/modes';
 import { clubsIn, getTeam } from '../src/lib/game/teams';
-import { drawRestrictions, lookupHint } from '../src/lib/game/validate';
+import { drawRestrictions } from '../src/lib/game/validate';
+import { describeContext } from '../src/lib/players/lookup';
 import type { Outgoing, QuizParty } from '../src/lib/game/types';
 import { getCard } from '../src/lib/party/content/cards';
 import { MemoryStore } from '../src/lib/store/memory';
@@ -93,12 +94,12 @@ test('admin reconhecido pelo @lid quando a Evolution manda os dois ids', async (
 });
 
 test('contexto da jogada vai para a IA; temas regionais sorteiam clubes da região', async () => {
-  assert.equal(lookupHint('GOL', { kind: 'club', teamId: 'atletico-mg' }), 'goleiro que jogou no Atlético-MG');
-  assert.equal(lookupHint('ATA', { kind: 'country', teamId: 'argentina' }), 'atacante da seleção de Argentina');
+  assert.equal(describeContext({ position: 'GOL', kind: 'club', teamId: 'atletico-mg' }), 'goleiro que jogou no Atlético-MG');
+  assert.equal(describeContext({ position: 'ATA', kind: 'country', teamId: 'argentina' }), 'atacante da seleção de Argentina');
   const seen: Array<string | undefined> = [];
   const store = new MemoryStore();
   const lookup = createLookup(store, async (q, hint) => (seen.push(hint), null));
-  await lookup('Victor', 'goleiro que jogou no Atlético-MG');
+  await lookup('Victor', { position: 'GOL', kind: 'club', teamId: 'atletico-mg' });
   await lookup('Victor');
   assert.deepEqual(seen, ['goleiro que jogou no Atlético-MG', undefined], 'com e sem contexto são consultas separadas');
   const br = new Set(clubsIn('br').map((t) => t.id));

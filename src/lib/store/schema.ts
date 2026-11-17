@@ -41,4 +41,48 @@ export const SCHEMA_STATEMENTS: string[] = [
     updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (group_jid, player_jid)
   )`,
+  // Base de jogadores: carga do Wikidata + o que a IA pesquisou.
+  `CREATE TABLE IF NOT EXISTS players (
+    id          text PRIMARY KEY,
+    name        text NOT NULL,
+    name_norm   text NOT NULL,
+    keys        text[] NOT NULL,
+    aliases     text[] NOT NULL DEFAULT '{}',
+    positions   text[] NOT NULL DEFAULT '{}',
+    nationality text,
+    birth_date  date,
+    height_cm   integer,
+    clubs       text[] NOT NULL DEFAULT '{}',
+    debut_year  integer,
+    sitelinks   integer NOT NULL DEFAULT 0,
+    stats       jsonb NOT NULL DEFAULT '{}',
+    anchors     jsonb,
+    source      text NOT NULL,
+    updated_at  timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS players_keys ON players USING gin (keys)`,
+  `CREATE TABLE IF NOT EXISTS import_state (
+    id         text PRIMARY KEY,
+    state      jsonb NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS lookup_log (
+    id         bigserial PRIMARY KEY,
+    query      text NOT NULL,
+    context    text,
+    outcome    text NOT NULL,
+    player_id  text,
+    ms         integer,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS lookup_log_created ON lookup_log (created_at DESC)`,
+];
+
+/**
+ * Opcionais: se o banco não permitir (extensão), o jogo segue sem a busca
+ * por semelhança (erro de digitação longo).
+ */
+export const OPTIONAL_SCHEMA_STATEMENTS: string[] = [
+  `CREATE EXTENSION IF NOT EXISTS pg_trgm`,
+  `CREATE INDEX IF NOT EXISTS players_name_trgm ON players USING gin (name_norm gin_trgm_ops)`,
 ];

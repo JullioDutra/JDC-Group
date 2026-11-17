@@ -43,7 +43,7 @@ const ROWS: Row[] = [
 const PROFILES: Array<{ keys: string[]; profile: PlayerProfile }> = ROWS.map((r) => ({
   keys: [normalize(r[0]), ...normalize(r[1]).split(' ').filter(Boolean)],
   profile: {
-    exists: true, name: r[0], positions: r[2], nationality: r[3], birthDate: r[4], clubs: r[5], heightCm: r[6],
+    exists: true, name: r[0], aliases: normalize(r[1]).split(' ').filter(Boolean), positions: r[2], nationality: r[3], birthDate: r[4], clubs: r[5], heightCm: r[6],
     careerGoals: r[7], careerAssists: r[8], peakValueEurM: r[9], intlCaps: r[10], intlGoals: r[11],
     worldCupGoals: r[12], uclGoals: r[13], titles: r[14],
     careerApps: r[15], brasileiraoGoals: r[16], libertadoresGoals: r[17], worldCupsPlayed: r[18], debutYear: r[19],

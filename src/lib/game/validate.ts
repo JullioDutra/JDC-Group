@@ -1,6 +1,7 @@
 import { GameMode, metricValue } from './modes';
 import { CLUBS, NATIONS, clubsIn, drawTeams, getTeam, isFromNation, playedForClub } from './teams';
-import { PlayerProfile, POSITION_LABEL, Position, Restriction, SLOTS } from './types';
+import { MetricKey, PlayerProfile, POSITION_LABEL, Position, Restriction, SLOTS } from './types';
+import type { LookupContext } from '../players/types';
 
 /**
  * Regras de escalação compartilhadas pelo 1 x 1 e pela Escalação em Grupo:
@@ -48,13 +49,17 @@ export function restrictionLine(restriction: Restriction | undefined): string {
   return restriction?.kind === 'club' ? `Clube da rodada: *${team.name}*\n` : `Seleção da rodada: *${team.name}*\n`;
 }
 
-/** Contexto da jogada para a IA desambiguar nomes: "goleiro que jogou no Atlético-MG". */
-export function lookupHint(position: Position | null | undefined, restriction?: Restriction | { kind: string; teamId?: string; value?: string }): string | undefined {
-  const pos = position ? POSITION_LABEL[position] : 'jogador';
-  const teamId = (restriction as { teamId?: string; value?: string } | undefined)?.teamId ?? (restriction as { value?: string } | undefined)?.value;
-  const team = getTeam(teamId);
-  if (!team) return position ? pos : undefined;
-  if (restriction?.kind === 'club') return `${pos} que jogou no ${team.name}`;
-  if (restriction?.kind === 'country' || restriction?.kind === 'nation') return `${pos} da seleção ${team.name === 'Brasil' ? 'brasileira' : `de ${team.name}`}`;
-  return pos;
+/**
+ * Contexto da jogada para a busca de jogadores: posição, clube/seleção da
+ * rodada e o número que o tema pede. Resolve homônimos ("Victor" + goleiro +
+ * Atlético-MG) e completa o dado do tema.
+ */
+export function playContext(
+  position: Position | null | undefined,
+  restriction?: { kind: string; teamId?: string; value?: string },
+  metric?: MetricKey,
+): LookupContext {
+  const teamId = restriction?.teamId ?? restriction?.value;
+  const kind = restriction?.kind === 'club' ? 'club' : restriction?.kind === 'country' || restriction?.kind === 'nation' ? 'country' : undefined;
+  return { position: position ?? null, ...(kind && teamId ? { kind, teamId } : {}), ...(metric ? { metric } : {}) };
 }

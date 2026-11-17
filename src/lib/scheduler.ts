@@ -42,3 +42,20 @@ export async function verifyTick(origin: string, signature: string | null, body:
     return false;
   }
 }
+
+/**
+ * Agenda uma chamada a uma rota de admin (carga da base de jogadores em
+ * lotes). O QStash repassa o cabeçalho de autorização para a rota.
+ */
+export async function scheduleAdminCall(url: string, body: unknown, delaySeconds: number): Promise<boolean> {
+  if (!hasScheduler() || !process.env.ADMIN_KEY) return false;
+  const client = new Client({ token: process.env.QSTASH_TOKEN!, ...(process.env.QSTASH_URL ? { baseUrl: process.env.QSTASH_URL } : {}) });
+  await client.publishJSON({
+    url,
+    body,
+    delay: Math.max(1, Math.round(delaySeconds)),
+    retries: 1,
+    headers: { authorization: `Bearer ${process.env.ADMIN_KEY}` },
+  });
+  return true;
+}

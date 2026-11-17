@@ -1,4 +1,4 @@
-import { lookupHint } from '../game/validate';
+import { playContext } from '../game/validate';
 import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { DraftParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
@@ -88,7 +88,7 @@ export async function draftAnswer(state: DraftParty, player: PartyPlayer, msg: I
   let profile;
   try {
     const rule = state.rules[state.round];
-    profile = await deps.lookup(typed, lookupHint(rule.pos, { kind: rule.kind, value: rule.value }));
+    profile = await deps.lookup(typed, playContext(rule.pos, { kind: rule.kind, value: rule.value }));
   } catch (error) {
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda de novo.`)];

@@ -1,4 +1,4 @@
-import { lookupHint } from '../game/validate';
+import { playContext } from '../game/validate';
 import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { AlfabetoParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
@@ -95,7 +95,7 @@ export async function alfabetoAnswer(
   const typed = msg.text.trim();
   let profile;
   try {
-    profile = await deps.lookup(typed, r.kind === 'pos' ? lookupHint(r.value as Position) : lookupHint(null, { kind: r.kind, value: r.value }));
+    profile = await deps.lookup(typed, r.kind === 'pos' ? playContext(r.value as Position) : playContext(null, { kind: r.kind, value: r.value }));
   } catch (error) {
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda de novo.`)];

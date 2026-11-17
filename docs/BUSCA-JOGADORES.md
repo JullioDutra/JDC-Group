@@ -1,72 +1,104 @@
-# Busca de jogadores: plano para acabar com "não encontrado" e jogador trocado
+# Base de jogadores: fim do "não encontrado" e do jogador trocado
 
 Problemas relatados em 17/11/2026, nos primeiros jogos de verdade:
 1. Muito "não encontrei" e "não tenho um dado confiável de gols".
 2. A pessoa digita um jogador e o bot entende outro.
 
-## 1. Por que acontece (diagnóstico no código)
+Decisão: o jogo passa a ter uma **base própria de jogadores**. A IA só pesquisa quem não estiver nela, e o que ela achar entra na base. A confirmação no chat ("é esse?") ficou de fora, a pedido.
 
-| # | Causa | Onde | Efeito |
-|---|---|---|---|
-| 1 | Uma única pergunta à IA pede a identidade **e** 17 números de uma vez, com a ordem "se não souber, use null" | `src/lib/ai/maritaca.ts` (prompt) | A IA devolve muitos campos vazios → "sem dado confiável" (gols, assistências, Libertadores, Brasileirão) |
-| 2 | O prompt manda "na dúvida, prefira exists:false" | idem | Jogador real menos famoso, apelido ou grafia diferente vira "não encontrei" |
-| 3 | O app aceita qualquer jogador que a IA devolver, sem conferir se o nome tem a ver com o que foi digitado | `src/lib/ai/index.ts` | Digitou X, veio Y, e o jogo segue com Y |
-| 4 | O cache guarda por 30 dias o que a IA respondeu, pelo texto digitado, para todos os grupos | `createLookup` + `player_cache` | Um erro de identidade se repete por um mês; "não existe" fica 1 dia |
-| 5 | Não há registro das buscas | — | Não dá para medir quantas erram nem quais nomes são problemáticos |
+## 1. Diagnóstico (por que acontecia)
 
-O contexto da jogada (posição + time) já foi incluído em 17/11 e resolve parte do item 3 ("Victor" + goleiro + Atlético-MG). O resto pede as mudanças abaixo.
+| # | Causa | Efeito |
+|---|---|---|
+| 1 | Uma única pergunta à IA pedia a identidade **e** 17 números de uma vez, com a ordem "se não souber, use null" | Muitos campos vazios → "sem dado confiável" |
+| 2 | O prompt dizia "na dúvida, prefira dizer que não existe" | Jogador real menos famoso, apelido ou grafia diferente → "não encontrei" |
+| 3 | O app aceitava qualquer jogador que a IA devolvesse | "Digitei X e veio Y" |
+| 4 | O cache guardava a resposta por 30 dias, pelo texto digitado | Um erro se repetia por um mês, em todos os grupos |
+| 5 | Nenhum registro das buscas | Não dava para medir nem achar os nomes problemáticos |
 
-## 2. A solução, em camadas
+## 2. Pesquisa: de onde vêm os dados
 
-### A. Identificar antes de medir
-Primeira chamada leve: a IA devolve **até 3 candidatos** (nome, nome completo, posições, seleção, principais clubes, período). O app decide:
-- descarta quem não cabe no contexto (posição, clube ou seleção da rodada);
-- confere a semelhança com o que foi digitado (sobrenome, apelido, erro de digitação). Se não tiver nada a ver, não aceita;
-- **1 candidato claro** → segue;
-- **2 ou mais plausíveis** → o bot pergunta, sem tirar a vez:
-  `Qual deles? 1) Victor (goleiro · Atlético-MG, 2012–2021)  2) Vitor Roque (atacante · Barcelona)`;
-- **nenhum** → "não achei", com a sugestão mais próxima ("você quis dizer Vítor Pereira?").
+**Wikidata** (base aberta da Wikipédia, gratuita, sem chave), consultada pelo serviço SPARQL `query.wikidata.org`:
+- **Futebolista:** ocupação `Q937857`. **Fama:** número de Wikipédias com artigo (sitelinks), que serve para desempatar homônimos.
+- **Ficha:** nome em português e inglês, apelidos (`altLabel`), nascimento (`P569`), altura (`P2048`, normalizada em metros), posição (`P413`), seleção (`P1532`, ou cidadania `P27` quando falta).
+- **Passagens por times** (`P54`): início (`P580`), fim (`P582`), jogos (`P1350`) e gols (`P1351`) em cada uma. Seleção principal é `Q6979593`. A mesma classe marca as seleções de base (sub-20, sub-21, olímpica), que o importador descarta pelo nome, assim como times B, reservas e juniores.
+- **Limites do serviço:** 60 s por consulta e cota de tempo por cliente. É obrigatório um User-Agent que identifique o app (o importador usa `DueloDeCraquesBot/1.0`). Consultas pesadas devolvem erro 500 de timeout. Por isso a carga vai em janelas de datas de nascimento, páginas de 400 jogadores e detalhes em lotes de 200, e divide a janela ao meio quando estoura o tempo.
 
-### B. Base de verdade: Wikidata
-Base aberta e gratuita, sem chave, com nome, nascimento, altura, nacionalidade, posição, **lista de clubes com datas** e, para muitos jogadores, jogos e gols por clube.
-- Identidade e clubes passam a vir do Wikidata, com a IA só interpretando o que foi digitado.
-- A IA fica com o que o Wikidata não tem: assistências, valor de mercado, títulos, gols em Champions, Libertadores e Brasileirão.
-- Se o Wikidata não responder, o jogo usa só a IA, como hoje.
+Fontes: [limites do WDQS e política de User-Agent](https://www.wikidata.org/wiki/Wikidata:Data_access), [qualificadores no Wikidata](https://www.wikidata.org/wiki/Help:Qualifiers), [exemplo de consulta de futebolistas com P54/P1350/P1351](https://kiwix.lema.org/stackoverflow.com_en_all_2023-11/questions/60057572/retrieve-wikidata-related-data-entities-from-wikipedia), [lista de propriedades](https://www.wikidata.org/wiki/Wikidata:Database_reports/List_of_properties/all).
 
-### C. Dado do tema com uma segunda pergunta focada
-Com o jogador já identificado, uma pergunta só sobre **o número que o tema pede** ("quantos gols Victor Bagy marcou na carreira"), com nome completo, clubes e período, e permissão para a **melhor estimativa**. O valor estimado aparece com `~` na imagem. "Sem dado confiável" só quando a IA disser que não sabe mesmo, ou o número for impossível.
+**O que vem de onde:**
 
-### D. Cache que não perpetua erro
-- Versão nova do cache: descarta as fichas atuais (inclui as erradas).
-- Chave pela **identidade** (id do Wikidata ou nome completo + nascimento), não pelo texto digitado.
-- "Não encontrado" guardado só por 10 minutos.
-- Lista curada de nomes ambíguos famosos (Ronaldo, Ronaldinho, Marcos, Fred, Juninho, Victor, Rafael, Dida, Edílson, Zé Roberto...) com a escolha padrão por contexto.
-- Correção pelo admin, no grupo: `corrigir Victor = Victor Bagy`. E uma rota `/api/admin/jogador` para ver e apagar uma ficha.
+| Dado | Fonte |
+|---|---|
+| Identidade, apelidos, posição, seleção, nascimento (idade), altura, clubes, ano de estreia, nº de clubes | Wikidata |
+| Jogos e gols pela seleção principal | Wikidata (soma das passagens), quando houver |
+| Gols e jogos na carreira, assistências, valor de mercado, títulos, gols em Copa/Champions/Libertadores/Brasileirão, Copas disputadas | IA, numa **pergunta focada** (um número por vez, com a soma do Wikidata como referência), e fica gravado |
 
-### E. Transparência no chat
-- Ao aceitar, o bot diz quem entendeu: `✅ Victor (goleiro · Atlético-MG 2012–2021) · 0 gols`.
-- Se não for quem a pessoa quis, ela manda `não é esse` em até 30 s. O bot oferece os outros candidatos, sem perder a vez e sem queimar o nome.
+## 3. Como a busca funciona agora
 
-### F. Medir e não regredir
-- Tabela `lookup_log`: o que foi digitado, contexto, quem foi escolhido, resultado (ok / ambíguo / não achou / sem dado) e tempo de resposta.
-- `/api/admin/status` passa a mostrar as taxas das últimas 24 h e os 10 nomes que mais falharam.
-- Conjunto de teste com 150 nomes difíceis (homônimos, apelidos, grafias erradas, jogadores antigos, futebol feminino, nomes em espanhol), rodado a cada mudança.
+```
+nome digitado + contexto da rodada (posição, clube/seleção, número do tema)
+        │
+        ▼
+1. BASE (tabela players): chave exata (nome, apelido, sobrenome, primeiro+último)
+   → partes do nome ("pedro guilherme") → semelhança (erro de digitação, pg_trgm)
+   → ordena: cumpre o contexto > nome mais parecido > mais famoso
+        │ achou quem cumpre o contexto? ── sim ──► usa
+        ▼ não
+2. IA pesquisa com o contexto ("goleiro que jogou no Atlético-MG")
+   → só vale se o nome devolvido bater com o digitado (senão: "não achei")
+   → entra na base (completa a ficha se a pessoa já existia)
+   → "não achei" fica guardado só 10 min
+        │ IA também não achou?
+        ▼
+3. Devolve o mais provável da base, e o jogo explica ("não tem passagem pelo X")
+        │
+        ▼
+4. Falta o número do tema? Pergunta focada só nele → grava na base
+```
+
+Toda busca é registrada (`lookup_log`) com o resultado: `base`, `ia`, `ia-nome-diferente`, `ia-nao-achou`, `base-fora-do-contexto`, `nao-achou-recente`, com `+dado` quando completou o número do tema.
+
+## 4. Operação
+
+Na VPS (as chaves estão em `~/jogos/segredos`):
+
+```bash
+source ~/jogos/segredos
+APP=https://duelo-de-craques-peach.vercel.app
+```
+
+**Começar a carga** (uma vez; ela continua sozinha em lotes, pelo QStash):
+```bash
+curl -s -X POST "$APP/api/admin/players/import" -H "Authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
+  -d '{"action":"start","fromYear":1925,"untilYear":2010,"minSitelinks":5}' | jq '{ok, chained, players, cursor: .state.cursor, erro: .state.lastError}'
+```
+
+**Acompanhar:**
+```bash
+curl -s -X POST "$APP/api/admin/players/import" -H "Authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
+  -d '{"action":"status"}' | jq '{players, cursor: .state.cursor, imported: .state.imported, erros: .state.errors, erro: .state.lastError, done: .state.done}'
+```
+
+**Se a cadeia parar** (6 erros seguidos ou cota do QStash): `-d '{"action":"step"}'` retoma de onde parou. **Parar:** `-d '{"action":"stop"}'`.
+
+**Testar uma busca** (sem gastar IA; com `&ia=1` faz a busca completa):
+```bash
+curl -s "$APP/api/admin/players?q=victor&pos=GOL&club=atletico-mg" -H "Authorization: Bearer $ADMIN_KEY" | jq
+```
+
+**Números no status:** `GET /api/admin/status` mostra `players.base` (quantos na base), `players.carga` (andamento) e `players.buscas24h` (resultados das buscas das últimas 24 h).
+
+## 5. Metas e próximos passos
 
 **Metas:**
 - ≥ 95% de identidade correta;
 - ≤ 3% de "não encontrado" para jogadores reais;
-- ≤ 5% de "sem dado" no tema.
+- ≤ 5% de "sem dado".
 
-## 3. Fases
+Os números vêm de `buscas24h`.
 
-| Fase | Entrega | Como testo |
-|---|---|---|
-| **1** | A (candidatos + checagem do nome + pergunta "qual deles?"), C (pergunta focada no número), D (cache novo, 10 min para "não achou", lista curada, `corrigir`), E (mostra quem entendeu + `não é esse`) | Testes automáticos com a IA simulada |
-| **2** | B (Wikidata para identidade, clubes e dados básicos) | Esta sessão não alcança o Wikidata; testo pelo app no ar (rota de admin) depois do deploy |
-| **3** | F (registro, taxas no status, conjunto de 150 nomes) e ajuste fino do prompt com os erros reais | Rodando o conjunto contra a IA de verdade, pela Vercel |
-
-**Custo e tempo:** na primeira vez que alguém escolhe um jogador são 2 chamadas em vez de 1 (cerca de 2 a 3 s). Depois, cache. A Maritaca cobra por uso, e a mudança dobra só as consultas de jogadores novos.
-
-## 4. O que ajuda agora
-
-Exemplos reais dos erros: o nome digitado, o tema e o clube ou seleção da rodada, e o que o bot respondeu. Eles entram no conjunto de teste da fase 3.
+**Próximos passos:**
+- Depois da primeira semana, olhar no `lookup_log` os nomes que mais falham e ajustar: mais apelidos, faixa de fama, prompt.
+- Se a cota diária do QStash apertar durante a carga, ela retoma no dia seguinte com `{"action":"step"}`.
+- Opcional: correção manual pelo admin (`corrigir X = Y`) para casos pontuais.

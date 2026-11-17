@@ -61,5 +61,18 @@ export async function GET(request: Request) {
     report.whatsapp = whatsapp;
   }
 
+  if (hasDatabase()) {
+    try {
+      const store = getStore();
+      report.players = {
+        base: await store.countPlayers(),
+        carga: await store.getImportState('wikidata'),
+        buscas24h: await store.lookupSummary(24),
+      };
+    } catch (error) {
+      report.players = `erro: ${(error as Error).message.slice(0, 120)}`;
+    }
+  }
+
   return NextResponse.json(report);
 }

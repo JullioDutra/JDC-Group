@@ -1,4 +1,4 @@
-import { lookupHint } from '../game/validate';
+import { playContext } from '../game/validate';
 import { CLUBS, drawTeams, getTeam, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import { DraftPick, IncomingMessage, MelhorTimeParty, Outgoing, POSITION_LABEL, PartyPlayer, Position, SLOTS } from '../game/types';
@@ -119,7 +119,7 @@ export async function melhorTimeAnswer(
   const club = getTeam(state.clubs[state.round])!;
   let profile;
   try {
-    profile = await deps.lookup(name, lookupHint(position ?? null, { kind: 'club', teamId: club.id }));
+    profile = await deps.lookup(name, playContext(position ?? null, { kind: 'club', teamId: club.id }, 'peakValueEurM'));
   } catch (error) {
     console.error('lookup failed', error);
     return [text('A consulta falhou por um instante. Mande de novo.')];

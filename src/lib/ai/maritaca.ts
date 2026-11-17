@@ -7,6 +7,7 @@ Responda SOMENTE com um objeto JSON, sem texto fora dele, neste formato:
 {
   "exists": true,
   "name": "nome pelo qual é mais conhecido no Brasil",
+  "aliases": ["nome completo", "apelidos e outras grafias usadas"],
   "positions": ["GOL" | "DEF" | "MEI" | "ATA"],
   "nationality": "país da seleção que defende, em português",
   "birthDate": "AAAA-MM-DD",
@@ -28,7 +29,9 @@ Responda SOMENTE com um objeto JSON, sem texto fora dele, neste formato:
 }
 
 Regras:
-- Se o nome não corresponder a nenhum futebolista profissional real (pessoa inventada, de outro esporte, técnico que nunca jogou, palavra aleatória), responda {"exists": false}. Na dúvida, prefira {"exists": false} a inventar.
+- O nome digitado pode ser apelido, só o sobrenome, só o primeiro nome ou ter erro de digitação: devolva o futebolista real mais provável, mesmo que seja pouco conhecido ou de outra época.
+- Responda {"exists": false} só quando não houver nenhum futebolista profissional com esse nome ou apelido (pessoa inventada, de outro esporte, técnico que nunca jogou, palavra aleatória).
+- Nunca troque por um jogador de nome diferente só porque é mais famoso: o nome devolvido (ou um dos aliases) tem que corresponder ao que foi digitado.
 - positions: 1 ou 2 grupos em que o jogador realmente atuou. Zagueiros e laterais = DEF; volantes, meias e alas = MEI; pontas, segundos atacantes e centroavantes = ATA.
 - careerGoals / careerAssists: jogos oficiais na carreira profissional, clubes + seleção principal.
 - peakValueEurM: maior valor de mercado da carreira, em milhões de euros (referência Transfermarkt).
@@ -38,7 +41,7 @@ Regras:
 - careerApps: jogos oficiais na carreira profissional (clubes + seleção principal).
 - brasileiraoGoals: gols na Série A do Campeonato Brasileiro (0 se nunca jogou nela). libertadoresGoals: gols na Copa Libertadores.
 - worldCupsPlayed: quantas Copas do Mundo disputou entrando em campo. debutYear: ano da estreia como profissional.
-- Use números inteiros (peakValueEurM pode ter decimal). Se você realmente não souber um dado, use null — nunca chute. Zero só quando o valor real for zero.`;
+- Use números inteiros (peakValueEurM pode ter decimal). Para os números, dê o valor real ou a melhor estimativa que você conseguir; use null só se não tiver nenhuma noção. Zero só quando o valor real for zero.`;
 
 const POSITIONS: Position[] = ['GOL', 'DEF', 'MEI', 'ATA'];
 
@@ -70,6 +73,7 @@ export function parseProfile(raw: unknown): PlayerProfile | null {
   return {
     exists: true,
     name: name.slice(0, 40),
+    aliases: Array.isArray(r.aliases) ? r.aliases.filter((a): a is string => typeof a === 'string').slice(0, 10) : [],
     positions,
     nationality: typeof r.nationality === 'string' ? r.nationality : null,
     birthDate,

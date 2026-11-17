@@ -1,4 +1,8 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
+import { nameKeys } from '../players/keys';
+import type { PlayerRecord, StatKey } from '../players/types';
+import { editDistance } from '../party/common';
+import { normalize } from '../game/text';
 import type { Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
@@ -11,6 +15,9 @@ export class MemoryStore implements Store {
   private cache = new Map<string, PlayerProfile | null>();
   private stats = new Map<string, Map<string, RankingRow>>();
   private seq = 0;
+  private players = new Map<string, { record: PlayerRecord; keys: string[] }>();
+  private importStates = new Map<string, unknown>();
+  readonly lookups: Array<{ query: string; context?: string; outcome: string; playerId?: string | null }> = [];
 
   async isGroupActive(groupJid: string) {
     return this.groups.get(groupJid) === true;
@@ -56,6 +63,62 @@ export class MemoryStore implements Store {
 
   async putCachedProfile(key: string, profile: PlayerProfile | null) {
     this.cache.set(key, profile);
+  }
+
+  async findPlayers(keys: string[], limit: number) {
+    const wanted = new Set(keys);
+    return [...this.players.values()]
+      .filter((p) => p.keys.some((k) => wanted.has(k)))
+      .map((p) => structuredClone(p.record))
+      .sort((a, b) => b.sitelinks - a.sitelinks)
+      .slice(0, limit);
+  }
+
+  async fuzzyPlayers(text: string, limit: number) {
+    const q = normalize(text);
+    return [...this.players.values()]
+      .map((p) => ({ p, d: Math.min(...p.keys.map((k) => editDistance(k, q))) }))
+      .filter((x) => x.d <= Math.max(1, Math.floor(q.length / 4)))
+      .sort((a, b) => a.d - b.d || b.p.record.sitelinks - a.p.record.sitelinks)
+      .slice(0, limit)
+      .map((x) => structuredClone(x.p.record));
+  }
+
+  async upsertPlayers(records: PlayerRecord[]) {
+    for (const r of records) {
+      const old = this.players.get(r.id)?.record;
+      const merged: PlayerRecord = old
+        ? { ...r, positions: r.positions.length ? r.positions : old.positions, stats: { ...old.stats, ...r.stats } }
+        : r;
+      this.players.set(r.id, { record: structuredClone(merged), keys: nameKeys([merged.name, ...merged.aliases]) });
+    }
+  }
+
+  async setPlayerStat(id: string, stat: StatKey, value: number | null) {
+    const p = this.players.get(id);
+    if (p) p.record.stats[stat] = value;
+  }
+
+  async countPlayers() {
+    return this.players.size;
+  }
+
+  async getImportState(id: string) {
+    return this.importStates.has(id) ? structuredClone(this.importStates.get(id)) : null;
+  }
+
+  async setImportState(id: string, state: unknown) {
+    this.importStates.set(id, structuredClone(state));
+  }
+
+  async logLookup(row: { query: string; context?: string; outcome: string; playerId?: string | null }) {
+    this.lookups.push(row);
+  }
+
+  async lookupSummary() {
+    const out: Record<string, number> = {};
+    for (const l of this.lookups) out[l.outcome] = (out[l.outcome] ?? 0) + 1;
+    return out;
   }
 
   async recordResult(groupJid: string, players: [MatchPlayer, MatchPlayer], winner: Side | 'draw') {

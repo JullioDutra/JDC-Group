@@ -19,7 +19,7 @@ import {
   Top10List,
   Top10Party,
 } from '../game/types';
-import { checkPick, drawRestrictions, lookupHint, restrictionLine } from '../game/validate';
+import { checkPick, drawRestrictions, playContext, restrictionLine } from '../game/validate';
 import type { Store } from '../store/types';
 import {
   LEADING_ARTICLE,
@@ -668,7 +668,7 @@ async function escalacaoAnswer(
 
   let profile;
   try {
-    profile = await deps.lookup(msg.text.trim(), lookupHint(SLOTS[state.round], state.restrictions[state.round]));
+    profile = await deps.lookup(msg.text.trim(), playContext(SLOTS[state.round], state.restrictions[state.round], mode.metric));
   } catch (error) {
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda o nome de novo.`)];

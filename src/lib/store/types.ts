@@ -1,4 +1,5 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
+import type { PlayerRecord, StatKey } from '../players/types';
 
 export interface Store {
   isGroupActive(groupJid: string): Promise<boolean>;
@@ -16,6 +17,20 @@ export interface Store {
 
   getCachedProfile(key: string): Promise<PlayerProfile | null | undefined>;
   putCachedProfile(key: string, profile: PlayerProfile | null): Promise<void>;
+
+  // ----- Base de jogadores -----
+  /** Jogadores com alguma das chaves de busca, dos mais famosos para os menos. */
+  findPlayers(keys: string[], limit: number): Promise<PlayerRecord[]>;
+  /** Busca por semelhança do nome (erros de digitação). */
+  fuzzyPlayers(text: string, limit: number): Promise<PlayerRecord[]>;
+  upsertPlayers(records: PlayerRecord[]): Promise<void>;
+  setPlayerStat(id: string, stat: StatKey, value: number | null): Promise<void>;
+  countPlayers(): Promise<number>;
+  getImportState(id: string): Promise<unknown | null>;
+  setImportState(id: string, state: unknown): Promise<void>;
+  logLookup(row: { query: string; context?: string; outcome: string; playerId?: string | null; ms?: number }): Promise<void>;
+  /** Contagem dos resultados de busca nas últimas horas (para o status). */
+  lookupSummary(hours: number): Promise<Record<string, number>>;
 
   recordResult(groupJid: string, players: [MatchPlayer, MatchPlayer], winner: Side | 'draw'): Promise<void>;
   /** Resultado de uma sala: vitória para os vencedores, derrota para os demais. */

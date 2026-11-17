@@ -32,6 +32,10 @@ export type MetricKey =
 export interface PlayerProfile {
   exists: boolean;
   name: string;
+  /** Nome completo, apelidos e grafias (quando a fonte informa). */
+  aliases?: string[];
+  /** Id na base de jogadores (Wikidata "Q..." ou "ai:..."). */
+  id?: string;
   positions: Position[];
   nationality: string | null;
   birthDate: string | null; // AAAA-MM-DD
