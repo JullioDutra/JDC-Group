@@ -41,6 +41,8 @@ export async function POST(request: Request) {
   }
   if (action === 'start') {
     state = { ...newImportState(body), errors: 0 };
+  } else if (state && !Array.isArray(state.plan)) {
+    return NextResponse.json({ ok: false, reason: 'carga no formato antigo: mande {"action":"start"} para recomeçar com o plano novo' });
   } else if (!state || state.done || state.stopped) {
     return NextResponse.json({ ok: false, reason: 'nada para continuar', state });
   } else if (body.runId && body.runId !== state.runId) {
