@@ -36,7 +36,10 @@ export class WikidataRateLimit extends Error {
   }
 }
 
-export async function sparql(query: string, fetcher: Fetcher = fetch): Promise<Binding[]> {
+/** Acabou o tempo desta chamada: salve o andamento e continue na próxima. */
+export class OutOfTime extends Error {}
+
+export async function sparql(query: string, fetcher: Fetcher = fetch, timeoutMs = 58_000): Promise<Binding[]> {
   const response = await fetcher(WDQS_URL, {
     method: 'POST',
     headers: {
@@ -45,7 +48,7 @@ export async function sparql(query: string, fetcher: Fetcher = fetch): Promise<B
       'user-agent': USER_AGENT,
     },
     body: new URLSearchParams({ query }).toString(),
-    signal: AbortSignal.timeout(58_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) {
     const text = (await response.text()).slice(0, 400);
@@ -281,11 +284,16 @@ export interface ImportState {
   lastError?: string;
   /** Segundos para esperar antes do próximo lote (cota do Wikidata). */
   retryAfter?: number;
+  /** A chamada acabou o tempo antes de terminar o lote: continua na próxima (sem erro). */
+  yielded?: boolean;
   updatedAt?: string;
 }
 
-export const PAGE = 400;
+/** Uma página = um lote de detalhes: cada passo é curto (4 consultas). */
+export const PAGE = 200;
 const CHUNK = 200;
+/** Cada consulta tem no máximo isto; e só começa se sobrar tempo para ela. */
+const QUERY_TIMEOUT = 25_000;
 /** Janelas vazias crescem até 10 anos (menos passos onde há poucos jogadores). */
 const MAX_SPAN = 3650;
 
@@ -328,8 +336,17 @@ export async function importStep(
   state: ImportState,
   save: (records: PlayerRecord[]) => Promise<void>,
   fetcher: Fetcher = fetch,
+  deadline = Number.POSITIVE_INFINITY,
 ): Promise<ImportState> {
-  let next: ImportState = { ...state, steps: state.steps + 1, lastError: undefined, retryAfter: undefined, updatedAt: new Date().toISOString() };
+  let next: ImportState = {
+    ...state, steps: state.steps + 1, lastError: undefined, retryAfter: undefined, yielded: undefined, updatedAt: new Date().toISOString(),
+  };
+  // Cada consulta só começa se couber no tempo que resta da chamada (a Vercel corta em 60 s).
+  const query = (q: string) => {
+    const left = deadline - Date.now();
+    if (left < 8_000) throw new OutOfTime();
+    return sparql(q, fetcher, Math.min(QUERY_TIMEOUT, left - 3_000));
+  };
   if (state.done) return next;
   if (Number(state.cursor.slice(0, 4)) > state.untilYear) return nextPart(next);
   const part = state.plan[state.part];
@@ -337,7 +354,7 @@ export async function importStep(
   let list: Array<{ id: string; sitelinks: number; birth: string | null }>;
   let imported = 0;
   try {
-    const rows = await sparql(listQuery(state.cursor, to, part.minSitelinks, PAGE, state.offset, part.clubCountry), fetcher);
+    const rows = await query(listQuery(state.cursor, to, part.minSitelinks, PAGE, state.offset, part.clubCountry));
     list = rows
       .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
       .filter((x) => /^Q\d+$/.test(x.id));
@@ -345,15 +362,16 @@ export async function importStep(
     for (let i = 0; i < list.length; i += CHUNK) {
       const chunk = list.slice(i, i + CHUNK);
       const ids = chunk.map((x) => x.id);
-      const identity = await sparql(identityQuery(ids), fetcher);
-      const names = await sparql(namesQuery(ids), fetcher);
-      const teams = await sparql(teamsQuery(ids), fetcher);
+      const identity = await query(identityQuery(ids));
+      const names = await query(namesQuery(ids));
+      const teams = await query(teamsQuery(ids));
       const records = buildRecords(chunk, identity, names, teams);
       await save(records);
       imported += records.length;
     }
   } catch (error) {
     // Erro em qualquer consulta: não avança (refaz a página depois; gravar de novo não duplica).
+    if (error instanceof OutOfTime) return { ...state, yielded: true, updatedAt: next.updatedAt };
     const message = (error as Error).message;
     if (error instanceof WikidataRateLimit) return { ...next, lastError: message, retryAfter: error.retryAfter };
     if (error instanceof WikidataTimeout && state.spanDays > 7) {

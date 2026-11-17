@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     onlyParts?: number[];
   };
   const action = body.action ?? 'status';
-  let state = (await store.getImportState(STATE_ID)) as (ImportState & { stopped?: boolean; errors?: number }) | null;
+  let state = (await store.getImportState(STATE_ID)) as (ImportState & { stopped?: boolean; errors?: number; leaseUntil?: number }) | null;
 
   if (action === 'status') return NextResponse.json({ state, players: await store.countPlayers() });
   if (action === 'stop') {
@@ -47,21 +47,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: 'nada para continuar', state });
   } else if (body.runId && body.runId !== state.runId) {
     return NextResponse.json({ ok: false, reason: 'cadeia antiga (outra carga começou depois)' });
+  } else if (state.leaseUntil && state.leaseUntil > Date.now()) {
+    // Trava: só um lote por vez. Uma cadeia duplicada termina aqui.
+    return NextResponse.json({ ok: false, reason: 'outro lote em andamento', state: { cursor: state.cursor, part: state.part } });
   }
+  await store.setImportState(STATE_ID, { ...state, leaseUntil: Date.now() + 58_000 });
 
-  // Vários lotes por chamada (até ~20 s), para gastar menos mensagens do QStash.
-  // Qualquer erro é gravado e a cadeia segue (nunca para no meio sem salvar).
+  // Vários lotes por chamada, mas sempre terminando antes dos 60 s da Vercel:
+  // cada consulta só começa se couber até o prazo (48 s). Qualquer erro é
+  // gravado e a cadeia segue (nunca para no meio sem salvar).
   const started = Date.now();
+  const deadline = started + 48_000;
   let next: ImportState = state;
   try {
     do {
-      next = await importStep(next, (records) => store.upsertPlayers(records));
-    } while (!next.done && !next.lastError && Date.now() - started < 20_000);
+      next = await importStep(next, (records) => store.upsertPlayers(records), fetch, deadline);
+    } while (!next.done && !next.lastError && !next.yielded && Date.now() - started < 30_000);
   } catch (error) {
     next = { ...next, lastError: (error as Error).message.slice(0, 200) };
   }
   const errors = next.lastError ? (state.errors ?? 0) + 1 : 0;
-  const saved = { ...next, errors };
+  const saved = { ...next, errors, leaseUntil: undefined };
   await store.setImportState(STATE_ID, saved);
 
   // Continua sozinho. Cota do Wikidata: espera o que ele pedir. Outras falhas:

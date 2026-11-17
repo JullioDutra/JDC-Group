@@ -285,3 +285,14 @@ test('Wikidata: cota estourada (429) no meio dos detalhes não quebra: guarda o 
   assert.match(s1.lastError ?? '', /429/);
   assert.ok(new WikidataRateLimit(5) instanceof Error);
 });
+
+test('Wikidata: sem tempo para a próxima consulta, o passo devolve o estado sem avançar (e sem erro)', async () => {
+  let calls = 0;
+  const fetcher: Fetcher = async () => (calls++, new Response(JSON.stringify({ results: { bindings: [] } })));
+  const s0 = newImportState({ untilYear: 1991, plan: [{ label: 'teste', minSitelinks: 3, fromYear: 1990 }] });
+  const out = await importStep(s0, async () => undefined, fetcher, Date.now() + 1_000);
+  assert.equal(calls, 0, 'nem começa a consulta');
+  assert.equal(out.yielded, true);
+  assert.equal(out.cursor, s0.cursor);
+  assert.equal(out.lastError, undefined);
+});
