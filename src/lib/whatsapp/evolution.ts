@@ -1,5 +1,6 @@
 import type { IncomingMessage } from '../game/types';
 import { postJson, type WhatsAppProvider } from './index';
+import { getStore, hasDatabase } from '../store';
 
 /**
  * Evolution API v2 (self-hosted, baseada em Baileys).
@@ -107,7 +108,37 @@ export const evolution: WhatsAppProvider = {
   async sendReaction(groupJid, messageId, _senderJid, emoji) {
     await evoReaction(groupJid, messageId, emoji);
   },
+
+  /**
+   * Reinicia SÓ a instância do jogo (EVOLUTION_INSTANCE), com o token dela:
+   * nenhuma outra instância do servidor é tocada. No máximo 1 vez a cada 15 min.
+   */
+  async recover() {
+    const store = hasDatabase() ? getStore() : null;
+    const last = (await store?.getImportState(RESTART_KEY).catch(() => null)) as { at?: number } | null;
+    const now = Date.now();
+    if ((last?.at && now - last.at < RESTART_EVERY_MS) || now - lastRestartHere < RESTART_EVERY_MS) return false;
+    lastRestartHere = now;
+    await store?.setImportState(RESTART_KEY, { at: now }).catch(() => undefined);
+    const { url, instance, headers } = evolutionConfig();
+    for (const method of ['POST', 'PUT']) {
+      const response = await fetch(`${url}/instance/restart/${encodeURIComponent(instance)}`, {
+        method,
+        headers,
+        signal: AbortSignal.timeout(15_000),
+      }).catch(() => null);
+      if (response && response.status !== 404 && response.status !== 405) {
+        console.warn(`instância ${instance} reiniciada (${method} ${response.status})`);
+        return response.ok;
+      }
+    }
+    return false;
+  },
 };
+
+const RESTART_KEY = 'evolution-restart';
+const RESTART_EVERY_MS = 15 * 60_000;
+let lastRestartHere = 0;
 
 async function evoReaction(groupJid: string, messageId: string, emoji: string) {
   const { url, instance, headers } = evolutionConfig();

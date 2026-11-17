@@ -1,25 +1,61 @@
 import type { Outgoing } from './game/types';
+import { imageAsText } from './images/fallback';
 import { renderImage } from './images/render';
 import { scheduleTick } from './scheduler';
 import type { WhatsAppProvider } from './whatsapp';
 
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
- * Envia ao grupo, em ordem, o que o motor devolveu. Reações e agendamentos
- * falham em silêncio (logados): não podem derrubar a jogada.
+ * Envia ao grupo, em ordem, o que o motor devolveu. Uma falha NUNCA para o
+ * envio no meio (senão a próxima pergunta e o fim da rodada não saem):
+ * - imagem que não sai: tenta de novo; se falhar, pede para a conexão se
+ *   recuperar e manda o conteúdo da imagem em texto;
+ * - reações e agendamentos falham em silêncio (logados).
  */
 export async function dispatch(
   provider: WhatsAppProvider,
   groupJid: string,
   outgoing: Outgoing[],
   origin: string,
+  pause: (ms: number) => Promise<unknown> = wait,
 ): Promise<void> {
   for (const out of outgoing) {
-    if (out.type === 'text') await provider.sendText(groupJid, out.text);
-    else if (out.type === 'image') await provider.sendImage(groupJid, await renderImage(out.image), out.caption);
-    else if (out.type === 'react') {
-      await provider.sendReaction(groupJid, out.messageId, out.senderJid, out.emoji).catch((e) => console.error('reaction failed', e));
-    } else if (out.type === 'schedule') {
-      await scheduleTick(origin, groupJid, out.token, out.delaySeconds).catch((e) => console.error('schedule failed', e));
+    try {
+      if (out.type === 'text') await provider.sendText(groupJid, out.text);
+      else if (out.type === 'image') await sendImage(provider, groupJid, out, pause);
+      else if (out.type === 'react') {
+        await provider.sendReaction(groupJid, out.messageId, out.senderJid, out.emoji).catch((e) => console.error('reaction failed', e));
+      } else if (out.type === 'schedule') {
+        await scheduleTick(origin, groupJid, out.token, out.delaySeconds).catch((e) => console.error('schedule failed', e));
+      }
+    } catch (error) {
+      console.error(`envio de ${out.type} falhou`, error);
     }
   }
+}
+
+async function sendImage(
+  provider: WhatsAppProvider,
+  groupJid: string,
+  out: Extract<Outgoing, { type: 'image' }>,
+  pause: (ms: number) => Promise<unknown>,
+): Promise<void> {
+  const png = await renderImage(out.image);
+  try {
+    await provider.sendImage(groupJid, png, out.caption);
+    return;
+  } catch (first) {
+    console.error('imagem falhou (1ª tentativa)', first);
+  }
+  await pause(1500);
+  try {
+    await provider.sendImage(groupJid, png, out.caption);
+    return;
+  } catch (second) {
+    console.error('imagem falhou (2ª tentativa): plano B em texto', second);
+  }
+  await provider.recover?.().catch((e) => console.error('recuperar conexão falhou', e));
+  const text = [out.caption, imageAsText(out.image)].filter(Boolean).join('\n\n');
+  if (text) await provider.sendText(groupJid, text);
 }

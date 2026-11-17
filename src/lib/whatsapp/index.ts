@@ -13,6 +13,8 @@ export interface WhatsAppProvider {
   sendImage(groupJid: string, png: Buffer, caption?: string): Promise<void>;
   /** Reage a uma mensagem recebida (ex.: ✅). */
   sendReaction(groupJid: string, messageId: string, senderJid: string, emoji: string): Promise<void>;
+  /** Envio travado (ex.: mídia com "Connection Closed"): tenta recuperar a conexão. true = tentou. */
+  recover?(): Promise<boolean>;
 }
 
 export function getProvider(): WhatsAppProvider {

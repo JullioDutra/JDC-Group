@@ -1,0 +1,81 @@
+import { getMode, MODES } from '../game/modes';
+import { getTeam } from '../game/teams';
+import { firstName, formatNumber } from '../game/text';
+import { SLOTS, type ImageSpec, type Pick } from '../game/types';
+import { getConexoes } from '../party/content/conexoes';
+
+/**
+ * Plano B quando a imagem não sai (falha de envio de mídia no WhatsApp):
+ * o essencial da imagem em texto, para a partida não travar.
+ */
+const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+const pickText = (p: Pick | null | undefined) => (p ? `${p.name}${Number.isFinite(p.value) ? ` (${formatNumber(p.value)})` : ''}` : '—');
+
+export function imageAsText(spec: ImageSpec): string | null {
+  switch (spec.kind) {
+    case 'modes':
+      return MODES.map((m) => `${m.number}. ${m.name} · ${m.tagline}`).join('\n');
+    case 'ranking':
+      return spec.rows.length
+        ? spec.rows.map((r, i) => `${i + 1}º ${r.name} · ${r.wins}V ${r.draws}E ${r.losses}D`).join('\n')
+        : null;
+    case 'kickoff':
+    case 'pitch': {
+      const s = spec.state;
+      const mode = getMode(s.modeId);
+      const lines = s.players.map((p, side) =>
+        p ? `*${p.name}*: ${s.picks[side as 0 | 1].map((x, i) => `${SLOTS[i]} ${pickText(x)}`).join(' · ')}` : '',
+      );
+      return [mode ? `Tema: ${mode.name}` : '', ...lines].filter(Boolean).join('\n');
+    }
+    case 'partyLobby':
+      return `Jogadores (${spec.state.players.length}): ${spec.state.players.map((p) => firstName(p.name)).join(', ')}`;
+    case 'partyTable':
+      return spec.state.players
+        .map((p) => `*${firstName(p.name)}*: ${(spec.state.picks[p.jid] ?? []).map((x) => pickText(x)).join(' · ')}`)
+        .join('\n');
+    case 'top10Board':
+      return spec.list.items
+        .map((item, i) => {
+          const who = spec.state.found[i];
+          return `${item.rank}º ${who || spec.final ? item.name : '?'}${who ? ` (${firstName(who.name)})` : ''}`;
+        })
+        .join('\n');
+    case 'lineupQuiz':
+      return spec.lines.map((line) => line.join(' · ')).join('\n');
+    case 'partyScore':
+      return [...spec.state.players]
+        .sort((a, b) => b.score - a.score)
+        .map((p, i) => `${i + 1}º ${firstName(p.name)} — ${p.score}`)
+        .join('\n');
+    case 'intrusoBoard':
+      return spec.state.options
+        .map((name, i) => {
+          const mark = spec.state.marks.find((m) => m.index === i);
+          const tag = spec.reveal && i === spec.state.intruderIndex ? ' ← intruso' : '';
+          return `*${LETTERS[i]}* ${name}${mark ? ` (X de ${firstName(mark.name)})` : ''}${tag}`;
+        })
+        .join('\n');
+    case 'draftBoard':
+      return [
+        `Clube da rodada: ${getTeam(spec.state.clubs[spec.state.round])?.name ?? '—'}`,
+        ...spec.state.players.map((p) => `*${firstName(p.name)}*: ${(spec.state.picks[p.jid] ?? []).map((x) => x?.name ?? '—').join(' · ')}`),
+      ].join('\n');
+    case 'flagQuiz':
+      return 'A bandeira não carregou agora. O anfitrião pode mandar *próxima* para pular esta.';
+    case 'conexoesBoard': {
+      const puzzle = getConexoes(spec.state.order[spec.state.round]);
+      const groups = puzzle?.groups ?? [];
+      const solved = spec.state.solved.map((s) => `✅ ${groups[s.group]?.label}: ${groups[s.group]?.items.join(', ')}`);
+      const solvedTiles = new Set(spec.state.solved.flatMap((s) => groups[s.group]?.items ?? []));
+      const open = spec.state.tiles
+        .map((t, i) => (solvedTiles.has(t) ? '' : `${i + 1}. ${t}`))
+        .filter(Boolean);
+      return [...solved, open.join('\n')].filter(Boolean).join('\n\n');
+    }
+    case 'textBoard':
+      return [`*${spec.title}*`, ...spec.rows.map((r) => [`*${r.head}*`, ...r.lines].join('\n'))].join('\n\n');
+    default:
+      return null;
+  }
+}
