@@ -101,6 +101,7 @@ const HELP = [
   '• *abrir linha do tempo* — ponha 4 fatos em ordem (até 15)',
   '• *abrir fato ou fake* — verdade ou mito? (até 15)',
   '• *entrar* · *sair* · *começar* e *encerrar* (anfitrião)',
+  '• *próxima* — pula a pausa entre rodadas (o anfitrião também pula a pergunta da vez)',
   '',
   '*Categorias* (some ao comando): *futebol*, *geral*, *história*, *anime*, *política*. Política só aparece quando pedida. Ex.: *abrir relâmpago política*, *top 10 geral*. Some *difícil* em escalação/melhor time para clubes menos óbvios.',
   '',
@@ -288,12 +289,18 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   const norm = normalize(msg.text);
   const sender: MatchPlayer = { jid: msg.senderJid, name: msg.senderName };
 
-  const manager = deps.canManageGroup?.(msg.senderJid) ?? true;
+  const ids = [msg.senderJid, ...(msg.senderAliases ?? [])];
+  const manager = deps.canManageGroup ? ids.some((id) => deps.canManageGroup!(id)) : true;
 
   // O bot só "enxerga" grupos ativados; em qualquer outro, tudo é ignorado.
   // "ativar grupo" é do Finanças G&J (bot pessoal no número do admin): o jogo usa outro nome.
   if (ACTIVATE.includes(norm)) {
-    if (!manager) return [];
+    if (!manager) {
+      // Ajuda a configurar: mostra como o WhatsApp identificou quem mandou (número ou @lid).
+      console.warn('ativação negada', ids);
+      const id = ids.map((j) => j.split('@')[0]).join(' / ');
+      return [text(`Só o administrador do bot ativa os jogos. Se você é o admin, adicione este id em ADMIN_NUMBERS na Vercel: ${id}`)];
+    }
     await store.setGroupActive(msg.groupJid, msg.groupName, true, msg.senderJid);
     return [text(`✅ *${GAME_NAME}* ativado neste grupo!\nMande *iniciar jogo* para desafiar alguém ou *ajuda* para ver os comandos.`)];
   }

@@ -32,6 +32,7 @@ const COMMANDS: Array<[string, string]> = [
   ['abrir fato ou fake', 'verdade ou mito?'],
   ['… política / história', 'categoria no fim do comando (política só se pedir)'],
   ['entrar · começar', 'entra na sala · anfitrião dá a largada'],
+  ['próxima', 'pula a pausa entre rodadas'],
   ['regras', 'explica o jogo'],
   ['modos', 'mostra os temas'],
   ['placar', 'campinho da partida'],

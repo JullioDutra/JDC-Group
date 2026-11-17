@@ -1,4 +1,4 @@
-import { firstName } from '../game/text';
+import { firstName, isChatter } from '../game/text';
 import type { ContentCategory, IncomingMessage, Outgoing, PartyPlayer, SobreviventeParty } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, normalizeAnswer, pendingResults, react, schedule, shuffle, text } from './common';
 import { getSurvivorList, survivorPool } from './content/sobrevivente';
@@ -66,7 +66,7 @@ function turnPrompt(state: SobreviventeParty, deps: PartyDeps): Outgoing[] {
 export function sobreviventeAnswer(state: SobreviventeParty, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
   if (state.players[state.turn]?.jid !== player.jid) return [];
   const raw = msg.text.trim();
-  if (raw.length < 1 || raw.length > 50 || /[?\n]/.test(raw)) return [];
+  if (raw.length < 1 || raw.length > 50 || /[?\n]/.test(raw) || isChatter(raw)) return [];
   const list = getSurvivorList(state.order[state.round])!;
   const guess = normalizeAnswer(raw);
   const index = list.items.findIndex((forms) => answerMatches(forms, guess));

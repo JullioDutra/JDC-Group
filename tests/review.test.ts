@@ -86,7 +86,7 @@ test('mensagens simultâneas: a segunda é reprocessada, não perdida', async ()
 
 test('só o admin ativa/desativa grupo', async () => {
   const { say } = setup({ owners: ['Ana@s'] });
-  assert.deepEqual(await say('Zé', 'ativar jogos'), []);
+  assert.match(asText(await say('Zé', 'ativar jogos')), /Só o administrador do bot ativa os jogos\. .*ADMIN_NUMBERS.*: Zé/);
   assert.deepEqual(await say('Zé', 'iniciar jogo'), [], 'grupo continua desligado');
   assert.match(asText(await say('Ana', 'ativar jogos')), /ativado/);
   assert.match(asText(await say("Zé", "desativar jogos")), /Só um admin/);

@@ -17,8 +17,18 @@ interface UpsertPayload {
   event?: string;
   instance?: string;
   data?: {
-    key?: { remoteJid?: string; fromMe?: boolean; id?: string; participant?: string; participantAlt?: string };
+    key?: {
+      remoteJid?: string;
+      fromMe?: boolean;
+      id?: string;
+      participant?: string;
+      participantAlt?: string;
+      participantPn?: string;
+      senderPn?: string;
+      participantLid?: string;
+    };
     participant?: string;
+    participantPn?: string;
     pushName?: string;
     message?: TextContent;
   };
@@ -63,12 +73,14 @@ export const evolution: WhatsAppProvider = {
     if (!key?.id || key.fromMe) return null;
     if (!key.remoteJid?.endsWith('@g.us')) return null; // só grupos
     const text = textOf(payload.data?.message);
-    const sender = pickSender([key.participant, payload.data?.participant, key.participantAlt]);
+    const candidates = [key.participant, payload.data?.participant, key.participantAlt, key.participantPn, key.senderPn, payload.data?.participantPn, key.participantLid];
+    const sender = pickSender(candidates);
     if (!text || !sender) return null;
     const message: IncomingMessage = {
       id: key.id,
       groupJid: key.remoteJid,
       senderJid: sender,
+      senderAliases: [...new Set(candidates.filter((c): c is string => Boolean(c)).map((c) => c.replace(/:\d+@/, '@')))],
       senderName: payload.data?.pushName?.trim() || 'Jogador',
       text,
     };

@@ -395,6 +395,7 @@ export async function handlePartyMessage(
   }
 
   // "próxima" no meio da rodada (anfitrião): revela e já abre a seguinte, sem pausa.
+  if (NEXT_WORDS.includes(norm) && !isHost) return []; // comando, nunca palpite
   if (NEXT_WORDS.includes(norm) && isHost && !['melhortime', 'top10', 'sobrevivente', 'draft'].includes(state.game)) {
     const out = await skipRound(state, deps);
     if (state.status === 'PLAYING' && state.intermission) {

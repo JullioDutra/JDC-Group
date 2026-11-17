@@ -1,4 +1,4 @@
-import { firstName, looksLikePlayerName, normalize } from '../game/text';
+import { firstName, isChatter, looksLikePlayerName, normalize } from '../game/text';
 import type { IncomingMessage, Outgoing, PartyPlayer, QuizParty } from '../game/types';
 import {
   PARTY_CONFIG,
@@ -209,7 +209,7 @@ export async function quizAnswer(
 ): Promise<Outgoing[]> {
   if (state.solved || state.attempts.includes(player.jid)) return [];
   const raw = msg.text.trim();
-  if (raw.length < 2 || raw.length > 40 || /[?!\n]/.test(raw)) return [];
+  if (raw.length < 1 || raw.length > 40 || /[?!\n]/.test(raw) || isChatter(raw)) return [];
   if (state.game === 'quemeh' && !looksLikePlayerName(raw)) return [];
   const who = firstName(player.name);
 

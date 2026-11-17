@@ -431,6 +431,8 @@ export interface IncomingMessage {
   groupJid: string;
   groupName?: string;
   senderJid: string;
+  /** Outros ids do mesmo remetente (número e @lid), quando a Evolution manda os dois. */
+  senderAliases?: string[];
   senderName: string;
   text: string;
 }
