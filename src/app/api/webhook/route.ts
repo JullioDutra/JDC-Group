@@ -10,7 +10,7 @@ import { publicOrigin } from '@/lib/scheduler';
 import { getProvider } from '@/lib/whatsapp';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 /**
  * Webhook do gateway de WhatsApp: recebe cada mensagem dos grupos,

@@ -8,7 +8,7 @@ import { getStore } from '@/lib/store';
 import { getProvider } from '@/lib/whatsapp';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 /**
  * Prazo de uma rodada do Modo em Grupo. Chamado pelo QStash, com assinatura.

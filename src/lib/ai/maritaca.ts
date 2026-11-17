@@ -119,7 +119,7 @@ export async function maritacaJson(system: string, user: string, maxTokens = 400
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.MARITACA_API_KEY}` },
       body: body(json),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(25_000),
     });
   let response = await call(true);
   if (response.status === 400 || response.status === 422) response = await call(false);
@@ -149,7 +149,7 @@ async function chat(query: string, jsonMode: boolean, hint?: string): Promise<Re
         { role: 'user', content: userMessage(query, hint) },
       ],
     }),
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(25_000),
   });
 }
 
