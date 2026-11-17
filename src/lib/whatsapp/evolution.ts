@@ -126,11 +126,14 @@ export const evolution: WhatsAppProvider = {
         method,
         headers,
         signal: AbortSignal.timeout(15_000),
-      }).catch(() => null);
-      if (response && response.status !== 404 && response.status !== 405) {
-        console.warn(`instância ${instance} reiniciada (${method} ${response.status})`);
-        return response.ok;
-      }
+      }).catch((error: Error) => {
+        console.warn(`reiniciar ${instance} (${method}) falhou: ${error.message}`);
+        return null;
+      });
+      if (!response) continue;
+      const detail = (await response.text().catch(() => '')).slice(0, 200);
+      console.warn(`reiniciar ${instance}: ${method} ${response.status} ${detail}`);
+      if (response.status !== 404 && response.status !== 405) return response.ok;
     }
     return false;
   },
