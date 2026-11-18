@@ -18,6 +18,21 @@
 | Monitoramento | `https://duelo-de-craques-peach.vercel.app/api/health`: conexão, banco, tamanho da base, andamento da carga e como terminaram as buscas de 24 h (só contagens) |
 | Ajuda | Imagem com todos os comandos (`ajuda`); `ajuda texto` continua existindo e é o plano B automático |
 
+### Buscas de jogador nas últimas 24 h (18/11, 11h)
+
+| Resultado | Buscas | % |
+|---|---|---|
+| Achou na base | 1.062 | 42% |
+| A IA achou (entrou na base) | 620 | 25% |
+| A IA não achou | 517 | 21% |
+| Achou, mas fora do contexto da rodada | 200 | 8% |
+| A IA devolveu outro nome (recusado) | 86 | 3% |
+| "Não achei" recente | 21 | 1% |
+
+A carga ainda está nos nascidos em dez/1984, na parte "mundo". A maioria dos escolhidos é mais recente e por isso ainda vai para a IA, então a parte da base deve subir bastante quando a carga passar dos anos 1990.
+
+O ponto de atenção são os **21% de "a IA não achou"**. Parte é recusa correta (apelido, erro de digitação, conversa que parece nome); para separar, a rota `GET /api/admin/lookups?resultado=ia-nao-achou` lista os nomes que mais falharam.
+
 ## 2. Dados à mão (Transfermarkt)
 
 **Regra:** o Transfermarkt considera os dados dele protegidos e não permite coleta automática nem redistribuição sem autorização ([relato de 2018, citando o próprio Transfermarkt](https://stat.ethz.ch/pipermail/r-package-devel/2018q1/002405.html); os serviços de raspagem também avisam que o cumprimento dos termos é responsabilidade de quem usa, por exemplo o [Apify](https://apify.com/automation-lab/transfermarkt-scraper)). Por isso **o jogo não raspa o site**. Quem atualiza é o admin, olhando o Transfermarkt e digitando o número. Cada valor guarda a fonte e a data ("manual · Transfermarkt · 18/11/2026").

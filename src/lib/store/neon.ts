@@ -187,6 +187,14 @@ export class NeonStore implements Store {
     if (Math.random() < 0.01) await this.sql`DELETE FROM lookup_log WHERE created_at < now() - interval '30 days'`;
   }
 
+  async topLookups(outcomePrefix: string, hours: number, limit: number) {
+    const rows = await this.sql`
+      SELECT lower(query) AS query, context, count(*)::int AS n FROM lookup_log
+      WHERE outcome LIKE ${`${outcomePrefix}%`} AND created_at > now() - make_interval(hours => ${hours}::int)
+      GROUP BY lower(query), context ORDER BY n DESC LIMIT ${limit}`;
+    return rows.map((r) => ({ query: r.query as string, context: (r.context as string | null) ?? null, n: r.n as number }));
+  }
+
   async lookupSummary(hours: number): Promise<Record<string, number>> {
     const rows = await this.sql`
       SELECT outcome, count(*)::int AS n FROM lookup_log

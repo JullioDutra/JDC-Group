@@ -29,6 +29,8 @@ export interface Store {
   logLookup(row: { query: string; context?: string; outcome: string; playerId?: string | null; ms?: number }): Promise<void>;
   /** Contagem dos resultados de busca nas últimas horas (para o status). */
   lookupSummary(hours: number): Promise<Record<string, number>>;
+  /** Nomes que mais terminaram com um resultado (ex.: "ia-nao-achou"), para diagnóstico. */
+  topLookups(outcomePrefix: string, hours: number, limit: number): Promise<Array<{ query: string; context: string | null; n: number }>>;
 
   recordResult(groupJid: string, players: [MatchPlayer, MatchPlayer], winner: Side | 'draw'): Promise<void>;
   /** Resultado de uma sala: vitória para os vencedores, derrota para os demais. */

@@ -103,6 +103,18 @@ export class MemoryStore implements Store {
     this.lookups.push(row);
   }
 
+  async topLookups(outcomePrefix: string, _hours: number, limit: number) {
+    const counts = new Map<string, { query: string; context: string | null; n: number }>();
+    for (const l of this.lookups) {
+      if (!l.outcome.startsWith(outcomePrefix)) continue;
+      const key = `${l.query.toLowerCase()}|${l.context ?? ''}`;
+      const row = counts.get(key) ?? { query: l.query, context: l.context ?? null, n: 0 };
+      row.n += 1;
+      counts.set(key, row);
+    }
+    return [...counts.values()].sort((a, b) => b.n - a.n).slice(0, limit);
+  }
+
   async lookupSummary() {
     const out: Record<string, number> = {};
     for (const l of this.lookups) out[l.outcome] = (out[l.outcome] ?? 0) + 1;
