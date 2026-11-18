@@ -28,6 +28,8 @@ export async function GET() {
       out.banco = 'ok';
       // Só contagens: como as buscas de jogador terminaram nas últimas 24 h.
       out.buscas24h = await store.lookupSummary(24);
+      // Só contagens de partidas (nenhum grupo ou pessoa identificado).
+      out.partidas = await store.matchStats();
       const carga = (await store.getImportState('wikidata')) as
         | {
             part?: number; plan?: Array<{ label: string }>; cursor?: string; done?: boolean; errors?: number;

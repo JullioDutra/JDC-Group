@@ -1,6 +1,20 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
 
+export interface MatchStats {
+  total: number;
+  /** Terminaram com resultado. */
+  terminadas: number;
+  /** Canceladas, abandonadas ou salas que não começaram. */
+  canceladas: number;
+  emAndamento: number;
+  ultimas24h: number;
+  grupos: number;
+  desde: string | null;
+  /** Por jogo ("1x1" = duelo de escalação): total e terminadas. */
+  porJogo: Record<string, { total: number; terminadas: number }>;
+}
+
 export interface Store {
   isGroupActive(groupJid: string): Promise<boolean>;
   setGroupActive(groupJid: string, name: string | undefined, active: boolean, by: string): Promise<void>;
@@ -50,4 +64,6 @@ export interface Store {
   /** Resultado de uma sala: vitória para os vencedores, derrota para os demais. */
   recordResults(groupJid: string, rows: Array<{ player: MatchPlayer; result: 'win' | 'draw' | 'loss' }>): Promise<void>;
   getRanking(groupJid: string, limit: number): Promise<RankingRow[]>;
+  /** Só contagens (sem grupo nem pessoa): partidas por situação e por jogo. */
+  matchStats(): Promise<MatchStats>;
 }

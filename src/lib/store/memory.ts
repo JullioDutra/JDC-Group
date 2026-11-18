@@ -1,7 +1,7 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
 import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
-import type { Store } from './types';
+import type { MatchStats, Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
 
@@ -167,6 +167,17 @@ export class MemoryStore implements Store {
     const out: Record<string, number> = {};
     for (const l of this.lookups) out[l.outcome] = (out[l.outcome] ?? 0) + 1;
     return out;
+  }
+
+  async matchStats(): Promise<MatchStats> {
+    // A memória só guarda partidas abertas: serve para testes e desenvolvimento.
+    const open = [...this.matches.values()];
+    const porJogo: MatchStats['porJogo'] = {};
+    for (const m of open) {
+      const jogo = (m.state as { game?: string }).game ?? '1x1';
+      porJogo[jogo] = { total: (porJogo[jogo]?.total ?? 0) + 1, terminadas: 0 };
+    }
+    return { total: open.length, terminadas: 0, canceladas: 0, emAndamento: open.length, ultimas24h: open.length, grupos: this.matches.size, desde: null, porJogo };
   }
 
   async recordResult(groupJid: string, players: [MatchPlayer, MatchPlayer], winner: Side | 'draw') {

@@ -5,7 +5,7 @@ import { nameKeys } from '../players/keys';
 import type { ManualData, ManualEntry, PlayerRecord, StatKey } from '../players/types';
 import { normalize } from '../game/text';
 import type { Position } from '../game/types';
-import type { Store } from './types';
+import type { Store, MatchStats } from './types';
 
 /** Fichas em cache valem 30 dias; "não achei" vale só 10 minutos (pode ter sido falha passageira). */
 const CACHE_TTL_DAYS = 30;
@@ -263,6 +263,29 @@ export class NeonStore implements Store {
       SELECT outcome, count(*)::int AS n FROM lookup_log
       WHERE created_at > now() - make_interval(hours => ${hours}::int) GROUP BY outcome`;
     return Object.fromEntries(rows.map((r) => [r.outcome as string, r.n as number]));
+  }
+
+  async matchStats(): Promise<MatchStats> {
+    const rows = await this.sql`
+      SELECT COALESCE(state->>'game', '1x1') AS jogo,
+             count(*)::int AS total,
+             count(*) FILTER (WHERE status = 'FINISHED')::int AS terminadas,
+             count(*) FILTER (WHERE status = 'CANCELLED')::int AS canceladas,
+             count(*) FILTER (WHERE created_at > now() - interval '24 hours')::int AS dia
+      FROM matches GROUP BY 1 ORDER BY 2 DESC`;
+    const extra = await this.sql`SELECT count(DISTINCT group_jid)::int AS grupos, min(created_at) AS desde FROM matches`;
+    const sum = (k: string) => rows.reduce((a, r) => a + (r[k] as number), 0);
+    const desde = extra[0]?.desde as string | Date | null;
+    return {
+      total: sum('total'),
+      terminadas: sum('terminadas'),
+      canceladas: sum('canceladas'),
+      emAndamento: sum('total') - sum('terminadas') - sum('canceladas'),
+      ultimas24h: sum('dia'),
+      grupos: (extra[0]?.grupos as number) ?? 0,
+      desde: desde ? new Date(desde).toISOString() : null,
+      porJogo: Object.fromEntries(rows.map((r) => [r.jogo as string, { total: r.total as number, terminadas: r.terminadas as number }])),
+    };
   }
 
   async recordResult(groupJid: string, players: [MatchPlayer, MatchPlayer], winner: Side | 'draw') {
