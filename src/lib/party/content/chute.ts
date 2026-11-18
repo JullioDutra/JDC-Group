@@ -89,6 +89,23 @@ export const CHUTE_QUESTIONS: ChuteQuestion[] = [
   { id: 'c-g-rugby', category: 'geral', prompt: 'Quantos jogadores um time de rúgbi (union) tem em campo?', answer: 15, unit: 'jogadores' },
   { id: 'c-g-estrelas', category: 'geral', prompt: 'Quantas estrelas tem a bandeira do Brasil?', answer: 27, unit: 'estrelas' },
   { id: 'c-g-ponte', category: 'geral', prompt: 'Quantos quilômetros tem a Ponte Rio-Niterói (arredonde)?', answer: 13, unit: 'km (13,3 km)' },
+  // 2025-2026 (pesquisa de 18/11/2026)
+  { id: 'c-gols-copa-2026', category: 'futebol', prompt: 'Quantos gols teve a Copa do Mundo de 2026?', answer: 308, unit: 'gols' },
+  { id: 'c-jogos-copa-2026', category: 'futebol', prompt: 'Quantos jogos teve a Copa do Mundo de 2026?', answer: 104, unit: 'jogos' },
+  { id: 'c-mbappe-copas', category: 'futebol', prompt: 'Quantos gols Mbappé tem em Copas do Mundo (até 2026)?', answer: 22, unit: 'gols' },
+  { id: 'c-messi-copas', category: 'futebol', prompt: 'Quantos gols Messi tem em Copas do Mundo (até 2026)?', answer: 21, unit: 'gols' },
+  { id: 'c-minuto-2026', category: 'futebol', prompt: 'Em que minuto Ferran Torres fez o gol do título da Espanha na final de 2026?', answer: 106, unit: 'minutos' },
+  { id: 'c-kaio-jorge', category: 'futebol', prompt: 'Quantos gols Kaio Jorge fez no Brasileirão 2025, quando foi o artilheiro?', answer: 21, unit: 'gols' },
+  { id: 'c-psg-titulos', category: 'futebol', prompt: 'Quantos títulos franceses o PSG tinha depois da temporada 2025/26?', answer: 14, unit: 'títulos' },
+  { id: 'c-inter-scudetti', category: 'futebol', prompt: 'Quantos títulos italianos a Inter tinha depois da temporada 2025/26?', answer: 21, unit: 'títulos' },
+  { id: 'c-bayern-titulos', category: 'futebol', prompt: 'Quantos títulos alemães o Bayern tinha depois da temporada 2025/26?', answer: 35, unit: 'títulos' },
+  { id: 'c-azteca-2026', category: 'futebol', prompt: 'Quantos torcedores viram a abertura da Copa de 2026 no Azteca (México 2 x 0 África do Sul)?', answer: 80824, unit: 'torcedores' },
+  { id: 'c-real-laliga', category: 'futebol', prompt: 'Quantos títulos espanhóis o Real Madrid tinha até 2025/26?', answer: 36, unit: 'títulos' },
+  { id: 'c-cr7-ucl', category: 'futebol', prompt: 'Quantos gols Cristiano Ronaldo marcou na Champions League?', answer: 140, unit: 'gols' },
+  { id: 'c-lula-2026', category: 'politica', prompt: 'Com quantos por cento dos votos válidos Lula venceu o 2º turno de 2026 (arredonde)?', answer: 52, unit: '%' },
+  { id: 'c-populacao-br-2025', category: 'geral', prompt: 'Qual era a população estimada do Brasil em 2025, em milhões (IBGE)?', answer: 213, unit: 'milhões' },
+  { id: 'c-medalhas-paris', category: 'geral', prompt: 'Quantas medalhas de ouro os EUA ganharam em Paris 2024?', answer: 40, unit: 'ouros' },
+  { id: 'c-rebeca', category: 'geral', prompt: 'Quantas medalhas olímpicas Rebeca Andrade tem (até Paris 2024)?', answer: 6, unit: 'medalhas' },
 ];
 
 export function getChute(id: string): ChuteQuestion | undefined {

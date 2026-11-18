@@ -148,7 +148,9 @@ test('Top 10: lista completa encerra e grava o ranking; tempo esgotado revela o 
   await t.say('Ana', 'top 10 futebol');
   await t.say('Bia', 'entrar');
   await t.say('Ana', 'começar');
-  await t.say('Bia', 'Brasil');
+  // Acerta o 1º item da lista sorteada (a ordem das listas muda com o repertório).
+  const listId = ((await t.store.getActiveMatch(G))!.state as { listId: string }).listId;
+  await t.say('Bia', getTop10List(listId)!.items[0].name);
   const end = asText(await t.tick());
   assert.match(end, /img:top10Board[\s\S]*Tempo esgotado\.[\s\S]*🏆 \*Bia\* venceu com 1 acerto/);
 });

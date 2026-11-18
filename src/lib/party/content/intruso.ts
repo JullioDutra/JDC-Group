@@ -369,6 +369,25 @@ export const INTRUSO_SETS: IntrusoSet[] = [
     intruder: 'Chile',
     reason: 'Os outros quatro fundaram o Mercosul em 1991. O Chile é só associado.',
   },
+  // 2026 (pesquisa de 18/11/2026)
+  {
+    id: 'campeoes-ligas-2026',
+    members: ['Arsenal', 'Barcelona', 'Inter de Milão', 'Bayern'],
+    intruder: 'Real Madrid',
+    reason: 'Os outros quatro foram campeões nacionais em 2025/26 (Inglaterra, Espanha, Itália e Alemanha). O Real Madrid não ganhou o Espanhol.',
+  },
+  {
+    id: 'artilheiros-copa-2026',
+    members: ['Mbappé', 'Messi', 'Haaland', 'Bellingham'],
+    intruder: 'Vinícius Júnior',
+    reason: 'Os outros quatro fizeram 7 ou mais gols na Copa de 2026 (Mbappé 10, Messi 8, Haaland e Bellingham 7). Vinícius ficou abaixo disso.',
+  },
+  {
+    id: 'campeoes-europa-2026',
+    members: ['PSG', 'Aston Villa', 'Crystal Palace', 'Chelsea'],
+    intruder: 'Arsenal',
+    reason: 'PSG (Champions 2026), Aston Villa (Liga Europa 2026), Crystal Palace (Conference 2026) e Chelsea (Mundial de 2025) ganharam torneios internacionais. O Arsenal perdeu a final da Champions.',
+  },
 ];
 
 export function getIntrusoSet(id: string): IntrusoSet | undefined {

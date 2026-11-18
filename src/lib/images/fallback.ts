@@ -4,6 +4,7 @@ import { firstName, formatNumber } from '../game/text';
 import { SLOTS, type ImageSpec, type Pick } from '../game/types';
 import { getConexoes } from '../party/content/conexoes';
 import { helpText } from '../game/commands';
+import { criterionLabel, parseCriterion } from '../party/gridCriteria';
 
 const GAME_NAME_FOR_TEXT = 'Duelo de Craques';
 
@@ -80,14 +81,15 @@ export function imageAsText(spec: ImageSpec): string | null {
     }
     case 'gradeBoard': {
       const st = spec.state;
-      const team = (id: string) => getTeam(id)?.name ?? id;
-      const head = `Colunas: ${st.cols.map((c, i) => `${i + 1} ${team(c)}`).join(' · ')}`;
+      const col = (raw: string) => criterionLabel(parseCriterion(raw, 'nation')).name;
+      const row = (raw: string) => criterionLabel(parseCriterion(raw, 'club')).name;
+      const head = `Colunas: ${st.cols.map((c, i) => `${i + 1} ${col(c)}`).join(' · ')}`;
       const rows = [0, 1, 2].map((r) => {
         const cells = [0, 1, 2].map((c) => {
           const cell = st.cells[r * 3 + c];
           return cell ? `${cell.name} (${firstName(st.players.find((p) => p.jid === cell.jid)?.name ?? '')})` : `${LETTERS[r]}${c + 1}`;
         });
-        return `*${LETTERS[r]} ${team(st.rows[r])}*: ${cells.join(' | ')}`;
+        return `*${LETTERS[r]} ${row(st.rows[r])}*: ${cells.join(' | ')}`;
       });
       return [head, ...rows].join('\n');
     }

@@ -58,8 +58,8 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     rules: ['Cite quem passou pelos 4 clubes da rodada.', 'Passou pelos 4: 10 pts · por 3: 6 · por 2: 3 · por 1: 1.', '1 palpite por pessoa em cada rodada. Ninguém repete jogador.'],
   },
   grade: {
-    subtitle: 'Jogo da velha · clubes x seleções',
-    rules: ['Linhas são clubes; colunas são seleções.', 'Na sua vez: casa + jogador que cumpra as duas (A2 Neymar).', 'Errou: perde a vez. 3 em linha vence.'],
+    subtitle: 'Jogo da velha · clubes, ligas, seleções e títulos',
+    rules: ['Linhas: clubes ou ligas. Colunas: seleções, títulos ou ligas.', 'Na sua vez: casa + jogador que cumpra as duas (A2 Neymar).', 'Errou: perde a vez. 3 em linha vence.'],
   },
   penaltis: {
     subtitle: '5 cobranças para cada · morte súbita',

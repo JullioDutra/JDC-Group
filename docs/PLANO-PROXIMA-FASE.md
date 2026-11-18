@@ -1,6 +1,6 @@
 # Plano da próxima fase
 
-> **Andamento (18/11, tarde):** F1 e F2 entregues, com três correções urgentes. Detalhes na seção 8.
+> **Andamento (18/11, tarde):** F1 e F2 entregues, com três correções urgentes. Detalhes na seção 8. O plano seguinte (com os números de uso, os dados de 2026 e a Grade nova) está em `PLANO-MELHORIAS-2026.md`.
 
 18/11/2026. Seis frentes:
 1. Verificar se tudo subiu.

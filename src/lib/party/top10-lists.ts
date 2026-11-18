@@ -1,11 +1,12 @@
 import type { Top10List } from '../game/types';
+import { TOP10_EXTRA } from './content/top10-extra';
 
 /**
  * Listas do Top 10. Regra de curadoria: só entra lista com fonte e data de
  * corte no título ("até 2022", "2025"), para a resposta nunca ficar errada
  * com o tempo. Empates repetem a posição (rank).
  */
-export const TOP10_LISTS: Top10List[] = [
+const BASE_LISTS: Top10List[] = [
   {
     id: 'carros-2025',
     category: 'geral',
@@ -131,22 +132,6 @@ export const TOP10_LISTS: Top10List[] = [
     ],
   },
   {
-    id: 'copas-titulos-2022',
-    category: 'futebol',
-    title: 'Seleções com mais títulos de Copa do Mundo (até 2022)',
-    source: 'FIFA, campeões de 1930 a 2022',
-    items: [
-      { rank: 1, name: 'Brasil', detail: '5' },
-      { rank: 2, name: 'Alemanha', detail: '4' },
-      { rank: 2, name: 'Itália', detail: '4' },
-      { rank: 4, name: 'Argentina', detail: '3' },
-      { rank: 5, name: 'França', detail: '2' },
-      { rank: 5, name: 'Uruguai', detail: '2' },
-      { rank: 7, name: 'Inglaterra', detail: '1' },
-      { rank: 7, name: 'Espanha', detail: '1' },
-    ],
-  },
-  {
     id: 'champions-titulos-2025',
     category: 'futebol',
     title: 'Clubes com mais títulos da Champions League (até 2025/26)',
@@ -160,36 +145,6 @@ export const TOP10_LISTS: Top10List[] = [
       { rank: 6, name: 'Ajax', detail: '4' },
       { rank: 7, name: 'Inter de Milão', aliases: ['inter', 'internazionale', 'inter milao'], detail: '3' },
       { rank: 7, name: 'Manchester United', aliases: ['man united', 'united', 'manchester utd'], detail: '3' },
-    ],
-  },
-  {
-    id: 'artilheiros-copas-2022',
-    category: 'futebol',
-    title: 'Maiores artilheiros da história das Copas (até 2022)',
-    source: 'FIFA, gols em Copas do Mundo de 1930 a 2022',
-    items: [
-      { rank: 1, name: 'Miroslav Klose', aliases: ['klose'], detail: '16 gols' },
-      { rank: 2, name: 'Ronaldo', aliases: ['ronaldo fenomeno', 'r9', 'ronaldo nazario'], detail: '15 gols' },
-      { rank: 3, name: 'Gerd Müller', aliases: ['gerd muller', 'muller'], detail: '14 gols' },
-      { rank: 4, name: 'Just Fontaine', aliases: ['fontaine'], detail: '13 gols' },
-      { rank: 4, name: 'Lionel Messi', aliases: ['messi'], detail: '13 gols' },
-      { rank: 6, name: 'Pelé', detail: '12 gols' },
-      { rank: 6, name: 'Kylian Mbappé', aliases: ['mbappe'], detail: '12 gols' },
-      { rank: 8, name: 'Sándor Kocsis', aliases: ['kocsis'], detail: '11 gols' },
-      { rank: 8, name: 'Jürgen Klinsmann', aliases: ['klinsmann'], detail: '11 gols' },
-    ],
-  },
-  {
-    id: 'bolas-de-ouro-2025',
-    category: 'futebol',
-    title: 'Jogadores com mais Bolas de Ouro (até 2025)',
-    source: 'France Football, Ballon d’Or',
-    items: [
-      { rank: 1, name: 'Lionel Messi', aliases: ['messi'], detail: '8' },
-      { rank: 2, name: 'Cristiano Ronaldo', aliases: ['cr7', 'cristiano'], detail: '5' },
-      { rank: 3, name: 'Johan Cruyff', aliases: ['cruyff', 'cruijff'], detail: '3' },
-      { rank: 3, name: 'Michel Platini', aliases: ['platini'], detail: '3' },
-      { rank: 3, name: 'Marco van Basten', aliases: ['van basten'], detail: '3' },
     ],
   },
   {
@@ -567,6 +522,9 @@ export const TOP10_LISTS: Top10List[] = [
 ];
 
 /** Categorias sorteadas no "aleatório". Política só entra quando pedida. */
+/** Listas antigas + as de 18/11/2026 (com os dados de 2026). */
+export const TOP10_LISTS: Top10List[] = [...BASE_LISTS, ...TOP10_EXTRA];
+
 export const TOP10_CATEGORIES = ['futebol', 'geral'] as const;
 
 export function getTop10List(id: string | null): Top10List | undefined {

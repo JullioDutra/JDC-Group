@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createLookup } from '@/lib/ai';
-import { defaultJudge, defaultWordCheck } from '@/lib/ai/judge';
+import { defaultJudge, defaultWordCheck, defaultFactCheck } from '@/lib/ai/judge';
 import { hasMaritacaKey } from '@/lib/ai/maritaca';
 import { secretMatches } from '@/lib/auth';
 import { handleMessage, handleTick } from '@/lib/game/engine';
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
   const store = getStore();
   const groupJid = `sim-${room}`;
-  const deps = { store, lookup: createLookup(store), judge: defaultJudge(), checkWords: defaultWordCheck() };
+  const deps = { store, lookup: createLookup(store), judge: defaultJudge(), checkWords: defaultWordCheck(), checkFact: defaultFactCheck() };
   let outgoing: Outgoing[];
   let messageId: string | null = null;
 

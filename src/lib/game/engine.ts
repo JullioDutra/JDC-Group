@@ -1,6 +1,6 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
-import type { TeamJudge, WordCheck } from '../party/common';
+import type { FactCheck, TeamJudge, WordCheck } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
@@ -41,6 +41,8 @@ export interface EngineDeps {
   judge?: TeamJudge;
   /** Stop: juiz de palavras (IA). */
   checkWords?: WordCheck;
+  /** Grade: títulos fora das listas curadas (IA). */
+  checkFact?: FactCheck;
 }
 
 
@@ -231,6 +233,7 @@ export async function handleTick(
           isAdmin: () => false,
           judge: deps.judge,
           checkWords: deps.checkWords,
+          checkFact: deps.checkFact,
         },
         force,
       );
@@ -317,6 +320,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     isAdmin: (jid: string) => deps.canManageGroup?.(jid) ?? false,
     judge: deps.judge,
     checkWords: deps.checkWords,
+    checkFact: deps.checkFact,
   };
 
   // ----- Modo em Grupo (salas) -----

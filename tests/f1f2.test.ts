@@ -13,6 +13,9 @@ import { careerPath, clubLabel } from '../src/lib/party/basegames';
 import { freshFirst, react } from '../src/lib/party/common';
 import { parsePartyStart } from '../src/lib/party/engine';
 import { buildGrid, hasLine, parseMove } from '../src/lib/party/grade';
+import { featuresOf, parseCriterion, satisfies } from '../src/lib/party/gridCriteria';
+import { TITLE_ENTRIES } from '../src/lib/party/content/titles';
+import { getTeam } from '../src/lib/game/teams';
 import { goals } from '../src/lib/party/penaltis';
 import { PONTE_POINTS, ponteHits } from '../src/lib/party/ponte';
 import { MemoryStore } from '../src/lib/store/memory';
@@ -227,20 +230,42 @@ test('Carreira: trajetória, dicas com o tempo e só vale nome coerente', async 
   assert.match(hit, /Ana\* acertou \(\+70\)/);
 });
 
-test('Grade 3x3: monta só casas com resposta, valida linha + coluna e fecha linha', async () => {
+/** Fichas de teste montadas das listas de campeões (cada um com o clube/seleção do título). */
+function championsFixture(): PlayerRecord[] {
+  const out: PlayerRecord[] = [];
+  let n = 0;
+  const bigClubs = ['Real Madrid', 'Barcelona', 'Milan', 'Flamengo', 'Chelsea', 'Juventus'];
+  for (const [title, entries] of Object.entries(TITLE_ENTRIES)) {
+    for (const e of entries) {
+      const club = e.club ? getTeam(e.club)!.name : bigClubs[n % bigClubs.length];
+      const nation = e.nation ? getTeam(e.nation)!.name : ['Brasil', 'Argentina', 'França', 'Espanha'][n % 4];
+      out.push(rec({ id: `T${++n}-${title}`, name: e.name, nationality: nation, clubs: [club, bigClubs[(n + 1) % bigClubs.length], 'São Paulo'] }));
+    }
+  }
+  return out;
+}
+
+test('Grade 3x3: montagem com clubes, ligas, seleções e títulos; toda casa tem resposta', () => {
   assert.deepEqual(parseMove('A2 Neymar'), { cell: 1, name: 'Neymar' });
   assert.deepEqual(parseMove('3c Kaká'), { cell: 8, name: 'Kaká' });
   assert.equal(parseMove('a gente joga?'), null);
-  const many: PlayerRecord[] = [];
-  const nations = ['Brasil', 'Argentina', 'França'];
-  const clubs = ['Barcelona', 'Real Madrid', 'Milan', 'Juventus'];
-  let n = 0;
-  for (const nat of nations) for (const club of clubs) for (let i = 0; i < 9; i++) many.push(rec({ id: `G${++n}`, name: `Jogador${n} Teste${n}`, nationality: nat, clubs: [club, 'Outro'] }));
-  const grid = buildGrid(many, () => 0.3);
-  assert.ok(grid);
-  assert.equal(grid!.rows.length, 3);
-  assert.ok(grid!.cols.every((c) => ['brasil', 'argentina', 'franca'].includes(c)));
-
+  const players = championsFixture();
+  const feats = players.map((p) => featuresOf(p));
+  for (const seed of [11, 37, 73]) {
+    let x = seed;
+    const rng = () => (x = (x * 16807) % 2147483647) / 2147483647;
+    const grid = buildGrid(players, rng);
+    assert.ok(grid, `sem grade (semente ${seed})`);
+    const rows = grid!.rows.map((r) => parseCriterion(r, 'club'));
+    const cols = grid!.cols.map((c) => parseCriterion(c, 'nation'));
+    assert.ok(cols.some((c) => c.kind === 'nation') && cols.some((c) => c.kind === 'title'), 'colunas: sempre seleção e título');
+    for (const r of rows) for (const c of cols) assert.ok(feats.some((f) => satisfies(f, r) && satisfies(f, c)), `casa sem resposta: ${r.id} x ${c.id}`);
+  }
+  // Campeões: o nome vale junto com a seleção ou o clube do título.
+  const ronaldo = rec({ id: 'R9', name: 'Ronaldo', nationality: 'Brasil', clubs: ['Cruzeiro', 'Barcelona', 'Real Madrid'] });
+  const cr7 = rec({ id: 'CR7', name: 'Cristiano Ronaldo', nationality: 'Portugal', clubs: ['Sporting', 'Manchester United', 'Real Madrid'] });
+  assert.ok(featuresOf(ronaldo).titles.has('copa') && featuresOf(ronaldo).titles.has('bola'));
+  assert.ok(!featuresOf(cr7).titles.has('copa') && featuresOf(cr7).titles.has('champions'));
   const st = { cells: Array(9).fill(null) } as unknown as GradeParty;
   st.cells[0] = { jid: 'a', name: 'x' };
   st.cells[4] = { jid: 'a', name: 'y' };
@@ -248,34 +273,41 @@ test('Grade 3x3: monta só casas com resposta, valida linha + coluna e fecha lin
   assert.ok(hasLine(st, 'a') && !hasLine(st, 'b'));
 });
 
-test('Grade 3x3 na partida: desafio, aceitar, jogada válida marca, inválida perde a vez', async () => {
-  const many: PlayerRecord[] = [];
-  const nations = ['Brasil', 'Argentina', 'França'];
-  const clubs = ['Barcelona', 'Real Madrid', 'Milan'];
-  let n = 0;
-  for (const nat of nations) for (const club of clubs) for (let i = 0; i < 9; i++) many.push(rec({ id: `G${++n}`, name: `Craque${n} Silva${n}`, nationality: nat, clubs: [club] }));
-  const t = setup(many);
-  await t.ready;
-  await t.say('Ana', 'ativar jogos');
-  await t.say('Ana', 'desafio grade');
-  const start = asText(await t.say('Bia', 'aceitar'));
+test('Grade 3x3 na partida: liga e título valem; fora da lista a IA confere; errou perde a vez', async () => {
+  const extra = [
+    rec({ id: 'X1', name: 'Ronaldinho', nationality: 'Brasil', clubs: ['Grêmio', 'Paris Saint-Germain', 'Barcelona', 'Milan', 'Flamengo', 'Atlético Mineiro'] }),
+    rec({ id: 'X2', name: 'Bobby Moore', nationality: 'Inglaterra', clubs: ['West Ham United', 'Fulham'] }),
+    rec({ id: 'X3', name: 'Rogério Ceni', nationality: 'Brasil', clubs: ['Sinop', 'São Paulo'] }),
+    rec({ id: 'X4', name: 'Zé Desconhecido', nationality: 'Brasil', clubs: ['Barcelona'] }),
+  ];
+  const store = new MemoryStore();
+  await store.upsertPlayers([...championsFixture(), ...extra]);
+  const asked: string[] = [];
+  let id = 0;
+  const deps = {
+    store, lookup: createLookup(store, async () => null, async () => null), rng: () => 0, now: () => new Date('2026-11-18T12:00:00Z'),
+    checkFact: async (q: string) => (asked.push(q), q.includes('Zé Desconhecido')),
+  };
+  const say = (who: string, text: string) => handleMessage({ id: `g${++id}`, groupJid: 'gr@g.us', senderJid: `${who}@s`, senderName: who, text }, deps);
+  await say('Ana', 'ativar jogos');
+  await say('Ana', 'desafio grade');
+  const start = asText(await say('Bia', 'aceitar'));
   assert.match(start, /Bia\* aceitou[\s\S]*\[img:gradeBoard\][\s\S]*Vez de/);
-  const s = await t.state<GradeParty>();
-  const turn = s.players[s.turn].name;
-  const other = turn === 'Ana' ? 'Bia' : 'Ana';
-  const club = s.rows[0];
-  const nat = s.cols[0];
-  const natName = { brasil: 'Brasil', argentina: 'Argentina', franca: 'França' }[nat]!;
-  const clubName = { barcelona: 'Barcelona', 'real-madrid': 'Real Madrid', milan: 'Milan' }[club]!;
-  const right = many.find((r) => r.nationality === natName && r.clubs[0] === clubName)!;
-  const wrong = many.find((r) => r.nationality !== natName && r.clubs[0] !== clubName)!;
-  assert.equal(asText(await t.say(other, `A1 ${right.name}`)), '', 'fora da vez: ignorado');
-  const ok = asText(await t.say(turn, `A1 ${right.name}`));
-  assert.match(ok, /\[react:✅\][\s\S]*em A1/);
-  const bad = asText(await t.say(other, `B2 ${wrong.name}`));
-  assert.match(bad, /perdeu a vez/);
-  const after = await t.state<GradeParty>();
-  assert.equal(after.players[after.turn].name, turn);
+  // Grade fixa para o teste.
+  const m = (await store.getActiveMatch('gr@g.us'))!;
+  const s = m.state as GradeParty;
+  s.rows = ['club:barcelona', 'league:premier', 'club:sao-paulo'];
+  s.cols = ['nation:brasil', 'title:copa', 'title:champions'];
+  await store.saveMatch(m);
+  const first = s.players[s.turn].name;
+  const second = first === 'Ana' ? 'Bia' : 'Ana';
+  assert.match(asText(await say(first, 'A1 Ronaldinho')), /\[react:✅\][\s\S]*em A1/);
+  assert.match(asText(await say(second, 'B2 Bobby Moore')), /\[react:✅\][\s\S]*em B2 \(Premier League \+ Campeão do Mundo\)/);
+  assert.match(asText(await say(first, 'C3 Rogério Ceni')), /não foi campeão da Champions\. \*\w+\* perdeu a vez/);
+  // Fora da lista curada: a IA confere (e a resposta fica guardada).
+  assert.match(asText(await say(second, 'A3 Zé Desconhecido')), /\[react:✅\]/);
+  assert.equal(asked.length, 2);
+  assert.match(asked[1], /Zé Desconhecido[\s\S]*Liga dos Campeões/);
 });
 
 test('Pênaltis: 5 cobranças, gol vale com a regra, decide antes quando não dá mais para alcançar', async () => {

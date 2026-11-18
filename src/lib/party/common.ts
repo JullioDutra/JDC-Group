@@ -61,9 +61,13 @@ export interface PartyDeps {
   judge?: TeamJudge;
   /** Stop: confere palavras fora das listas curadas (IA). Sem ele, só vale o que está nas listas. */
   checkWords?: WordCheck;
+  /** Pergunta de sim ou não à IA (títulos da Grade fora das listas). null = não sabe. */
+  checkFact?: FactCheck;
   /** Itens que o grupo já viu neste jogo (do mais antigo ao mais recente): o sorteio prioriza o resto. */
   seen?: string[];
 }
+
+export type FactCheck = (question: string) => Promise<boolean | null>;
 
 /** Recebe a letra e os pares (categoria, palavra); devolve se cada palavra vale. */
 export type WordCheck = (letter: string, items: Array<{ category: string; word: string }>) => Promise<boolean[]>;

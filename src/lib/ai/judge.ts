@@ -1,4 +1,4 @@
-import type { JudgeTeam, TeamJudge, WordCheck } from '../party/common';
+import type { FactCheck, JudgeTeam, TeamJudge, WordCheck } from '../party/common';
 import { extractJson, hasMaritacaKey, maritacaJson } from './maritaca';
 
 const JUDGE_PROMPT = `Você é um comentarista de futebol imparcial julgando um desafio entre amigos.
@@ -42,4 +42,23 @@ export const maritacaWordCheck: WordCheck = async (letter, items) => {
 
 export function defaultWordCheck(): WordCheck | undefined {
   return hasMaritacaKey() ? maritacaWordCheck : undefined;
+}
+
+const FACT_PROMPT = `Você confere fatos de futebol para um jogo entre amigos.
+Recebe uma pergunta de sim ou não sobre a carreira de um jogador.
+Responda SOMENTE com JSON: {"resposta": "sim"} ou {"resposta": "nao"} ou {"resposta": "nao sei"}.
+Só diga "sim" se tiver certeza. Na dúvida, "nao sei".`;
+
+/** Pergunta de sim ou não (títulos da Grade fora das listas curadas). */
+export const maritacaFactCheck: FactCheck = async (question) => {
+  const content = await maritacaJson(FACT_PROMPT, question, 20);
+  const raw = extractJson(content) as { resposta?: unknown };
+  const answer = typeof raw.resposta === 'string' ? raw.resposta.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
+  if (answer === 'sim') return true;
+  if (answer === 'nao') return false;
+  return null;
+};
+
+export function defaultFactCheck(): FactCheck | undefined {
+  return hasMaritacaKey() ? maritacaFactCheck : undefined;
 }

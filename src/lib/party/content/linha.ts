@@ -134,6 +134,17 @@ export const TIMELINE: TimelineEvent[] = [
   e('t-bitcoin', 'geral', 2009, 'Criação do Bitcoin'),
   e('t-netflix-br', 'geral', 2011, 'A Netflix chega ao Brasil'),
   e('t-pix', 'geral', 2020, 'Lançamento do Pix'),
+  // Recentes (pesquisa de 18/11/2026)
+  e('t-neymar-psg', 'futebol', 2017, 'Neymar vai do Barcelona para o PSG por 222 milhões de euros'),
+  e('t-fla-2019', 'futebol', 2019, 'Flamengo ganha a Libertadores e o Brasileirão no mesmo ano'),
+  e('t-cr7-arabia', 'futebol', 2023, 'Cristiano Ronaldo vai para o Al-Nassr'),
+  e('t-psg-ucl', 'futebol', 2025, 'PSG ganha a Champions pela primeira vez'),
+  e('t-espanha-bi', 'futebol', 2026, 'Espanha bicampeã do mundo, com gol de Ferran Torres na prorrogação'),
+  e('t-kane-bola', 'futebol', 2026, 'Harry Kane ganha a Bola de Ouro'),
+  e('t-ainda-estou-oscar', 'geral', 2025, '"Ainda Estou Aqui" ganha o Oscar de filme internacional'),
+  e('t-papa-leao', 'historia', 2025, 'Eleição do papa Leão XIV'),
+  e('t-cop30', 'geral', 2025, 'Belém sedia a COP30'),
+  e('t-lula-2026', 'politica', 2026, 'Lula é eleito presidente pela quarta vez'),
 ];
 
 export function getEvent(id: string): TimelineEvent | undefined {

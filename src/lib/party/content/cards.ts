@@ -166,6 +166,33 @@ export const RELAMPAGO_CARDS: Card[] = [
   { id: 'r-h-salvador', category: 'historia', prompt: 'Qual foi a primeira capital do Brasil?', answer: 'Salvador' },
   { id: 'r-h-napoleao', category: 'historia', prompt: 'Que imperador francês foi derrotado em Waterloo?', answer: 'Napoleão', aliases: ['napoleao', 'napoleao bonaparte'] },
   { id: 'r-h-gandhi', category: 'historia', prompt: 'Quem liderou a independência da Índia pela não violência?', answer: 'Gandhi', aliases: ['mahatma gandhi'] },
+  // Futebol 2025-2026 (pesquisa de 18/11/2026)
+  { id: 'r-artilheiro-copa-2026', category: 'futebol', prompt: 'Quem foi o artilheiro da Copa do Mundo de 2026?', answer: 'Kylian Mbappé', aliases: ['mbappe'] },
+  { id: 'r-melhor-copa-2026', category: 'futebol', prompt: 'Quem foi eleito o melhor jogador da Copa de 2026?', answer: 'Rodri', aliases: ['rodrigo hernandez'] },
+  { id: 'r-luva-copa-2026', category: 'futebol', prompt: 'Quem ganhou a Luva de Ouro (melhor goleiro) da Copa de 2026?', answer: 'Unai Simón', aliases: ['unai simon', 'unai'] },
+  { id: 'r-jovem-copa-2026', category: 'futebol', prompt: 'Quem foi eleito o melhor jovem da Copa de 2026?', answer: 'Pau Cubarsí', aliases: ['cubarsi', 'pau cubarsi'] },
+  { id: 'r-algoz-2026', category: 'futebol', prompt: 'Que seleção eliminou o Brasil nas oitavas da Copa de 2026?', answer: 'Noruega' },
+  { id: 'r-haaland-2026', category: 'futebol', prompt: 'Quem fez os dois gols da Noruega na vitória por 2 a 1 sobre o Brasil, na Copa de 2026?', answer: 'Erling Haaland', aliases: ['haaland'] },
+  { id: 'r-final-2026-estadio', category: 'futebol', prompt: 'Em que estádio foi a final da Copa de 2026?', answer: 'MetLife Stadium', aliases: ['metlife', 'estadio metlife'] },
+  { id: 'r-tecnico-espanha-2026', category: 'futebol', prompt: 'Quem era o técnico da Espanha campeã do mundo em 2026?', answer: 'Luis de la Fuente', aliases: ['de la fuente'] },
+  { id: 'r-terceiro-2026', category: 'futebol', prompt: 'Que seleção ficou em 3º lugar na Copa de 2026?', answer: 'Inglaterra' },
+  { id: 'r-estreante-2026', category: 'futebol', prompt: 'Qual seleção caribenha virou o menor país a disputar uma Copa, em 2026?', answer: 'Curaçao', aliases: ['curacao'] },
+  { id: 'r-ucl-final-2026', category: 'futebol', prompt: 'Contra quem o PSG ganhou a final da Champions de 2026, nos pênaltis?', answer: 'Arsenal' },
+  { id: 'r-ucl-sede-2026', category: 'futebol', prompt: 'Em que cidade foi a final da Champions de 2026?', answer: 'Budapeste', aliases: ['budapest'] },
+  { id: 'r-europa-league-2026', category: 'futebol', prompt: 'Qual clube inglês ganhou a Liga Europa 2025/26?', answer: 'Aston Villa', aliases: ['villa'] },
+  { id: 'r-conference-2026', category: 'futebol', prompt: 'Qual clube ganhou a Conference League 2025/26?', answer: 'Crystal Palace', aliases: ['palace'] },
+  { id: 'r-scudetto-2026', category: 'futebol', prompt: 'Qual clube foi campeão italiano em 2025/26?', answer: 'Inter de Milão', aliases: ['inter', 'internazionale', 'inter milao'] },
+  { id: 'r-brasileirao-2025', category: 'futebol', prompt: 'Qual clube foi campeão brasileiro em 2025?', answer: 'Flamengo', aliases: ['mengao'] },
+  { id: 'r-artilheiro-br-2025', category: 'futebol', prompt: 'Quem foi o artilheiro do Brasileirão 2025, pelo Cruzeiro?', answer: 'Kaio Jorge' },
+  { id: 'r-mundial-2025', category: 'futebol', prompt: 'Qual clube ganhou o Mundial de Clubes de 2025, nos EUA?', answer: 'Chelsea' },
+  { id: 'r-bola-fem-2026', category: 'futebol', prompt: 'Quem ganhou a Bola de Ouro feminina de 2026?', answer: 'Alexia Putellas', aliases: ['putellas', 'alexia'] },
+  { id: 'r-kopa-2026', category: 'futebol', prompt: 'Quem ganhou o Troféu Kopa (melhor jovem) de 2026?', answer: 'Lamine Yamal', aliases: ['yamal', 'lamine'] },
+  { id: 'r-liberta-final-2026', category: 'futebol', prompt: 'Que clube argentino enfrentou o Palmeiras na final da Libertadores de 2026?', answer: 'Estudiantes', aliases: ['estudiantes de la plata'] },
+  { id: 'r-cdb-final-2026', category: 'futebol', prompt: 'Qual clube enfrentou o Palmeiras na final da Copa do Brasil de 2026?', answer: 'Grêmio', aliases: ['gremio'] },
+  { id: 'r-ancelotti', category: 'futebol', prompt: 'Qual técnico italiano assumiu a Seleção Brasileira em 2025?', answer: 'Carlo Ancelotti', aliases: ['ancelotti'] },
+  // Política 2026
+  { id: 'r-eleicao-2026', category: 'politica', prompt: 'Quem foi eleito presidente do Brasil em 2026?', answer: 'Lula', aliases: ['luiz inacio lula da silva'] },
+  { id: 'r-vice-2026', category: 'politica', prompt: 'Quem perdeu o 2º turno da eleição presidencial de 2026 para Lula?', answer: 'Flávio Bolsonaro', aliases: ['flavio bolsonaro', 'flavio'] },
 ];
 
 export const CARDS = { emoji: EMOJI_CARDS, relampago: RELAMPAGO_CARDS };

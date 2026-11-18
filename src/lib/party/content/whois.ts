@@ -648,6 +648,36 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
 
+  {
+    id: 'lamine-yamal', answer: 'Lamine Yamal', aliases: ['yamal', 'lamine'],
+    clues: [
+      'Nasceu em 2007, em Esplugues de Llobregat, na Espanha.',
+      'Ponta canhoto, revelado nas categorias de base do Barcelona (La Masia).',
+      'Campeão da Eurocopa de 2024, aos 17 anos, e da Copa do Mundo de 2026.',
+      'Foi 3º na Bola de Ouro de 2026 e ganhou o Troféu Kopa de melhor jovem.',
+      'Camisa 10 do Barcelona, empatado com Haaland como o mais valioso do mundo (Transfermarkt, 2026).',
+    ],
+  },
+  {
+    id: 'harry-kane', answer: 'Harry Kane', aliases: ['kane'],
+    clues: [
+      'Nasceu em Londres, em 1993.',
+      'Centroavante, foi emprestado a Leyton Orient, Millwall, Norwich e Leicester no começo da carreira.',
+      'É o maior artilheiro da história da seleção inglesa e do Tottenham.',
+      'Foi para o Bayern de Munique em 2023 e lá ganhou o primeiro título da carreira.',
+      'Ganhou a Bola de Ouro de 2026.',
+    ],
+  },
+  {
+    id: 'rodri', answer: 'Rodri', aliases: ['rodrigo hernandez', 'rodrigo hernandez cascante'],
+    clues: [
+      'Nasceu em Madri, em 1996.',
+      'Volante, revelado pelo Villarreal; também jogou no Atlético de Madrid.',
+      'Fez o gol do título da Champions de 2023, pelo Manchester City, contra a Inter.',
+      'Ganhou a Bola de Ouro de 2024.',
+      'Melhor jogador da Copa do Mundo de 2026, campeão com a Espanha.',
+    ],
+  },
 ];
 
 export function getWhoIs(id: string): WhoIsCard | undefined {

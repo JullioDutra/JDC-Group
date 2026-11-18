@@ -27,7 +27,7 @@ export const DUEL_COMMANDS: Array<[command: string, what: string]> = [
   ['iniciar jogo', 'desafio 1 x 1'],
   ['iniciar aleatório', 'tema sorteado'],
   ['iniciar melhor time', 'clubes sorteados'],
-  ['desafio grade', 'jogo da velha 3x3'],
+  ['desafio grade', 'jogo da velha: clubes, ligas, títulos'],
   ['desafio pênaltis', '5 cobranças + morte súbita'],
   ['aceitar', 'entra no desafio'],
 ];

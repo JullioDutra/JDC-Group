@@ -86,6 +86,23 @@ export const FACTS: FactCard[] = [
   f('ff-everest-cresce', 'geral', true, 'O Everest ainda está crescendo.', 'Alguns milímetros por ano, empurrado pelo choque das placas da Índia e da Ásia.'),
   f('ff-portugues-9', 'geral', true, 'O português é língua oficial em nove países.', 'Brasil, Portugal, Angola, Moçambique, Cabo Verde, Guiné-Bissau, São Tomé e Príncipe, Timor-Leste e Guiné Equatorial.'),
   f('ff-polvo-tinta', 'geral', false, 'Todo animal com tentáculos solta tinta.', 'Águas-vivas, por exemplo, não soltam. Polvos e lulas, sim.'),
+  // 2025-2026 (pesquisa de 18/11/2026)
+  f('ff-espanha-penaltis-2026', 'futebol', false, 'A Espanha ganhou a Copa de 2026 nos pênaltis.', 'Foi 1 a 0 na prorrogação, gol de Ferran Torres aos 106 minutos, contra a Argentina.'),
+  f('ff-mbappe-recorde', 'futebol', true, 'Depois da Copa de 2026, Mbappé é o maior artilheiro da história das Copas.', 'Chegou a 22 gols, um a mais que Messi (21). Klose, com 16, caiu para 3º.'),
+  f('ff-messi-maior-artilheiro', 'futebol', false, 'Depois da Copa de 2026, Messi é o maior artilheiro da história das Copas.', 'Messi tem 21; Mbappé passou com 22.'),
+  f('ff-brasil-noruega', 'futebol', true, 'O Brasil foi eliminado pela Noruega na Copa de 2026.', 'Perdeu por 2 a 1 nas oitavas, com dois gols de Haaland.'),
+  f('ff-kane-bola', 'futebol', true, 'Harry Kane ganhou a Bola de Ouro de 2026.', 'Foi a primeira dele. Mbappé ficou em 2º e Lamine Yamal em 3º.'),
+  f('ff-psg-final-2026', 'futebol', false, 'O PSG venceu o Arsenal no tempo normal na final da Champions de 2026.', 'Foi 1 a 1 e o PSG ganhou nos pênaltis (4 a 3), em Budapeste.'),
+  f('ff-cr7-seis-copas', 'futebol', true, 'Cristiano Ronaldo marcou gol em seis Copas do Mundo diferentes.', 'Marcou em todas de 2006 a 2026, um recorde.'),
+  f('ff-copa-64-jogos', 'futebol', false, 'A Copa de 2026 teve 64 jogos, como as anteriores.', 'Com 48 seleções foram 104 jogos e 308 gols, recorde de gols numa Copa.'),
+  f('ff-arsenal-2026', 'futebol', true, 'O Arsenal foi campeão inglês em 2025/26.', 'Acabou com um jejum de mais de 20 anos sem o título.'),
+  f('ff-liberta-2026-fla', 'futebol', false, 'A final da Libertadores de 2026 é Palmeiras x Flamengo.', 'É Palmeiras x Estudiantes, em Montevidéu. O Estudiantes eliminou o Flamengo na semifinal.'),
+  f('ff-azteca-abertura', 'futebol', true, 'A abertura da Copa de 2026 foi no Estádio Azteca.', 'México 2 x 0 África do Sul. O Azteca já tinha recebido jogos das Copas de 1970 e 1986.'),
+  f('ff-chelsea-mundial', 'futebol', true, 'O Chelsea ganhou o primeiro Mundial de Clubes com 32 times, em 2025.', 'Venceu o PSG por 3 a 0 na final, nos EUA.'),
+  f('ff-flamengo-tetra', 'futebol', true, 'O Flamengo é o clube brasileiro com mais Libertadores.', 'Com o título de 2025, chegou a 4. São Paulo, Santos, Grêmio e Palmeiras têm 3.'),
+  f('ff-cdb-jogo-unico', 'futebol', true, 'A final da Copa do Brasil de 2026 é em jogo único.', 'É a primeira vez: Palmeiras x Grêmio, em Brasília, em 6 de dezembro.'),
+  f('ff-psg-bi', 'futebol', true, 'O PSG ganhou a Champions duas vezes seguidas, em 2025 e 2026.', 'Em 2025 bateu a Inter por 5 a 0; em 2026, o Arsenal nos pênaltis.'),
+  f('ff-lula-4', 'politica', true, 'Lula foi eleito presidente pela quarta vez em 2026.', 'Venceu em 2002, 2006, 2022 e 2026, este no 2º turno contra Flávio Bolsonaro, com 51,79% dos votos válidos.'),
 ];
 
 export function getFact(id: string): FactCard | undefined {

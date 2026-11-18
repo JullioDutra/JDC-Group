@@ -1,6 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { firstName } from '../game/text';
-import { getTeam } from '../game/teams';
+import { criterionLabel, parseCriterion } from '../party/gridCriteria';
 import type { ConexoesParty, FlagSpec, GradeParty, PartyGame, QuizParty } from '../game/types';
 import { PARTY_CONFIG } from '../party/common';
 import { getConexoes } from '../party/content/conexoes';
@@ -177,13 +177,13 @@ export function gradeBoard(state: GradeParty, final: boolean): ReactElement {
     box(
       { width: cellSize, height: 110, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel, borderRadius: 16, border: `2px solid ${C.panelLine}` },
       txt(sub, { fontSize: 22, fontWeight: 700, color: C.lime, letterSpacing: 2 }),
-      txt(upper(fit(label, 12)), { fontFamily: DISPLAY, fontSize: 34, lineHeight: 1.1 }),
+      txt(upper(fit(label, 26)), { fontFamily: DISPLAY, fontSize: label.length > 16 ? 24 : label.length > 12 ? 28 : 34, lineHeight: 1.1, textAlign: 'center' }),
     );
   const rowHead = (label: string, sub: string) =>
     box(
       { width: head, height: cellSize, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel, borderRadius: 16, border: `2px solid ${C.panelLine}` },
       txt(sub, { fontSize: 26, fontWeight: 700, color: C.lime, letterSpacing: 2 }),
-      txt(upper(fit(label, 11)), { fontFamily: DISPLAY, fontSize: 32, lineHeight: 1.1, textAlign: 'center' }),
+      txt(upper(fit(label, 26)), { fontFamily: DISPLAY, fontSize: label.length > 14 ? 24 : label.length > 11 ? 28 : 32, lineHeight: 1.1, textAlign: 'center' }),
     );
   const cell = (i: number) => {
     const c = state.cells[i];
@@ -202,7 +202,8 @@ export function gradeBoard(state: GradeParty, final: boolean): ReactElement {
         : txt(coord, { fontFamily: DISPLAY, fontSize: 56, color: 'rgba(255,255,255,0.25)' }),
     );
   };
-  const nameOf = (id: string) => getTeam(id)?.name ?? id;
+  const rowLabel = (raw: string) => criterionLabel(parseCriterion(raw, 'club'));
+  const colLabel = (raw: string) => criterionLabel(parseCriterion(raw, 'nation'));
   const [a, b] = state.players;
   const counts = state.players.map((p) => state.cells.filter((x) => x?.jid === p.jid).length);
   return stage(
@@ -215,8 +216,8 @@ export function gradeBoard(state: GradeParty, final: boolean): ReactElement {
     ),
     box(
       { flexDirection: 'column', gap: 12, alignItems: 'center' },
-      box({ gap: 12 }, box({ width: head, height: 110 }), ...state.cols.map((id, i) => header(nameOf(id), `${i + 1} · SELEÇÃO`))),
-      ...[0, 1, 2].map((r) => box({ gap: 12 }, rowHead(nameOf(state.rows[r]), `${['A', 'B', 'C'][r]} · CLUBE`), ...[0, 1, 2].map((c) => cell(r * 3 + c)))),
+      box({ gap: 12 }, box({ width: head, height: 110 }), ...state.cols.map((raw, i) => header(colLabel(raw).name, `${i + 1} · ${colLabel(raw).sub}`))),
+      ...[0, 1, 2].map((r) => box({ gap: 12 }, rowHead(rowLabel(state.rows[r]).name, `${['A', 'B', 'C'][r]} · ${rowLabel(state.rows[r]).sub}`), ...[0, 1, 2].map((c) => cell(r * 3 + c)))),
     ),
     txt(final ? 'Mande DESAFIO GRADE para jogar de novo' : `Vez de ${firstName(state.players[state.turn].name)} · mande: A2 Neymar`, {
       fontSize: 30, fontWeight: 700, color: C.lime, marginTop: 22, textAlign: 'center', justifyContent: 'center',
