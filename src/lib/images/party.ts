@@ -55,7 +55,7 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
   },
   ponte: {
     subtitle: `${PARTY_CONFIG.ponte.rounds} rodadas · 4 clubes por rodada`,
-    rules: ['Cite quem passou pelos 4 clubes da rodada.', 'Passou pelos 4: 10 pts · por 3: 6 · por 2: 3 · por 1: 1.', 'Vale a sua melhor resposta. Ninguém repete jogador.'],
+    rules: ['Cite quem passou pelos 4 clubes da rodada.', 'Passou pelos 4: 10 pts · por 3: 6 · por 2: 3 · por 1: 1.', '1 palpite por pessoa em cada rodada. Ninguém repete jogador.'],
   },
   grade: {
     subtitle: 'Jogo da velha · clubes x seleções',

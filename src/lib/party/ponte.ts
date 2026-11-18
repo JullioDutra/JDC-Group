@@ -7,8 +7,8 @@ import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, pau
 
 /**
  * Ponte: 4 clubes por rodada. Cada um cita jogadores que passaram por eles:
- * passou pelos 4 vale o máximo, por 3 vale menos, e assim por diante. Vale a
- * melhor resposta de cada um (dá para tentar melhorar) e ninguém repete
+ * passou pelos 4 vale o máximo, por 3 vale menos, e assim por diante. Cada
+ * um tem 1 palpite por rodada (pedido de 18/11) e ninguém repete
  * jogador. Os 4 clubes saem da carreira de um jogador real, então sempre há
  * pelo menos uma resposta de 4.
  */
@@ -18,7 +18,8 @@ const HITS_EMOJI = ['', '1️⃣', '2️⃣', '3️⃣', '4️⃣'];
 export const PONTE_RULES = [
   'Cada rodada tem 4 clubes. Cite jogadores que passaram por eles.',
   `Passou pelos 4: ${PONTE_POINTS[4]} pontos · por 3: ${PONTE_POINTS[3]} · por 2: ${PONTE_POINTS[2]} · por 1: ${PONTE_POINTS[1]}.`,
-  'Vale a sua melhor resposta da rodada: pode mandar outro nome para melhorar. Ninguém repete jogador.',
+  '1 palpite por pessoa em cada rodada: o primeiro jogador que você mandar é o que vale. Ninguém repete jogador.',
+  'Nome não encontrado ou já citado por outro não gasta o palpite: manda outro.',
   'O bot reage com o número de clubes (1️⃣ a 4️⃣).',
 ];
 
@@ -63,7 +64,7 @@ export function openPonteRound(state: PonteParty, deps: PartyDeps): Outgoing[] {
     text(
       `*Rodada ${state.round + 1}/${state.totalRounds} · Ponte*\n\n🔗 ${clubNames(r.clubs).map((n) => `*${n}*`).join(' · ')}\n\n` +
         `Cite quem passou por esses clubes: 4 clubes = ${PONTE_POINTS[4]} pts, 3 = ${PONTE_POINTS[3]}, 2 = ${PONTE_POINTS[2]}, 1 = ${PONTE_POINTS[1]}. ` +
-        `Vale a sua melhor resposta. ${PARTY_CONFIG.ponte.seconds}s.`,
+        `*1 palpite por pessoa.* ${PARTY_CONFIG.ponte.seconds}s.`,
     ),
     schedule(state, PARTY_CONFIG.ponte.seconds, deps.now.getTime(), 'pt'),
   ];
@@ -77,7 +78,7 @@ export function ponteHits(record: Pick<PlayerRecord, 'clubs'>, clubs: string[]):
 }
 
 export async function ponteAnswer(state: PonteParty, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> {
-  if ((state.best[player.jid]?.hits ?? 0) >= 4) return [];
+  if (player.jid in state.best) return []; // já usou o palpite da rodada
   const raw = msg.text.trim();
   if (!looksLikePlayerName(raw)) return [];
   const who = firstName(player.name);
@@ -94,12 +95,13 @@ export async function ponteAnswer(state: PonteParty, player: PartyPlayer, msg: I
   if (state.used.includes(key)) return [text(`*${found.record.name}* já foi citado nesta rodada.`)];
   state.used.push(key);
   player.missed = 0;
-  if (found.score === 0) return save([text(`❌ *${who}*: ${found.record.name} não passou por nenhum dos 4.`)]);
-  const before = state.best[player.jid]?.hits ?? 0;
-  if (found.score > before) state.best[player.jid] = { name: found.record.name, hits: found.score };
-  const out: Outgoing[] = [react(msg, HITS_EMOJI[found.score])];
-  const everyoneMaxed = activePlayers(state).every((p) => (state.best[p.jid]?.hits ?? 0) >= 4);
-  if (everyoneMaxed) return save([...out, ...closePonteRound(state, deps, 'Todos acharam alguém dos 4 clubes!')]);
+  // O palpite vale, acertando ou não: fica registrado e não dá para trocar.
+  state.best[player.jid] = { name: found.record.name, hits: found.score };
+  const out: Outgoing[] = found.score === 0
+    ? [text(`❌ *${who}*: ${found.record.name} não passou por nenhum dos 4.`)]
+    : [react(msg, HITS_EMOJI[found.score])];
+  const everyone = activePlayers(state).every((p) => p.jid in state.best);
+  if (everyone) return save([...out, ...closePonteRound(state, deps, 'Todos responderam.')]);
   return save(out);
 }
 

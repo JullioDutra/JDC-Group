@@ -425,14 +425,14 @@ export interface CarreiraParty extends PartyBase {
   solved: boolean;
 }
 
-/** Ponte: 4 clubes; cite quem passou por eles. Vale a melhor resposta de cada um (4 clubes = máximo). */
+/** Ponte: 4 clubes; cite quem passou por eles. 1 palpite por pessoa por rodada (4 clubes = máximo). */
 export interface PonteParty extends PartyBase {
   game: 'ponte';
   round: number;
   totalRounds: number;
   /** Clubes de cada rodada (ids de time) e um exemplo que passou pelos 4. */
   rounds: Array<{ clubs: string[]; example: string; exampleId: string }>;
-  /** Melhor resposta de cada um nesta rodada. */
+  /** O palpite de cada um nesta rodada (1 por pessoa). */
   best: Record<string, { name: string; hits: number }>;
   /** Jogadores já citados nesta rodada (ninguém repete). */
   used: string[];

@@ -182,7 +182,7 @@ test('comandos dos jogos da base', () => {
   assert.deepEqual(careerPath(FAMOUS[0]), ['Santos', 'Barcelona', 'PSG', 'Al-Hilal']);
 });
 
-test('Ponte: 4 clubes = máximo, 3 vale menos e assim em sequência; melhor resposta de cada um; ninguém repete', async () => {
+test('Ponte: 4 clubes = máximo, 3 vale menos e assim em sequência; 1 palpite por pessoa; ninguém repete', async () => {
   assert.deepEqual([PONTE_POINTS[4], PONTE_POINTS[3], PONTE_POINTS[2], PONTE_POINTS[1]], [10, 6, 3, 1]);
   const t = setup();
   await t.ready;
@@ -199,10 +199,13 @@ test('Ponte: 4 clubes = máximo, 3 vale menos e assim em sequência; melhor resp
   const other = FAMOUS.filter((f) => f.id !== example.id).sort((a, b) => ponteHits(b, clubs) - ponteHits(a, clubs))[0];
   const otherHits = ponteHits(other, clubs);
   await t.say('Bia', other.name);
+  // Bia já usou o palpite: o segundo nome é ignorado, mesmo sendo o de 4 clubes.
+  assert.equal(asText(await t.say('Bia', example.name)), '');
+  // Nome já citado não gasta o palpite de Ana.
   assert.match(asText(await t.say('Ana', other.name)), /já foi citado/);
-  const out = asText(await t.say('Ana', example.name));
-  assert.match(out, /\[react:4️⃣\]/);
-  const end = asText(await t.tick());
+  // O palpite de Ana fecha a rodada: todos responderam.
+  const end = asText(await t.say('Ana', example.name));
+  assert.match(end, /\[react:4️⃣\][\s\S]*Todos responderam/);
   assert.match(end, new RegExp(`Ana: ${example.name} \\(4 de 4\\) \\+10`));
   if (otherHits > 0) assert.match(end, new RegExp(`Bia: ${other.name} \\(${otherHits} de 4\\) \\+${PONTE_POINTS[otherHits]}`));
 });

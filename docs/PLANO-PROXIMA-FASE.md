@@ -92,7 +92,7 @@ Com mais de 77 mil jogadores na base (clubes com datas, seleção, posição), d
 | Modo | Formato | Como funciona | Conteúdo |
 |---|---|---|---|
 | **Carreira** | Grupo, corrida | O bot mostra a trajetória: "Paulista → Grêmio → Atlético-MG". Quem acertar primeiro leva. Dicas extras saem com o tempo (seleção, posição, nascimento) | Gerado da base (jogadores conhecidos com 3+ clubes) |
-| **Ponte** | Grupo, várias certas | **4 clubes** por rodada (pedido de 18/11): passou pelos 4 = 10 pontos, por 3 = 6, por 2 = 3, por 1 = 1. Vale a melhor resposta de cada um. Ninguém repete | Validado pela base |
+| **Ponte** | Grupo, várias certas | **4 clubes** por rodada (pedido de 18/11): passou pelos 4 = 10 pontos, por 3 = 6, por 2 = 3, por 1 = 1. 1 palpite por pessoa por rodada. Ninguém repete | Validado pela base |
 | **Grade 3x3** | 1x1 (jogo da velha) ou grupo | Linhas = clubes, colunas = seleções ou clubes. Cada casa pede um jogador que cumpra os dois. Fechou 3 em linha, venceu | Validado pela base |
 | **Pênaltis** | 1x1 | 5 cobranças alternadas. Cada cobrança: cite um jogador que cumpra a regra sorteada ("atacante que jogou no Milan"). Errou, o goleiro defendeu. Empate vai para morte súbita | Validado pela base |
 | **Maior ou Menor** | Grupo, eliminação | Dois jogadores: quem tem mais gols, jogos ou valor? Errou, está fora | Números da base (manuais primeiro) |
@@ -182,7 +182,7 @@ Com mais de 77 mil jogadores na base (clubes com datas, seleção, posição), d
 | Comando | Jogo |
 |---|---|
 | `abrir carreira` | Trajetória de clubes; dicas a cada 25 s (posição e seleção, ano de nascimento, iniciais); 100/70/50/30 pontos; 5 rodadas |
-| `abrir ponte` | 4 clubes tirados da carreira de um jogador real (sempre há resposta de 4). Passou pelos 4: 10 pontos, por 3: 6, por 2: 3, por 1: 1. Vale a melhor resposta de cada um; o bot reage com 1️⃣ a 4️⃣; ninguém repete; 4 rodadas de 90 s |
+| `abrir ponte` | 4 clubes tirados da carreira de um jogador real (sempre há resposta de 4). Passou pelos 4: 10 pontos, por 3: 6, por 2: 3, por 1: 1. **1 palpite por pessoa por rodada** (nome não encontrado ou já citado não gasta o palpite); o bot reage com 1️⃣ a 4️⃣; ninguém repete; a rodada acaba quando todos responderem ou em 90 s; 4 rodadas |
 | `desafio grade` | Jogo da velha 1 x 1: linhas = clubes, colunas = seleções; só entram casas com resposta na base. `A2 Neymar`; errou, perde a vez; 3 em linha vence |
 | `desafio pênaltis` | 1 x 1: 5 cobranças para cada, com regra (posição + clube ou seleção); gol ou defesa; termina antes se não der mais para alcançar; morte súbita |
 
