@@ -5,6 +5,7 @@ import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
 import { ImageSpec, MatchState, Pick, Position, RankingRow, SLOTS, Side } from '../game/types';
 import { conexoesBoard, flagQuiz, textBoard } from './party2';
+import { helpMenu } from './help';
 import { draftBoard, intrusoBoard, lineupQuiz, partyLobby, partyScore, partyTable, top10Board } from './party';
 import { BODY, C, DISPLAY, H, SIDE_COLOR, W, ball, box, brand, fit, formationStrip, pill, stage, txt } from './theme';
 
@@ -309,6 +310,8 @@ export function buildImage(spec: ImageSpec): ReactElement {
   switch (spec.kind) {
     case 'challenge':
       return challenge(spec.host);
+    case 'help':
+      return helpMenu();
     case 'modes':
       return modesMenu();
     case 'kickoff':

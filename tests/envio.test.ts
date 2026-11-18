@@ -67,3 +67,17 @@ test('plano B em texto: tabuleiro do Conexões numerado', () => {
   });
   assert.equal(text, '1. Gilmar\n2. Feola\n3. Pelé\n4. Leônidas');
 });
+
+test('ajuda: vira imagem (com texto de reserva) e renderiza', async () => {
+  const { renderImage } = await import('../src/lib/images/render');
+  const { handleMessage } = await import('../src/lib/game/engine');
+  const { MemoryStore } = await import('../src/lib/store/memory');
+  const { createLookup } = await import('../src/lib/ai');
+  const store = new MemoryStore();
+  const deps = { store, lookup: createLookup(store, async () => null) };
+  await handleMessage({ id: '1', groupJid: 'g@g.us', senderJid: 'a@s', senderName: 'Ana', text: 'ativar jogos' }, deps);
+  const out = await handleMessage({ id: '2', groupJid: 'g@g.us', senderJid: 'a@s', senderName: 'Ana', text: 'ajuda' }, deps);
+  assert.equal(out[0].type, 'image');
+  assert.ok((await renderImage({ kind: 'help' })).length > 10_000);
+  assert.match(imageAsText({ kind: 'help' }) ?? '', /abrir fato ou fake/);
+});

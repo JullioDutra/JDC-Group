@@ -3,6 +3,9 @@ import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
 import { SLOTS, type ImageSpec, type Pick } from '../game/types';
 import { getConexoes } from '../party/content/conexoes';
+import { helpText } from '../game/commands';
+
+const GAME_NAME_FOR_TEXT = 'Duelo de Craques';
 
 /**
  * Plano B quando a imagem não sai (falha de envio de mídia no WhatsApp):
@@ -13,6 +16,8 @@ const pickText = (p: Pick | null | undefined) => (p ? `${p.name}${Number.isFinit
 
 export function imageAsText(spec: ImageSpec): string | null {
   switch (spec.kind) {
+    case 'help':
+      return helpText(GAME_NAME_FOR_TEXT);
     case 'modes':
       return MODES.map((m) => `${m.number}. ${m.name} · ${m.tagline}`).join('\n');
     case 'ranking':

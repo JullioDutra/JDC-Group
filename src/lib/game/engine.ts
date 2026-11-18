@@ -5,6 +5,7 @@ import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
 import { drawRestrictions, playContext } from './validate';
+import { helpText } from './commands';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import {
@@ -71,44 +72,7 @@ function roundStarter(round: number): Side {
 
 // ---------- Textos ----------
 
-const HELP = [
-  `*${GAME_NAME}* — comandos`,
-  '',
-  '*1 x 1*',
-  '• *iniciar jogo* — lança um desafio',
-  '• *iniciar aleatório* — desafio com tema sorteado (bom para começar)',
-  '• *iniciar melhor time* — clubes sorteados, montem o melhor time; a IA julga (ou *iniciar melhor time votação*: o grupo vota)',
-  '• *aceitar* — entra como adversário',
-  '• *placar* — campinho da partida',
-  '• *tempo* — cobra quem estourou o tempo da jogada',
-  '• *cancelar* — desiste/encerra',
-  '',
-  '*Em grupo*',
-  '• *abrir sala* — Escalação em Grupo (até 10)',
-  '• *top 10* — acertem as posições de um ranking (até 10)',
-  '• *abrir que time é esse* — adivinhe o time e o ano pela escalação (até 15)',
-  '• *abrir quem é* — adivinhe o craque pelas dicas (até 15)',
-  '• *abrir intruso* — marquem X em quem pertence; o que sobrar é o intruso (até 15)',
-  '• *abrir emoji* — adivinhe pelo emoji; 1 palpite por pessoa (até 15)',
-  '• *abrir relâmpago* — perguntas rápidas, quem acertar primeiro leva (até 15)',
-  '• *abrir alfabeto* — letra + categoria, nome repetido não vale (até 15)',
-  '• *abrir chute certo* — chute o número; o mais perto ganha (até 15)',
-  '• *abrir bandeiraço* — de que país é a bandeira? (até 15)',
-  '• *abrir sobrevivente* — um item por vez; errou, perde vida (até 15)',
-  '• *abrir conexões* — 16 nomes, ache os 4 grupos (até 12)',
-  '• *abrir stop* — a Adedonha do grupo (até 10)',
-  '• *abrir draft* — draft em serpente e o grupo vota (até 8)',
-  '• *abrir linha do tempo* — ponha 4 fatos em ordem (até 15)',
-  '• *abrir fato ou fake* — verdade ou mito? (até 15)',
-  '• *entrar* · *sair* · *começar* e *encerrar* (anfitrião)',
-  '• *próxima* — pula a pausa entre rodadas (o anfitrião também pula a pergunta da vez)',
-  '',
-  '*Categorias* (some ao comando): *futebol*, *geral*, *história*, *anime*, *política*. Política só aparece quando pedida. Ex.: *abrir relâmpago política*, *top 10 geral*. Some *difícil* em escalação/melhor time para clubes menos óbvios.',
-  '',
-  '*Geral*',
-  '• *regras* · *modos* · *ranking*',
-  '• *desativar jogos* — só admin',
-].join('\n');
+const HELP = helpText(GAME_NAME);
 
 const RULES = [
   `*Como se joga ${GAME_NAME}*`,
@@ -311,7 +275,10 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return [text('Bot desativado neste grupo. Para voltar, mande *ativar jogos*.')];
   }
 
-  if (norm === 'ajuda' || norm === 'menu' || norm === 'comandos' || norm === 'jogos' || norm === 'ajuda jogos') return [text(HELP)];
+  if (norm === 'ajuda' || norm === 'menu' || norm === 'comandos' || norm === 'jogos' || norm === 'ajuda jogos') {
+    return [{ type: 'image', image: { kind: 'help' }, caption: 'Mande o comando do jogo. Dúvida sobre um jogo? Abra a sala e mande *regras*.' }];
+  }
+  if (norm === 'ajuda texto') return [text(HELP)];
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (norm === 'ranking') {
     const rows = await store.getRanking(msg.groupJid, 10);

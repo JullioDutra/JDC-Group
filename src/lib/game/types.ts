@@ -455,6 +455,7 @@ export type Outgoing =
 export type ImageSpec =
   | { kind: 'challenge'; host: string }
   | { kind: 'modes' }
+  | { kind: 'help' }
   | { kind: 'kickoff'; state: MatchState }
   | { kind: 'pitch'; state: MatchState }
   | { kind: 'ranking'; groupName: string; rows: RankingRow[] }
