@@ -128,6 +128,11 @@ export const MODES: GameMode[] = [
     metric: 'debutYear', unit: 'ano', direction: 'low', restriction: 'club', penalty: new Date().getUTCFullYear(),
     what: 'Escale os mais antigos: conta o ano de estreia como profissional.',
   }),
+  mode({
+    id: 'vitrine', number: 18, name: 'Vitrine Atual', tagline: 'Valor de mercado hoje · clube sorteado',
+    metric: 'marketValueEurM', unit: 'mi €', direction: 'high', restriction: 'club',
+    what: 'Escale quem vale mais HOJE no mercado (aposentado vale zero).',
+  }),
 ];
 
 export function getMode(id: string | null): GameMode | undefined {
@@ -166,6 +171,7 @@ const RANGES: Record<MetricKey, [number, number]> = {
   worldCupsPlayed: [0, 6],
   debutYear: [1900, 2100],
   clubsCount: [1, 40],
+  marketValueEurM: [0, 250],
 };
 
 function raw(profile: PlayerProfile, metric: MetricKey, now: Date): number | null {

@@ -1,6 +1,6 @@
 import { firstName, normalize } from '../game/text';
 import type { ConexoesParty, ContentCategory, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, warnOnce, pauseBeforeNext } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, warnOnce, pauseBeforeNext, freshFirst } from './common';
 import { CONEXOES, getConexoes } from './content/conexoes';
 
 /**
@@ -25,7 +25,7 @@ export const CONEXOES_RULES = [
 
 export function startConexoes(state: ConexoesParty, deps: PartyDeps): Outgoing[] {
   const pool = CONEXOES.filter((p) => (state.category ? p.category === state.category : p.category !== 'politica'));
-  state.order = shuffle(pool.map((p) => p.id), deps.rng).slice(0, state.totalRounds);
+  state.order = freshFirst(pool.map((p) => p.id), deps.rng, deps.seen).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;

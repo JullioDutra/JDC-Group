@@ -100,57 +100,67 @@ export function hasMaritacaKey(): boolean {
   return Boolean(process.env.MARITACA_API_KEY);
 }
 
-/** Chamada genérica que pede JSON (usada pelo juiz do Melhor Time). Devolve o texto da resposta. */
-export async function maritacaJson(system: string, user: string, maxTokens = 400): Promise<string> {
+type ChatMessage = { role: 'system' | 'user'; content: string };
+
+class RetryableError extends Error {}
+
+/**
+ * Uma conversa com a Maritaca (API compatível com OpenAI), pedindo JSON.
+ * Se o modelo principal demorar (15 s) ou der erro 5xx, tenta uma vez no
+ * modelo rápido (MARITACA_FAST_MODEL, padrão sabiazinho-4, 10 s). Em 17-18/11
+ * foram 6 estouros de tempo e um 502 que deixaram jogada sem resposta.
+ */
+async function complete(messages: ChatMessage[], opts: { maxTokens: number; temperature: number }): Promise<string> {
   const baseUrl = (process.env.MARITACA_BASE_URL || 'https://chat.maritaca.ai/api').replace(/\/$/, '');
-  const body = (json: boolean) =>
-    JSON.stringify({
-      model: process.env.MARITACA_MODEL || 'sabia-4',
-      temperature: 0.2,
-      max_tokens: maxTokens,
-      ...(json ? { response_format: { type: 'json_object' } } : {}),
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    });
-  const call = (json: boolean) =>
-    fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.MARITACA_API_KEY}` },
-      body: body(json),
-      signal: AbortSignal.timeout(25_000),
-    });
-  let response = await call(true);
-  if (response.status === 400 || response.status === 422) response = await call(false);
-  if (!response.ok) throw new Error(`Maritaca respondeu ${response.status}`);
-  const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Maritaca devolveu resposta vazia');
-  return content;
+  const once = async (model: string, timeoutMs: number): Promise<string> => {
+    const call = (json: boolean) =>
+      fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.MARITACA_API_KEY}` },
+        body: JSON.stringify({
+          model,
+          temperature: opts.temperature,
+          max_tokens: opts.maxTokens,
+          ...(json ? { response_format: { type: 'json_object' } } : {}),
+          messages,
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    let response: Response;
+    try {
+      response = await call(true);
+      // Se o modo JSON não for aceito pelo modelo, tenta sem ele (o prompt já exige JSON).
+      if (response.status === 400 || response.status === 422) response = await call(false);
+    } catch (error) {
+      throw new RetryableError(`Maritaca não respondeu: ${(error as Error).name}`);
+    }
+    if (response.status >= 500 || response.status === 429) throw new RetryableError(`Maritaca respondeu ${response.status}`);
+    if (!response.ok) throw new Error(`Maritaca respondeu ${response.status}: ${(await response.text()).slice(0, 200)}`);
+    const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new RetryableError('Maritaca devolveu resposta vazia');
+    return content;
+  };
+  const main = process.env.MARITACA_MODEL || 'sabia-4';
+  const fast = process.env.MARITACA_FAST_MODEL || 'sabiazinho-4';
+  try {
+    return await once(main, 15_000);
+  } catch (error) {
+    if (!(error instanceof RetryableError) || fast === main) throw error;
+    console.error(`IA principal falhou (${error.message}); tentando o modelo rápido`);
+    return once(fast, 10_000);
+  }
 }
 
-/** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
-async function chat(query: string, jsonMode: boolean, hint?: string): Promise<Response> {
-  const baseUrl = (process.env.MARITACA_BASE_URL || 'https://chat.maritaca.ai/api').replace(/\/$/, '');
-  return fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${process.env.MARITACA_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: process.env.MARITACA_MODEL || 'sabia-4',
-      temperature: 0,
-      max_tokens: 800,
-      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage(query, hint) },
-      ],
-    }),
-    signal: AbortSignal.timeout(25_000),
-  });
+/** Chamada genérica que pede JSON (juiz, dado focado). Devolve o texto da resposta. */
+export async function maritacaJson(system: string, user: string, maxTokens = 400): Promise<string> {
+  return complete(
+    [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+    { maxTokens, temperature: 0.2 },
+  );
 }
 
 function userMessage(query: string, hint?: string): string {
@@ -163,16 +173,14 @@ function userMessage(query: string, hint?: string): string {
   );
 }
 
-/** Consulta a Maritaca (API compatível com OpenAI). Lança erro em falha de rede/formato. */
+/** Consulta a Maritaca. Lança erro em falha de rede/formato. */
 export async function lookupWithMaritaca(query: string, hint?: string): Promise<PlayerProfile | null> {
-  let response = await chat(query, true, hint);
-  // Se o modo JSON não for aceito pelo modelo, tenta de novo sem ele (o prompt já exige JSON).
-  if (response.status === 400 || response.status === 422) response = await chat(query, false, hint);
-  if (!response.ok) {
-    throw new Error(`Maritaca respondeu ${response.status}: ${(await response.text()).slice(0, 200)}`);
-  }
-  const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Maritaca devolveu resposta vazia');
+  const content = await complete(
+    [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: userMessage(query, hint) },
+    ],
+    { maxTokens: 800, temperature: 0 },
+  );
   return parseProfile(extractJson(content));
 }

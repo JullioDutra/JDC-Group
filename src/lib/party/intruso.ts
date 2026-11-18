@@ -1,6 +1,6 @@
 import { firstName, normalize } from '../game/text';
 import type { IncomingMessage, IntrusoParty, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, answerMatches, pendingResults, schedule, text, warnOnce, pauseBeforeNext } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, answerMatches, pendingResults, schedule, text, warnOnce, pauseBeforeNext, freshFirst } from './common';
 import { INTRUSO_SETS, getIntrusoSet } from './content/intruso';
 
 /**
@@ -43,7 +43,7 @@ export function startIntruso(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
   const pool = INTRUSO_SETS.filter((s) =>
     state.category ? (s.category ?? 'futebol') === state.category : (s.category ?? 'futebol') !== 'politica',
   );
-  state.order = shuffle(pool.map((s) => s.id), deps.rng).slice(0, state.totalRounds);
+  state.order = freshFirst(pool.map((s) => s.id), deps.rng, deps.seen).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;

@@ -28,15 +28,35 @@ const contextKey = (ctx?: LookupContext) => `${ctx?.position ?? ''}|${ctx?.kind 
 
 const isStatKey = (m: MetricKey | undefined): m is StatKey => !!m && (STAT_KEYS as string[]).includes(m);
 
-/** O número do tema ainda não foi perguntado para este jogador? */
+/**
+ * Falta o número do tema? Vale o manual, depois o que está gravado. Um "não
+ * sei" antigo da IA (null) não conta como dado: pergunta de novo (antes ele
+ * ficava gravado para sempre e o jogador nunca mais tinha o número).
+ */
 function needsStat(r: PlayerRecord, stat: StatKey): boolean {
+  if (r.manual?.stats?.[stat]) return false;
   if (stat === 'heightCm' && r.heightCm != null) return false;
   if (stat === 'debutYear' && r.debutYear != null) return false;
-  return !(stat in r.stats);
+  return typeof r.stats[stat] !== 'number';
+}
+
+/** Número do jogador: manual (admin) > base (Wikidata/IA). */
+export function statOf(r: PlayerRecord, k: StatKey): number | null {
+  const manual = r.manual?.stats?.[k];
+  if (manual && Number.isFinite(manual.value)) return manual.value;
+  return typeof r.stats[k] === 'number' ? (r.stats[k] as number) : null;
+}
+
+/** Data da conferência manual mais recente (para mostrar no placar). */
+function manualDate(r: PlayerRecord): string | undefined {
+  const dates = Object.values(r.manual?.stats ?? {}).map((e) => e?.at).filter((d): d is string => !!d);
+  return dates.sort().at(-1);
 }
 
 export function toProfile(r: PlayerRecord): PlayerProfile {
-  const n = (k: StatKey) => (typeof r.stats[k] === 'number' ? (r.stats[k] as number) : null);
+  const n = (k: StatKey) => statOf(r, k);
+  const manualHeight = r.manual?.stats?.heightCm?.value;
+  const manualDebut = r.manual?.stats?.debutYear?.value;
   return {
     exists: true,
     id: r.id,
@@ -46,7 +66,7 @@ export function toProfile(r: PlayerRecord): PlayerProfile {
     nationality: r.nationality,
     birthDate: r.birthDate,
     clubs: r.clubs,
-    heightCm: r.heightCm ?? n('heightCm'),
+    heightCm: manualHeight ?? r.heightCm ?? n('heightCm'),
     careerGoals: n('careerGoals'),
     careerAssists: n('careerAssists'),
     peakValueEurM: n('peakValueEurM'),
@@ -59,8 +79,55 @@ export function toProfile(r: PlayerRecord): PlayerProfile {
     brasileiraoGoals: n('brasileiraoGoals'),
     libertadoresGoals: n('libertadoresGoals'),
     worldCupsPlayed: n('worldCupsPlayed'),
-    debutYear: r.debutYear ?? n('debutYear'),
+    debutYear: manualDebut ?? r.debutYear ?? n('debutYear'),
+    marketValueEurM: n('marketValueEurM'),
+    manualAt: manualDate(r),
   };
+}
+
+const sameBirth = (a: PlayerRecord, b: PlayerRecord) => !!a.birthDate && a.birthDate === b.birthDate;
+
+/** As duas fichas são da mesma pessoa? Mesmo nascimento e um nome de uma bate com o da outra. */
+export function isSamePerson(a: PlayerRecord, b: PlayerRecord): boolean {
+  if (a.id === b.id || !sameBirth(a, b)) return false;
+  const namesA = [a.name, ...a.aliases].map(normalize);
+  const namesB = [b.name, ...b.aliases].map(normalize);
+  return namesA.some((x) => namesB.includes(x));
+}
+
+/**
+ * Junta fichas duplicadas da mesma pessoa (a que a IA criou antes e a que o
+ * Wikidata trouxe depois): fica a do Wikidata (ou a mais famosa), com os
+ * números das duas (os dela primeiro) e as correções manuais das duas.
+ * Era um dos motivos de "às vezes não puxou os gols": a ficha escolhida não
+ * tinha o número, que estava na outra.
+ */
+export async function mergeDuplicates(store: Store, record: PlayerRecord, pool: PlayerRecord[]): Promise<PlayerRecord> {
+  const dups = pool.filter((r) => isSamePerson(record, r));
+  if (dups.length === 0) return record;
+  const all = [record, ...dups];
+  const keep = all.find((r) => r.source === 'wikidata' && !r.id.startsWith('ai:')) ?? all.sort((a, b) => b.sitelinks - a.sitelinks)[0];
+  const others = all.filter((r) => r.id !== keep.id);
+  const merged: PlayerRecord = { ...keep, stats: { ...keep.stats }, aliases: [...keep.aliases], clubs: [...keep.clubs] };
+  for (const o of others) {
+    for (const k of STAT_KEYS) if (typeof merged.stats[k] !== 'number' && typeof o.stats[k] === 'number') merged.stats[k] = o.stats[k];
+    for (const a of [o.name, ...o.aliases]) if (!merged.aliases.some((x) => normalize(x) === normalize(a)) && normalize(a) !== normalize(merged.name)) merged.aliases.push(a);
+    if (!merged.positions.length) merged.positions = o.positions;
+    if (!merged.clubs.length) merged.clubs = [...o.clubs];
+    merged.nationality ??= o.nationality;
+    merged.heightCm ??= o.heightCm;
+    merged.debutYear ??= o.debutYear;
+  }
+  merged.aliases = merged.aliases.slice(0, 8);
+  await store.upsertPlayers([merged]);
+  for (const o of others) {
+    for (const [k, e] of Object.entries(o.manual?.stats ?? {})) {
+      if (e && !keep.manual?.stats?.[k as StatKey]) await store.setManualStat(merged.id, k as StatKey, e);
+    }
+    for (const a of o.manual?.aliases ?? []) await store.addManualAlias(merged.id, a);
+  }
+  await store.deletePlayers(others.map((o) => o.id));
+  return (await store.getPlayer(merged.id)) ?? merged;
 }
 
 /** Nomes que valem para este jogador: o nome conhecido e o nome completo (nunca apelidos). */
@@ -106,7 +173,8 @@ async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRe
       debutYear: same.debutYear ?? profile.debutYear,
       clubs,
       aliases: [...new Set([...same.aliases, ...acceptedNames(profile).slice(1)])].slice(0, 6),
-      stats: { ...fromAi, ...same.stats },
+      // Os números da ficha existente valem mais; um "não sei" antigo (null) não apaga o da IA.
+      stats: { ...fromAi, ...Object.fromEntries(Object.entries(same.stats).filter(([, v]) => typeof v === 'number')) },
     };
   } else {
     record = {
@@ -126,6 +194,47 @@ async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRe
   }
   await store.upsertPlayers([record]);
   return record;
+}
+
+/**
+ * Pergunta o número do tema à IA (que já tenta o modelo rápido se o principal
+ * falhar). Só grava número de verdade. Se a IA não souber ou falhar:
+ * - gols/jogos na carreira: usa a soma do Wikidata (clubes + seleção) como
+ *   estimativa da jogada, sem gravar (tenta a IA de novo numa próxima vez);
+ * - lembra o "não sei" por 10 min, para não travar a rodada perguntando de novo.
+ */
+async function fetchStat(
+  store: Store,
+  stats: StatSource,
+  record: PlayerRecord,
+  stat: StatKey,
+): Promise<{ value: number | null; stored: boolean; estimate: boolean }> {
+  const negKey = `stat:${record.id}:${stat}`;
+  let value: number | null = null;
+  if ((await store.getCachedProfile(negKey).catch(() => undefined)) === undefined) {
+    try {
+      value = await stats(record, stat);
+    } catch (error) {
+      console.error('dado do tema falhou', error);
+    }
+    if (value !== null) {
+      await store.setPlayerStat(record.id, stat, value);
+      return { value, stored: true, estimate: false };
+    }
+    await store.putCachedProfile(negKey, null).catch(() => undefined);
+  }
+  const estimate = anchorEstimate(record, stat);
+  return { value: estimate, stored: false, estimate: estimate !== null };
+}
+
+/** Estimativa pelo Wikidata (somas por clube + seleção), só para gols e jogos na carreira. */
+export function anchorEstimate(record: PlayerRecord, stat: StatKey): number | null {
+  const intl = (k: StatKey) => (typeof record.stats[k] === 'number' ? (record.stats[k] as number) : 0);
+  if (stat === 'careerGoals' && record.anchors?.clubGoals != null && (record.anchors.clubApps ?? 0) > 0) {
+    return record.anchors.clubGoals + intl('intlGoals');
+  }
+  if (stat === 'careerApps' && record.anchors?.clubApps) return record.anchors.clubApps + intl('intlCaps');
+  return null;
 }
 
 /**
@@ -197,16 +306,20 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       }
     }
 
+    // Mesma pessoa em duas fichas: junta antes de olhar o número.
+    try {
+      record = await mergeDuplicates(store, record, candidates);
+    } catch (error) {
+      console.error('juntar duplicadas falhou', error);
+    }
+
     const stat = isStatKey(ctx?.metric) ? ctx!.metric as StatKey : null;
     if (stat && stats && needsStat(record, stat)) {
-      try {
-        const value = await stats(record, stat);
-        record.stats[stat] = value;
-        await store.setPlayerStat(record.id, stat, value);
-        outcome += '+dado';
-      } catch (error) {
-        console.error('dado do tema falhou', error);
-      }
+      const value = await fetchStat(store, stats, record, stat);
+      if (value.stored) outcome += '+dado';
+      else if (value.estimate) outcome += '+estimativa';
+      else outcome += '+sem-dado';
+      if (value.value !== null) record.stats[stat] = value.value;
     }
 
     void log(outcome, record.id);

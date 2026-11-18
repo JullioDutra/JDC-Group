@@ -4,6 +4,7 @@ import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
 import { EscalacaoParty, IntrusoParty, MelhorTimeParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
 import { PARTY_CONFIG, standings } from '../party/engine';
+import { ONE_X_ONE } from '../party/common';
 import { BODY, C, DISPLAY, H, W, box, brand, fit, pill, stage, txt } from './theme';
 
 /** Imagens do Modo em Grupo: sala aberta, tabela da Escalação e quadro do Top 10. */
@@ -48,6 +49,22 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     subtitle: `${PARTY_CONFIG.linha.rounds} rodadas · 4 acontecimentos`,
     rules: ['Ponha os 4 acontecimentos em ordem: do mais antigo ao mais recente.', 'Mande as letras: CADB. 1 resposta por pessoa.', 'Pontos por posição certa; acertou tudo, bônus.'],
   },
+  carreira: {
+    subtitle: `${PARTY_CONFIG.carreira.rounds} carreiras · gerado da base de jogadores`,
+    rules: ['O bot mostra a trajetória de clubes de um jogador.', 'A cada 25s sai uma dica extra. 1 palpite por pessoa a cada dica.', 'O primeiro que acertar leva: quanto antes, mais pontos.'],
+  },
+  ponte: {
+    subtitle: `${PARTY_CONFIG.ponte.rounds} rodadas · 4 clubes por rodada`,
+    rules: ['Cite quem passou pelos 4 clubes da rodada.', 'Passou pelos 4: 10 pts · por 3: 6 · por 2: 3 · por 1: 1.', 'Vale a sua melhor resposta. Ninguém repete jogador.'],
+  },
+  grade: {
+    subtitle: 'Jogo da velha · clubes x seleções',
+    rules: ['Linhas são clubes; colunas são seleções.', 'Na sua vez: casa + jogador que cumpra as duas (A2 Neymar).', 'Errou: perde a vez. 3 em linha vence.'],
+  },
+  penaltis: {
+    subtitle: '5 cobranças para cada · morte súbita',
+    rules: ['Cada cobrança tem uma regra: posição + clube ou seleção.', 'Jogador que cumpre a regra: gol. Não cumpre: defendeu.', 'Empate depois das 5: morte súbita.'],
+  },
   fato: {
     subtitle: `${PARTY_CONFIG.fato.rounds} afirmações`,
     rules: ['Uma afirmação por rodada: é fato ou fake?', '1 resposta por pessoa. O primeiro a acertar ganha bônus.', 'Na revelação, o bot explica o porquê.'],
@@ -56,6 +73,7 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
 
 export function partyLobby(state: PartyState): ReactElement {
   const cfg = PARTY_CONFIG[state.game];
+  const oneXOne = ONE_X_ONE.includes(state.game);
   const mode = state.game === 'escalacao' ? getMode(state.modeId) : undefined;
   let subtitle: string;
   let rules: string[];
@@ -122,8 +140,9 @@ export function partyLobby(state: PartyState): ReactElement {
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(`ATÉ ${cfg.maxPlayers} JOGADORES`, C.panel, C.lime, 24)),
     box(
       { flexDirection: 'column', marginTop: 44 },
-      txt('SALA ABERTA', { fontSize: 30, fontWeight: 700, letterSpacing: 6, color: C.lime }),
-      txt(upper(cfg.name), { fontFamily: DISPLAY, fontSize: cfg.name.length > 10 ? 116 : 160, lineHeight: 1.15 }),
+      txt(oneXOne ? 'DESAFIO 1 X 1' : 'SALA ABERTA', { fontSize: 30, fontWeight: 700, letterSpacing: 6, color: C.lime }),
+      // Acento em maiúscula (PÊNALTIS) precisa de mais altura para não encostar no rótulo.
+      txt(upper(cfg.name), { fontFamily: DISPLAY, fontSize: cfg.name.length > 10 ? 116 : 160, lineHeight: /[ÂÊÔÁÉÍÓÚÃÕ]/.test(upper(cfg.name)) ? 1.35 : 1.15 }),
       txt(subtitle, { fontSize: 34, color: C.muted, fontWeight: 500, marginTop: 10 }),
     ),
     box(
@@ -159,10 +178,10 @@ export function partyLobby(state: PartyState): ReactElement {
       { marginTop: 28, justifyContent: 'space-between', alignItems: 'center' },
       box(
         { flexDirection: 'column' },
-        txt(state.game === 'melhortime' ? 'Desafio 1 x 1' : `Dá para entrar até ${state.game === 'top10' ? `a ${cfg.joinUntil}ª posição revelada` : `a ${cfg.joinUntil}ª rodada`}`, { fontSize: 28, color: C.muted, fontWeight: 500 }),
-        txt(state.game === 'melhortime' ? 'Começa assim que alguém aceitar' : 'O anfitrião manda COMEÇAR', { fontSize: 28, color: C.white, fontWeight: 700 }),
+        txt(oneXOne ? 'Desafio 1 x 1' : cfg.joinUntil === 0 ? 'Ninguém entra depois de começar' : `Dá para entrar até ${state.game === 'top10' ? `a ${cfg.joinUntil}ª posição revelada` : `a ${cfg.joinUntil}ª rodada`}`, { fontSize: 28, color: C.muted, fontWeight: 500 }),
+        txt(oneXOne ? 'Começa assim que alguém aceitar' : 'O anfitrião manda COMEÇAR', { fontSize: 28, color: C.white, fontWeight: 700 }),
       ),
-      txt(state.game === 'melhortime' ? 'ACEITAR' : 'ENTRAR', {
+      txt(oneXOne ? 'ACEITAR' : 'ENTRAR', {
         fontFamily: DISPLAY, fontSize: 56, color: C.ink, backgroundColor: C.lime, padding: '10px 40px', borderRadius: 20, letterSpacing: 2,
       }),
     ),

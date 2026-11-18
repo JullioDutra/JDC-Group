@@ -1,4 +1,5 @@
-import { getTeam, isFromNation, playedForClub } from '../game/teams';
+import { clubsIn, getTeam, isFromNation, playedForClub } from '../game/teams';
+import { normalize } from '../game/text';
 import { coherenceScore } from './keys';
 import type { LookupContext, PlayerRecord } from './types';
 
@@ -17,6 +18,16 @@ export function fitsContext(record: PlayerRecord, ctx: LookupContext | undefined
   if (team && ctx?.kind === 'club') teamOk = playedForClub(team, record.clubs);
   if (team && (ctx?.kind === 'country' || ctx?.kind === 'nation')) teamOk = isFromNation(team, record.nationality);
   return { position, team: teamOk };
+}
+
+/** Vale cerca de 4,5 vezes mais artigos na Wikipédia: desempata, mas não vence um craque mundial. */
+export const BRAZIL_BONUS = 30;
+const BR_CLUBS = clubsIn('br');
+
+/** Jogou pela seleção brasileira (ou é brasileiro) ou passou por clube brasileiro conhecido. */
+export function brazilLinked(record: PlayerRecord): boolean {
+  if (record.nationality && normalize(record.nationality).includes('brasil')) return true;
+  return BR_CLUBS.some((t) => playedForClub(t, record.clubs));
 }
 
 /** O digitado é um nome coerente do jogador? (0 = não vale; ver coherentWith). */
@@ -38,7 +49,8 @@ export function rankCandidates(candidates: PlayerRecord[], query: string, ctx?: 
     if (name === 0) continue;
     const fit = fitsContext(record, ctx);
     const fits = fit.position && fit.team;
-    const score = (fit.team ? 4000 : 0) + (fit.position ? 2000 : 0) + name + Math.log1p(record.sitelinks) * 20;
+    // Preferência pelo Brasil: entre homônimos de fama parecida, ganha quem jogou aqui ou pela seleção.
+    const score = (fit.team ? 4000 : 0) + (fit.position ? 2000 : 0) + name + Math.log1p(record.sitelinks) * 20 + (brazilLinked(record) ? BRAZIL_BONUS : 0);
     out.push({ record, score, fits });
   }
   return out.sort((a, b) => b.score - a.score);

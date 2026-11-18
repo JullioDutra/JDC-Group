@@ -4,7 +4,7 @@ import { MODES, getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
 import { firstName, formatNumber } from '../game/text';
 import { ImageSpec, MatchState, Pick, Position, RankingRow, SLOTS, Side } from '../game/types';
-import { conexoesBoard, flagQuiz, textBoard } from './party2';
+import { conexoesBoard, flagQuiz, gradeBoard, textBoard } from './party2';
 import { helpMenu } from './help';
 import { draftBoard, intrusoBoard, lineupQuiz, partyLobby, partyScore, partyTable, top10Board } from './party';
 import { BODY, C, DISPLAY, H, SIDE_COLOR, W, ball, box, brand, fit, formationStrip, pill, stage, txt } from './theme';
@@ -338,6 +338,8 @@ export function buildImage(spec: ImageSpec): ReactElement {
       return flagQuiz(spec.state, spec.flag);
     case 'conexoesBoard':
       return conexoesBoard(spec.state, spec.reveal);
+    case 'gradeBoard':
+      return gradeBoard(spec.state, spec.final);
     case 'textBoard':
       return textBoard(spec.game, spec.title, spec.subtitle, spec.rows);
   }

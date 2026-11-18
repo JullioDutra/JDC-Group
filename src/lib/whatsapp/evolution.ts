@@ -81,6 +81,7 @@ export const evolution: WhatsAppProvider = {
       id: key.id,
       groupJid: key.remoteJid,
       senderJid: sender,
+      keyParticipant: key.participant ?? payload.data?.participant,
       senderAliases: [...new Set(candidates.filter((c): c is string => Boolean(c)).map((c) => c.replace(/:\d+@/, '@')))],
       senderName: payload.data?.pushName?.trim() || 'Jogador',
       text,
@@ -105,8 +106,8 @@ export const evolution: WhatsAppProvider = {
     });
   },
 
-  async sendReaction(groupJid, messageId, _senderJid, emoji) {
-    await evoReaction(groupJid, messageId, emoji);
+  async sendReaction(groupJid, messageId, participant, emoji) {
+    await evoReaction(groupJid, messageId, participant, emoji);
   },
 
   /**
@@ -143,10 +144,12 @@ const RESTART_KEY = 'evolution-restart';
 const RESTART_EVERY_MS = 15 * 60_000;
 let lastRestartHere = 0;
 
-async function evoReaction(groupJid: string, messageId: string, emoji: string) {
+async function evoReaction(groupJid: string, messageId: string, participant: string, emoji: string) {
   const { url, instance, headers } = evolutionConfig();
+  // Em grupo, a chave da reação precisa do autor da mensagem (participant), igual ao
+  // que veio no webhook; sem ele, o WhatsApp mostra uma mensagem vazia no grupo.
   await postJson(`${url}/message/sendReaction/${encodeURIComponent(instance)}`, headers, {
-    key: { remoteJid: groupJid, fromMe: false, id: messageId },
+    key: { remoteJid: groupJid, fromMe: false, id: messageId, participant },
     reaction: emoji,
   });
 }

@@ -1,5 +1,7 @@
 # Plano da próxima fase
 
+> **Andamento (18/11, tarde):** F1 e F2 entregues, com três correções urgentes. Detalhes na seção 8.
+
 18/11/2026. Seis frentes:
 1. Verificar se tudo subiu.
 2. Dados atualizados à mão, com o Transfermarkt como referência.
@@ -89,8 +91,8 @@ Com mais de 77 mil jogadores na base (clubes com datas, seleção, posição), d
 
 | Modo | Formato | Como funciona | Conteúdo |
 |---|---|---|---|
-| **Carreira** | Grupo, corrida | O bot mostra a trajetória: "2003 Paulista → 2008 Grêmio → 2012 Atlético-MG". Quem acertar primeiro leva. Dicas extras saem com o tempo (seleção, posição, nascimento) | Gerado da base (jogadores conhecidos com 3+ clubes) |
-| **Ponte** | Grupo, várias certas | Dois clubes sorteados: cite um jogador que passou pelos dois. Ninguém repete | Validado pela base |
+| **Carreira** | Grupo, corrida | O bot mostra a trajetória: "Paulista → Grêmio → Atlético-MG". Quem acertar primeiro leva. Dicas extras saem com o tempo (seleção, posição, nascimento) | Gerado da base (jogadores conhecidos com 3+ clubes) |
+| **Ponte** | Grupo, várias certas | **4 clubes** por rodada (pedido de 18/11): passou pelos 4 = 10 pontos, por 3 = 6, por 2 = 3, por 1 = 1. Vale a melhor resposta de cada um. Ninguém repete | Validado pela base |
 | **Grade 3x3** | 1x1 (jogo da velha) ou grupo | Linhas = clubes, colunas = seleções ou clubes. Cada casa pede um jogador que cumpra os dois. Fechou 3 em linha, venceu | Validado pela base |
 | **Pênaltis** | 1x1 | 5 cobranças alternadas. Cada cobrança: cite um jogador que cumpra a regra sorteada ("atacante que jogou no Milan"). Errou, o goleiro defendeu. Empate vai para morte súbita | Validado pela base |
 | **Maior ou Menor** | Grupo, eliminação | Dois jogadores: quem tem mais gols, jogos ou valor? Errou, está fora | Números da base (manuais primeiro) |
@@ -147,3 +149,46 @@ Com mais de 77 mil jogadores na base (clubes com datas, seleção, posição), d
 | **F2** | Modos Carreira, Ponte, Grade 3x3 e Pênaltis |
 | **F3** | Conteúdo gerado da base (Intruso, Conexões e Quem é? automáticos) + curadoria dobrada |
 | **F4** | Maior ou Menor, Leilão, Elenco Campeão, Quem sou eu (números), variações de regra |
+
+## 8. Entregue em 18/11 (tarde)
+
+### Correções urgentes
+
+| Problema | Causa | Correção |
+|---|---|---|
+| **Mensagens vazias num grupo** | As reações (✅ ❌) iam sem o autor da mensagem na chave. Em grupo com ids @lid, o WhatsApp mostra isso como bolha vazia | A reação leva o autor exatamente como veio no webhook. Texto vazio nunca é enviado. Chave de emergência: `WHATSAPP_REACTIONS=0` na Vercel desliga as reações sem mexer no jogo |
+| **"Às vezes não puxou os gols do Rogério Ceni"** | (1) Quando a IA respondia "não sei", o vazio ficava gravado para sempre. (2) Quando a IA demorava ou dava erro (6 estouros e um 502 em 24 h), a jogada ficava sem número. (3) Ficha duplicada: a da IA tinha os gols e a do Wikidata, que era a escolhida, não | (1) "Não sei" não é mais gravado: a IA é consultada de novo (com pausa de 10 min). (2) Se o modelo principal falhar, tenta o rápido (`sabiazinho-4`); se ainda assim falhar, usa a soma do Wikidata (clubes + seleção) só naquela jogada. (3) Fichas da mesma pessoa (mesmo nome e nascimento) são juntadas automaticamente, sem perder números. E agora dá para corrigir à mão: `corrigir Rogério Ceni gols 131` |
+| **Carga de jogadores parada desde 17/11, 18h26** | A carga gastou a cota diária grátis do QStash (1.000 mensagens). Com isso, a cadeia quebrou e os prazos das rodadas também ficaram sem agendamento por 4 h (as rodadas fechavam só na mensagem seguinte) | A carga usa no máximo 350 mensagens por dia (`IMPORT_DAILY_CALLS`) e faz mais trabalho por mensagem (36 s). O resto da cota fica para os jogos. Passou do limite, o próximo lote fica para 00:05 UTC. Um cron diário da Vercel (00:17 UTC) retoma a carga se ela parar. A página de saúde mostra `lotesHoje`, `proximoLote` e `problemaNaCadeia` |
+
+### F1: dados à mão, jogador correto e sem repetição
+
+- **Prioridade dos números:** manual > Wikidata > IA. A carga do Wikidata nunca apaga um número manual nem um nome famoso aceito.
+- **No grupo:**
+  - `ficha Rogério Ceni` (qualquer pessoa) mostra clubes, seleção, posição e os números, com ✍️ fonte e data nos manuais;
+  - `corrigir Rogério Ceni gols 131` e `corrigir Neymar valor atual 25 fonte Transfermarkt` (só admin);
+  - `corrigir Neymar gols apagar` volta para o número automático;
+  - `nome famoso Gabigol = Gabriel Barbosa` (só admin).
+- **Página do admin:** `/admin/jogadores` (pede a ADMIN_KEY). Busca a ficha, corrige um número, cadastra nome famoso e aceita lote colado (`jogador; dado; valor; data; fonte`).
+- **API de lote:** `POST /api/admin/players/manual` com `{"csv": "..."}`.
+- **Valor de mercado atual:** novo dado, com o tema 18, **Vitrine Atual** (aposentado vale zero).
+- **Jogador correto:**
+  - preferência pelo Brasil entre homônimos de fama parecida;
+  - junção de duplicados;
+  - IA com segunda tentativa no modelo rápido.
+- **Sem repetição por grupo** (tabela `group_seen`): em todos os jogos de conteúdo (quiz, emoji, relâmpago, quem é, que time é esse, bandeiraço, intruso, chute certo, sobrevivente, conexões, linha do tempo, fato ou fake, top 10) e nos novos, o sorteio começa pelo que o grupo ainda não viu e depois passa ao que ele viu há mais tempo.
+
+### F2: modos gerados da base
+
+| Comando | Jogo |
+|---|---|
+| `abrir carreira` | Trajetória de clubes; dicas a cada 25 s (posição e seleção, ano de nascimento, iniciais); 100/70/50/30 pontos; 5 rodadas |
+| `abrir ponte` | 4 clubes tirados da carreira de um jogador real (sempre há resposta de 4). Passou pelos 4: 10 pontos, por 3: 6, por 2: 3, por 1: 1. Vale a melhor resposta de cada um; o bot reage com 1️⃣ a 4️⃣; ninguém repete; 4 rodadas de 90 s |
+| `desafio grade` | Jogo da velha 1 x 1: linhas = clubes, colunas = seleções; só entram casas com resposta na base. `A2 Neymar`; errou, perde a vez; 3 em linha vence |
+| `desafio pênaltis` | 1 x 1: 5 cobranças para cada, com regra (posição + clube ou seleção); gol ou defesa; termina antes se não der mais para alcançar; morte súbita |
+
+Nesses jogos, entre homônimos com nome válido, o bot fica com quem cumpre a regra da jogada (o benefício da dúvida é de quem joga). A ajuda em imagem já lista os jogos novos.
+
+### Pendências
+
+- A carga de jogadores precisa ser retomada uma vez (ou espera o cron das 00:17 UTC).
+- O conjunto de teste com 150 nomes reais (ação 8) depende da base completa; hoje os testes cobrem as regras com fichas de exemplo.

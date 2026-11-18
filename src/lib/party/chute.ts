@@ -1,6 +1,6 @@
 import { firstName, formatNumber } from '../game/text';
 import type { ChuteParty, ContentCategory, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text, pauseBeforeNext } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text, pauseBeforeNext, freshFirst } from './common';
 import { CHUTE_QUESTIONS, getChute } from './content/chute';
 import { scoreImage } from './quiz';
 
@@ -32,7 +32,7 @@ export const CHUTE_RULES = [
 
 export function startChute(state: ChuteParty, deps: PartyDeps): Outgoing[] {
   const pool = CHUTE_QUESTIONS.filter((q) => (state.category ? q.category === state.category : q.category !== 'politica'));
-  state.order = shuffle(pool.map((q) => q.id), deps.rng).slice(0, state.totalRounds);
+  state.order = freshFirst(pool.map((q) => q.id), deps.rng, deps.seen).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;

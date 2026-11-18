@@ -1,6 +1,6 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
-import type { PlayerRecord, StatKey } from '../players/types';
+import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
 import type { Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
@@ -15,6 +15,7 @@ export class MemoryStore implements Store {
   private seq = 0;
   private players = new Map<string, { record: PlayerRecord; keys: string[] }>();
   private importStates = new Map<string, unknown>();
+  private seen = new Map<string, string[]>();
   readonly lookups: Array<{ query: string; context?: string; outcome: string; playerId?: string | null }> = [];
 
   async isGroupActive(groupJid: string) {
@@ -76,8 +77,10 @@ export class MemoryStore implements Store {
     for (const r of records) {
       const old = this.players.get(r.id)?.record;
       const merged: PlayerRecord = old
-        ? { ...r, positions: r.positions.length ? r.positions : old.positions, stats: { ...old.stats, ...r.stats } }
+        ? { ...r, positions: r.positions.length ? r.positions : old.positions, stats: { ...old.stats, ...r.stats }, manual: old.manual }
         : r;
+      const manualAliases = merged.manual?.aliases ?? [];
+      merged.aliases = [...merged.aliases, ...manualAliases.filter((a) => !merged.aliases.includes(a))];
       this.players.set(r.id, { record: structuredClone(merged), keys: nameKeys([merged.name, ...merged.aliases]) });
     }
   }
@@ -85,6 +88,51 @@ export class MemoryStore implements Store {
   async setPlayerStat(id: string, stat: StatKey, value: number | null) {
     const p = this.players.get(id);
     if (p) p.record.stats[stat] = value;
+  }
+
+  async getPlayer(id: string) {
+    const p = this.players.get(id);
+    return p ? structuredClone(p.record) : null;
+  }
+
+  async setManualStat(id: string, stat: StatKey, entry: ManualEntry | null) {
+    const p = this.players.get(id);
+    if (!p) return;
+    const manual = (p.record.manual ??= {});
+    manual.stats ??= {};
+    if (entry) manual.stats[stat] = entry;
+    else delete manual.stats[stat];
+  }
+
+  async addManualAlias(id: string, alias: string) {
+    const p = this.players.get(id);
+    if (!p) return;
+    const manual = (p.record.manual ??= {});
+    manual.aliases = [...(manual.aliases ?? []), alias];
+    if (!p.record.aliases.includes(alias)) p.record.aliases.push(alias);
+    p.keys = nameKeys([p.record.name, ...p.record.aliases]);
+  }
+
+  async deletePlayers(ids: string[]) {
+    for (const id of ids) this.players.delete(id);
+  }
+
+  async samplePlayers(opts: { minSitelinks: number; minClubs: number; limit: number }) {
+    return [...this.players.values()]
+      .map((p) => p.record)
+      .filter((r) => r.sitelinks >= opts.minSitelinks && r.clubs.length >= opts.minClubs)
+      .slice(0, opts.limit)
+      .map((r) => structuredClone(r));
+  }
+
+  async getSeen(groupJid: string, kind: string) {
+    return [...(this.seen.get(`${groupJid}|${kind}`) ?? [])];
+  }
+
+  async markSeen(groupJid: string, kind: string, items: string[]) {
+    const key = `${groupJid}|${kind}`;
+    const list = (this.seen.get(key) ?? []).filter((x) => !items.includes(x));
+    this.seen.set(key, [...list, ...items]);
   }
 
   async countPlayers() {

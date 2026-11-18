@@ -6,6 +6,7 @@ import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metr
 import { getTeam, isFromNation, playedForClub } from './teams';
 import { drawRestrictions, playContext } from './validate';
 import { helpText } from './commands';
+import { applyCorrection, applyFamousName, findRecords, formatCard, parseCorrection, parseFamousName } from '../players/admin';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import {
@@ -284,6 +285,27 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     const rows = await store.getRanking(msg.groupJid, 10);
     if (rows.length === 0) return [text('Ainda não há partidas finalizadas neste grupo.')];
     return [{ type: 'image', image: { kind: 'ranking', groupName: msg.groupName ?? 'Grupo', rows } }];
+  }
+
+  // ----- Dados à mão (F1) -----
+  if (norm.startsWith('ficha ')) {
+    const asked = msg.text.trim().slice(6).trim();
+    const records = await findRecords(store, asked, 3);
+    if (!records.length) return looksLikePlayerName(asked) ? [text(`Não achei "${asked}" na base.`)] : [];
+    const extra = records.length > 1 ? `\n\nOutros com esse nome: ${records.slice(1).map((r) => `${r.name} (${r.birthDate?.slice(0, 4) ?? '?'}, ${r.id.startsWith('ai:') ? 'IA' : r.id})`).join('; ')}` : '';
+    return [text(formatCard(records[0]) + extra)];
+  }
+  if (norm.startsWith('corrigir ')) {
+    if (!manager) return [text('Só o admin do bot corrige dados.')];
+    const cmd = parseCorrection(norm);
+    if (!cmd) return [text('Formato: *corrigir <jogador> <dado> <valor>*. Ex.: corrigir Rogério Ceni gols 131. Dados: gols, jogos, assistências, valor atual, valor máximo, títulos, gols seleção, jogos seleção, gols copa, copas, gols champions, gols libertadores, gols brasileirão, altura, estreia.')];
+    return [text(await applyCorrection(store, cmd, now.toISOString().slice(0, 10)))];
+  }
+  if (norm.startsWith('nome famoso ')) {
+    if (!manager) return [text('Só o admin do bot cadastra nomes famosos.')];
+    const cmd = parseFamousName(msg.text);
+    if (!cmd) return [text('Formato: *nome famoso <apelido> = <jogador>*. Ex.: nome famoso Gabigol = Gabriel Barbosa.')];
+    return [text(await applyFamousName(store, cmd))];
   }
 
   const session = await store.getActiveMatch(msg.groupJid);

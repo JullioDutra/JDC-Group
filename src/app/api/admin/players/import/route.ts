@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { secretMatches } from '@/lib/auth';
-import { importStep, newImportState, type ImportState } from '@/lib/players/wikidata';
-import { publicOrigin, scheduleAdminCall } from '@/lib/scheduler';
+import { runImportCall, type ImportCall } from '@/lib/players/importRunner';
+import { publicOrigin } from '@/lib/scheduler';
 import { getStore, hasDatabase } from '@/lib/store';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
-
-const STATE_ID = 'wikidata';
 
 /**
  * Carga da base de jogadores a partir do Wikidata, em lotes.
@@ -18,75 +16,16 @@ const STATE_ID = 'wikidata';
  *   {"action": "step"}    roda o próximo lote (o QStash chama sozinho, em cadeia)
  *   {"action": "stop"}    para a cadeia
  *   {"action": "status"}  mostra o andamento
+ *
+ * Gasta no máximo IMPORT_DAILY_CALLS (350) mensagens do QStash por dia; passou
+ * disso, o próximo lote fica para 00:05 UTC. Se a cadeia quebrar, o cron
+ * diário (/api/cron/import) retoma.
  */
 export async function POST(request: Request) {
   const bearer = request.headers.get('authorization')?.replace(/^Bearer /, '');
   if (!secretMatches(bearer, process.env.ADMIN_KEY)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   if (!hasDatabase()) return NextResponse.json({ error: 'DATABASE_URL não configurada' }, { status: 500 });
-
-  const store = getStore();
-  const body = (await request.json().catch(() => ({}))) as {
-    action?: string;
-    runId?: string;
-    untilYear?: number;
-    onlyParts?: number[];
-  };
-  const action = body.action ?? 'status';
-  let state = (await store.getImportState(STATE_ID)) as (ImportState & { stopped?: boolean; errors?: number; leaseUntil?: number }) | null;
-
-  if (action === 'status') return NextResponse.json({ state, players: await store.countPlayers() });
-  if (action === 'stop') {
-    if (state) await store.setImportState(STATE_ID, { ...state, stopped: true });
-    return NextResponse.json({ ok: true, stopped: true });
-  }
-  if (action === 'start') {
-    state = { ...newImportState(body), errors: 0 };
-  } else if (state && !Array.isArray(state.plan)) {
-    return NextResponse.json({ ok: false, reason: 'carga no formato antigo: mande {"action":"start"} para recomeçar com o plano novo' });
-  } else if (!state || state.done || state.stopped) {
-    return NextResponse.json({ ok: false, reason: 'nada para continuar', state });
-  } else if (body.runId && body.runId !== state.runId) {
-    return NextResponse.json({ ok: false, reason: 'cadeia antiga (outra carga começou depois)' });
-  } else if (state.leaseUntil && state.leaseUntil > Date.now()) {
-    // Trava: só um lote por vez. Uma cadeia duplicada termina aqui.
-    return NextResponse.json({ ok: false, reason: 'outro lote em andamento', state: { cursor: state.cursor, part: state.part } });
-  }
-  await store.setImportState(STATE_ID, { ...state, leaseUntil: Date.now() + 58_000 });
-
-  // Vários lotes por chamada, mas sempre terminando antes dos 60 s da Vercel:
-  // cada consulta só começa se couber até o prazo (48 s). Qualquer erro é
-  // gravado e a cadeia segue (nunca para no meio sem salvar).
-  const started = Date.now();
-  const deadline = started + 48_000;
-  let next: ImportState = state;
-  try {
-    do {
-      next = await importStep(next, (records) => store.upsertPlayers(records), fetch, deadline);
-    } while (!next.done && !next.lastError && !next.yielded && Date.now() - started < 20_000);
-  } catch (error) {
-    next = { ...next, lastError: (error as Error).message.slice(0, 200) };
-  }
-  const errors = next.lastError ? (state.errors ?? 0) + 1 : 0;
-  const saved = { ...next, errors, leaseUntil: undefined };
-  await store.setImportState(STATE_ID, saved);
-
-  // Continua sozinho. Cota do Wikidata: espera o que ele pedir. Outras falhas:
-  // espera cada vez mais; 10 falhas seguidas param a cadeia (retome com "step").
-  let chained = false;
-  if (!saved.done && errors < 10) {
-    const url = `${publicOrigin(request)}/api/admin/players/import`;
-    const delay = saved.retryAfter ?? (errors ? Math.min(600, 30 * errors) : 5);
-    chained = await scheduleAdminCall(url, { action: 'step', runId: saved.runId }, delay).catch((error) => {
-      console.error('agendar próximo lote falhou', error);
-      return false;
-    });
-  }
-  const { plan, ...summary } = saved;
-  return NextResponse.json({
-    ok: !saved.lastError,
-    chained,
-    parte: plan[saved.part]?.label ?? 'fim',
-    state: summary,
-    players: await store.countPlayers(),
-  });
+  const body = (await request.json().catch(() => ({}))) as ImportCall;
+  const result = await runImportCall(getStore(), `${publicOrigin(request)}/api/admin/players/import`, body);
+  return NextResponse.json(result);
 }

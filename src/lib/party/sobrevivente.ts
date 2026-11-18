@@ -1,6 +1,6 @@
 import { firstName, isChatter } from '../game/text';
 import type { ContentCategory, IncomingMessage, Outgoing, PartyPlayer, SobreviventeParty } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, normalizeAnswer, pendingResults, react, schedule, shuffle, text } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, normalizeAnswer, pendingResults, react, schedule, shuffle, text, freshFirst } from './common';
 import { getSurvivorList, survivorPool } from './content/sobrevivente';
 
 /**
@@ -30,8 +30,9 @@ const alive = (state: SobreviventeParty, p: PartyPlayer) => (state.lives[p.jid] 
 const livesLabel = (n: number) => `${n} vida${n === 1 ? '' : 's'}`;
 
 export function startSobrevivente(state: SobreviventeParty, deps: PartyDeps): Outgoing[] {
-  const pool = shuffle(survivorPool(state.category), deps.rng).sort((a, b) => a.level - b.level);
-  state.order = pool.slice(0, state.totalRounds).map((l) => l.id).sort((a, b) => getSurvivorList(a)!.level - getSurvivorList(b)!.level);
+  // Listas novas para o grupo primeiro; dentro da partida, da mais fácil para a mais difícil.
+  const pool = freshFirst(survivorPool(state.category).map((l) => l.id), deps.rng, deps.seen);
+  state.order = pool.slice(0, state.totalRounds).sort((a, b) => getSurvivorList(a)!.level - getSurvivorList(b)!.level);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = 0;

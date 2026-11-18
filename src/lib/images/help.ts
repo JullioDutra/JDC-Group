@@ -8,17 +8,17 @@ const upper = (s: string) => s.toLocaleUpperCase('pt-BR');
 function gameCard([command, what]: [string, string]): ReactElement {
   return box(
     {
-      flexDirection: 'column', justifyContent: 'center', width: 476, height: 72, padding: '0 16px', borderRadius: 14,
+      flexDirection: 'column', justifyContent: 'center', width: 476, height: 64, padding: '0 16px', borderRadius: 14,
       backgroundColor: C.panel, border: `2px solid ${C.panelLine}`,
     },
-    txt(upper(command), { fontFamily: DISPLAY, fontSize: 30, color: C.lime, lineHeight: 1.05 }),
-    txt(what, { fontSize: 22, color: C.muted, fontWeight: 600, lineHeight: 1.1 }),
+    txt(upper(command), { fontFamily: DISPLAY, fontSize: 27, color: C.lime, lineHeight: 1.05 }),
+    txt(what, { fontSize: 20, color: C.muted, fontWeight: 600, lineHeight: 1.1 }),
   );
 }
 
 function section(title: string, ...children: ReactElement[]): ReactElement {
   return box(
-    { flexDirection: 'column', gap: 10, marginTop: 18 },
+    { flexDirection: 'column', gap: 8, marginTop: 14 },
     txt(title, { fontSize: 22, fontWeight: 700, letterSpacing: 3, color: C.white }),
     ...children,
   );
@@ -53,7 +53,7 @@ export function helpMenu(): ReactElement {
       { flexDirection: 'column', gap: 6, marginTop: 'auto', paddingTop: 14 },
       txt(CATEGORIES_LINE, { fontSize: 21, color: C.muted, fontWeight: 600, lineHeight: 1.2 }),
       txt(NAMES_LINE, { fontSize: 21, color: C.lime, fontWeight: 700, lineHeight: 1.2 }),
-      txt('Também: REGRAS · MODOS · RANKING', { fontSize: 21, color: C.white, fontWeight: 700 }),
+      txt('Também: REGRAS · MODOS · RANKING · FICHA <JOGADOR>', { fontSize: 21, color: C.white, fontWeight: 700 }),
     ),
   );
 }

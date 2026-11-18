@@ -78,6 +78,19 @@ export function imageAsText(spec: ImageSpec): string | null {
         .filter(Boolean);
       return [...solved, open.join('\n')].filter(Boolean).join('\n\n');
     }
+    case 'gradeBoard': {
+      const st = spec.state;
+      const team = (id: string) => getTeam(id)?.name ?? id;
+      const head = `Colunas: ${st.cols.map((c, i) => `${i + 1} ${team(c)}`).join(' · ')}`;
+      const rows = [0, 1, 2].map((r) => {
+        const cells = [0, 1, 2].map((c) => {
+          const cell = st.cells[r * 3 + c];
+          return cell ? `${cell.name} (${firstName(st.players.find((p) => p.jid === cell.jid)?.name ?? '')})` : `${LETTERS[r]}${c + 1}`;
+        });
+        return `*${LETTERS[r]} ${team(st.rows[r])}*: ${cells.join(' | ')}`;
+      });
+      return [head, ...rows].join('\n');
+    }
     case 'textBoard':
       return [`*${spec.title}*`, ...spec.rows.map((r) => [`*${r.head}*`, ...r.lines].join('\n'))].join('\n\n');
     default:

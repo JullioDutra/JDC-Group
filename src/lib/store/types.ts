@@ -1,5 +1,5 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
-import type { PlayerRecord, StatKey } from '../players/types';
+import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
 
 export interface Store {
   isGroupActive(groupJid: string): Promise<boolean>;
@@ -23,6 +23,20 @@ export interface Store {
   findPlayers(keys: string[], limit: number): Promise<PlayerRecord[]>;
   upsertPlayers(records: PlayerRecord[]): Promise<void>;
   setPlayerStat(id: string, stat: StatKey, value: number | null): Promise<void>;
+  getPlayer(id: string): Promise<PlayerRecord | null>;
+  /** Número corrigido pelo admin (null apaga a correção). A carga do Wikidata nunca mexe. */
+  setManualStat(id: string, stat: StatKey, entry: ManualEntry | null): Promise<void>;
+  /** Nome famoso aceito pelo admin: o jogador passa a ser achado por ele. */
+  addManualAlias(id: string, alias: string): Promise<void>;
+  /** Apaga fichas (usado ao juntar duplicadas). */
+  deletePlayers(ids: string[]): Promise<void>;
+  /** Jogadores conhecidos ao acaso (modos gerados da base). */
+  samplePlayers(opts: { minSitelinks: number; minClubs: number; limit: number }): Promise<PlayerRecord[]>;
+
+  // ----- Sem repetição por grupo -----
+  /** Itens de um jogo que o grupo já viu (do mais antigo para o mais recente). */
+  getSeen(groupJid: string, kind: string): Promise<string[]>;
+  markSeen(groupJid: string, kind: string, items: string[]): Promise<void>;
   countPlayers(): Promise<number>;
   getImportState(id: string): Promise<unknown | null>;
   setImportState(id: string, state: unknown): Promise<void>;

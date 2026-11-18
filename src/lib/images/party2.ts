@@ -1,6 +1,7 @@
 import { createElement, type ReactElement } from 'react';
 import { firstName } from '../game/text';
-import type { ConexoesParty, FlagSpec, PartyGame, QuizParty } from '../game/types';
+import { getTeam } from '../game/teams';
+import type { ConexoesParty, FlagSpec, GradeParty, PartyGame, QuizParty } from '../game/types';
 import { PARTY_CONFIG } from '../party/common';
 import { getConexoes } from '../party/content/conexoes';
 import { C, DISPLAY, box, brand, fit, pill, stage, txt } from './theme';
@@ -162,5 +163,63 @@ export function textBoard(
     txt(upper(title), { fontFamily: DISPLAY, fontSize: 76, lineHeight: 1.1, marginTop: 16 }),
     txt(subtitle, { fontSize: 28, color: C.muted, fontWeight: 500, marginBottom: 18 }),
     box({ flexWrap: 'wrap', gap: 14, alignContent: 'flex-start' }, ...rows.map(card)),
+  );
+}
+
+// ---------- Grade 3x3 ----------
+
+export function gradeBoard(state: GradeParty, final: boolean): ReactElement {
+  const colors = [C.host, C.guest];
+  const colorOf = (jid: string) => colors[Math.max(0, state.players.findIndex((p) => p.jid === jid))];
+  const cellSize = 236;
+  const head = 196;
+  const header = (label: string, sub: string) =>
+    box(
+      { width: cellSize, height: 110, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel, borderRadius: 16, border: `2px solid ${C.panelLine}` },
+      txt(sub, { fontSize: 22, fontWeight: 700, color: C.lime, letterSpacing: 2 }),
+      txt(upper(fit(label, 12)), { fontFamily: DISPLAY, fontSize: 34, lineHeight: 1.1 }),
+    );
+  const rowHead = (label: string, sub: string) =>
+    box(
+      { width: head, height: cellSize, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel, borderRadius: 16, border: `2px solid ${C.panelLine}` },
+      txt(sub, { fontSize: 26, fontWeight: 700, color: C.lime, letterSpacing: 2 }),
+      txt(upper(fit(label, 11)), { fontFamily: DISPLAY, fontSize: 32, lineHeight: 1.1, textAlign: 'center' }),
+    );
+  const cell = (i: number) => {
+    const c = state.cells[i];
+    const coord = `${['A', 'B', 'C'][Math.floor(i / 3)]}${(i % 3) + 1}`;
+    return box(
+      {
+        width: cellSize, height: cellSize, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 18,
+        backgroundColor: c ? colorOf(c.jid) : 'rgba(255,255,255,0.04)', border: `3px solid ${c ? colorOf(c.jid) : C.panelLine}`, padding: 10,
+      },
+      c
+        ? box(
+            { flexDirection: 'column', alignItems: 'center' },
+            txt(upper(fit(c.name, 14)), { fontFamily: DISPLAY, fontSize: 30, color: C.ink, textAlign: 'center', lineHeight: 1.1 }),
+            txt(fit(firstName(state.players.find((p) => p.jid === c.jid)?.name ?? ''), 14), { fontSize: 24, fontWeight: 700, color: C.ink, marginTop: 6 }),
+          )
+        : txt(coord, { fontFamily: DISPLAY, fontSize: 56, color: 'rgba(255,255,255,0.25)' }),
+    );
+  };
+  const nameOf = (id: string) => getTeam(id)?.name ?? id;
+  const [a, b] = state.players;
+  const counts = state.players.map((p) => state.cells.filter((x) => x?.jid === p.jid).length);
+  return stage(
+    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(final ? 'FIM DE JOGO' : 'GRADE 3X3', C.panel, C.lime, 24)),
+    box(
+      { justifyContent: 'center', alignItems: 'center', gap: 24, marginTop: 18, marginBottom: 18 },
+      txt(upper(fit(firstName(a.name), 12)), { fontFamily: DISPLAY, fontSize: 52, color: colors[0] }),
+      txt(`${counts[0]} x ${counts[1]}`, { fontFamily: DISPLAY, fontSize: 52 }),
+      txt(upper(fit(firstName(b.name), 12)), { fontFamily: DISPLAY, fontSize: 52, color: colors[1] }),
+    ),
+    box(
+      { flexDirection: 'column', gap: 12, alignItems: 'center' },
+      box({ gap: 12 }, box({ width: head, height: 110 }), ...state.cols.map((id, i) => header(nameOf(id), `${i + 1} · SELEÇÃO`))),
+      ...[0, 1, 2].map((r) => box({ gap: 12 }, rowHead(nameOf(state.rows[r]), `${['A', 'B', 'C'][r]} · CLUBE`), ...[0, 1, 2].map((c) => cell(r * 3 + c)))),
+    ),
+    txt(final ? 'Mande DESAFIO GRADE para jogar de novo' : `Vez de ${firstName(state.players[state.turn].name)} · mande: A2 Neymar`, {
+      fontSize: 30, fontWeight: 700, color: C.lime, marginTop: 22, textAlign: 'center', justifyContent: 'center',
+    }),
   );
 }

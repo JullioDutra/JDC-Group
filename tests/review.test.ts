@@ -34,8 +34,8 @@ async function startMatch(say: (w: string, t: string) => Promise<Outgoing[]>, ch
   return say('Ana', choice);
 }
 
-test('17 temas com números únicos e sequenciais', () => {
-  assert.equal(MODES.length, 17);
+test('18 temas com números únicos e sequenciais', () => {
+  assert.equal(MODES.length, 18);
   assert.deepEqual(MODES.map((m) => m.number), MODES.map((_, i) => i + 1));
   assert.equal(new Set(MODES.map((m) => m.id)).size, MODES.length);
 });

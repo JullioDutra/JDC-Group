@@ -22,10 +22,15 @@ export async function dispatch(
 ): Promise<void> {
   for (const out of outgoing) {
     try {
-      if (out.type === 'text') await provider.sendText(groupJid, out.text);
+      // Texto vazio vira bolha vazia no WhatsApp: nunca manda.
+      if (out.type === 'text') {
+        if (out.text.trim()) await provider.sendText(groupJid, out.text);
+      }
       else if (out.type === 'image') await sendImage(provider, groupJid, out, pause);
       else if (out.type === 'react') {
-        await provider.sendReaction(groupJid, out.messageId, out.senderJid, out.emoji).catch((e) => console.error('reaction failed', e));
+        // WHATSAPP_REACTIONS=0 desliga as reações (✅/❌) sem mexer no jogo.
+        if (process.env.WHATSAPP_REACTIONS === '0' || !out.emoji) continue;
+        await provider.sendReaction(groupJid, out.messageId, out.participant ?? out.senderJid, out.emoji).catch((e) => console.error('reaction failed', e));
       } else if (out.type === 'schedule') {
         await scheduleTick(origin, groupJid, out.token, out.delaySeconds).catch((e) => console.error('schedule failed', e));
       }

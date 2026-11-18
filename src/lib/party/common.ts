@@ -41,7 +41,15 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   fato: { name: 'Fato ou Fake', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 10 },
   // 1 x 1: 90 s por escolha; 'joinUntil' 0 = ninguém entra depois de começar.
   melhortime: { name: 'Melhor Time', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 90, rounds: 6 },
+  // Jogos gerados da base de jogadores (frente F2).
+  carreira: { name: 'Carreira', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 25, rounds: 5 },
+  ponte: { name: 'Ponte', maxPlayers: 12, minPlayers: 2, joinUntil: 2, seconds: 90, rounds: 4 },
+  grade: { name: 'Grade 3x3', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 60 },
+  penaltis: { name: 'Pênaltis', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 45 },
 };
+
+/** Jogos 1 x 1: quem aceitar entra e a partida começa sozinha. */
+export const ONE_X_ONE: PartyGame[] = ['melhortime', 'grade', 'penaltis'];
 
 export interface PartyDeps {
   store: Store;
@@ -53,6 +61,8 @@ export interface PartyDeps {
   judge?: TeamJudge;
   /** Stop: confere palavras fora das listas curadas (IA). Sem ele, só vale o que está nas listas. */
   checkWords?: WordCheck;
+  /** Itens que o grupo já viu neste jogo (do mais antigo ao mais recente): o sorteio prioriza o resto. */
+  seen?: string[];
 }
 
 /** Recebe a letra e os pares (categoria, palavra); devolve se cada palavra vale. */
@@ -72,6 +82,18 @@ export function shuffle<T>(items: T[], rng: () => number): T[] {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+/**
+ * Embaralha priorizando o que o grupo ainda não viu; depois vem o que ele viu
+ * há mais tempo. Sem histórico, é um embaralhamento comum.
+ */
+export function freshFirst(ids: string[], rng: () => number, seen?: string[]): string[] {
+  if (!seen?.length) return shuffle(ids, rng);
+  const when = new Map(seen.map((id, i) => [id, i]));
+  const unseen = shuffle(ids.filter((id) => !when.has(id)), rng);
+  const old = ids.filter((id) => when.has(id)).sort((a, b) => when.get(a)! - when.get(b)!);
+  return [...unseen, ...old];
 }
 
 export function scoreImage(state: PartyState, final: boolean): Outgoing {
@@ -139,6 +161,7 @@ export const react = (msg: IncomingMessage, emoji: string): Outgoing => ({
   type: 'react',
   messageId: msg.id,
   senderJid: msg.senderJid,
+  participant: msg.keyParticipant ?? msg.senderJid,
   emoji,
 });
 

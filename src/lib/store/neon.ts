@@ -2,7 +2,7 @@ import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { SCHEMA_STATEMENTS } from './schema';
 import { nameKeys } from '../players/keys';
-import type { PlayerRecord, StatKey } from '../players/types';
+import type { ManualData, ManualEntry, PlayerRecord, StatKey } from '../players/types';
 import { normalize } from '../game/text';
 import type { Position } from '../game/types';
 import type { Store } from './types';
@@ -116,7 +116,16 @@ export class NeonStore implements Store {
       stats: (row.stats as PlayerRecord['stats']) ?? {},
       anchors: (row.anchors as PlayerRecord['anchors']) ?? undefined,
       source: row.source as PlayerRecord['source'],
+      ...NeonStore.manualOf(row),
     };
+  }
+
+  private static manualOf(row: Record<string, unknown>): Partial<PlayerRecord> {
+    const manual = (row.manual as ManualData | null) ?? null;
+    if (!manual || (!manual.stats && !manual.aliases)) return {};
+    const aliases = ((row.aliases as string[]) ?? []).slice();
+    for (const a of manual.aliases ?? []) if (!aliases.includes(a)) aliases.push(a);
+    return { manual, aliases };
   }
 
   async findPlayers(keys: string[], limit: number): Promise<PlayerRecord[]> {
@@ -143,7 +152,7 @@ export class NeonStore implements Store {
         `INSERT INTO players (id, name, name_norm, keys, aliases, positions, nationality, birth_date, height_cm, clubs, debut_year, sitelinks, stats, anchors, source)
          VALUES ${values.join(', ')}
          ON CONFLICT (id) DO UPDATE SET
-           name = EXCLUDED.name, name_norm = EXCLUDED.name_norm, keys = EXCLUDED.keys, aliases = EXCLUDED.aliases,
+           name = EXCLUDED.name, name_norm = EXCLUDED.name_norm, keys = EXCLUDED.keys || players.manual_keys, aliases = EXCLUDED.aliases,
            positions = CASE WHEN cardinality(EXCLUDED.positions) > 0 THEN EXCLUDED.positions ELSE players.positions END,
            nationality = COALESCE(EXCLUDED.nationality, players.nationality),
            birth_date = COALESCE(EXCLUDED.birth_date, players.birth_date),
@@ -161,6 +170,60 @@ export class NeonStore implements Store {
 
   async setPlayerStat(id: string, stat: StatKey, value: number | null): Promise<void> {
     await this.sql`UPDATE players SET stats = stats || jsonb_build_object(${stat}::text, ${value}::numeric), updated_at = now() WHERE id = ${id}`;
+  }
+
+  async getPlayer(id: string): Promise<PlayerRecord | null> {
+    const rows = await this.sql`SELECT * FROM players WHERE id = ${id}`;
+    return rows[0] ? NeonStore.toRecord(rows[0]) : null;
+  }
+
+  async setManualStat(id: string, stat: StatKey, entry: ManualEntry | null): Promise<void> {
+    if (entry) {
+      await this.sql`
+        UPDATE players SET
+          manual = jsonb_set(CASE WHEN manual ? 'stats' THEN manual ELSE manual || '{"stats":{}}'::jsonb END,
+                             ARRAY['stats', ${stat}::text], ${JSON.stringify(entry)}::jsonb),
+          updated_at = now()
+        WHERE id = ${id}`;
+    } else {
+      await this.sql`UPDATE players SET manual = manual #- ARRAY['stats', ${stat}::text], updated_at = now() WHERE id = ${id}`;
+    }
+  }
+
+  async addManualAlias(id: string, alias: string): Promise<void> {
+    const keys = nameKeys([alias]);
+    await this.sql`
+      UPDATE players SET
+        manual = jsonb_set(manual, '{aliases}', COALESCE(manual->'aliases', '[]'::jsonb) || to_jsonb(${alias}::text)),
+        manual_keys = manual_keys || ${keys}::text[],
+        keys = keys || ${keys}::text[],
+        updated_at = now()
+      WHERE id = ${id}`;
+  }
+
+  async deletePlayers(ids: string[]): Promise<void> {
+    if (ids.length) await this.sql`DELETE FROM players WHERE id = ANY(${ids}::text[])`;
+  }
+
+  async samplePlayers(opts: { minSitelinks: number; minClubs: number; limit: number }): Promise<PlayerRecord[]> {
+    const rows = await this.sql`
+      SELECT * FROM players
+      WHERE sitelinks >= ${opts.minSitelinks} AND cardinality(clubs) >= ${opts.minClubs}
+      ORDER BY random() LIMIT ${opts.limit}`;
+    return rows.map((r) => NeonStore.toRecord(r));
+  }
+
+  async getSeen(groupJid: string, kind: string): Promise<string[]> {
+    const rows = await this.sql`SELECT item FROM group_seen WHERE group_jid = ${groupJid} AND kind = ${kind} ORDER BY seen_at`;
+    return rows.map((r) => r.item as string);
+  }
+
+  async markSeen(groupJid: string, kind: string, items: string[]): Promise<void> {
+    if (!items.length) return;
+    await this.sql`
+      INSERT INTO group_seen (group_jid, kind, item)
+      SELECT ${groupJid}, ${kind}, unnest(${items}::text[])
+      ON CONFLICT (group_jid, kind, item) DO UPDATE SET seen_at = now()`;
   }
 
   async countPlayers(): Promise<number> {

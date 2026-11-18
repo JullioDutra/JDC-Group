@@ -1,6 +1,6 @@
 import { firstName, normalize } from '../game/text';
 import type { ContentCategory, IncomingMessage, Outgoing, PartyPlayer, RodadaParty } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, pauseBeforeNext } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, react, schedule, scoreImage, shuffle, text, pauseBeforeNext, freshFirst } from './common';
 import { FACTS, getFact } from './content/fato';
 import { TIMELINE, getEvent } from './content/linha';
 
@@ -35,8 +35,12 @@ export const FATO_RULES = [
 const fits = (category: ContentCategory | null) => (c: ContentCategory) => (category ? c === category : c !== 'politica');
 
 /** Sorteia 4 eventos de anos diferentes (e não muito colados, para não virar loteria). */
-function drawTimeline(category: ContentCategory | null, rounds: number, rng: () => number): string[] {
-  const pool = shuffle(TIMELINE.filter((e) => fits(category)(e.category)), rng);
+function drawTimeline(category: ContentCategory | null, rounds: number, rng: () => number, seen?: string[]): string[] {
+  const candidates = TIMELINE.filter((e) => fits(category)(e.category));
+  const byId = new Map(candidates.map((e) => [e.id, e]));
+  // Eventos que o grupo ainda não viu primeiro (o histórico guarda cada evento).
+  const seenEvents = seen?.flatMap((s) => s.split(','));
+  const pool = freshFirst(candidates.map((e) => e.id), rng, seenEvents).map((id) => byId.get(id)!);
   const used = new Set<string>();
   const out: string[] = [];
   for (let r = 0; r < rounds; r++) {
@@ -57,8 +61,8 @@ function drawTimeline(category: ContentCategory | null, rounds: number, rng: () 
 export function startRodada(state: RodadaParty, deps: PartyDeps): Outgoing[] {
   state.order =
     state.game === 'linha'
-      ? drawTimeline(state.category, state.totalRounds, deps.rng)
-      : shuffle(FACTS.filter((x) => fits(state.category)(x.category)).map((x) => x.id), deps.rng).slice(0, state.totalRounds);
+      ? drawTimeline(state.category, state.totalRounds, deps.rng, deps.seen)
+      : freshFirst(FACTS.filter((x) => fits(state.category)(x.category)).map((x) => x.id), deps.rng, deps.seen).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;

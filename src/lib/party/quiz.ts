@@ -12,7 +12,7 @@ import {
   schedule,
   scoreImage,
   shuffle,
-  text, pauseBeforeNext } from './common';
+  text, pauseBeforeNext, freshFirst } from './common';
 import { LINEUPS, Lineup, getLineup } from './content/lineups';
 import { WHOIS, getWhoIs } from './content/whois';
 import { CARDS, getCard } from './content/cards';
@@ -50,8 +50,8 @@ function cardOf(state: QuizParty, id: string): { answer: string; aliases: string
 }
 
 /** Bandeiraço: 2 da América do Sul, 4 da Europa e o resto do mundo, nessa ordem. */
-function flagOrder(total: number, rng: () => number): string[] {
-  const pick = (region: string, n: number) => shuffle(FLAGS.filter((f) => f.region === region).map((f) => f.id), rng).slice(0, n);
+function flagOrder(total: number, rng: () => number, seen?: string[]): string[] {
+  const pick = (region: string, n: number) => freshFirst(FLAGS.filter((f) => f.region === region).map((f) => f.id), rng, seen).slice(0, n);
   return [...pick('sul', 2), ...pick('europa', 4), ...pick('mundo', Math.max(0, total - 6))];
 }
 
@@ -119,9 +119,9 @@ export function startQuiz(state: QuizParty, deps: PartyDeps): Outgoing[] {
       : state.game === 'quemeh'
         ? WHOIS.filter((c) => fits(c.category)).map((c) => c.id)
         : state.game === 'bandeira'
-          ? flagOrder(state.totalRounds, deps.rng)
+          ? flagOrder(state.totalRounds, deps.rng, deps.seen)
           : CARDS[state.game].filter((c) => (state.category ? c.category === state.category : c.category !== 'politica')).map((c) => c.id);
-  state.order = state.game === 'bandeira' ? pool : shuffle(pool, deps.rng).slice(0, state.totalRounds);
+  state.order = state.game === 'bandeira' ? pool : freshFirst(pool, deps.rng, deps.seen).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;

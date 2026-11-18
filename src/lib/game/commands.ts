@@ -19,12 +19,16 @@ export const GROUP_GAMES: Array<[command: string, what: string]> = [
   ['abrir draft', 'draft e o grupo vota'],
   ['abrir linha do tempo', 'ponha em ordem'],
   ['abrir fato ou fake', 'verdade ou mito?'],
+  ['abrir carreira', 'de quem é a trajetória?'],
+  ['abrir ponte', 'quem passou pelos 4 clubes'],
 ];
 
 export const DUEL_COMMANDS: Array<[command: string, what: string]> = [
   ['iniciar jogo', 'desafio 1 x 1'],
   ['iniciar aleatório', 'tema sorteado'],
   ['iniciar melhor time', 'clubes sorteados'],
+  ['desafio grade', 'jogo da velha 3x3'],
+  ['desafio pênaltis', '5 cobranças + morte súbita'],
   ['aceitar', 'entra no desafio'],
 ];
 
@@ -50,6 +54,7 @@ export function helpText(gameName: string): string {
     CATEGORIES_LINE,
     NAMES_LINE,
     '',
+    '*Jogadores:* *ficha <nome>* mostra a ficha e os números · admin: *corrigir <nome> <dado> <valor>*, *nome famoso <apelido> = <nome>*',
     '*Geral:* *regras* · *modos* · *ranking* · *desativar jogos* (admin)',
   ].join('\n');
 }

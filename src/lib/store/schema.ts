@@ -76,4 +76,17 @@ export const SCHEMA_STATEMENTS: string[] = [
     created_at timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS lookup_log_created ON lookup_log (created_at DESC)`,
+  // Correções do admin (prioridade sobre Wikidata e IA) e as chaves dos nomes
+  // famosos aceitos, que a carga do Wikidata não apaga.
+  `ALTER TABLE players ADD COLUMN IF NOT EXISTS manual jsonb NOT NULL DEFAULT '{}'`,
+  `ALTER TABLE players ADD COLUMN IF NOT EXISTS manual_keys text[] NOT NULL DEFAULT '{}'`,
+  `CREATE INDEX IF NOT EXISTS players_sitelinks ON players (sitelinks DESC)`,
+  // O que cada grupo já viu em cada jogo (sorteio prioriza o que é novo).
+  `CREATE TABLE IF NOT EXISTS group_seen (
+    group_jid text NOT NULL,
+    kind      text NOT NULL,
+    item      text NOT NULL,
+    seen_at   timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (group_jid, kind, item)
+  )`,
 ];

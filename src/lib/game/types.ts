@@ -26,7 +26,8 @@ export type MetricKey =
   | 'libertadoresGoals'
   | 'worldCupsPlayed'
   | 'debutYear'
-  | 'clubsCount';
+  | 'clubsCount'
+  | 'marketValueEurM';
 
 /** Ficha de um jogador de futebol, devolvida pela IA e guardada em cache. */
 export interface PlayerProfile {
@@ -56,6 +57,10 @@ export interface PlayerProfile {
   libertadoresGoals: number | null;
   worldCupsPlayed: number | null;
   debutYear: number | null;
+  /** Valor de mercado atual (mi €); 0 para quem parou de jogar. */
+  marketValueEurM?: number | null;
+  /** Data da conferência dos números corrigidos à mão (AAAA-MM-DD), se houver. */
+  manualAt?: string;
 }
 
 export type RestrictionKind = 'none' | 'club' | 'country';
@@ -142,7 +147,11 @@ export type PartyGame =
   | 'stop'
   | 'draft'
   | 'linha'
-  | 'fato';
+  | 'fato'
+  | 'carreira'
+  | 'ponte'
+  | 'grade'
+  | 'penaltis';
 
 export interface PartyPlayer {
   jid: string;
@@ -394,6 +403,66 @@ export interface RodadaParty extends PartyBase {
   arrival: string[];
 }
 
+/** Ficha mínima de um jogador da base, guardada no estado (não precisa buscar de novo). */
+export interface BaseCard {
+  id: string;
+  name: string;
+  /** Nomes que valem como resposta (nome completo e nomes famosos aceitos). */
+  names: string[];
+}
+
+/** Carreira: o bot mostra a trajetória; dicas extras saem com o tempo; o primeiro que acertar leva. */
+export interface CarreiraParty extends PartyBase {
+  game: 'carreira';
+  round: number;
+  totalRounds: number;
+  cards: Array<BaseCard & { path: string[]; clues: string[] }>;
+  /** Dica atual (0 = só a trajetória). */
+  clue: number;
+  /** Quem já palpitou nesta dica e palpites já ditos (normalizados). */
+  attempts: string[];
+  guesses: string[];
+  solved: boolean;
+}
+
+/** Ponte: 4 clubes; cite quem passou por eles. Vale a melhor resposta de cada um (4 clubes = máximo). */
+export interface PonteParty extends PartyBase {
+  game: 'ponte';
+  round: number;
+  totalRounds: number;
+  /** Clubes de cada rodada (ids de time) e um exemplo que passou pelos 4. */
+  rounds: Array<{ clubs: string[]; example: string; exampleId: string }>;
+  /** Melhor resposta de cada um nesta rodada. */
+  best: Record<string, { name: string; hits: number }>;
+  /** Jogadores já citados nesta rodada (ninguém repete). */
+  used: string[];
+}
+
+/** Grade 3x3 (1 x 1): linhas = clubes, colunas = seleções; 3 casas em linha vence. */
+export interface GradeParty extends PartyBase {
+  game: 'grade';
+  rows: string[];
+  cols: string[];
+  /** 9 casas (linha * 3 + coluna): dono e jogador. */
+  cells: Array<{ jid: string; name: string } | null>;
+  /** Índice (em players) de quem joga. */
+  turn: number;
+  used: string[];
+  /** Vezes seguidas que a vez passou sem casa marcada (4 = fim). */
+  idle: number;
+  round: number;
+}
+
+/** Pênaltis (1 x 1): 5 cobranças para cada; cada cobrança tem uma regra. */
+export interface PenaltisParty extends PartyBase {
+  game: 'penaltis';
+  kicks: Array<{ jid: string; pos: Position; kind: 'club' | 'nation'; teamId: string; label: string; result: 'gol' | 'defendeu' | null; answer?: string }>;
+  /** Cobrança atual (índice em kicks). */
+  kick: number;
+  used: string[];
+  round: number;
+}
+
 export type PartyState =
   | EscalacaoParty
   | Top10Party
@@ -406,7 +475,11 @@ export type PartyState =
   | ConexoesParty
   | StopParty
   | DraftParty
-  | RodadaParty;
+  | RodadaParty
+  | CarreiraParty
+  | PonteParty
+  | GradeParty
+  | PenaltisParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -439,6 +512,11 @@ export interface IncomingMessage {
   senderJid: string;
   /** Outros ids do mesmo remetente (número e @lid), quando a Evolution manda os dois. */
   senderAliases?: string[];
+  /**
+   * Id do remetente exatamente como veio na chave da mensagem (pode ser @lid).
+   * Reações precisam dele: com outro id, o WhatsApp mostra uma bolha vazia.
+   */
+  keyParticipant?: string;
   senderName: string;
   text: string;
 }
@@ -448,7 +526,7 @@ export type Outgoing =
   | { type: 'text'; text: string }
   | { type: 'image'; image: ImageSpec; caption?: string }
   /** Reação (ex.: ✅) na mensagem de um jogador: confirma sem poluir o grupo. */
-  | { type: 'react'; messageId: string; senderJid: string; emoji: string }
+  | { type: 'react'; messageId: string; senderJid: string; emoji: string; participant?: string }
   /** Agenda o fim da rodada (QStash). Não é enviado ao grupo. */
   | { type: 'schedule'; delaySeconds: number; token: string };
 
@@ -468,6 +546,7 @@ export type ImageSpec =
   | { kind: 'draftBoard'; state: MelhorTimeParty }
   | { kind: 'flagQuiz'; state: QuizParty; flag: FlagSpec }
   | { kind: 'conexoesBoard'; state: ConexoesParty; reveal: boolean }
+  | { kind: 'gradeBoard'; state: GradeParty; final: boolean }
   | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> };
 
 /** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */

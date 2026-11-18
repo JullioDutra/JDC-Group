@@ -29,10 +29,23 @@ export async function GET() {
       // Só contagens: como as buscas de jogador terminaram nas últimas 24 h.
       out.buscas24h = await store.lookupSummary(24);
       const carga = (await store.getImportState('wikidata')) as
-        | { part?: number; plan?: Array<{ label: string }>; cursor?: string; done?: boolean; errors?: number }
+        | {
+            part?: number; plan?: Array<{ label: string }>; cursor?: string; done?: boolean; errors?: number;
+            stopped?: boolean; callsToday?: number; callsDay?: string; nextAt?: string; chainError?: string; leaseUntil?: number;
+          }
         | null;
       if (carga) {
-        out.carga = { parte: carga.plan?.[carga.part ?? 0]?.label ?? null, cursor: carga.cursor, terminou: !!carga.done, errosSeguidos: carga.errors ?? 0 };
+        const today = new Date().toISOString().slice(0, 10);
+        out.carga = {
+          parte: carga.plan?.[carga.part ?? 0]?.label ?? null,
+          cursor: carga.cursor,
+          terminou: !!carga.done,
+          parada: !!carga.stopped,
+          errosSeguidos: carga.errors ?? 0,
+          lotesHoje: carga.callsDay === today ? (carga.callsToday ?? 0) : 0,
+          proximoLote: carga.nextAt ?? null,
+          problemaNaCadeia: carga.chainError ? carga.chainError.replace(/https?:\/\/\S+/g, '[url]').slice(0, 80) : null,
+        };
       }
     } catch {
       out.banco = 'erro';

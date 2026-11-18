@@ -74,7 +74,15 @@ nome digitado + contexto da rodada (posição, clube/seleção, número do tema)
         │
         ▼
 4. Falta o número do tema? Pergunta focada só nele → grava na base
+   (só grava número de verdade; "não sei" volta a perguntar depois de 10 min;
+   se a IA falhar, gols/jogos usam a soma do Wikidata só naquela jogada)
 ```
+
+**Desde 18/11:**
+- **Prioridade:** número manual (admin) > Wikidata > IA.
+- **Juntar duplicados:** a mesma pessoa em duas fichas (mesmo nome e nascimento) vira uma só, com os números das duas.
+- **Preferência pelo Brasil:** entre homônimos de fama parecida, ganha quem jogou aqui ou pela seleção brasileira.
+- **IA mais estável:** 15 s no modelo principal; se falhar, mais uma tentativa no `sabiazinho-4` (`MARITACA_FAST_MODEL`).
 
 Toda busca é registrada (`lookup_log`) com o resultado: `base`, `ia`, `ia-nome-diferente`, `ia-nao-achou`, `base-fora-do-contexto`, `nao-achou-recente`, com `+dado` quando completou o número do tema.
 
@@ -110,7 +118,9 @@ curl -s -X POST "$APP/api/admin/players/import" -H "Authorization: Bearer $ADMIN
   -d '{"action":"status"}' | jq '{players, parte: .state.part, cursor: .state.cursor, imported: .state.imported, erros: .state.errors, erro: .state.lastError, done: .state.done}'
 ```
 
-**Se a cadeia parar** (6 erros seguidos ou cota do QStash): `-d '{"action":"step"}'` retoma de onde parou. **Parar:** `-d '{"action":"stop"}'`.
+**Se a cadeia parar** (10 erros seguidos ou cota do QStash): `-d '{"action":"step"}'` retoma de onde parou. O cron diário da Vercel (00:17 UTC) também retoma sozinho. **Parar:** `-d '{"action":"stop"}'`.
+
+**Cota do QStash:** a carga usa no máximo 350 mensagens por dia (`IMPORT_DAILY_CALLS`). A cota grátis (1.000/dia) é a mesma dos prazos das rodadas; em 17/11 a carga gastou tudo e as rodadas ficaram sem prazo por 4 h. Passou do limite, o próximo lote fica para 00:05 UTC.
 
 **Testar uma busca** (sem gastar IA; com `&ia=1` faz a busca completa):
 ```bash

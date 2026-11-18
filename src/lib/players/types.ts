@@ -15,11 +15,13 @@ export type StatKey =
   | 'libertadoresGoals'
   | 'worldCupsPlayed'
   | 'heightCm'
-  | 'debutYear';
+  | 'debutYear'
+  | 'marketValueEurM';
 
 export const STAT_KEYS: StatKey[] = [
   'careerGoals', 'careerAssists', 'peakValueEurM', 'intlCaps', 'intlGoals', 'worldCupGoals', 'uclGoals',
   'titles', 'careerApps', 'brasileiraoGoals', 'libertadoresGoals', 'worldCupsPlayed', 'heightCm', 'debutYear',
+  'marketValueEurM',
 ];
 
 /** Ficha guardada na base de jogadores (tabela players). */
@@ -42,7 +44,26 @@ export interface PlayerRecord {
   stats: Partial<Record<StatKey, number | null>>;
   /** Somas do Wikidata (jogos e gols em clubes), usadas como referência para a IA. */
   anchors?: { clubApps?: number; clubGoals?: number };
+  /**
+   * Correções do admin (ex.: números conferidos no Transfermarkt). Têm
+   * prioridade sobre Wikidata e IA, e a carga do Wikidata nunca apaga.
+   */
+  manual?: ManualData;
   source: 'wikidata' | 'ai' | 'admin';
+}
+
+export interface ManualEntry {
+  value: number;
+  /** De onde veio (ex.: "Transfermarkt"). */
+  source: string;
+  /** Data da conferência (AAAA-MM-DD). */
+  at: string;
+}
+
+export interface ManualData {
+  stats?: Partial<Record<StatKey, ManualEntry>>;
+  /** Nomes famosos aceitos pelo admin (ex.: "Gabigol"). */
+  aliases?: string[];
 }
 
 /** Contexto da jogada: resolve homônimos e diz qual número o tema precisa. */

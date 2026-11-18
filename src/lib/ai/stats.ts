@@ -23,12 +23,14 @@ export const STAT_QUESTION: Record<StatKey, string> = {
   worldCupsPlayed: 'quantas Copas do Mundo disputou entrando em campo',
   heightCm: 'altura em centímetros',
   debutYear: 'ano da estreia como profissional',
+  marketValueEurM: 'valor de mercado ATUAL, em milhões de euros (referência Transfermarkt); 0 se já parou de jogar',
 };
 
 const SYSTEM = `Você é um estatístico de futebol. Recebe um jogador já identificado e UM dado pedido.
 Responda SOMENTE com JSON: {"valor": número ou null}.
 Dê o número real; se não souber o exato, dê a sua melhor estimativa (é um jogo entre amigos, uma estimativa boa vale mais que nada).
-Use null só se você não tiver nenhuma noção sobre esse jogador. Zero só quando o real for zero.`;
+Use null só se você não tiver nenhuma noção sobre esse jogador. Zero só quando o real for zero.
+Goleiros também marcam gols (pênaltis e faltas): conte esses gols quando o dado for de gols.`;
 
 export function describePlayer(p: PlayerRecord): string {
   const lines = [
