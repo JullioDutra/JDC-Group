@@ -6,7 +6,7 @@ import { handleMessage, handleTick } from '../src/lib/game/engine';
 import type { LeilaoParty, MatchState, Outgoing } from '../src/lib/game/types';
 import type { PlayerRecord } from '../src/lib/players/types';
 import { parsePartyStart } from '../src/lib/party/engine';
-import { LEILAO_BONUS, completeTeam, leilaoEligible, maxBid, overallOf, parseBid, teamScore } from '../src/lib/party/leilao';
+import { leilaoEligible, leilaoModeOf, maxBid, overallOf, parseBid, teamScore } from '../src/lib/party/leilao';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
 
@@ -84,20 +84,21 @@ test('Leilão: overall pela fama, lance pelo número, limite de saldo e time com
   assert.equal(parseBid('quinze'), null);
   assert.deepEqual(parsePartyStart('abrir leilao'), { game: 'leilao', rest: '' });
   assert.deepEqual(parsePartyStart('abrir leilao de craques'), { game: 'leilao', rest: '' });
+  assert.deepEqual(parsePartyStart('abrir leilao votacao'), { game: 'leilao', rest: 'votacao' });
+  assert.deepEqual(parsePartyStart('abrir leilao overall'), { game: 'leilao', rest: 'overall' });
+  assert.equal(leilaoModeOf('votacao'), 'votacao');
+  assert.equal(leilaoModeOf('overall'), 'overall');
   const squad = [
-    { name: 'a', positions: ['GOL'] as const, overall: 80, price: 1 },
-    { name: 'b', positions: ['DEF', 'MEI'] as const, overall: 80, price: 1 },
-    { name: 'c', positions: ['MEI'] as const, overall: 80, price: 1 },
-    { name: 'd', positions: ['ATA'] as const, overall: 80, price: 1 },
-  ].map((x) => ({ ...x, positions: [...x.positions] }));
-  assert.ok(completeTeam(squad));
-  assert.equal(teamScore(squad).total, 320 + LEILAO_BONUS);
-  assert.ok(!completeTeam(squad.map((s) => ({ ...s, positions: ['ATA' as const] }))));
+    { name: 'a', positions: ['GOL' as const], overall: 80, price: 1 },
+    { name: 'b', positions: ['DEF' as const], overall: 80, price: 1 },
+  ];
+  assert.equal(teamScore(squad).total, 160);
   const st = { budget: { a: 100 }, squads: { a: [] } } as unknown as LeilaoParty;
   assert.equal(maxBid(st, 'a'), 97, 'guarda 1 moeda para cada uma das outras 3 vagas');
 });
 
-test('Leilão na partida: lances, venda no fim do tempo e resultado com o overall revelado', async () => {
+/** Monta a base do leilão (4 craques por posição) e devolve as funções da partida. */
+async function leilaoSetup(group: string) {
   const store = new MemoryStore();
   const records: PlayerRecord[] = [];
   let n = 0;
@@ -108,31 +109,76 @@ test('Leilão na partida: lances, venda no fim do tempo e resultado com o overal
   let id = 0;
   const deps = { store, lookup: createLookup(store, async () => null), now: () => new Date('2026-11-19T12:00:00Z'), rng: () => 0.5 };
   const say = (who: string, text: string): Promise<Outgoing[]> =>
-    handleMessage({ id: `l${++id}`, groupJid: 'leilao@g.us', senderJid: `${who}@s`, senderName: who, text }, deps);
-  const tick = () => handleTick('leilao@g.us', null, deps, true);
+    handleMessage({ id: `l${++id}`, groupJid: group, senderJid: `${who}@s`, senderName: who, text }, deps);
+  const tick = () => handleTick(group, null, deps, true);
+  const state = async () => (await store.getActiveMatch(group))?.state as LeilaoParty | undefined;
+  /** Até fechar os times: em cada lote, quem ainda precisa da posição dá lance de 1. */
+  const playOut = async () => {
+    let out = '';
+    for (let i = 0; i < 30; i++) {
+      const s = await state();
+      if (!s || s.phase === 'voting') break;
+      const slot = s.lots[s.round].positions[0];
+      const who = ['Ana', 'Bia'].find((w) => s.squads[`${w}@s`].length < 4 && !s.squads[`${w}@s`].some((x) => (x.slot ?? x.positions[0]) === slot));
+      if (who) await say(who, '1');
+      out = asText(await tick());
+    }
+    return out;
+  };
+  return { store, say, tick, state, playOut };
+}
+
+test('Leilão na partida: um por posição, venda no fim do tempo e resultado com o overall revelado', async () => {
+  const { store, say, tick, state, playOut } = await leilaoSetup('leilao@g.us');
   await say('Ana', 'ativar jogos');
   await say('Ana', 'abrir leilão');
   await say('Bia', 'entrar');
   const start = asText(await say('Ana', 'começar'));
-  assert.match(start, /Leilão de Craques\* valendo![\s\S]*Lote 1\/12[\s\S]*Mande o valor\. 30s\.[\s\S]*\[timer:31s\]/);
+  assert.match(start, /Leilão de Craques\* valendo![\s\S]*1 GOL, 1 DEF, 1 MEI e 1 ATA[\s\S]*Lote 1\/12\* · \*[A-Z]+\*[\s\S]*Podem dar lance: Ana, Bia[\s\S]*30s\.[\s\S]*\[timer:31s\]/);
   assert.equal(asText(await say('Ana', '10')), '[react:💰]');
   assert.equal(asText(await say('Bia', '5')), '', 'lance menor que o atual não vale');
   assert.equal(asText(await say('Bia', '12')), '[react:💰]');
   assert.match(asText(await say('Ana', '98')), /lance máximo agora é 97/);
+  const firstSlot = (await state())!.lots[0].positions[0];
   const sold = asText(await tick());
   assert.match(sold, /✅ Vendido! \*[^*]+\* para \*Bia\* por 12 \(sobram 88\)\.[\s\S]*Lote 2\/12/);
-  // Resto do leilão: cada um dá lance de 1 alternando, até os times fecharem.
-  let out = '';
-  for (let i = 0; i < 20; i++) {
-    const m = await store.getActiveMatch('leilao@g.us');
-    if (!m) break;
-    const s = m.state as LeilaoParty;
-    const who = s.squads['Ana@s'].length <= s.squads['Bia@s'].length ? 'Ana' : 'Bia';
-    await say(who, '1');
-    out = asText(await tick());
+  // Um por posição: Bia não pode dar lance no próximo craque da mesma posição.
+  for (let i = 0; i < 12; i++) {
+    const s = (await state())!;
+    if (s.lots[s.round].positions[0] === firstSlot) {
+      assert.match(asText(await say('Bia', '5')), /já tem [a-z]+: é um por posição/);
+      break;
+    }
+    await say('Ana', '1');
+    await tick();
   }
+  const out = await playOut();
   assert.match(out, /\[img:textBoard\][\s\S]*(Todos os times estão completos|Acabaram os lotes)[\s\S]*🏆/);
   assert.equal(await store.getActiveMatch('leilao@g.us'), null);
+});
+
+test('Leilão no modo votação: times de 1 por posição e o grupo vota (ninguém no próprio)', async () => {
+  const { store, say, tick, state, playOut } = await leilaoSetup('leilaov@g.us');
+  await say('Ana', 'ativar jogos');
+  await say('Ana', 'abrir leilão votação');
+  await say('Bia', 'entrar');
+  const start = asText(await say('Ana', 'começar'));
+  assert.match(start, /No fim, o grupo vota no melhor time/);
+  const voting = await playOut();
+  assert.match(voting, /Votação!\* Qualquer pessoa do grupo manda o número do melhor time \(1 a 2\)/);
+  const s = (await state())!;
+  assert.equal(s.phase, 'voting');
+  for (const w of ['Ana@s', 'Bia@s']) {
+    const slots = s.squads[w].map((x) => x.slot ?? x.positions[0]);
+    assert.equal(new Set(slots).size, slots.length, 'nenhuma posição repetida no time');
+  }
+  assert.match(asText(await say('Ana', '1')), /não vale votar no próprio time/);
+  assert.equal(asText(await say('Ana', '2')), '[react:✅]');
+  assert.equal(asText(await say('Caio', '2')), '[react:✅]', 'quem não jogou também vota');
+  assert.equal(asText(await say('Caio', '1')), '', 'um voto por pessoa');
+  const result = asText(await tick());
+  assert.match(result, /\[img:textBoard\][\s\S]*🏆 \*Bia\* montou o melhor time \(2 votos\)[\s\S]*2\. Bia — 2 votos/);
+  assert.equal(await store.getActiveMatch('leilaov@g.us'), null);
 });
 
 // ---------- Anagrama ----------

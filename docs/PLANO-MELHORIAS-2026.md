@@ -412,3 +412,21 @@ O rodízio alterna futebol, música e geral, para dois dias seguidos não caíre
 | Stop, Alfabeto, Draft, Melhor Time, Escalação | Sorteio pelo histórico do grupo: letras, clubes, seleções e tema sorteado. |
 | 1x1 (`iniciar aleatório` e "aleatório" no menu) | O tema sorteado também segue o histórico do grupo. |
 | Jogos que já usavam o histórico | Seguem iguais: Relâmpago, Emoji, Quem é, Que time é esse, Bandeiraço, Intruso, Chute Certo, Sobrevivente, Conexões, Linha do Tempo, Fato ou Fake, Carreira, Ponte, Leilão e Anagrama. |
+
+## 13. Leilão: um por posição e dois modos (19/11)
+
+**Pedido:** no Leilão, cada um só pode ter um jogador por posição, e deve haver dois modos: um pelo overall (como já era) e outro com votação do melhor time.
+
+**Como ficou:**
+- **Um por posição:** cada time é 1 GOL, 1 DEF, 1 MEI e 1 ATA. O craque ocupa a posição principal dele. Quem já tem aquela posição não pode dar lance (o bot avisa uma vez). Lote que ninguém mais precisa é pulado sozinho, e cada lote mostra quem ainda pode dar lance. O bônus de time completo saiu, porque agora todo time é completo por regra.
+- **Modo overall (padrão):** `abrir leilão`. O overall de cada craque (70 a 99) fica escondido até o fim; vence a maior soma e, no empate, quem gastou menos.
+- **Modo votação:** `abrir leilão votação`, ou *votação* no lobby (o anfitrião também pode mandar *overall*). Quando o leilão acaba, abre uma votação de 60 s:
+  - qualquer pessoa do grupo manda o número do melhor time;
+  - quem jogou não vota no próprio time;
+  - é um voto por pessoa;
+  - o anfitrião pode encerrar com *pular*.
+  
+  Vence quem tiver mais votos; empate fica empatado. Nesse modo o overall não aparece.
+- **Sala e regras:** mostram o modo escolhido e a regra de um por posição.
+
+**Planejado x entregue:** tudo entregue. Testes novos: lance recusado na posição já ocupada, times sem posição repetida e a votação completa (voto no próprio time recusado, voto de quem não jogou aceito, um voto por pessoa, vencedor certo).

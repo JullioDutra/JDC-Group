@@ -508,14 +508,21 @@ export interface AnagramaParty extends PartyBase {
 /** Leilão de Craques: orçamento, lances no chat, overall escondido até o fim. */
 export interface LeilaoParty extends PartyBase {
   game: 'leilao';
+  /** "overall" (soma do overall escondido) ou "votacao" (o grupo vota no melhor time). Partidas antigas: overall. */
+  mode?: 'overall' | 'votacao';
+  /** Leilão rolando ou votação aberta (só no modo votação). */
+  phase?: 'auction' | 'voting';
   /** Lote atual (índice em lots). */
   round: number;
   totalRounds: number;
   lots: Array<{ id: string; name: string; positions: Position[]; nationality: string | null; path: string[]; overall: number }>;
   budget: Record<string, number>;
-  squads: Record<string, Array<{ name: string; positions: Position[]; overall: number; price: number }>>;
+  /** Times: um craque por posição (slot = a posição que ele ocupa). */
+  squads: Record<string, Array<{ name: string; positions: Position[]; slot?: Position; overall: number; price: number }>>;
   /** Maior lance do lote atual. */
   bid: { jid: string; name: string; value: number } | null;
+  /** Votos (quem votou -> índice do time), no modo votação. */
+  votes?: Record<string, number>;
 }
 
 export type PartyState =

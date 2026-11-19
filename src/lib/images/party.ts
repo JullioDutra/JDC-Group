@@ -66,8 +66,12 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     rules: ['O bot mostra as letras embaralhadas e o tema.', 'Desembaralhe: o primeiro que acertar leva 100 (60 depois da dica).', 'Tema: abrir anagrama capitais, clubes, filmes... (temas do anagrama).'],
   },
   leilao: {
-    subtitle: '100 moedas · times de 4 · overall escondido',
-    rules: ['O bot leiloa craques; para dar lance, mande só o número.', 'Cada um monta um time de 4 com 100 moedas.', 'No fim o overall aparece: vence a maior soma (+10 com GOL, DEF, MEI e ATA).'],
+    subtitle: '100 moedas · 1 GOL, 1 DEF, 1 MEI, 1 ATA',
+    rules: [
+      'O bot leiloa craques; para dar lance, mande só o número.',
+      'Um por posição: quem já tem goleiro não dá lance em outro.',
+      'Anfitrião escolhe o modo: *overall* (maior soma) ou *votação* (o grupo vota).',
+    ],
   },
   grade: {
     subtitle: 'Jogo da velha · clubes, ligas, seleções e títulos',
@@ -122,7 +126,12 @@ export function partyLobby(state: PartyState): ReactElement {
     const info = NEW_LOBBY[state.game]!;
     const catLabel: Record<string, string> = { futebol: 'futebol', geral: 'conhecimentos gerais', historia: 'história', politica: 'política', anime: 'animes' };
     const cat = 'category' in state && state.category ? ` · ${catLabel[state.category] ?? state.category}` : '';
-    subtitle = state.game === 'anagrama' && state.theme ? `${PARTY_CONFIG.anagrama.rounds} palavras · tema: ${state.theme}` : `${info.subtitle}${cat}`;
+    subtitle =
+      state.game === 'anagrama' && state.theme
+        ? `${PARTY_CONFIG.anagrama.rounds} palavras · tema: ${state.theme}`
+        : state.game === 'leilao'
+          ? `${info.subtitle} · modo ${state.mode === 'votacao' ? 'votação' : 'overall'}`
+          : `${info.subtitle}${cat}`;
     rules = info.rules;
   } else {
     const q = PARTY_CONFIG[state.game];

@@ -8,25 +8,38 @@ import { PARTY_CONFIG, PartyDeps, Save, award, freshFirst, pendingResults, react
 
 /**
  * Leilão de Craques: um jogo de mercado, bem diferente dos de pergunta.
- * Cada um começa com 100 moedas e precisa montar um time de 4. O bot leiloa
- * craques da base, um por vez (30 s por lote): o lance é só mandar o número.
- * Quem der o maior lance leva. O "overall" de cada craque (de 70 a 99, pela
- * fama dele no mundo) fica escondido até o fim: aí soma-se o time, com +10
- * para quem fechar GOL, DEF, MEI e ATA. Vence a maior soma; no empate, quem
- * gastou menos.
+ * Cada um começa com 100 moedas e monta um time de 4: um goleiro, um
+ * defensor, um meia e um atacante (um por posição). O bot leiloa craques
+ * conhecidos das grandes ligas, um por vez (30 s por lote): o lance é só
+ * mandar o número. Quem der o maior lance leva.
+ *
+ * Dois modos:
+ * - *overall* (padrão): cada craque tem um overall de 70 a 99 (pela fama),
+ *   escondido até o fim; vence a maior soma (empate: quem gastou menos);
+ * - *votação*: no fim, o grupo vota no melhor time (ninguém vota no próprio).
  */
 export const LEILAO_BUDGET = 100;
 export const LEILAO_SQUAD = 4;
-export const LEILAO_BONUS = 10;
+export const LEILAO_VOTE_SECONDS = 60;
 const POSITIONS: Position[] = ['GOL', 'DEF', 'MEI', 'ATA'];
 
+export type LeilaoMode = 'overall' | 'votacao';
+
 export const LEILAO_RULES = [
-  `Cada um tem ${LEILAO_BUDGET} moedas para montar um time de ${LEILAO_SQUAD} craques.`,
+  `Cada um tem ${LEILAO_BUDGET} moedas para montar um time de ${LEILAO_SQUAD}: 1 goleiro, 1 defensor, 1 meia e 1 atacante.`,
   `O bot leiloa um craque por vez (${PARTY_CONFIG.leilao.seconds}s). Para dar lance, mande só o número: *15*. Tem que cobrir o lance anterior.`,
-  'Só craques conhecidos das grandes ligas: metade estrelas, metade bons jogadores. O overall (70 a 99) fica escondido até o fim.',
-  `No fim soma o overall do time; quem tiver GOL, DEF, MEI e ATA ganha +${LEILAO_BONUS}. Empate: vence quem gastou menos.`,
+  'Já tem jogador naquela posição? Não pode dar lance em outro.',
+  'Modo *overall*: cada craque tem um overall (70 a 99) escondido; vence a maior soma. Modo *votação*: no fim o grupo vota no melhor time.',
   'Guarde moedas: cada vaga que falta precisa de pelo menos 1 moeda.',
 ];
+
+/** "abrir leilão votação" / "votação" no lobby. */
+export function leilaoModeOf(raw: string): LeilaoMode | null {
+  const w = raw.trim();
+  if (['votacao', 'voto', 'votos', 'grupo', 'votacao do grupo'].includes(w)) return 'votacao';
+  if (['overall', 'over', 'pontos', 'normal'].includes(w)) return 'overall';
+  return null;
+}
 
 /**
  * Quem entra no leilão: jogador conhecido (artigo em 30+ Wikipédias), que
@@ -54,11 +67,14 @@ export function overallOf(sitelinks: number): number {
   return Math.max(70, Math.min(99, Math.round(v)));
 }
 
-export function newLeilao(): Pick<LeilaoParty, 'game' | 'round' | 'totalRounds' | 'lots' | 'budget' | 'squads' | 'bid'> {
-  return { game: 'leilao', round: -1, totalRounds: 0, lots: [], budget: {}, squads: {}, bid: null };
+export function newLeilao(mode: LeilaoMode = 'overall'): Pick<LeilaoParty, 'game' | 'mode' | 'phase' | 'round' | 'totalRounds' | 'lots' | 'budget' | 'squads' | 'bid' | 'votes'> {
+  return { game: 'leilao', mode, phase: 'auction', round: -1, totalRounds: 0, lots: [], budget: {}, squads: {}, bid: null, votes: {} };
 }
 
 const posLabel = (ps: Position[]) => ps.map((p) => POSITION_LABEL[p]).join('/');
+/** A posição que o craque ocupa no time: a principal dele. */
+const slotOf = (lot: { positions: Position[] }): Position => lot.positions[0];
+const modeOf = (state: LeilaoParty): LeilaoMode => state.mode ?? 'overall';
 
 export async function startLeilao(state: LeilaoParty, deps: PartyDeps): Promise<Outgoing[]> {
   // Duas amostras: estrelas (raras) e o resto dos conhecidos.
@@ -94,17 +110,26 @@ export async function startLeilao(state: LeilaoParty, deps: PartyDeps): Promise<
     state.squads[p.jid] = [];
   }
   state.status = 'PLAYING';
+  state.phase = 'auction';
   state.round = -1;
+  const how =
+    modeOf(state) === 'votacao'
+      ? 'No fim, o grupo vota no melhor time.'
+      : 'O overall de cada craque fica escondido até o fim: vence a maior soma.';
   return [
     text(
-      `🔨 *Leilão de Craques* valendo! ${state.players.length} técnicos, ${LEILAO_BUDGET} moedas cada, times de ${LEILAO_SQUAD}.\n` +
-        `Lance = mande só o número. O overall de cada craque fica escondido até o fim. Fechar GOL, DEF, MEI e ATA vale +${LEILAO_BONUS}.`,
+      `🔨 *Leilão de Craques* valendo! ${state.players.length} técnicos, ${LEILAO_BUDGET} moedas cada.\n` +
+        `Cada time: 1 GOL, 1 DEF, 1 MEI e 1 ATA (um por posição). Lance = mande só o número. ${how}`,
     ),
     ...openLot(state, deps),
   ];
 }
 
 const full = (state: LeilaoParty, jid: string) => (state.squads[jid]?.length ?? 0) >= LEILAO_SQUAD;
+/** Já tem jogador nessa posição? */
+const hasSlot = (state: LeilaoParty, jid: string, slot: Position) => (state.squads[jid] ?? []).some((s) => (s.slot ?? slotOf(s)) === slot);
+/** Ainda pode comprar esse craque (time não está cheio e a posição está vaga)? */
+const canBuy = (state: LeilaoParty, jid: string, slot: Position) => !full(state, jid) && !hasSlot(state, jid, slot);
 
 /** Maior lance possível: o saldo menos 1 moeda para cada outra vaga que ainda falta. */
 export function maxBid(state: LeilaoParty, jid: string): number {
@@ -113,19 +138,32 @@ export function maxBid(state: LeilaoParty, jid: string): number {
 }
 
 function openLot(state: LeilaoParty, deps: PartyDeps): Outgoing[] {
-  state.round += 1;
   state.bid = null;
   state.warned = [];
-  if (state.round >= state.lots.length || state.players.every((p) => full(state, p.jid) || p.missed >= 99)) {
-    return finishLeilao(state, state.round >= state.lots.length ? 'Acabaram os lotes.' : 'Todos os times estão completos.', deps.now.getTime());
-  }
+  const active = state.players.filter((p) => p.missed < 99);
+  // Pula o lote que ninguém pode comprar (todo mundo já tem a posição).
+  const skipped: string[] = [];
+  do {
+    state.round += 1;
+    if (state.round >= state.lots.length || active.every((p) => full(state, p.jid))) {
+      return endAuction(state, state.round >= state.lots.length ? 'Acabaram os lotes.' : 'Todos os times estão completos.', deps);
+    }
+    const lot = state.lots[state.round];
+    if (active.some((p) => canBuy(state, p.jid, slotOf(lot)))) break;
+    skipped.push(lot.name);
+  } while (true);
   const lot = state.lots[state.round];
-  const who = [posLabel(lot.positions), lot.nationality].filter(Boolean).join(' · ');
+  const slot = POSITION_LABEL[slotOf(lot)].toLocaleUpperCase('pt-BR');
+  const also = lot.positions.length > 1 ? `também ${posLabel(lot.positions.slice(1))}` : '';
+  const who = [lot.nationality, also].filter(Boolean).join(' · ');
+  const need = active.filter((p) => canBuy(state, p.jid, slotOf(lot))).map((p) => firstName(p.name));
+  const skipLine = skipped.length ? `(Ninguém precisa mais de ${skipped.length > 1 ? 'alguns lotes' : skipped[0]}: pulando.)\n` : '';
   return [
     text(
-      `🔨 *Lote ${state.round + 1}/${state.totalRounds}* · *${lot.name}* (${who})\n` +
+      skipLine +
+        `🔨 *Lote ${state.round + 1}/${state.totalRounds}* · *${slot}* · *${lot.name}*${who ? ` (${who})` : ''}\n` +
         (lot.path.length ? `Clubes: ${lot.path.join(' → ')}\n` : '') +
-        `Lance mínimo 1. Mande o valor. ${PARTY_CONFIG.leilao.seconds}s.`,
+        `Podem dar lance: ${need.join(', ')}. Lance mínimo 1. ${PARTY_CONFIG.leilao.seconds}s.`,
     ),
     schedule(state, PARTY_CONFIG.leilao.seconds, deps.now.getTime(), 'lei'),
   ];
@@ -138,10 +176,16 @@ export function parseBid(raw: string): number | null {
 }
 
 export function leilaoAnswer(state: LeilaoParty, player: PartyPlayer, msg: IncomingMessage, _deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
+  if (state.phase === 'voting') return leilaoVote(state, msg, save);
   const value = parseBid(msg.text);
   if (value === null || value < 1) return [];
   const who = firstName(player.name);
+  const lot = state.lots[state.round];
+  if (!lot) return [];
   if (full(state, player.jid)) return warnOnce(state, player.jid, `*${who}*, seu time já está completo.`, save);
+  if (hasSlot(state, player.jid, slotOf(lot))) {
+    return warnOnce(state, player.jid, `*${who}*, você já tem ${POSITION_LABEL[slotOf(lot)]}: é um por posição.`, save);
+  }
   const limit = maxBid(state, player.jid);
   if (value > limit) return warnOnce(state, player.jid, `*${who}*, seu lance máximo agora é ${limit} (guarde 1 moeda para cada vaga que falta).`, save);
   if (state.bid && value <= state.bid.value) return [];
@@ -152,12 +196,13 @@ export function leilaoAnswer(state: LeilaoParty, player: PartyPlayer, msg: Incom
 
 /** Fim do tempo do lote: vende para o maior lance (ou ninguém quis) e abre o próximo. */
 export function closeLot(state: LeilaoParty, deps: PartyDeps, reason = ''): Outgoing[] {
+  if (state.phase === 'voting') return closeLeilaoVoting(state, reason || 'Fim da votação.', deps.now.getTime());
   const lot = state.lots[state.round];
   let line: string;
   if (state.bid) {
     const buyer = state.bid;
     state.budget[buyer.jid] -= buyer.value;
-    state.squads[buyer.jid].push({ name: lot.name, positions: lot.positions, overall: lot.overall, price: buyer.value });
+    state.squads[buyer.jid].push({ name: lot.name, positions: lot.positions, slot: slotOf(lot), overall: lot.overall, price: buyer.value });
     line = `✅ Vendido! *${lot.name}* para *${firstName(buyer.name)}* por ${buyer.value} (sobram ${state.budget[buyer.jid]}).`;
   } else {
     line = `Ninguém deu lance em *${lot.name}*.`;
@@ -167,50 +212,124 @@ export function closeLot(state: LeilaoParty, deps: PartyDeps, reason = ''): Outg
   return [text([reason, line].filter(Boolean).join(' ')), ...openLot(state, deps)];
 }
 
-/** Tem GOL, DEF, MEI e ATA (cada craque cobre uma posição)? */
-export function completeTeam(squad: Array<{ positions: Position[] }>): boolean {
-  const used = new Set<number>();
-  const assign = (k: number): boolean => {
-    if (k === POSITIONS.length) return true;
-    for (let i = 0; i < squad.length; i++) {
-      if (used.has(i) || !squad[i].positions.includes(POSITIONS[k])) continue;
-      used.add(i);
-      if (assign(k + 1)) return true;
-      used.delete(i);
-    }
-    return false;
-  };
-  return assign(0);
+/** Acabou o leilão: no modo overall, resultado; no modo votação, abre a votação. */
+function endAuction(state: LeilaoParty, reason: string, deps: PartyDeps): Outgoing[] {
+  if (modeOf(state) === 'votacao') return openLeilaoVoting(state, reason, deps.now.getTime());
+  return finishLeilao(state, reason, deps.now.getTime());
 }
 
-export function teamScore(squad: LeilaoParty['squads'][string]): { total: number; bonus: boolean } {
-  const bonus = squad.length >= POSITIONS.length && completeTeam(squad);
-  return { total: squad.reduce((a, s) => a + s.overall, 0) + (bonus ? LEILAO_BONUS : 0), bonus };
+export function openLeilaoVoting(state: LeilaoParty, reason: string, nowMs: number): Outgoing[] {
+  state.phase = 'voting';
+  state.votes = {};
+  state.bid = null;
+  state.warned = [];
+  return [
+    {
+      ...leilaoBoard(state, false),
+      caption:
+        `${reason}\n\n🗳️ *Votação!* Qualquer pessoa do grupo manda o número do melhor time (1 a ${state.players.length}). ` +
+        `Quem jogou não vota no próprio. ${LEILAO_VOTE_SECONDS}s.`,
+    } as Outgoing,
+    schedule(state, LEILAO_VOTE_SECONDS, nowMs, 'lv'),
+  ];
 }
 
-export function leilaoRows(state: LeilaoParty, reveal: boolean) {
-  return state.players.map((p) => {
-    const squad = state.squads[p.jid] ?? [];
-    const score = teamScore(squad);
-    const lines = squad.map((s) => `${posLabel(s.positions)} ${s.name}${reveal ? ` · overall ${s.overall}` : ''} · ${s.price} moedas`);
-    while (lines.length < LEILAO_SQUAD) lines.push('— vaga —');
-    if (reveal && score.bonus) lines.push(`Time completo: +${LEILAO_BONUS}`);
+/** Voto: qualquer pessoa do grupo, 1 por pessoa, ninguém vota no próprio time. */
+export function leilaoVote(state: LeilaoParty, msg: IncomingMessage, save: Save): Promise<Outgoing[]> | Outgoing[] {
+  const n = Number(msg.text.trim());
+  if (!Number.isInteger(n) || n < 1 || n > state.players.length) return [];
+  state.votes ??= {};
+  if (msg.senderJid in state.votes) return [];
+  const own = state.players.findIndex((p) => p.jid === msg.senderJid);
+  if (own === n - 1) return warnOnce(state, msg.senderJid, `*${firstName(msg.senderName)}*, não vale votar no próprio time.`, save);
+  state.votes[msg.senderJid] = n - 1;
+  return save([react(msg, '✅')]);
+}
+
+function voteCounts(state: LeilaoParty): number[] {
+  const counts = state.players.map(() => 0);
+  for (const v of Object.values(state.votes ?? {})) counts[v] += 1;
+  return counts;
+}
+
+export function closeLeilaoVoting(state: LeilaoParty, reason: string, nowMs = Date.now()): Outgoing[] {
+  state.status = 'FINISHED';
+  state.deadline = null;
+  state.timerToken = null;
+  const counts = voteCounts(state);
+  state.players.forEach((p, i) => {
+    p.score = 0;
+    award(p, counts[i], nowMs);
+  });
+  const top = Math.max(0, ...counts);
+  const winners = top === 0 ? [] : state.players.filter((_, i) => counts[i] === top);
+  const plural = (n: number) => `${n} voto${n === 1 ? '' : 's'}`;
+  const headline =
+    winners.length === 0
+      ? 'Ninguém votou: empate geral.'
+      : winners.length > 1
+        ? `🏆 Empate na votação: ${winners.map((p) => `*${p.name}*`).join(' e ')} (${plural(top)}).`
+        : `🏆 *${winners[0].name}* montou o melhor time (${plural(top)}).`;
+  pendingResults.set(
+    state,
+    state.players.map((p) => ({
+      player: { jid: p.jid, name: p.name },
+      result: winners.length === 0 ? 'draw' : winners.includes(p) ? (winners.length > 1 ? 'draw' : 'win') : 'loss',
+    })),
+  );
+  const lines = state.players.map((p, i) => `${i + 1}. ${p.name} — ${plural(counts[i])}`);
+  return [
+    {
+      ...leilaoBoard(state, true),
+      caption: [reason, headline, lines.join('\n'), 'Mande *abrir leilão votação* para jogar de novo.'].filter(Boolean).join('\n\n'),
+    } as Outgoing,
+  ];
+}
+
+/** Ordem do time na imagem: GOL, DEF, MEI, ATA. */
+const bySlot = (squad: LeilaoParty['squads'][string]) =>
+  [...squad].sort((a, b) => POSITIONS.indexOf(a.slot ?? slotOf(a)) - POSITIONS.indexOf(b.slot ?? slotOf(b)));
+
+export function teamScore(squad: LeilaoParty['squads'][string]): { total: number } {
+  return { total: squad.reduce((a, s) => a + s.overall, 0) };
+}
+
+export function leilaoRows(state: LeilaoParty, final: boolean) {
+  const vote = modeOf(state) === 'votacao';
+  const counts = vote ? voteCounts(state) : [];
+  const revealOverall = final && !vote;
+  return state.players.map((p, i) => {
+    const squad = bySlot(state.squads[p.jid] ?? []);
+    const lines = POSITIONS.map((pos) => {
+      const s = squad.find((x) => (x.slot ?? slotOf(x)) === pos);
+      return s ? `${POSITION_LABEL[pos]} ${s.name}${revealOverall ? ` · overall ${s.overall}` : ''} · ${s.price} moedas` : `${POSITION_LABEL[pos]} — vaga —`;
+    });
     lines.push(`Moedas: ${state.budget[p.jid] ?? 0}`);
-    return { head: `${firstName(p.name)}${reveal ? ` · ${score.total}` : ''}`, lines };
+    const head = vote
+      ? `${i + 1}. ${firstName(p.name)}${final ? ` · ${counts[i]} voto${counts[i] === 1 ? '' : 's'}` : ''}`
+      : `${firstName(p.name)}${revealOverall ? ` · ${teamScore(squad).total}` : ''}`;
+    return { head, lines };
   });
 }
 
 export function leilaoBoard(state: LeilaoParty, final: boolean): Outgoing {
+  const vote = modeOf(state) === 'votacao';
+  const subtitle = state.phase === 'voting' || (vote && final)
+    ? final ? 'Votos do grupo' : 'Votação aberta: mande o número do melhor time'
+    : final
+      ? 'Overall revelado'
+      : `Lote ${Math.max(1, state.round + 1)} de ${state.totalRounds} · ${vote ? 'no fim, votação' : 'overall escondido'}`;
   return {
     type: 'image',
-    image: {
-      kind: 'textBoard',
-      game: 'leilao',
-      title: final ? 'Resultado do leilão' : 'Os times',
-      subtitle: final ? 'Overall revelado' : `Lote ${Math.max(1, state.round + 1)} de ${state.totalRounds} · overall escondido`,
-      rows: leilaoRows(state, final),
-    },
+    image: { kind: 'textBoard', game: 'leilao', title: final ? 'Resultado do leilão' : 'Os times', subtitle, rows: leilaoRows(state, final) },
   };
+}
+
+/** "encerrar": no modo votação, o leilão vai direto para a votação (ou a fecha). */
+export function endLeilao(state: LeilaoParty, reason: string, nowMs = Date.now()): Outgoing[] {
+  if (state.phase === 'voting') return closeLeilaoVoting(state, reason, nowMs);
+  if (modeOf(state) === 'votacao' && state.status === 'PLAYING') return openLeilaoVoting(state, reason, nowMs);
+  return finishLeilao(state, reason, nowMs);
 }
 
 export function finishLeilao(state: LeilaoParty, reason: string, nowMs = Date.now()): Outgoing[] {
@@ -238,6 +357,6 @@ export function finishLeilao(state: LeilaoParty, reason: string, nowMs = Date.no
       result: best.total > 0 && s.total === best.total && s.left === best.left ? (tied.length > 1 ? 'draw' : 'win') : 'loss',
     })),
   );
-  const lines = scored.map((s, i) => `${i + 1}º ${s.p.name} — ${s.total}${s.bonus ? ' (com bônus)' : ''} · sobrou ${s.left}`);
+  const lines = scored.map((s, i) => `${i + 1}º ${s.p.name} — ${s.total} · sobrou ${s.left}`);
   return [{ ...leilaoBoard(state, true), caption: [reason, headline, lines.join('\n'), 'Mande *abrir leilão* para jogar de novo.'].filter(Boolean).join('\n\n') } as Outgoing];
 }

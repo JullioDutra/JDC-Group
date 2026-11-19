@@ -57,6 +57,7 @@ import { SURVIVOR_LISTS } from './content/sobrevivente';
 import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
 import { anagramThemesText, newAnagrama } from './anagrama';
+import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
 import { matchTop100, newTop100, playedTodayKey } from './top100';
 import { dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
@@ -111,7 +112,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   // Jogos gerados da base de jogadores.
   if (/^(abrir|jogar) (a )?carreira$/.test(norm)) return { game: 'carreira', rest: '' };
   if (/^(abrir|jogar) (a )?ponte$/.test(norm)) return { game: 'ponte', rest: '' };
-  if (/^(abrir|jogar) (o )?leilao( de craques)?$/.test(norm)) return { game: 'leilao', rest: '' };
+  const lei = norm.match(/^(abrir|jogar) (o )?leilao( de craques)?(?: (?:por |no |modo )?(overall|over|pontos|votacao|voto|votos|grupo))?$/);
+  if (lei) return { game: 'leilao', rest: lei[4] ?? '' };
   if (/^((abrir|jogar) )?(o )?top ?100( do dia)?$/.test(norm) || norm === 'desafio do dia') return { game: 'top100', rest: '' };
   const ana = norm.match(/^(abrir|jogar) (o )?anagramas?(?: (?:de |do |da |dos |das )?(.+))?$/);
   if (ana) return { game: 'anagrama', rest: ana[3] ?? '' };
@@ -182,6 +184,8 @@ export async function createParty(
       return [text('O *Top 100 do Dia* de hoje já foi jogado neste grupo. Amanhã tem lista nova (vira à meia-noite de Brasília).')];
     }
     state = { ...base('top100', host, nowMs), ...newTop100(deps.now) } as PartyState;
+  } else if (start.game === 'leilao') {
+    state = { ...base('leilao', host, nowMs), ...newLeilao(leilaoModeOf(start.rest) ?? 'overall') } as PartyState;
   } else if (start.game === 'anagrama') {
     // "abrir anagrama capitais": tema escolhido; "futebol"/"geral": a categoria toda.
     const rest = start.rest.trim();
@@ -385,6 +389,9 @@ export async function handlePartyMessage(
         state.options = { blind: choice.twists.blind, turnSeconds: choice.twists.fast ? 40 : cfg.seconds, hard: choice.twists.hard };
         return save([react(msg, '✅')]);
       }
+    } else if (state.game === 'leilao' && leilaoModeOf(norm)) {
+      state.mode = leilaoModeOf(norm)!;
+      return save([react(msg, '✅')]);
     } else if (state.game === 'melhortime' && ['ia', 'votacao', 'votacao do grupo', 'grupo'].includes(norm)) {
       state.judge = norm === 'ia' ? 'ia' : 'votacao';
       return save([react(msg, '✅')]);
@@ -426,6 +433,12 @@ export async function handlePartyMessage(
   // Melhor Time: na votação, quem decide é quem NÃO jogou.
   if (state.status === 'PLAYING' && state.game === 'melhortime' && state.phase === 'voting') {
     return melhorTimeVote(state, msg, save);
+  }
+
+  // Leilão (modo votação): na votação, qualquer pessoa do grupo vota.
+  if (state.status === 'PLAYING' && state.game === 'leilao' && state.phase === 'voting') {
+    if (norm === 'pular' && isHost) return save(closeLeilaoVoting(state, 'Votação encerrada pelo anfitrião.', deps.now.getTime()));
+    return leilaoVote(state, msg, save);
   }
 
   // Draft da Resenha: na votação, qualquer pessoa do grupo vota.

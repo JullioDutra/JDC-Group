@@ -6,7 +6,7 @@ import { PONTE_RULES, closePonteRound, newPonte, openPonteRound, ponteAnswer, st
 import { GRADE_RULES, finishGrade, gradeAnswer, gradeTimeout, newGrade, startGrade } from './grade';
 import { PENALTIS_RULES, finishPenaltis, goals, newPenaltis, penaltisAnswer, penaltisTimeout, scoreLine, startPenaltis } from './penaltis';
 import { finishByScore } from './common';
-import { LEILAO_RULES, closeLot, finishLeilao, leilaoAnswer, leilaoBoard, newLeilao, startLeilao } from './leilao';
+import { LEILAO_RULES, closeLot, endLeilao, leilaoAnswer, leilaoBoard, newLeilao, startLeilao } from './leilao';
 import type { AnagramaParty, LeilaoParty, Top100Party } from '../game/types';
 import { TOP100_RULES, finishTop100, newTop100, playedTodayKey, startTop100, top100Answer, top100Timeout } from './top100';
 import { ANAGRAMA_RULES, anagramaAnswer, anagramaTimeout, newAnagrama, openAnagramaRound, skipAnagrama, startAnagrama } from './anagrama';
@@ -89,12 +89,12 @@ const penaltis: PartyModule = {
 
 const leilao: PartyModule = {
   rules: LEILAO_RULES,
-  create: newLeilao,
+  create: () => newLeilao(),
   start: (s, d) => startLeilao(s as LeilaoParty, d),
   answer: (s, p, m, d, save) => leilaoAnswer(s as LeilaoParty, p, m, d, save),
   timeout: (s, d) => closeLot(s as LeilaoParty, d),
-  skip: (s, d) => closeLot(s as LeilaoParty, d, 'Martelo batido pelo anfitrião.'),
-  finish: (s, reason) => finishLeilao(s as LeilaoParty, reason),
+  skip: (s, d) => closeLot(s as LeilaoParty, d, (s as LeilaoParty).phase === 'voting' ? 'Votação encerrada pelo anfitrião.' : 'Martelo batido pelo anfitrião.'),
+  finish: (s, reason) => endLeilao(s as LeilaoParty, reason),
   board: (s, final) => leilaoBoard(s as LeilaoParty, final),
   seenItems: (s) => (s as LeilaoParty).lots.map((l) => l.id),
 };
