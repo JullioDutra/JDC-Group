@@ -31,7 +31,10 @@ export interface AnagramTheme {
   category: ContentCategory;
   /** Como o grupo pede o tema (sem acento). */
   keys: string[];
-  /** Palavras: "Resposta|apelido aceito, Outra". */
+  /**
+   * Palavras: "Resposta|apelido, Outra". No Anagrama só vale a resposta exata;
+   * o apelido serve para o palpite final do Impostor, que usa as mesmas listas.
+   */
   list: string;
 }
 

@@ -1,6 +1,6 @@
 import { firstName, isChatter, normalize } from '../game/text';
 import type { AnagramaParty, ContentCategory, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, finishByScore, freshFirst, normalizeAnswer, pauseBeforeNext, react, schedule, scoreImage, text } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, award, finishByScore, freshFirst, normalizeAnswer, pauseBeforeNext, react, schedule, scoreImage, text } from './common';
 import { ANAGRAMS, ANAGRAM_THEMES, getAnagram, plainUpper, scramble } from './content/anagramas';
 
 /**
@@ -29,6 +29,7 @@ export function anagramThemesText(head = ''): string {
 
 export const ANAGRAMA_RULES = [
   'O bot mostra as letras embaralhadas e o tema. Desembaralhe e mande a palavra.',
+  'Só vale a palavra certinha (acento não precisa). Letra trocada ou apelido não valem.',
   'Dá para escolher o tema: *abrir anagrama capitais*, *abrir anagrama clubes*... (mande *temas do anagrama* para ver todos).',
   `O primeiro que acertar leva ${ANAGRAMA_POINTS.early} pontos (${ANAGRAMA_POINTS.late} depois da dica, que sai na metade do tempo).`,
   `Cada um tem ${ANAGRAMA_TRIES} tentativas por rodada. Vence quem acertar mais.`,
@@ -72,6 +73,17 @@ export function openAnagramaRound(state: AnagramaParty, deps: PartyDeps): Outgoi
   ];
 }
 
+/**
+ * Acertou só com a palavra 100% certa: as mesmas letras, na mesma ordem. Não
+ * importam acento, maiúscula, espaço, hífen nem o artigo do começo ("O Rei do
+ * Gado" = "rei do gado"). Erro de digitação e apelido não valem: "Rodrigo" não
+ * é "Rodrygo", "bparaiba" não é "Paraíba".
+ */
+export function anagramaHit(answer: string, raw: string): boolean {
+  const letters = (s: string) => normalizeAnswer(s).replace(/[^a-z0-9]/g, '');
+  return letters(raw) !== '' && letters(raw) === letters(answer);
+}
+
 export function anagramaAnswer(state: AnagramaParty, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
   if (state.solved) return [];
   const raw = msg.text.trim();
@@ -79,13 +91,12 @@ export function anagramaAnswer(state: AnagramaParty, player: PartyPlayer, msg: I
   const used = state.tries[player.jid] ?? 0;
   if (used >= ANAGRAMA_TRIES) return [];
   const word = getAnagram(state.order[state.round])!;
-  const guess = normalizeAnswer(raw);
   // Só conta como tentativa o que tem o tamanho certo (conversa não gasta tentativa).
   const size = (s: string) => normalize(s).replace(/[^a-z]/g, '').length;
   if (Math.abs(size(raw) - size(word.answer)) > 2) return [];
   state.tries[player.jid] = used + 1;
   player.missed = 0;
-  if (!answerMatches([word.answer, ...(word.aliases ?? [])], guess)) {
+  if (!anagramaHit(word.answer, raw)) {
     return save([react(msg, used + 1 >= ANAGRAMA_TRIES ? '🚫' : '❌')]);
   }
   const points = state.hint ? ANAGRAMA_POINTS.late : ANAGRAMA_POINTS.early;

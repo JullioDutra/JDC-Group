@@ -5,6 +5,7 @@ import { handleMessage } from '../src/lib/game/engine';
 import type { AnagramaParty, Outgoing, Top100Party } from '../src/lib/game/types';
 import { freshPick } from '../src/lib/party/common';
 import { ANAGRAMS, ANAGRAM_THEMES, findAnagramTheme, getAnagram } from '../src/lib/party/content/anagramas';
+import { anagramaAnswer, anagramaHit } from '../src/lib/party/anagrama';
 import { parsePartyStart, pickTop10 } from '../src/lib/party/engine';
 import { TOP10_LISTS, top10Theme } from '../src/lib/party/top10-lists';
 import { MemoryStore } from '../src/lib/store/memory';
@@ -71,6 +72,40 @@ test('Anagrama: temas escolhidos no comando, todos com pelo menos 16 palavras', 
   const st = m!.state as AnagramaParty;
   assert.equal(st.theme, 'capital');
   assert.ok(st.order.every((w) => getAnagram(w)?.theme === 'capital'), 'só palavras do tema');
+});
+
+test('Anagrama: só vale a palavra 100% certa (sem acento), nada de erro de digitação nem apelido', async () => {
+  // Os casos do grupo.
+  assert.ok(!anagramaHit('Rodrygo', 'Rodrigo'));
+  assert.ok(!anagramaHit('Paraíba', 'bparaiba'));
+  assert.ok(anagramaHit('Rodrygo', 'rodrygo'));
+  assert.ok(anagramaHit('Paraíba', 'PARAIBA'));
+  assert.ok(anagramaHit('Paraíba', 'Paraíba'));
+  // Espaço, hífen e artigo do começo não contam; letra trocada, sim.
+  assert.ok(anagramaHit('Beira-Rio', 'beira rio'));
+  assert.ok(anagramaHit('O Rei do Gado', 'rei do gado'));
+  assert.ok(anagramaHit('Vinícius Júnior', 'vinicius junior'));
+  assert.ok(!anagramaHit('Vinícius Júnior', 'vini jr'), 'apelido não vale no Anagrama');
+  assert.ok(!anagramaHit('Internacional', 'inter'));
+  assert.ok(!anagramaHit('Florianópolis', 'florianopoles'), 'erro em palavra longa também não');
+
+  // Na partida: "Rodrigo" gasta tentativa e leva ❌; "Rodrygo" acerta.
+  const word = ANAGRAMS.find((a) => a.answer === 'Rodrygo')!;
+  const players = ['Ana', 'Bia'].map((n) => ({ jid: `${n}@s`, name: n, score: 0, missed: 0, hits: 0, lastHitAt: 0 }));
+  const state = {
+    kind: 'party', game: 'anagrama', status: 'PLAYING', host: players[0], players, createdAt: 0, updatedAt: 0, deadline: null,
+    timerToken: null, seq: 0, warned: [], category: 'futebol', theme: 'craque brasileiro', round: 0, totalRounds: 1,
+    order: [word.id], scrambled: 'GORYRDO', hint: false, tries: {}, solved: false,
+  } as unknown as AnagramaParty;
+  const deps = { store: new MemoryStore(), lookup: createLookup(new MemoryStore(), async () => null), now: new Date('2026-11-19T12:00:00Z'), rng: lcg(1) };
+  const save = async (out: Outgoing[]) => out;
+  const msg = (who: string, text: string) => ({ id: `${who}-${text}`, groupJid: 'g@g.us', senderJid: `${who}@s`, senderName: who, text });
+  const wrong = await anagramaAnswer(state, players[1], msg('Bia', 'Rodrigo'), deps as never, save);
+  assert.ok(wrong.some((o) => o.type === 'react' && o.emoji === '❌'));
+  assert.equal(state.solved, false);
+  const right = await anagramaAnswer(state, players[0], msg('Ana', 'RODRYGO'), deps as never, save);
+  assert.ok(right.some((o) => o.type === 'react' && o.emoji === '✅'));
+  assert.equal(state.solved, true);
 });
 
 // ---------- Comandos do admin: Top 100 e temporada ----------

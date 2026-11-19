@@ -1000,3 +1000,13 @@ Todo mundo recebe no privado o mesmo segredo (um craque, clube, seleção…), m
 | Testes | modo do grupo e conteúdo | 2 testes novos: temas, misturas, rótulos que funcionam como comando e mensagens sem 😈; grupo só de Impostor de ponta a ponta. **132 passando**; o build passa. |
 
 **Ficou de fora, como planejado:** futebol feminino, influenciadores, tema do grupo e imagens sem a marca Duelo de Craques.
+
+## 21. Correção: Anagrama só aceita a palavra exata (19/11)
+
+- **Problema:** o Anagrama usava a mesma conferência dos quizzes, que tolera erro de digitação e aceita apelido. Por isso "Rodrigo" valia por "Rodrygo" e "bparaiba" por "Paraíba".
+- **Agora:** só vale a palavra 100% certa, com as mesmas letras na mesma ordem.
+  - Não importam acento, maiúscula, espaço, hífen nem o artigo do começo ("rei do gado" vale por "O Rei do Gado").
+  - Letra trocada, letra a mais e apelido ("inter", "vini jr") não valem.
+- **Os outros jogos não mudam:** quizzes e o palpite do Impostor continuam tolerando erro pequeno de digitação.
+- **Regras:** as do Anagrama ganharam a linha "Só vale a palavra certinha (acento não precisa)".
+- **Teste:** os dois casos do grupo, mais espaço/hífen/artigo e uma rodada de ponta a ponta. São 133 testes passando.
