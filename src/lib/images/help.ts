@@ -8,17 +8,17 @@ const upper = (s: string) => s.toLocaleUpperCase('pt-BR');
 function gameCard([command, what]: [string, string]): ReactElement {
   return box(
     {
-      flexDirection: 'column', justifyContent: 'center', width: 476, height: 64, padding: '0 16px', borderRadius: 14,
+      flexDirection: 'column', justifyContent: 'center', width: 476, height: 54, padding: '0 16px', borderRadius: 12,
       backgroundColor: C.panel, border: `2px solid ${C.panelLine}`,
     },
-    txt(upper(command), { fontFamily: DISPLAY, fontSize: 27, color: C.lime, lineHeight: 1.05 }),
-    txt(what, { fontSize: 20, color: C.muted, fontWeight: 600, lineHeight: 1.1 }),
+    txt(upper(command), { fontFamily: DISPLAY, fontSize: 24, color: C.lime, lineHeight: 1.05 }),
+    txt(what, { fontSize: 18, color: C.muted, fontWeight: 600, lineHeight: 1.1 }),
   );
 }
 
 function section(title: string, ...children: ReactElement[]): ReactElement {
   return box(
-    { flexDirection: 'column', gap: 8, marginTop: 14 },
+    { flexDirection: 'column', gap: 8, marginTop: 12 },
     txt(title, { fontSize: 22, fontWeight: 700, letterSpacing: 3, color: C.white }),
     ...children,
   );
@@ -26,7 +26,7 @@ function section(title: string, ...children: ReactElement[]): ReactElement {
 
 export function helpMenu(): ReactElement {
   const half = Math.ceil(GROUP_GAMES.length / 2);
-  const column = (list: typeof GROUP_GAMES) => box({ flexDirection: 'column', gap: 8 }, ...list.map(gameCard));
+  const column = (list: typeof GROUP_GAMES) => box({ flexDirection: 'column', gap: 6 }, ...list.map(gameCard));
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill('COMANDOS', C.lime, C.ink, 24)),
     section(

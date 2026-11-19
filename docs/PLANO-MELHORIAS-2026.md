@@ -224,3 +224,53 @@ Um jogo de mercado, diferente de todos os de pergunta.
 - **Venda:** no fim do tempo, quem deu o maior lance leva o craque. O anfitrião pode bater o martelo antes com *pular*.
 - **Overall escondido:** cada craque tem um overall de 60 a 99, que mede a fama dele no mundo (número de Wikipédias com artigo). O número fica escondido até o fim: o jogo é saber quem vale mais.
 - **Resultado:** soma do overall + 10 para quem tiver GOL, DEF, MEI e ATA. No empate, vence quem gastou menos.
+
+## 8. Modo novo: Anagrama (`abrir anagrama`)
+
+Jogo em grupo: quem desembaralha mais palavras vence.
+
+- **Conteúdo:** 267 palavras em 13 temas. Futebol: clube brasileiro, clube do exterior, craque brasileiro, craque do mundo, seleção e coisas do futebol. Geral: capital, estado, cidade brasileira, animal, fruta ou comida, profissão e artista brasileiro.
+- **Escolha do tema:** `abrir anagrama` mistura tudo; `abrir anagrama futebol` e `abrir anagrama geral` filtram. As palavras já vistas no grupo ficam para depois.
+- **Rodadas:** 12 rodadas de 40 s. As letras vêm em maiúscula e sem acento, com o tema e o número de letras. Nomes de duas palavras são embaralhados palavra por palavra.
+- **Pontos:** 100 para quem acerta na primeira metade do tempo e 60 depois. Com 20 s, sai a dica com a primeira letra.
+- **Palpites:** 3 por pessoa em cada rodada. Mensagem com tamanho bem diferente da resposta é tratada como conversa e não gasta palpite.
+
+## 9. Modo novo: Top 100 do Dia (`top 100`)
+
+O desafio diário: uma lista de 100 itens, a mesma para todos os grupos, e cada grupo só pode jogar uma vez por dia.
+
+- **Pontos = posição:** quem acerta o 63º ganha 63 pontos. O fundo da lista vale mais porque é mais difícil.
+- **Vidas:** 10 palpites errados por pessoa. Um erro que alguém já tinha dito não gasta vida.
+- **Tempo:** 8 minutos. Quem mandar um palpite com o jogo rolando já entra.
+- **Imagem:** grade 10 x 10 que vai sendo pintada com a cor de quem acertou. Sai no início, a cada 25 acertos e no fim, com a lista completa.
+- **Troca da lista:** à meia-noite de Brasília. Se o grupo tentar jogar de novo no mesmo dia, o bot avisa que amanhã tem lista nova.
+- **Listas (uma por dia, em rodízio):**
+  1. *O Maior Brasileiro de Todos os Tempos* (votação do SBT, 2012). Chico Xavier vale 1 ponto; os outros 11 finalistas valem 2 (a ordem deles não foi divulgada). Dedé é o 63º e Ivete Sangalo a 43ª.
+  2. *Os 100 municípios mais populosos* (Censo 2022 do IBGE).
+  3. *Os 100 maiores países em área* (ONU).
+  4. *Os 100 primeiros elementos da tabela periódica.*
+  5. *Os 100 primeiros Pokémon da Pokédex.*
+- **Próximas listas:** países por população, artilheiros da história do Brasileirão, clubes com mais títulos e músicas mais tocadas do ano.
+
+**Acesso à Wikipédia:** as listas vêm de páginas da Wikipédia. O ambiente desta sessão é o "JDC-Group" e libera só `pt.wikipedia.org` e `en.wikipedia.org`. A API limita as chamadas, então os downloads são lentos e com pausa. Os dados são gravados no código (`top100-wiki.ts`); o bot não consulta a Wikipédia enquanto roda.
+
+## 10. Mais dados de 2026, rodada 3 (19/11)
+
+| Jogo | Novos itens |
+|---|---|
+| Quiz Relâmpago | +13 (campanha do Brasil na Copa de 2026, semifinais, estreantes Cabo Verde, Uzbequistão e Jordânia, The Best 2025, artilheiro da Libertadores 2025) |
+| Fato ou Fake | +6 |
+| Chute Certo | +5 |
+| Top 10 | "Top 10 da Bola de Ouro de 2026" (Kane, Mbappé, Yamal, Rodri, Messi, Kvaratskhelia, Dembélé, Haaland, Olise, Fabián Ruiz), no lugar do pódio; "Adversários do Brasil na Copa de 2026" (Marrocos, Haiti, Escócia, Japão, Noruega) |
+
+**Fontes:**
+- [Metrópoles, Bola de Ouro 2026](https://www.metropoles.com/esportes/kane-mbappe-e-yamal-confira-a-classificacao-final-da-bola-de-ouro-2026)
+- [Band, Bola de Ouro 2026](https://www.band.com.br/esportes/futebol/bola-de-ouro-2026-veja-os-rankings-masculino-e-feminino)
+- [FIFA, The Best 2025](https://www.fifa.com/pt/the-best-fifa-football-awards/2025/articles/the-best-fifa-2025-todos-vencedores-dembele-bonmati-luis-enrique-wiegman)
+- [Olympics.com, Brasil na Copa 2026](https://www.olympics.com/pt/noticias/copa-do-mundo-2026-brasil-locais-datas-jogos-cruzamentos-selecao-brasil)
+- [Lance, jogos da Copa 2026](https://www.lance.com.br/lancepedia/copa-do-mundo-de-2026-jogos-resultados.html)
+- [Gazeta Esportiva, semifinais](https://www.gazetaesportiva.com/campeonatos/copa-do-mundo/saiba-classificados-e-confrontos-das-semifinais-da-copa-do-mundo/)
+- [Metrópoles, seleções estreantes](https://www.metropoles.com/esportes/confira-as-cinco-selecoes-estreantes-nesta-copa-do-mundo-de-2026)
+- [Goal, artilheiros da Libertadores 2025](https://www.goal.com/br/listas/artilheiros-copa-libertadores-2025/blt623e9e4058612fc8)
+- [CBF, eliminação do Brasil](https://www.cbf.com.br/selecao-brasileira/noticias/selecao-masculina/a/ancelotti-lamenta-eliminacao-do-brasil-na-copa-do-mundo)
+- Wikipédia: "O Maior Brasileiro de Todos os Tempos", "Lista de municípios do Brasil por população" e "Lista de Estados por área territorial".

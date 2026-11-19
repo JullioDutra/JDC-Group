@@ -184,11 +184,29 @@ export const TOP10_EXTRA: Top10List[] = [
     items: seq(['Espanha', 'campeã'], ['Argentina', 'vice'], ['Inglaterra', '3º lugar'], ['França', '4º lugar', ['franca']]),
   },
   {
-    id: 'bola-de-ouro-2026-podio',
+    id: 'bola-de-ouro-2026-top10',
     category: 'futebol',
-    title: 'Pódio da Bola de Ouro de 2026',
+    title: 'Top 10 da Bola de Ouro de 2026',
     source: 'France Football, cerimônia de 26/10/2026 em Londres',
-    items: seq(['Harry Kane', 'Bayern', ['kane']], ['Kylian Mbappé', 'Real Madrid', ['mbappe']], ['Lamine Yamal', 'Barcelona', ['yamal', 'lamine']]),
+    items: seq(
+      ['Harry Kane', 'Bayern', ['kane']],
+      ['Kylian Mbappé', 'Real Madrid', ['mbappe']],
+      ['Lamine Yamal', 'Barcelona', ['yamal', 'lamine']],
+      ['Rodri', 'Manchester City'],
+      ['Lionel Messi', 'Inter Miami', ['messi']],
+      ['Khvicha Kvaratskhelia', 'PSG', ['kvaratskhelia', 'kvara']],
+      ['Ousmane Dembélé', 'PSG', ['dembele']],
+      ['Erling Haaland', 'Manchester City', ['haaland']],
+      ['Michael Olise', 'Bayern', ['olise']],
+      ['Fabián Ruiz', 'PSG', ['fabian ruiz']],
+    ),
+  },
+  {
+    id: 'brasil-copa-2026-jogos',
+    category: 'futebol',
+    title: 'Adversários do Brasil na Copa de 2026, em ordem',
+    source: 'FIFA (1 x 1, 3 x 0, 3 x 0, 2 x 1 e derrota por 2 x 1 nas oitavas)',
+    items: seq(['Marrocos', '1 x 1'], ['Haiti', '3 x 0'], ['Escócia', '3 x 0', ['escocia']], ['Japão', '2 x 1', ['japao']], ['Noruega', '1 x 2']),
   },
   // ---------- Futebol: clubes e ligas ----------
   {

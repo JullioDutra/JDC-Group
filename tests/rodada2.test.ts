@@ -126,3 +126,81 @@ test('Leilão na partida: lances, venda no fim do tempo e resultado com o overal
   assert.match(out, /\[img:textBoard\][\s\S]*(Todos os times estão completos|Acabaram os lotes)[\s\S]*🏆/);
   assert.equal(await store.getActiveMatch('leilao@g.us'), null);
 });
+
+// ---------- Anagrama ----------
+
+test('Anagrama: 100+ palavras, embaralha diferente, primeiro que acerta leva; dica na metade', async () => {
+  const { ANAGRAMS, scramble } = await import('../src/lib/party/content/anagramas');
+  assert.ok(ANAGRAMS.length >= 100, `só ${ANAGRAMS.length}`);
+  assert.equal(new Set(ANAGRAMS.map((a) => a.id)).size, ANAGRAMS.length);
+  assert.ok(new Set(ANAGRAMS.map((a) => a.theme)).size >= 10, 'vários temas');
+  for (const a of ANAGRAMS.slice(0, 40)) assert.notEqual(scramble(a.answer, () => 0).replace(/[^A-Z]/g, ''), a.answer.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, ''), a.answer);
+  assert.deepEqual(parsePartyStart('abrir anagrama'), { game: 'anagrama', rest: '' });
+  assert.deepEqual(parsePartyStart('jogar anagrama futebol'), { game: 'anagrama', rest: 'futebol' });
+
+  const store = new MemoryStore();
+  let id = 0;
+  const deps = { store, lookup: createLookup(store, lookupDemo), now: () => new Date('2026-11-19T12:00:00Z'), rng: () => 0 };
+  const say = (who: string, text: string): Promise<Outgoing[]> =>
+    handleMessage({ id: `a${++id}`, groupJid: 'ana@g.us', senderJid: `${who}@s`, senderName: who, text }, deps);
+  const tick = () => handleTick('ana@g.us', null, deps, true);
+  await say('Ana', 'ativar jogos');
+  await say('Ana', 'abrir anagrama futebol');
+  await say('Bia', 'entrar');
+  const start = asText(await say('Ana', 'começar'));
+  assert.match(start, /Anagrama\* valendo![\s\S]*Rodada 1\/12\* · Tema: \*[^*]+\* \(\d+ letras\)[\s\S]*🔤[\s\S]*\[timer:21s\]/);
+  const state = async () => (await store.getActiveMatch('ana@g.us'))!.state as import('../src/lib/game/types').AnagramaParty;
+  const s = await state();
+  const { getAnagram } = await import('../src/lib/party/content/anagramas');
+  const word = getAnagram(s.order[0])!;
+  // Errar gasta tentativa; o tamanho errado (conversa) não gasta.
+  assert.equal(asText(await say('Bia', 'kkkk que dificil isso')), '');
+  const wrong = word.answer.split('').reverse().join('');
+  assert.match(asText(await say('Bia', wrong)), /\[react:❌\]/);
+  // Dica na metade do tempo.
+  assert.match(asText(await tick()), /💡 Dica: começa com/);
+  const hit = asText(await say('Ana', word.answer));
+  assert.match(hit, /Ana\* acertou \(\+60\)/);
+});
+
+// ---------- Top 100 do Dia ----------
+
+test('Top 100 do Dia: lista do dia igual para todos, acerto vale a posição, 1 vez por dia por grupo', async () => {
+  const { TOP100_LISTS, listOfDay, dayKey } = await import('../src/lib/party/content/top100');
+  assert.ok(TOP100_LISTS.length >= 4);
+  for (const l of TOP100_LISTS) {
+    assert.equal(l.items.length, 100, l.id);
+    assert.ok(l.items.every((it, i) => i === 0 || it.rank >= l.items[i - 1].rank), `ordem em ${l.id}`);
+  }
+  assert.deepEqual(parsePartyStart('top 100'), { game: 'top100', rest: '' });
+  assert.deepEqual(parsePartyStart('desafio do dia'), { game: 'top100', rest: '' });
+  assert.equal(parsePartyStart('top 10')?.game, 'top10');
+  // 23h de Brasília ainda é o mesmo dia; a lista muda à meia-noite de Brasília.
+  assert.equal(dayKey(new Date('2026-11-20T02:30:00Z')), '2026-11-19');
+
+  const store = new MemoryStore();
+  let clock = Date.parse('2026-11-19T15:00:00Z');
+  let id = 0;
+  const deps = { store, lookup: createLookup(store, lookupDemo), now: () => new Date(clock), rng: () => 0 };
+  const say = (who: string, text: string): Promise<Outgoing[]> =>
+    handleMessage({ id: `t${++id}`, groupJid: 't100@g.us', senderJid: `${who}@s`, senderName: who, text }, deps);
+  const tick = () => handleTick('t100@g.us', null, deps, true);
+  const list = listOfDay(new Date(clock));
+  await say('Ana', 'ativar jogos');
+  await say('Ana', 'top 100');
+  const start = asText(await say('Ana', 'começar'));
+  assert.match(start, /\[img:top100Board\][\s\S]*Top 100 do Dia\* \(19\/11\/2026\)[\s\S]*\[timer:481s\]/);
+  const item = list.items[59];
+  const hit = asText(await say('Ana', item.name));
+  assert.match(hit, new RegExp(`✅ \\*Ana\\*: ${item.rank}º[\\s\\S]*\\(\\+${item.rank}\\)`));
+  assert.match(asText(await say('Ana', item.name)), /já foi/);
+  // Quem não entrou e manda palpite já joga; erro gasta vida.
+  assert.equal(asText(await say('Bia', 'Zzzzz Inexistente')), '[react:❌]');
+  const end = asText(await tick());
+  assert.match(end, /Tempo esgotado\.[\s\S]*O grupo achou 1 de 100\.[\s\S]*Ana\* venceu/);
+  // Mesmo dia: não abre de novo. Dia seguinte: abre (com outra lista).
+  assert.match(asText(await say('Ana', 'top 100')), /já foi jogado neste grupo/);
+  clock += 24 * 3600_000;
+  assert.match(asText(await say('Ana', 'top 100')), /img:partyLobby/);
+  assert.notEqual(listOfDay(new Date(clock)).id, list.id);
+});

@@ -1,7 +1,8 @@
 import { createElement, type ReactElement } from 'react';
 import { firstName } from '../game/text';
 import { criterionLabel, parseCriterion } from '../party/gridCriteria';
-import type { ConexoesParty, FlagSpec, GradeParty, PartyGame, QuizParty } from '../game/types';
+import type { ConexoesParty, FlagSpec, GradeParty, PartyGame, QuizParty, Top100Party } from '../game/types';
+import { getTop100 } from '../party/content/top100';
 import { PARTY_CONFIG } from '../party/common';
 import { getConexoes } from '../party/content/conexoes';
 import { C, DISPLAY, box, brand, fit, pill, stage, txt } from './theme';
@@ -222,5 +223,41 @@ export function gradeBoard(state: GradeParty, final: boolean): ReactElement {
     txt(final ? 'Mande DESAFIO GRADE para jogar de novo' : `Vez de ${firstName(state.players[state.turn].name)} · mande: A2 Neymar`, {
       fontSize: 30, fontWeight: 700, color: C.lime, marginTop: 22, textAlign: 'center', justifyContent: 'center',
     }),
+  );
+}
+
+// ---------- Top 100 do Dia ----------
+
+const T100_COLORS = ['#38BDF8', '#FF8A3D', '#C084FC', '#F472B6', '#FACC15', '#34D399', '#F87171', '#60A5FA', '#A3E635', '#FB923C', '#2DD4BF', '#E879F9', '#FDE047', '#93C5FD', '#FCA5A5'];
+
+export function top100Board(state: Top100Party, final: boolean): ReactElement {
+  const list = getTop100(state.listId);
+  const items = list?.items ?? [];
+  const colorOf = (jid: string) => T100_COLORS[Math.max(0, state.players.findIndex((p) => p.jid === jid)) % T100_COLORS.length];
+  const cell = (i: number) => {
+    const it = items[i];
+    const hit = state.found[i];
+    const show = hit || final;
+    return box(
+      {
+        width: 91, height: 88, flexDirection: 'column', padding: '4px 6px', borderRadius: 10,
+        backgroundColor: hit ? colorOf(hit.jid) : 'rgba(255,255,255,0.04)', border: `2px solid ${hit ? colorOf(hit.jid) : C.panelLine}`,
+      },
+      txt(it ? it.rank : i + 1, { fontFamily: DISPLAY, fontSize: 18, color: hit ? C.ink : 'rgba(255,255,255,0.45)' }),
+      ...(show && it
+        ? [txt(fit(it.name, 22), { fontSize: 14, fontWeight: 700, lineHeight: 1.05, color: hit ? C.ink : 'rgba(255,255,255,0.55)' })]
+        : []),
+    );
+  };
+  const found = state.found.filter(Boolean).length;
+  const ranked = [...state.players].sort((a, b) => b.score - a.score).slice(0, 4);
+  return stage(
+    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.7), pill(final ? 'RESULTADO' : `${found} DE 100`, final ? C.lime : C.panel, final ? C.ink : C.lime, 22)),
+    txt(upper(fit(list?.title ?? 'Top 100 do Dia', 70)), { fontFamily: DISPLAY, fontSize: (list?.title.length ?? 0) > 50 ? 30 : 38, lineHeight: 1.1, marginTop: 10 }),
+    box(
+      { gap: 14, marginTop: 6, marginBottom: 10, flexWrap: 'wrap' },
+      ...ranked.map((p) => txt(`${firstName(p.name)} ${p.score}`, { fontSize: 22, fontWeight: 700, color: colorOf(p.jid) })),
+    ),
+    box({ flexWrap: 'wrap', gap: 6, width: 968 }, ...items.slice(0, 100).map((_, i) => cell(i))),
   );
 }

@@ -116,6 +116,12 @@ export const CHUTE_QUESTIONS: ChuteQuestion[] = [
   { id: 'c-paulista-palmeiras', category: 'futebol', prompt: 'Quantos títulos paulistas o Palmeiras tinha depois de 2026?', answer: 27, unit: 'títulos' },
   { id: 'c-carioca-flamengo', category: 'futebol', prompt: 'Quantos títulos cariocas o Flamengo tinha depois de 2026?', answer: 40, unit: 'títulos' },
   { id: 'c-safonov', category: 'futebol', prompt: 'Quantos pênaltis Safonov defendeu na decisão da Intercontinental de 2025 contra o Flamengo?', answer: 4, unit: 'pênaltis' },
+  // Copa 2026 e prêmios (rodada 3)
+  { id: 'c-vini-copa-2026', category: 'futebol', prompt: 'Quantos gols Vinícius Júnior fez na Copa de 2026?', answer: 4, unit: 'gols' },
+  { id: 'c-brasil-pontos-2026', category: 'futebol', prompt: 'Quantos pontos o Brasil fez na fase de grupos da Copa de 2026?', answer: 7, unit: 'pontos' },
+  { id: 'c-messi-bola-2026', category: 'futebol', prompt: 'Em que posição Messi ficou na Bola de Ouro de 2026?', answer: 5, unit: 'º lugar' },
+  { id: 'c-vini-bola-2026', category: 'futebol', prompt: 'Em que posição Vinícius Júnior ficou na Bola de Ouro de 2026?', answer: 17, unit: 'º lugar' },
+  { id: 'c-flaco-2025', category: 'futebol', prompt: 'Quantos gols Flaco López fez ao ser artilheiro da Libertadores de 2025?', answer: 7, unit: 'gols' },
 ];
 
 export function getChute(id: string): ChuteQuestion | undefined {

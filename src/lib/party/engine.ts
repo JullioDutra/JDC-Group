@@ -1,6 +1,6 @@
 import { ConflictError } from '../game/conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, getMode, parseModeChoice, randomMode } from '../game/modes';
-import { firstName, formatNumber, looksLikePlayerName, normalize } from '../game/text';
+import { firstName, formatNumber, isChatter as isChatterText, looksLikePlayerName, normalize } from '../game/text';
 import {
   EscalacaoParty,
   IncomingMessage,
@@ -56,6 +56,10 @@ import { TIMELINE } from './content/linha';
 import { SURVIVOR_LISTS } from './content/sobrevivente';
 import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
+import { newAnagrama } from './anagrama';
+import { newTop100, playedTodayKey } from './top100';
+import { dayKey } from './content/top100';
+import { ANAGRAMS } from './content/anagramas';
 import { ONE_X_ONE, freshFirst } from './common';
 
 const LOBBY_TTL_MS = 15 * 60_000;
@@ -108,6 +112,9 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (/^(abrir|jogar) (a )?carreira$/.test(norm)) return { game: 'carreira', rest: '' };
   if (/^(abrir|jogar) (a )?ponte$/.test(norm)) return { game: 'ponte', rest: '' };
   if (/^(abrir|jogar) (o )?leilao( de craques)?$/.test(norm)) return { game: 'leilao', rest: '' };
+  if (/^((abrir|jogar) )?(o )?top ?100( do dia)?$/.test(norm) || norm === 'desafio do dia') return { game: 'top100', rest: '' };
+  const ana = norm.match(/^(abrir|jogar) (o )?anagramas?( (futebol|geral))?$/);
+  if (ana) return { game: 'anagrama', rest: ana[4] ?? '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };
   if (/^(abrir|jogar|desafio) (os )?(penaltis|penalti|disputa de penaltis)$/.test(norm)) return { game: 'penaltis', rest: '' };
   const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time((?: (?:ia|votacao|grupo|dificil))*)$/);
@@ -167,6 +174,16 @@ export async function createParty(
       ...base('melhortime', host, nowMs),
       ...newMelhorTime(words.includes('votacao') || words.includes('grupo') ? 'votacao' : 'ia', words.includes('dificil')),
     };
+  } else if (start.game === 'top100') {
+    // Uma vez por dia em cada grupo.
+    const day = dayKey(deps.now);
+    const seen = await deps.store.getSeen(msg.groupJid, 'top100').catch(() => [] as string[]);
+    if (seen.includes(playedTodayKey(day))) {
+      return [text('O *Top 100 do Dia* de hoje já foi jogado neste grupo. Amanhã tem lista nova (vira à meia-noite de Brasília).')];
+    }
+    state = { ...base('top100', host, nowMs), ...newTop100(deps.now) } as PartyState;
+  } else if (start.game === 'anagrama') {
+    state = { ...base('anagrama', host, nowMs), ...newAnagrama(contentCategory(start.rest, ANAGRAMS)) } as PartyState;
   } else if (MODULES[start.game]) {
     state = { ...base(start.game, host, nowMs), ...MODULES[start.game]!.create() } as PartyState;
   } else if (start.game === 'alfabeto') {
@@ -411,6 +428,13 @@ export async function handlePartyMessage(
   if (state.status === 'PLAYING' && state.game === 'draft' && state.phase === 'voting') {
     if (norm === 'pular' && isHost) return save(closeVoting(state, 'Votação encerrada pelo anfitrião.'));
     return draftVote(state, msg, save);
+  }
+
+  // Top 100 do Dia: quem mandar um palpite com o jogo rolando já entra.
+  if (state.status === 'PLAYING' && !player && state.game === 'top100' && !isChatterText(msg.text) && state.players.length < cfg.maxPlayers) {
+    const joined = newPlayer({ jid: msg.senderJid, name: msg.senderName });
+    state.players.push(joined);
+    return moduleOf(state).answer(state, joined, msg, deps, save);
   }
 
   if (state.status !== 'PLAYING' || !player) return [];

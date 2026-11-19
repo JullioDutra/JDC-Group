@@ -22,6 +22,8 @@ export const GROUP_GAMES: Array<[command: string, what: string]> = [
   ['abrir carreira', 'de quem é a trajetória?'],
   ['abrir ponte', 'quem passou pelos 4 clubes'],
   ['abrir leilão', 'monte o time com 100 moedas'],
+  ['abrir anagrama', 'desembaralhe as letras'],
+  ['top 100', 'a lista do dia (1 vez por dia)'],
 ];
 
 export const DUEL_COMMANDS: Array<[command: string, what: string]> = [

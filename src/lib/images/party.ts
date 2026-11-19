@@ -57,6 +57,14 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     subtitle: `${PARTY_CONFIG.ponte.rounds} rodadas · 4 clubes por rodada`,
     rules: ['Cite quem passou pelos 4 clubes da rodada.', 'Passou pelos 4: 10 pts · por 3: 6 · por 2: 3 · por 1: 1.', '1 palpite por pessoa em cada rodada. Ninguém repete jogador.'],
   },
+  top100: {
+    subtitle: 'Uma lista de 100 por dia · cada grupo joga 1 vez',
+    rules: ['Mandem nomes: cada acerto vale a posição (o 87º vale 87).', 'Errar gasta 1 de 10 vidas. Quem mandar palpite já entra.', '8 minutos. Amanhã tem lista nova.'],
+  },
+  anagrama: {
+    subtitle: `${PARTY_CONFIG.anagrama.rounds} palavras · futebol e conhecimentos gerais`,
+    rules: ['O bot mostra as letras embaralhadas e o tema.', 'Desembaralhe: o primeiro que acertar leva 100 (60 depois da dica).', 'Cada um tem 3 tentativas por rodada.'],
+  },
   leilao: {
     subtitle: '100 moedas · times de 4 · overall escondido',
     rules: ['O bot leiloa craques; para dar lance, mande só o número.', 'Cada um monta um time de 4 com 100 moedas.', 'No fim o overall aparece: vence a maior soma (+10 com GOL, DEF, MEI e ATA).'],

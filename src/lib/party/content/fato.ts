@@ -115,6 +115,13 @@ export const FACTS: FactCard[] = [
   f('ff-corinthians-cdb-2025', 'futebol', true, 'O Corinthians ganhou a Copa do Brasil de 2025 em cima do Vasco.', '0 a 0 em casa e 2 a 1 no Maracanã: o quarto título do clube.'),
   f('ff-psg-intercontinental', 'futebol', true, 'O PSG ganhou a Copa Intercontinental de 2025 contra o Flamengo.', '1 a 1 e vitória nos pênaltis, em Doha. O goleiro Safonov defendeu quatro cobranças.'),
   f('ff-carioca-2026', 'futebol', false, 'O Fluminense ganhou o Carioca de 2026.', 'O Flamengo foi campeão nos pênaltis (5 a 4), o seu 40º título estadual.'),
+  // Copa 2026 e prêmios (rodada 3)
+  f('ff-brasil-grupo-2026', 'futebol', true, 'O Brasil terminou em 1º no seu grupo da Copa de 2026.', '7 pontos: 1 x 1 com o Marrocos, 3 x 0 no Haiti e 3 x 0 na Escócia.'),
+  f('ff-argentina-semi-2026', 'futebol', false, 'A Argentina eliminou a França na semifinal da Copa de 2026.', 'Eliminou a Inglaterra (2 a 1). A França caiu para a Espanha.'),
+  f('ff-dembele-dobradinha', 'futebol', true, 'Dembélé ganhou a Bola de Ouro e o The Best em 2025.', 'Bola de Ouro em setembro e The Best da FIFA em dezembro, em Doha.'),
+  f('ff-messi-top5-2026', 'futebol', true, 'Messi ficou entre os 5 primeiros da Bola de Ouro de 2026.', 'Foi o 5º, aos 39 anos.'),
+  f('ff-vini-top10-2026', 'futebol', false, 'Vinícius Júnior ficou no top 10 da Bola de Ouro de 2026.', 'Ficou em 17º. O top 10 teve Kane, Mbappé, Yamal, Rodri, Messi, Kvaratskhelia, Dembélé, Haaland, Olise e Fabián Ruiz.'),
+  f('ff-cabo-verde-2026', 'futebol', true, 'Cabo Verde disputou sua primeira Copa do Mundo em 2026.', 'Liderou o grupo das eliminatórias à frente de Camarões e caiu no grupo da Espanha.'),
 ];
 
 export function getFact(id: string): FactCard | undefined {

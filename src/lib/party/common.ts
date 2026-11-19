@@ -48,6 +48,10 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   penaltis: { name: 'Pênaltis', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 45 },
   // Leilão: 30 s por lote; ninguém entra depois de começar (os lotes são contados por pessoa).
   leilao: { name: 'Leilão de Craques', maxPlayers: 8, minPlayers: 2, joinUntil: 0, seconds: 30 },
+  // Anagrama: 40 s por palavra (dica na metade), 12 palavras.
+  anagrama: { name: 'Anagrama', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 12 },
+  // Top 100 do dia: 8 minutos no total; uma partida por dia em cada grupo.
+  top100: { name: 'Top 100 do Dia', maxPlayers: 20, minPlayers: 1, joinUntil: 0, seconds: 480 },
 };
 
 /** Jogos 1 x 1: quem aceitar entra e a partida começa sozinha. */

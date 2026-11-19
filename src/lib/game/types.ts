@@ -158,7 +158,9 @@ export type PartyGame =
   | 'ponte'
   | 'grade'
   | 'penaltis'
-  | 'leilao';
+  | 'leilao'
+  | 'anagrama'
+  | 'top100';
 
 export interface PartyPlayer {
   jid: string;
@@ -470,6 +472,37 @@ export interface PenaltisParty extends PartyBase {
   round: number;
 }
 
+/** Top 100 do dia: uma lista de 100 por dia; cada acerto vale a posição. */
+export interface Top100Party extends PartyBase {
+  game: 'top100';
+  listId: string;
+  /** Dia (horário de Brasília) da lista: o grupo só joga uma vez por dia. */
+  day: string;
+  /** Quem acertou cada posição (índice = item da lista). */
+  found: Array<{ jid: string; name: string } | null>;
+  /** Vidas (palpites errados que ainda pode dar). */
+  lives: Record<string, number>;
+  /** Palpites errados já ditos (não gastam vida de novo). */
+  misses: string[];
+  round: number;
+}
+
+/** Anagrama: letras embaralhadas + tema; o primeiro que acertar leva. */
+export interface AnagramaParty extends PartyBase {
+  game: 'anagrama';
+  category: ContentCategory | null;
+  round: number;
+  totalRounds: number;
+  order: string[];
+  /** Letras embaralhadas da rodada (como aparecem no grupo). */
+  scrambled: string;
+  /** A dica (primeira letra) já saiu. */
+  hint: boolean;
+  /** Tentativas de cada um nesta rodada. */
+  tries: Record<string, number>;
+  solved: boolean;
+}
+
 /** Leilão de Craques: orçamento, lances no chat, overall escondido até o fim. */
 export interface LeilaoParty extends PartyBase {
   game: 'leilao';
@@ -500,7 +533,9 @@ export type PartyState =
   | PonteParty
   | GradeParty
   | PenaltisParty
-  | LeilaoParty;
+  | LeilaoParty
+  | AnagramaParty
+  | Top100Party;
 
 export type SessionState = MatchState | PartyState;
 
@@ -568,6 +603,7 @@ export type ImageSpec =
   | { kind: 'flagQuiz'; state: QuizParty; flag: FlagSpec }
   | { kind: 'conexoesBoard'; state: ConexoesParty; reveal: boolean }
   | { kind: 'gradeBoard'; state: GradeParty; final: boolean }
+  | { kind: 'top100Board'; state: Top100Party; final: boolean }
   | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> };
 
 /** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */

@@ -7,13 +7,15 @@ import { GRADE_RULES, finishGrade, gradeAnswer, gradeTimeout, newGrade, startGra
 import { PENALTIS_RULES, finishPenaltis, goals, newPenaltis, penaltisAnswer, penaltisTimeout, scoreLine, startPenaltis } from './penaltis';
 import { finishByScore } from './common';
 import { LEILAO_RULES, closeLot, finishLeilao, leilaoAnswer, leilaoBoard, newLeilao, startLeilao } from './leilao';
-import type { LeilaoParty } from '../game/types';
+import type { AnagramaParty, LeilaoParty, Top100Party } from '../game/types';
+import { TOP100_RULES, finishTop100, newTop100, playedTodayKey, startTop100, top100Answer, top100Timeout } from './top100';
+import { ANAGRAMA_RULES, anagramaAnswer, anagramaTimeout, newAnagrama, openAnagramaRound, skipAnagrama, startAnagrama } from './anagrama';
 
 /**
  * Jogos gerados da base de jogadores (frente F2). Cada um declara as peças
  * que o motor das salas usa; assim o motor não precisa de um "if" por jogo.
  */
-export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty;
+export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty | AnagramaParty | Top100Party;
 
 export interface PartyModule {
   rules: string[];
@@ -97,7 +99,32 @@ const leilao: PartyModule = {
   seenItems: (s) => (s as LeilaoParty).lots.map((l) => l.id),
 };
 
-export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao };
+const anagrama: PartyModule = {
+  rules: ANAGRAMA_RULES,
+  create: () => newAnagrama(),
+  start: async (s, d) => startAnagrama(s as AnagramaParty, d),
+  answer: (s, p, m, d, save) => anagramaAnswer(s as AnagramaParty, p, m, d, save),
+  timeout: (s, d) => anagramaTimeout(s as AnagramaParty, d),
+  skip: (s, d) => skipAnagrama(s as AnagramaParty, d),
+  resume: (s, d) => openAnagramaRound(s as AnagramaParty, d),
+  finish: (s, reason) => finishByScore(s, reason, 'abrir anagrama'),
+  seenItems: (s) => (s as AnagramaParty).order,
+};
+
+const top100: PartyModule = {
+  rules: TOP100_RULES,
+  create: () => newTop100(new Date()),
+  start: async (s, d) => startTop100(s as Top100Party, d),
+  answer: (s, p, m, d, save) => top100Answer(s as Top100Party, p, m, d, save),
+  timeout: (s) => top100Timeout(s as Top100Party),
+  skip: (s) => finishTop100(s as Top100Party, 'Encerrado pelo anfitrião.'),
+  finish: (s, reason) => finishTop100(s as Top100Party, reason),
+  board: (s, final) => ({ type: 'image', image: { kind: 'top100Board', state: structuredClone(s as Top100Party), final } }),
+  // Marca o dia (o grupo só joga uma vez por dia) e a lista.
+  seenItems: (s) => [playedTodayKey((s as Top100Party).day), (s as Top100Party).listId],
+};
+
+export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao, anagrama, top100 };
 
 export function isBaseGame(state: PartyState): state is BaseGameState {
   return state.game in MODULES;

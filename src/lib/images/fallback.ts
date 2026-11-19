@@ -4,6 +4,7 @@ import { firstName, formatNumber } from '../game/text';
 import { SLOTS, type ImageSpec, type Pick } from '../game/types';
 import { getConexoes } from '../party/content/conexoes';
 import { helpText } from '../game/commands';
+import { getTop100 } from '../party/content/top100';
 import { criterionLabel, parseCriterion } from '../party/gridCriteria';
 
 const GAME_NAME_FOR_TEXT = 'Duelo de Craques';
@@ -78,6 +79,14 @@ export function imageAsText(spec: ImageSpec): string | null {
         .map((t, i) => (solvedTiles.has(t) ? '' : `${i + 1}. ${t}`))
         .filter(Boolean);
       return [...solved, open.join('\n')].filter(Boolean).join('\n\n');
+    }
+    case 'top100Board': {
+      const st = spec.state;
+      const list = getTop100(st.listId);
+      const lines = (list?.items ?? [])
+        .map((it, i) => (st.found[i] ? `${it.rank}º ${it.name} (${firstName(st.found[i]!.name)})` : spec.final ? `${it.rank}º ${it.name}` : ''))
+        .filter(Boolean);
+      return [`*${list?.title ?? 'Top 100'}*`, ...lines].join('\n');
     }
     case 'gradeBoard': {
       const st = spec.state;

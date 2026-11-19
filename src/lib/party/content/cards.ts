@@ -217,6 +217,20 @@ export const RELAMPAGO_CARDS: Card[] = [
   { id: 'r-mineiro-2026', category: 'futebol', prompt: 'Quem ganhou o Campeonato Mineiro de 2026, com gol de Kaio Jorge na final?', answer: 'Cruzeiro' },
   { id: 'r-gaucho-2026', category: 'futebol', prompt: 'Quem ganhou o Gauchão de 2026, empatando no Beira-Rio na final?', answer: 'Grêmio', aliases: ['gremio'] },
   { id: 'r-sula-2026', category: 'futebol', prompt: 'Qual clube brasileiro enfrentou o Boca Juniors na final da Sul-Americana de 2026?', answer: 'Atlético-MG', aliases: ['atletico mineiro', 'atletico mg', 'galo'] },
+  // Copa 2026 e prêmios (pesquisa de 19/11/2026, rodada 3)
+  { id: 'r-estreia-brasil-2026', category: 'futebol', prompt: 'Contra quem o Brasil estreou na Copa de 2026, empatando por 1 a 1?', answer: 'Marrocos' },
+  { id: 'r-haiti-2026', category: 'futebol', prompt: 'Qual seleção caribenha o Brasil venceu por 3 a 0 na Copa de 2026?', answer: 'Haiti' },
+  { id: 'r-cunha-2026', category: 'futebol', prompt: 'Quem fez dois gols do Brasil contra o Haiti na Copa de 2026?', answer: 'Matheus Cunha', aliases: ['cunha'] },
+  { id: 'r-japao-2026', category: 'futebol', prompt: 'Que seleção o Brasil eliminou por 2 a 1 no primeiro mata-mata da Copa de 2026?', answer: 'Japão', aliases: ['japao'] },
+  { id: 'r-semi-argentina-2026', category: 'futebol', prompt: 'Quem a Argentina eliminou na semifinal da Copa de 2026?', answer: 'Inglaterra' },
+  { id: 'r-semi-espanha-2026', category: 'futebol', prompt: 'Quem a Espanha eliminou na semifinal da Copa de 2026?', answer: 'França', aliases: ['franca'] },
+  { id: 'r-cabo-verde-2026', category: 'futebol', prompt: 'Qual país africano estreou em Copas em 2026, no grupo da Espanha?', answer: 'Cabo Verde' },
+  { id: 'r-uzbequistao-2026', category: 'futebol', prompt: 'Qual país da Ásia Central estreou em Copas em 2026?', answer: 'Uzbequistão', aliases: ['uzbequistao'] },
+  { id: 'r-jordania-2026', category: 'futebol', prompt: 'Qual país do Oriente Médio, com capital em Amã, estreou em Copas em 2026?', answer: 'Jordânia', aliases: ['jordania'] },
+  { id: 'r-the-best-2025', category: 'futebol', prompt: 'Quem foi eleito o melhor jogador do mundo no The Best da FIFA de 2025?', answer: 'Ousmane Dembélé', aliases: ['dembele'] },
+  { id: 'r-the-best-fem-2025', category: 'futebol', prompt: 'Quem ganhou o The Best feminino de 2025, pela terceira vez seguida?', answer: 'Aitana Bonmatí', aliases: ['aitana', 'bonmati'] },
+  { id: 'r-liberta-artilheiro-2025', category: 'futebol', prompt: 'Qual atacante do Palmeiras foi o artilheiro da Libertadores de 2025?', answer: 'Flaco López', aliases: ['flaco lopez', 'jose manuel lopez', 'lopez'] },
+  { id: 'r-bola-4-2026', category: 'futebol', prompt: 'Que volante espanhol ficou em 4º na Bola de Ouro de 2026?', answer: 'Rodri' },
 ];
 
 export const CARDS = { emoji: EMOJI_CARDS, relampago: RELAMPAGO_CARDS };
