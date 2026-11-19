@@ -58,8 +58,8 @@ import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRul
 import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
 import { anagramThemesText, newAnagrama } from './anagrama';
 import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
-import { matchTop100, newTop100, playedTodayKey } from './top100';
-import { dayKey, getTop100 } from './content/top100';
+import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
+import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
 import { ONE_X_ONE, freshFirst, freshPick } from './common';
 
@@ -183,7 +183,10 @@ export async function createParty(
     if (seen.includes(playedTodayKey(day))) {
       return [text('O *Top 100 do Dia* de hoje já foi jogado neste grupo. Amanhã tem lista nova (vira à meia-noite de Brasília).')];
     }
-    state = { ...base('top100', host, nowMs), ...newTop100(deps.now) } as PartyState;
+    // Liberado pelo admin depois de jogar: vem uma lista que o grupo ainda não jogou.
+    const listIds = TOP100_LISTS.map((l) => l.id);
+    const extra = seen.includes(resetTodayKey(day)) ? freshFirst(listIds, deps.rng, seen.filter((x) => listIds.includes(x)))[0] : undefined;
+    state = { ...base('top100', host, nowMs), ...newTop100(deps.now, extra) } as PartyState;
   } else if (start.game === 'leilao') {
     state = { ...base('leilao', host, nowMs), ...newLeilao(leilaoModeOf(start.rest) ?? 'overall') } as PartyState;
   } else if (start.game === 'anagrama') {

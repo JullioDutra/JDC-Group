@@ -19,13 +19,15 @@ export const TOP100_RULES = [
   `São ${Math.round(PARTY_CONFIG.top100.seconds / 60)} minutos. Vence quem somar mais pontos.`,
 ];
 
-export function newTop100(now: Date): Pick<Top100Party, 'game' | 'listId' | 'day' | 'found' | 'lives' | 'misses' | 'round'> {
-  const list = listOfDay(now);
+export function newTop100(now: Date, listId?: string): Pick<Top100Party, 'game' | 'listId' | 'day' | 'found' | 'lives' | 'misses' | 'round'> {
+  const list = (listId && getTop100(listId)) || listOfDay(now);
   return { game: 'top100', listId: list.id, day: dayKey(now), found: list.items.map(() => null), lives: {}, misses: [], round: 0 };
 }
 
 /** Marca do grupo para "já jogou hoje" (histórico sem repetição). */
 export const playedTodayKey = (day: string) => `dia:${day}`;
+/** Marca de que o admin liberou o Top 100 de hoje (a partida extra vem com outra lista). */
+export const resetTodayKey = (day: string) => `reset:${day}`;
 
 export function startTop100(state: Top100Party, deps: PartyDeps): Outgoing[] {
   const list = getTop100(state.listId)!;

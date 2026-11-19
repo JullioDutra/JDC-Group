@@ -89,4 +89,13 @@ export const SCHEMA_STATEMENTS: string[] = [
     seen_at   timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (group_jid, kind, item)
   )`,
+  // Temporadas do ranking: a aberta tem ended_at nulo; a fechada guarda o ranking final.
+  `CREATE TABLE IF NOT EXISTS group_seasons (
+    group_jid  text NOT NULL,
+    season     integer NOT NULL,
+    started_at timestamptz NOT NULL DEFAULT now(),
+    ended_at   timestamptz,
+    ranking    jsonb,
+    PRIMARY KEY (group_jid, season)
+  )`,
 ];

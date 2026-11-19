@@ -22,6 +22,12 @@ export function imageAsText(spec: ImageSpec): string | null {
       return helpText(GAME_NAME_FOR_TEXT);
     case 'modes':
       return MODES.map((m) => `${m.number}. ${m.name} · ${m.tagline}`).join('\n');
+    case 'season':
+      return [
+        `🏆 Fim da Temporada ${spec.season}: ${spec.rows[0]?.name ?? '—'} campeão!`,
+        ...spec.rows.slice(0, 10).map((r, i) => `${i + 1}º ${r.name} · ${r.wins * 3 + r.draws} pts (${r.wins}V ${r.draws}E ${r.losses}D)`),
+        ...spec.highlights.map((h) => `${h.label}: ${h.name} (${h.value})`),
+      ].join('\n');
     case 'ranking':
       return spec.rows.length
         ? spec.rows.map((r, i) => `${i + 1}º ${r.name} · ${r.wins}V ${r.draws}E ${r.losses}D`).join('\n')

@@ -5,7 +5,7 @@ import { nameKeys } from '../players/keys';
 import type { ManualData, ManualEntry, PlayerRecord, StatKey } from '../players/types';
 import { normalize } from '../game/text';
 import type { Position } from '../game/types';
-import type { Store, MatchStats } from './types';
+import type { Store, MatchStats, Season } from './types';
 
 /** Fichas em cache valem 30 dias; "não achei" vale só 10 minutos (pode ter sido falha passageira). */
 const CACHE_TTL_DAYS = 30;
@@ -224,6 +224,55 @@ export class NeonStore implements Store {
       INSERT INTO group_seen (group_jid, kind, item)
       SELECT ${groupJid}, ${kind}, unnest(${items}::text[])
       ON CONFLICT (group_jid, kind, item) DO UPDATE SET seen_at = now()`;
+  }
+
+  async unmarkSeen(groupJid: string, kind: string, items: string[]): Promise<void> {
+    if (!items.length) return;
+    await this.sql`DELETE FROM group_seen WHERE group_jid = ${groupJid} AND kind = ${kind} AND item = ANY(${items}::text[])`;
+  }
+
+  async getSeason(groupJid: string): Promise<Season> {
+    const open = await this.sql`SELECT season, started_at FROM group_seasons WHERE group_jid = ${groupJid} AND ended_at IS NULL`;
+    if (open[0]) return { season: open[0].season as number, startedAt: new Date(open[0].started_at as string).toISOString() };
+    const rows = await this.sql`
+      INSERT INTO group_seasons (group_jid, season, started_at)
+      SELECT ${groupJid},
+             COALESCE((SELECT max(season) FROM group_seasons WHERE group_jid = ${groupJid}), 0) + 1,
+             COALESCE((SELECT min(created_at) FROM matches WHERE group_jid = ${groupJid}), now())
+      ON CONFLICT (group_jid, season) DO NOTHING
+      RETURNING season, started_at`;
+    if (rows[0]) return { season: rows[0].season as number, startedAt: new Date(rows[0].started_at as string).toISOString() };
+    return this.getSeason(groupJid);
+  }
+
+  async closeSeason(groupJid: string, ranking: RankingRow[]): Promise<Season> {
+    const current = await this.getSeason(groupJid);
+    await this.sql`
+      UPDATE group_seasons SET ended_at = now(), ranking = ${JSON.stringify(ranking)}::jsonb
+      WHERE group_jid = ${groupJid} AND season = ${current.season} AND ended_at IS NULL`;
+    await this.sql`INSERT INTO group_seasons (group_jid, season, started_at) VALUES (${groupJid}, ${current.season + 1}, now()) ON CONFLICT DO NOTHING`;
+    await this.sql`DELETE FROM group_stats WHERE group_jid = ${groupJid}`;
+    return this.getSeason(groupJid);
+  }
+
+  async listSeasons(groupJid: string): Promise<Season[]> {
+    const rows = await this.sql`
+      SELECT season, started_at, ended_at, ranking FROM group_seasons
+      WHERE group_jid = ${groupJid} AND ended_at IS NOT NULL ORDER BY season`;
+    return rows.map((r) => ({
+      season: r.season as number,
+      startedAt: new Date(r.started_at as string).toISOString(),
+      endedAt: new Date(r.ended_at as string).toISOString(),
+      ranking: (r.ranking as RankingRow[] | null) ?? [],
+    }));
+  }
+
+  async groupGameCounts(groupJid: string, sinceIso: string): Promise<Record<string, number>> {
+    const rows = await this.sql`
+      SELECT COALESCE(state->>'game', '1x1') AS jogo, count(*)::int AS n
+      FROM matches WHERE group_jid = ${groupJid} AND status = 'FINISHED' AND created_at >= ${sinceIso}
+      GROUP BY 1`;
+    return Object.fromEntries(rows.map((r) => [r.jogo as string, r.n as number]));
   }
 
   async countPlayers(): Promise<number> {

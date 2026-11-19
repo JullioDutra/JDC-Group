@@ -11,6 +11,9 @@ import { applyCorrection, applyFamousName, findRecords, formatCard, parseCorrect
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import { anagramThemesText } from '../party/anagrama';
+import { playedTodayKey, resetTodayKey } from '../party/top100';
+import { dayKey } from '../party/content/top100';
+import { championsText, seasonTurnover, shortDay } from './season';
 import {
   IncomingMessage,
   Match,
@@ -382,9 +385,25 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
   if (norm === 'ranking') {
-    const rows = await store.getRanking(msg.groupJid, 10);
-    if (rows.length === 0) return [text('Ainda não há partidas finalizadas neste grupo.')];
-    return [{ type: 'image', image: { kind: 'ranking', groupName: msg.groupName ?? 'Grupo', rows } }];
+    const [rows, season] = await Promise.all([store.getRanking(msg.groupJid, 10), store.getSeason(msg.groupJid)]);
+    if (rows.length === 0) return [text(`Ainda não há partidas finalizadas na *Temporada ${season.season}*.`)];
+    return [{ type: 'image', image: { kind: 'ranking', groupName: msg.groupName ?? 'Grupo', rows, season: season.season, since: shortDay(season.startedAt) } }];
+  }
+  if (/^(campeoes|temporadas|hall da fama|historico de campeoes)$/.test(norm)) return [text(await championsText(store, msg.groupJid))];
+
+  // ----- Comandos do admin -----
+  if (/^(virada de temporada|virar (a )?temporada|fim de temporada|fechar (a )?temporada|encerrar (a )?temporada|nova temporada)$/.test(norm)) {
+    if (!manager) return [text('Só o admin do bot faz a virada de temporada.')];
+    return seasonTurnover(store, msg.groupJid, msg.groupName, now);
+  }
+  if (/^(resetar|liberar|zerar|reabrir|reset) (o )?(top ?)?100( do dia)?$/.test(norm)) {
+    if (!manager) return [text('Só o admin do bot libera o Top 100 de novo.')];
+    const open = await store.getActiveMatch(msg.groupJid);
+    if (open && (open.state as { game?: string }).game === 'top100') return [text('Tem um *Top 100* rolando. Mande *encerrar* antes de liberar de novo.')];
+    const day = dayKey(now);
+    await store.unmarkSeen(msg.groupJid, 'top100', [playedTodayKey(day)]);
+    await store.markSeen(msg.groupJid, 'top100', [resetTodayKey(day)]);
+    return [text('✅ *Top 100* liberado: o grupo pode jogar mais uma vez hoje (mande *top 100*). Vem uma lista que vocês ainda não jogaram.')];
   }
 
   // ----- Dados à mão (F1) -----

@@ -601,7 +601,18 @@ export type ImageSpec =
   | { kind: 'help' }
   | { kind: 'kickoff'; state: MatchState }
   | { kind: 'pitch'; state: MatchState }
-  | { kind: 'ranking'; groupName: string; rows: RankingRow[] }
+  | { kind: 'ranking'; groupName: string; rows: RankingRow[]; season?: number; since?: string }
+  | {
+      kind: 'season';
+      groupName: string;
+      season: number;
+      startedAt: string;
+      endedAt: string;
+      rows: RankingRow[];
+      matches: number;
+      highlights: Array<{ label: string; name: string; value: string }>;
+      games?: Array<{ name: string; count: number }>;
+    }
   | { kind: 'partyLobby'; state: PartyState }
   | { kind: 'partyTable'; state: EscalacaoParty }
   | { kind: 'top10Board'; state: Top10Party; list: Top10List; final: boolean }

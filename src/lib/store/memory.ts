@@ -1,7 +1,7 @@
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
 import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
-import type { MatchStats, Store } from './types';
+import type { MatchStats, Season, Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
 
@@ -16,6 +16,9 @@ export class MemoryStore implements Store {
   private players = new Map<string, { record: PlayerRecord; keys: string[] }>();
   private importStates = new Map<string, unknown>();
   private seen = new Map<string, string[]>();
+  private seasons = new Map<string, Season[]>();
+  /** Partidas terminadas (grupo, jogo, quando), para o resumo da temporada. */
+  private finished: Array<{ groupJid: string; game: string; at: string }> = [];
   readonly lookups: Array<{ query: string; context?: string; outcome: string; playerId?: string | null }> = [];
 
   async isGroupActive(groupJid: string) {
@@ -45,6 +48,10 @@ export class MemoryStore implements Store {
       this.matches.set(match.groupJid, { ...structuredClone(match), version: match.version + 1 });
     } else {
       this.matches.delete(match.groupJid);
+      if (match.state.status === 'FINISHED') {
+        const game = 'game' in match.state && typeof match.state.game === 'string' ? match.state.game : '1x1';
+        this.finished.push({ groupJid: match.groupJid, game, at: new Date().toISOString() });
+      }
     }
     match.version += 1;
     return true;
@@ -202,6 +209,42 @@ export class MemoryStore implements Store {
       else row.losses += 1;
       table.set(p.jid, row);
     }
+  }
+
+  async unmarkSeen(groupJid: string, kind: string, items: string[]) {
+    const key = `${groupJid}|${kind}`;
+    this.seen.set(key, (this.seen.get(key) ?? []).filter((x) => !items.includes(x)));
+  }
+
+  async getSeason(groupJid: string): Promise<Season> {
+    const list = this.seasons.get(groupJid) ?? [];
+    const open = list.find((s) => !s.endedAt);
+    if (open) return { season: open.season, startedAt: open.startedAt };
+    const first = this.finished.find((m) => m.groupJid === groupJid)?.at ?? new Date().toISOString();
+    const created: Season = { season: list.length + 1, startedAt: list.length ? new Date().toISOString() : first, endedAt: null };
+    this.seasons.set(groupJid, [...list, created]);
+    return { season: created.season, startedAt: created.startedAt };
+  }
+
+  async closeSeason(groupJid: string, ranking: RankingRow[]): Promise<Season> {
+    const current = await this.getSeason(groupJid);
+    const list = this.seasons.get(groupJid)!;
+    const open = list.find((s) => s.season === current.season)!;
+    open.endedAt = new Date().toISOString();
+    open.ranking = structuredClone(ranking);
+    list.push({ season: current.season + 1, startedAt: new Date().toISOString(), endedAt: null });
+    this.stats.delete(groupJid);
+    return this.getSeason(groupJid);
+  }
+
+  async listSeasons(groupJid: string): Promise<Season[]> {
+    return structuredClone((this.seasons.get(groupJid) ?? []).filter((s) => s.endedAt));
+  }
+
+  async groupGameCounts(groupJid: string, sinceIso: string): Promise<Record<string, number>> {
+    const out: Record<string, number> = {};
+    for (const m of this.finished) if (m.groupJid === groupJid && m.at >= sinceIso) out[m.game] = (out[m.game] ?? 0) + 1;
+    return out;
   }
 
   async getRanking(groupJid: string, limit: number) {

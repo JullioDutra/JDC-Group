@@ -6,6 +6,7 @@ import { firstName, formatNumber } from '../game/text';
 import { ImageSpec, MatchState, Pick, Position, RankingRow, SLOTS, Side } from '../game/types';
 import { conexoesBoard, flagQuiz, gradeBoard, textBoard, top100Board } from './party2';
 import { helpMenu } from './help';
+import { seasonImage } from './season';
 import { draftBoard, intrusoBoard, lineupQuiz, partyLobby, partyScore, partyTable, top10Board } from './party';
 import { BODY, C, DISPLAY, H, SIDE_COLOR, W, ball, box, brand, fit, formationStrip, pill, stage, txt } from './theme';
 
@@ -278,14 +279,14 @@ function pitch(state: MatchState): ReactElement {
 
 // ---------- 5. Ranking do grupo ----------
 
-function ranking(groupName: string, rows: RankingRow[]): ReactElement {
+function ranking(groupName: string, rows: RankingRow[], season?: number, since?: string): ReactElement {
   const cell = (v: string | number, width: number, strong = false) =>
     txt(v, { width, justifyContent: 'center', fontSize: 34, fontWeight: strong ? 700 : 500, color: strong ? C.lime : C.white });
   const head = (v: string, width: number) => txt(v, { width, justifyContent: 'center', fontSize: 22, fontWeight: 700, color: C.muted, letterSpacing: 2 });
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(upper(fit(groupName, 20)), C.panel, C.lime, 24)),
     txt('RANKING', { fontFamily: DISPLAY, fontSize: 150, lineHeight: 1, marginTop: 36 }),
-    txt('Vitória 3 pts · empate 1 pt', { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: 26 }),
+    txt(`${season ? `Temporada ${season}${since ? ` · desde ${since}` : ''} · ` : ''}Vitória 3 pts · empate 1 pt`, { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: 26 }),
     box({ padding: '0 24px', marginBottom: 8 }, txt('', { width: 70 }), txt('', { flexGrow: 1 }), head('J', 90), head('V', 90), head('E', 90), head('D', 90), head('PTS', 110)),
     box(
       { flexDirection: 'column', gap: 10, flexGrow: 1 },
@@ -319,7 +320,9 @@ export function buildImage(spec: ImageSpec): ReactElement {
     case 'pitch':
       return pitch(spec.state);
     case 'ranking':
-      return ranking(spec.groupName, spec.rows);
+      return ranking(spec.groupName, spec.rows, spec.season, spec.since);
+    case 'season':
+      return seasonImage(spec);
     case 'partyLobby':
       return partyLobby(spec.state);
     case 'partyTable':

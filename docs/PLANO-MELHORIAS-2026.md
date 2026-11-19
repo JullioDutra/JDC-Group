@@ -430,3 +430,23 @@ O rodízio alterna futebol, música e geral, para dois dias seguidos não caíre
 - **Sala e regras:** mostram o modo escolhido e a regra de um por posição.
 
 **Planejado x entregue:** tudo entregue. Testes novos: lance recusado na posição já ocupada, times sem posição repetida e a votação completa (voto no próprio time recusado, voto de quem não jogou aceito, um voto por pessoa, vencedor certo).
+
+## 14. Comandos do admin: Top 100 e virada de temporada (19/11)
+
+**Pedido:** o admin precisa de comandos para resetar o Top 100 e para fazer a virada de temporada, com uma imagem caprichada dos melhores do período.
+
+**Como ficou (só quem está em ADMIN_NUMBERS):**
+- **`resetar top 100`** (aceita também `resetar o 100`, `liberar top 100` e `reabrir top 100`): libera mais uma partida do Top 100 hoje. A partida extra vem com uma lista que o grupo ainda não jogou. Se houver um Top 100 rolando, o bot pede *encerrar* antes.
+- **`virada de temporada`** (aceita também `fim de temporada`, `fechar temporada` e `nova temporada`):
+  - manda a imagem "Fim da Temporada N": pódio com os 3 primeiros (ouro, prata e bronze, com "CAMPEÃO"), a tabela até o 10º, partidas por jogo (quando sobra espaço) e 4 destaques (mais vitórias, mais partidas, melhor aproveitamento e jogo mais jogado);
+  - guarda o ranking final no histórico (tabela `group_seasons`), zera o ranking e abre a Temporada N+1.
+- **Para todos:**
+  - `campeões` mostra o campeão de cada temporada encerrada e desde quando vale a atual;
+  - `ranking` passa a mostrar "Temporada N · desde dd/mm".
+- A 1ª temporada de cada grupo conta desde a primeira partida dele, então o placar atual vira a Temporada 1.
+
+**Planejado x entregue:** tudo entregue. Testes novos:
+- reset só pelo admin, com lista diferente;
+- virada só pelo admin: campeão, destaques, ranking zerado, histórico em *campeões* e ranking da temporada nova.
+
+A imagem foi conferida com 2, 5 e 10+ jogadores.
