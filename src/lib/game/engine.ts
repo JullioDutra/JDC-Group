@@ -15,7 +15,8 @@ import { playedTodayKey, resetTodayKey } from '../party/top100';
 import { dayKey } from '../party/content/top100';
 import { championsText, seasonTurnover, shortDay } from './season';
 import { NEXT_BLOCK_KIND, blockedNames, sameMember, targetsOf } from './blocks';
-import { cardText, impostorThemesText } from '../party/impostor';
+import { IMPOSTOR_RULES, cardText, impostorThemesText } from '../party/impostor';
+import { ACTIVATE_IMPOSTOR, IMPOSTOR_GROUP_HELP, isImpostorOnly, setImpostorOnly } from './groupMode';
 import {
   ImpostorParty,
   IncomingMessage,
@@ -349,6 +350,18 @@ export async function handleTick(
 }
 
 const ACTIVATE = ['ativar jogos', 'ativar jogo', 'ativar duelo'];
+const HELP_WORDS = ['ajuda', 'menu', 'comandos', 'jogos', 'ajuda jogos'];
+
+/**
+ * O grupo é só de Impostor? Só consulta o banco quando a mensagem é um comando
+ * que muda nesse modo (ajuda, temas, regras, abrir outro jogo).
+ */
+async function impostorOnlyFor(store: EngineDeps['store'], groupJid: string, norm: string): Promise<boolean> {
+  const relevant =
+    HELP_WORDS.includes(norm) || ['ajuda texto', 'modos', 'temas', 'regras'].includes(norm) || /^temas (do |de )?impostor$/.test(norm) ||
+    Boolean(parsePartyStart(norm)) || Boolean(parseStart(norm));
+  return relevant ? isImpostorOnly(store, groupJid) : false;
+}
 const DEACTIVATE = ['desativar jogos', 'desativar jogo', 'desativar duelo'];
 
 /**
@@ -384,6 +397,20 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
 
   // O bot só "enxerga" grupos ativados; em qualquer outro, tudo é ignorado.
   // "ativar grupo" é do Finanças G&J (bot pessoal no número do admin): o jogo usa outro nome.
+  // "ativar impostor": grupo que não é de futebol, só com o Impostor (sem tema, temas gerais).
+  if (ACTIVATE_IMPOSTOR.test(norm)) {
+    if (!manager) return [text('Só o administrador do bot ativa o Impostor neste grupo.')];
+    await store.setGroupActive(msg.groupJid, msg.groupName, true, msg.senderJid);
+    await setImpostorOnly(store, msg.groupJid, true);
+    return [
+      text(
+        '✅ *Impostor* ativado neste grupo! Aqui só ele fica ligado (os outros jogos do bot não respondem).\n\n' +
+          'Sem tema, a partida usa temas gerais: filmes, séries, lugares, animais... Mande *abrir impostor* para abrir a sala, ' +
+          'ou *abrir impostor* + tema (*temas do impostor* mostra todos). *ajuda* mostra os comandos.\n\n' +
+          'Para liberar todos os jogos: *ativar jogos*.',
+      ),
+    ];
+  }
   if (ACTIVATE.includes(norm)) {
     if (!manager) {
       // Ajuda a configurar: mostra como o WhatsApp identificou quem mandou (número ou @lid).
@@ -391,23 +418,46 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
       const id = ids.map((j) => j.split('@')[0]).join(' / ');
       return [text(`Só o administrador do bot ativa os jogos. Se você é o admin, adicione este id em ADMIN_NUMBERS na Vercel: ${id}`)];
     }
+    const wasImpostorOnly = await isImpostorOnly(store, msg.groupJid);
     await store.setGroupActive(msg.groupJid, msg.groupName, true, msg.senderJid);
-    return [text(`✅ *${GAME_NAME}* ativado neste grupo!\nMande *iniciar jogo* para desafiar alguém ou *ajuda* para ver os comandos.`)];
+    if (wasImpostorOnly) await setImpostorOnly(store, msg.groupJid, false);
+    return [
+      text(
+        wasImpostorOnly
+          ? `✅ Todos os jogos do *${GAME_NAME}* liberados neste grupo (antes era só o Impostor).\nMande *ajuda* para ver os comandos.`
+          : `✅ *${GAME_NAME}* ativado neste grupo!\nMande *iniciar jogo* para desafiar alguém ou *ajuda* para ver os comandos.`,
+      ),
+    ];
   }
   if (!(await store.isGroupActive(msg.groupJid))) return [];
   if (DEACTIVATE.includes(norm)) {
     if (!manager) return [text('Só um admin do bot pode desativar o jogo neste grupo.')];
     await store.setGroupActive(msg.groupJid, msg.groupName, false, msg.senderJid);
-    return [text('Bot desativado neste grupo. Para voltar, mande *ativar jogos*.')];
+    const back = (await isImpostorOnly(store, msg.groupJid)) ? '*ativar impostor* (ou *ativar jogos* para todos os jogos)' : '*ativar jogos*';
+    return [text(`Bot desativado neste grupo. Para voltar, mande ${back}.`)];
   }
 
-  if (norm === 'ajuda' || norm === 'menu' || norm === 'comandos' || norm === 'jogos' || norm === 'ajuda jogos') {
+  // Grupo só de Impostor: ajuda e temas próprios; os outros jogos não abrem.
+  const onlyImpostor = await impostorOnlyFor(store, msg.groupJid, norm);
+  if (onlyImpostor) {
+    if (HELP_WORDS.includes(norm) || norm === 'ajuda texto') return [text(IMPOSTOR_GROUP_HELP)];
+    if (norm === 'modos' || norm === 'temas') return [text(impostorThemesText('', true))];
+    const other = parsePartyStart(norm);
+    if ((other && other.game !== 'impostor') || parseStart(norm)) {
+      return [text('Neste grupo só o *Impostor* está ativo. Mande *abrir impostor* (ou *ajuda*). O admin libera os outros jogos com *ativar jogos*.')];
+    }
+    if (norm === 'regras') {
+      const open = await store.getActiveMatch(msg.groupJid);
+      if (!open || !isParty(open.state)) return [text(['🕵️ *Regras do Impostor*', ...IMPOSTOR_RULES.map((r) => `• ${r}`)].join('\n'))];
+    }
+  }
+  if (HELP_WORDS.includes(norm)) {
     return [{ type: 'image', image: { kind: 'help' }, caption: 'Mande o comando do jogo. Dúvida sobre um jogo? Abra a sala e mande *regras*.' }];
   }
   if (norm === 'ajuda texto') return [text(HELP)];
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
-  if (/^temas (do |de )?impostor$/.test(norm)) return [text(impostorThemesText())];
+  if (/^temas (do |de )?impostor$/.test(norm)) return [text(impostorThemesText('', onlyImpostor))];
   if (norm === 'ranking') {
     const [rows, season] = await Promise.all([store.getRanking(msg.groupJid, 10), store.getSeason(msg.groupJid)]);
     if (rows.length === 0) return [text(`Ainda não há partidas finalizadas na *Temporada ${season.season}*.`)];

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { createLookup } from '../src/lib/ai';
 import { handleMessage, handleTick } from '../src/lib/game/engine';
 import type { ImpostorParty, Outgoing } from '../src/lib/game/types';
-import { IMPOSTOR_GERAL, IMPOSTOR_SECRETS, IMPOSTOR_THEMES, findImpostorTheme, getImpostorSecret, impostorPool } from '../src/lib/party/content/impostor';
+import { IMPOSTOR_FUTEBOL, IMPOSTOR_GERAL, IMPOSTOR_SECRETS, IMPOSTOR_THEMES, IMPOSTOR_TUDO, findImpostorTheme, getImpostorSecret, impostorPool, themeLabel } from '../src/lib/party/content/impostor';
 import { ANAGRAMS } from '../src/lib/party/content/anagramas';
 import { IMPOSTOR_POINTS, givesAway } from '../src/lib/party/impostor';
 import { parsePartyStart } from '../src/lib/party/engine';
@@ -75,7 +75,7 @@ test('Impostor: cartas no privado, segredo nunca no grupo, dicas validadas, vota
     if (d.to === t.s.impostor) assert.doesNotMatch(d.text, new RegExp(secret.name));
   }
   assert.notEqual(t.s.order[0], t.s.impostor, 'o impostor não abre a 1ª volta');
-  assert.match(groupText(t.start), /Impostor do Futebol\* valendo! 4 jogadores[\s\S]*Ordem da mesa[\s\S]*\[timer:16s\]/);
+  assert.match(groupText(t.start), /Impostor\* valendo! 4 jogadores[\s\S]*Ordem da mesa[\s\S]*\[timer:16s\]/);
 
   // Pedir a carta de novo: reação + privado, nada no grupo.
   const again = await t.say('Bia', 'carta');
@@ -212,7 +212,7 @@ test('Impostor no privado: "oi" de quem joga reenvia a carta; resto e quem não 
   const priv = (from: string, text: string) =>
     handleMessage({ id: `p${text}${from}`, groupJid: from, senderJid: from, senderName: 'X', text, private: true }, t.deps);
   const card = asText(await priv(bia, 'oi'));
-  assert.match(card, /Impostor do Futebol\*: (o segredo é|você é o \*IMPOSTOR)/);
+  assert.match(card, /Impostor\*: (o segredo é|você é o \*IMPOSTOR)/);
   assert.deepEqual(await priv(bia, 'quem ganhou ontem?'), []);
   assert.deepEqual(await priv('Zeca@s.whatsapp.net', 'oi'), []);
   assert.deepEqual(await priv(bia, 'ativar jogos'), [], 'no privado nada mexe em grupo');
@@ -255,7 +255,7 @@ test('Impostor: 4 temas novos de futebol, temas gerais só quando pedidos e nome
   assert.equal(findImpostorTheme('geral'), IMPOSTOR_GERAL);
   // Sem tema: só futebol; "geral": só os gerais.
   assert.ok(impostorPool(null).every((s) => s.category === 'futebol'));
-  assert.ok(impostorPool(IMPOSTOR_GERAL).every((s) => s.category === 'geral'));
+  assert.ok(impostorPool(IMPOSTOR_GERAL).every((s) => s.category !== 'futebol'), '"geral" = tudo que não é futebol');
   assert.ok(impostorPool('lugar').every((s) => s.theme === 'lugar'));
   // Copa: o ano (inteiro ou de 2 dígitos) entrega; "tri" não.
   const copa70 = IMPOSTOR_SECRETS.find((s) => s.name === 'Copa de 1970')!;
@@ -269,12 +269,96 @@ test('Impostor: 4 temas novos de futebol, temas gerais só quando pedidos e nome
   assert.equal(getImpostorSecret(t.s.secretId)!.category, 'geral');
   assert.equal(t.s.theme, IMPOSTOR_GERAL);
   const temas = asText(await t.say('Bia', 'temas do impostor'));
-  assert.match(temas, /Futebol: [^\n]*estadios do mundo[^\n]*copas/);
-  assert.match(temas, /Gerais: [^\n]*filmes[^\n]*lugares/);
+  assert.match(temas, /Futebol\*: [^\n]*estádios do mundo[^\n]*Copas do Mundo/);
+  assert.match(temas, /Gerais\*: [^\n]*filmes[^\n]*lugares/);
   const f = await table(4, 12, 'futebol');
-  assert.equal(f.s.theme, null, '"futebol" é o mesmo que sem tema');
+  assert.equal(f.s.theme, 'futebol', '"futebol" mistura os de futebol');
   assert.equal(getImpostorSecret(f.s.secretId)!.category, 'futebol');
   const c = await table(4, 13, 'copas rapido');
   assert.equal(getImpostorSecret(c.s.secretId)!.theme, 'edição da Copa');
   assert.equal(c.s.fast, true);
+});
+
+// ---------- Rodada 8: temas à escolha, grupo só de Impostor, ~2.300 segredos ----------
+
+test('Impostor: 57 temas, misturas futebol/geral/tudo, nome curto proibido e sem diabinho', async () => {
+  assert.ok(IMPOSTOR_SECRETS.length >= 2000, `${IMPOSTOR_SECRETS.length} segredos`);
+  assert.ok(IMPOSTOR_THEMES.length >= 45, `${IMPOSTOR_THEMES.length} temas`);
+  assert.equal(new Set(IMPOSTOR_SECRETS.map((s) => s.id)).size, IMPOSTOR_SECRETS.length, 'ids únicos');
+  const keys = IMPOSTOR_THEMES.flatMap((t) => t.keys);
+  assert.equal(new Set(keys).size, keys.length, 'nenhuma chave de tema repetida');
+  for (const t of IMPOSTOR_THEMES) assert.ok(impostorPool(t.theme).length >= 15, `tema ${t.theme}`);
+  // O que aparece na lista de temas funciona como comando ("abrir impostor festas e datas").
+  for (const t of IMPOSTOR_THEMES) assert.equal(findImpostorTheme(themeLabel(t)), t.theme, `rótulo ${themeLabel(t)}`);
+  assert.ok(IMPOSTOR_SECRETS.every((s) => s.forbidden.length > 0 && !s.name.includes(',')));
+  // Misturas e temas pedidos pelo nome com ou sem acento.
+  assert.equal(findImpostorTheme('futebol'), IMPOSTOR_FUTEBOL);
+  assert.equal(findImpostorTheme('tudo'), IMPOSTOR_TUDO);
+  assert.equal(findImpostorTheme('séries'), 'série');
+  assert.equal(findImpostorTheme('heróis e vilões'), 'herói ou vilão');
+  assert.equal(findImpostorTheme('gringos do brasileirão'), 'gringo do Brasileirão');
+  assert.equal(findImpostorTheme('animes'), 'personagem de anime');
+  assert.ok(impostorPool(IMPOSTOR_FUTEBOL).every((s) => s.category === 'futebol'));
+  assert.equal(impostorPool(IMPOSTOR_TUDO).length, IMPOSTOR_SECRETS.length);
+  assert.ok(impostorPool(IMPOSTOR_GERAL).some((s) => s.category === 'anime'), '"geral" inclui anime e história');
+  // Nome de 2 letras também não vale como dica (U2, Ka).
+  const u2 = IMPOSTOR_SECRETS.find((s) => s.name === 'U2')!;
+  assert.ok(givesAway(u2.id, 'U2') && !givesAway(u2.id, 'Bono'));
+  // "abrir impostor do futebol" = tema futebol.
+  assert.deepEqual(parsePartyStart('abrir impostor do futebol'), { game: 'impostor', rest: 'futebol' });
+  assert.deepEqual(parsePartyStart('abrir impostor de series'), { game: 'impostor', rest: 'series' });
+
+  // Partida com tema escolhido na frente: carta e mensagens sem o 😈.
+  const t = await table(4, 21, 'séries');
+  assert.equal(getImpostorSecret(t.s.secretId)!.theme, 'série');
+  const all = asText(t.start);
+  assert.doesNotMatch(all, /😈/);
+  assert.match(all, /🕵️ \*Impostor\* valendo![\s\S]*Tema: \*série\*/);
+  const cards = t.start.flatMap((o) => (o.type === 'dm' ? [o.text] : [])).join('\n');
+  assert.match(cards, /🎭 \*Impostor\*: você é o \*IMPOSTOR\*/);
+  assert.doesNotMatch(cards, /😈/);
+  assert.doesNotMatch(asText(await t.say('Bia', 'temas do impostor')), /😈/);
+});
+
+test('Grupo só de Impostor: "ativar impostor" (admin), padrão geral, outros jogos recusados e "ativar jogos" libera', async () => {
+  const store = new MemoryStore();
+  let id = 0;
+  const deps = {
+    store, lookup: createLookup(store, async () => null), now: () => new Date('2026-11-19T12:00:00Z'), rng: lcg(31),
+    canManageGroup: (jid: string) => jid === 'Ana@s.whatsapp.net',
+  };
+  const G = 'amigos@g.us';
+  const say = (who: string, text: string) =>
+    handleMessage({ id: `g${++id}`, groupJid: G, senderJid: `${who}@s.whatsapp.net`, senderName: who, text }, deps);
+  // Grupo desligado: só o admin ativa.
+  assert.match(asText(await say('Bia', 'ativar impostor')), /Só o administrador/);
+  assert.match(asText(await say('Ana', 'ativar só o impostor')), /Impostor\* ativado neste grupo[\s\S]*temas gerais/);
+  // Ajuda, temas e regras do próprio Impostor.
+  assert.match(asText(await say('Bia', 'ajuda')), /só este jogo está ativo/);
+  assert.match(asText(await say('Bia', 'temas do impostor')), /Sem tema, neste grupo: \*geral\*/);
+  assert.match(asText(await say('Bia', 'regras')), /Regras do Impostor/);
+  // Outros jogos não abrem.
+  for (const cmd of ['abrir top 10', 'iniciar jogo', 'abrir anagrama', 'top 100']) {
+    assert.match(asText(await say('Bia', cmd)), /só o \*Impostor\* está ativo/, cmd);
+  }
+  assert.equal(await store.getActiveMatch(G), null);
+  // Sem tema: geral (nada de futebol).
+  await say('Ana', 'abrir impostor');
+  for (const p of ['Bia', 'Caio', 'Duda']) await say(p, 'entrar');
+  await say('Ana', 'começar');
+  const st = (await store.getActiveMatch(G))!.state as ImpostorParty;
+  assert.equal(st.theme, IMPOSTOR_GERAL);
+  assert.notEqual(getImpostorSecret(st.secretId)!.category, 'futebol');
+  await say('Ana', 'encerrar');
+  // Futebol também dá, pedindo.
+  await say('Ana', 'abrir impostor futebol');
+  for (const p of ['Bia', 'Caio', 'Duda']) await say(p, 'entrar');
+  await say('Ana', 'começar');
+  const fut = (await store.getActiveMatch(G))!.state as ImpostorParty;
+  assert.equal(getImpostorSecret(fut.secretId)!.category, 'futebol');
+  await say('Ana', 'encerrar');
+  // "ativar jogos" libera tudo de novo; sem tema volta a ser futebol.
+  assert.match(asText(await say('Ana', 'ativar jogos')), /Todos os jogos[\s\S]*liberados/);
+  assert.match(asText(await say('Bia', 'ajuda')), /img:help/);
+  assert.match(asText(await say('Bia', 'abrir top 10')), /img:partyLobby/);
 });

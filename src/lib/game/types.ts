@@ -474,7 +474,7 @@ export interface PenaltisParty extends PartyBase {
 }
 
 /**
- * Impostor do Futebol: todos recebem no privado o mesmo segredo, menos o
+ * Impostor: todos recebem no privado o mesmo segredo, menos o
  * impostor (só o tema). Dicas de 1 palavra em 2 voltas, debate, votação
  * (2º turno no empate) e, se pegarem o impostor, o palpite final dele.
  */

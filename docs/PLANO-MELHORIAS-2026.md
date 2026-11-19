@@ -914,3 +914,89 @@ Todo mundo recebe no privado o mesmo segredo (um craque, clube, seleção…), m
 | Testes | conteúdo, temas, imagens | 5 testes novos: filtro de glifos, nada fora da fonte, imagem com emoji sem rede, cards sem corte, conteúdo e temas do Impostor. **130 passando**; o build passa. |
 
 **Ficou de fora, como planejado:** Copa de 2026, apelidos de clube e "coisa do futebol".
+
+## 20. Impostor: temas à escolha, grupo só de Impostor e muito mais conteúdo (19/11)
+
+> Pedido: "como ficou hoje para iniciar o Impostor com outros temas? Tem como deixar um tema só para futebol, e a pessoa consegue escolher o tema que colocar na frente. Fazer também um comando para ativar apenas o Impostor num grupo quando o grupo não for de tema de futebol. Adicione mais temas e traga o máximo de conteúdo possível. Tire o diabinho de emoji do Impostor também."
+
+### 20.1 Como está hoje (antes desta rodada)
+
+- `abrir impostor`: mistura os temas de futebol.
+- `abrir impostor <tema>`: um tema só (ex.: `filmes`, `lugares`, `craques`).
+- `abrir impostor geral`: mistura os temas gerais.
+- Para usar o bot, o grupo precisa de `ativar jogos`, que liga **todos** os jogos (o bot é de futebol).
+- O nome do jogo é "Impostor do Futebol" e as mensagens usam o 😈.
+
+### 20.2 O que muda
+
+| # | Pedido | Como fica |
+|---|---|---|
+| 1 | Tema só de futebol | `abrir impostor futebol` (ou `abrir impostor do futebol`) mistura só os temas de futebol, em qualquer grupo. |
+| 2 | Escolher o tema na frente do comando | `abrir impostor <tema>`, em qualquer um dos ~45 temas. Tema não encontrado: o bot responde com a lista. Misturas: `futebol`, `geral` (tudo que não é futebol) e `tudo`. |
+| 3 | Grupo só de Impostor | Comando do admin `ativar impostor` (também `ativar só impostor`). Ativa o bot no grupo só com o Impostor. **Sem tema, o padrão desse grupo é `geral`.** Os outros jogos respondem "neste grupo só o Impostor está ativo". `ajuda` mostra só os comandos do Impostor. `ativar jogos` volta a liberar tudo; `desativar jogos` desliga. |
+| 4 | Sem o diabinho | O 😈 sai de todas as mensagens: 🕵️ no título do jogo, 🎭 na carta do impostor. |
+| 5 | Nome do jogo | "Impostor do Futebol" vira **"Impostor"**, porque agora serve para grupo que não é de futebol. O tema aparece na sala, na carta e na imagem. |
+| 6 | Mais temas e conteúdo | Ver 20.3. |
+
+**Onde guarda o modo do grupo:** no armazenamento por grupo que o bloqueio do *próxima* já usa (`group_seen`, tipo `admin:modo`). Não precisa mexer no banco.
+
+### 20.3 Conteúdo: metas
+
+| Bloco | Antes | Meta |
+|---|---|---|
+| Temas de futebol | 11 temas, 373 segredos | **16 temas, ~550**: mais nomes em craques (BR e mundo) e 5 temas novos: goleiro, craque argentino, gringo do Brasileirão, gíria do futebol, narrador e comentarista |
+| Temas gerais que já existem (12) | 248 | **~650**: país, capital, cidade, animal, comida, profissão, artista, esporte, novela, filme e lugar com 45 a 65 nomes cada; estado brasileiro com os 27 |
+| Temas gerais novos | — | **~26 temas, ~850**: desenho, herói e vilão, série, personagem de filme, ator de Hollywood, ator brasileiro, apresentador de TV, comediante, cantor internacional, banda brasileira, banda internacional, atleta brasileiro, atleta do mundo, ponto turístico, objeto da casa, transporte, marca, carro, comida brasileira, bebida, corpo humano, roupa e acessório, instrumento musical, brincadeira, festa e data, app e rede social, videogame |
+| Anime e história | — | 1 tema cada: personagem de anime e personagem histórico |
+| **Total** | **621** | **~2.000 segredos em ~45 temas** |
+
+- **`temas do impostor`:** mostra os temas com acento e separados (futebol, gerais, anime e história), além de como misturar.
+
+### 20.4 Critério e fontes
+
+- **Só nome conhecido:** que um grupo brasileiro comum reconhece (mesmo critério do Anagrama). Na dúvida, fica de fora.
+- **Nada de 2026 sem fonte**, e nada que muda: nenhum segredo diz clube atual, cargo atual nem resultado recente.
+- **Sem política atual nem religião:** o histórico só tem figuras do passado; o "político" fica de fora.
+- **Nome que se repete em 2 temas pode** (Hulk craque e Hulk herói): são segredos diferentes, com ids diferentes.
+
+### 20.5 O que fica de fora
+
+- Futebol feminino como tema: poucos nomes que todo grupo conhece. Fica para quando houver lista conferida.
+- Influenciadores e youtubers: mudam rápido e geram discussão.
+- Tema do grupo (o admin cadastra os próprios segredos) e modo disfarce: continuam para a fase 2 (18.11).
+- Imagens próprias para grupos que não são de futebol: as imagens continuam com a marca Duelo de Craques.
+
+### 20.6 Testes
+
+- Modo do grupo:
+  - `ativar impostor` só pelo admin;
+  - outro jogo é recusado;
+  - `abrir impostor` sem tema sai com tema geral;
+  - `abrir impostor futebol` sai com tema de futebol;
+  - `ativar jogos` libera tudo.
+- Temas e conteúdo:
+  - todo tema com 15 ou mais segredos;
+  - chaves de tema sem repetição;
+  - ids únicos;
+  - `futebol`, `geral` e `tudo` misturam certo.
+- Sem 😈 em nenhuma mensagem do Impostor.
+
+### 20.7 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Tema só de futebol | `abrir impostor futebol` | `abrir impostor futebol` e `abrir impostor do futebol` misturam só os de futebol, em qualquer grupo |
+| Tema na frente do comando | qualquer tema | 57 temas. Vale o nome com ou sem acento e o que aparece na lista (ex.: "festas e datas"). Tema desconhecido: o bot responde com a lista. Misturas: `futebol`, `geral` (tudo que não é futebol, com anime e história) e `tudo`. |
+| Grupo só de Impostor | `ativar impostor` (admin) | `ativar impostor` / `ativar só o impostor` / `ativar apenas impostor`, só o admin. Sem tema, o padrão é `geral`. `ajuda`, `regras` e `temas` mostram só o Impostor. Abrir outro jogo responde "neste grupo só o Impostor está ativo". `ativar jogos` libera tudo; `desativar jogos` desliga e lembra como voltar. |
+| Diabinho | sair o 😈 | sai de todas as mensagens: 🕵️ no título, 🎭 na carta do impostor e no resultado |
+| Nome do jogo | "Impostor" | "Impostor" na sala, nas mensagens e nas imagens |
+| Futebol | 16 temas, ~550 | **16 temas, 599 segredos.** Craques 94, craques do mundo 98. Temas novos: goleiros 34, argentinos 34, gringos do Brasileirão 26, gírias 32, narradores 25. |
+| Gerais que já existiam | ~650 | **12 temas, 741 segredos**: entre 51 e 70 cada; os estados agora são os 27 |
+| Gerais novos | ~26 temas, ~850 | **27 temas, 906 segredos** (desenhos, heróis e vilões, séries, personagens de filme, atores, apresentadores, comediantes, cantores, bandas, atletas, pontos turísticos, objetos, transportes, marcas, carros, comidas brasileiras, bebidas, corpo humano, roupas, instrumentos, brincadeiras, festas e datas, apps, videogames) |
+| Anime e história | 1 tema cada | animes 41 e história 39 |
+| **Total** | ~2.000 em ~45 temas | **2.326 segredos em 57 temas** (eram 621) |
+| Lista de temas | com acento, por bloco | `temas do impostor`: futebol, gerais, anime e história, as misturas e o padrão do grupo |
+| Palavra proibida | — | o nome inteiro sempre conta, mesmo curto ("U2", "Ka") |
+| Testes | modo do grupo e conteúdo | 2 testes novos: temas, misturas, rótulos que funcionam como comando e mensagens sem 😈; grupo só de Impostor de ponta a ponta. **132 passando**; o build passa. |
+
+**Ficou de fora, como planejado:** futebol feminino, influenciadores, tema do grupo e imagens sem a marca Duelo de Craques.

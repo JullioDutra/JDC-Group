@@ -1,12 +1,13 @@
 import { firstName, normalize } from '../game/text';
 import type { ImpostorParty, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, freshFirst, normalizeAnswer, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
-import { IMPOSTOR_THEMES, getImpostorSecret, impostorPool } from './content/impostor';
+import { IMPOSTOR_THEMES, getImpostorSecret, impostorPool, themeLabel } from './content/impostor';
 import { safeFirstName } from '../images/glyphs';
 
 /**
- * Impostor do Futebol (blefe e dedução). Todos recebem no privado o mesmo
- * segredo (craque, clube, seleção...), menos o impostor, que só sabe o tema.
+ * Impostor (blefe e dedução). Todos recebem no privado o mesmo segredo (um
+ * craque, um filme, um lugar... conforme o tema), menos o impostor, que só
+ * sabe o tema.
  * Duas voltas de dicas de 1 palavra no grupo, debate de 30 s e votação (só
  * quem joga; empate vai para o 2º turno). Se pegarem o impostor, ele ainda
  * tem 20 s para acertar o segredo no grupo e roubar a vitória.
@@ -21,7 +22,7 @@ export const IMPOSTOR_FAST_SECONDS = 25;
 export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1 };
 
 export const IMPOSTOR_RULES = [
-  'Todos recebem o segredo no privado (craque, clube, seleção...), menos o impostor, que só sabe o tema.',
+  'Todos recebem o segredo no privado (um craque, um filme, um lugar... conforme o tema), menos o impostor, que só sabe o tema.',
   `Na sua vez, mande *1 palavra* de dica no grupo (${PARTY_CONFIG.impostor.seconds}s). São ${IMPOSTOR_LAPS} voltas. Não vale o nome do segredo nem repetir dica.`,
   `Depois: ${IMPOSTOR_DEBATE_SECONDS}s de debate e votação (só quem joga; empate vai para o 2º turno).`,
   `Pegaram o impostor? Ele tem ${IMPOSTOR_GUESS_SECONDS}s para acertar o segredo e roubar a vitória.`,
@@ -29,15 +30,21 @@ export const IMPOSTOR_RULES = [
   'Não recebeu a carta? Mande *carta* aqui ou *oi* para o bot no privado.',
 ];
 
-/** Lista de temas para o grupo escolher ("abrir impostor clubes"). */
-export function impostorThemesText(head = ''): string {
-  const keys = (futebol: boolean) => IMPOSTOR_THEMES.filter((t) => (t.category === 'futebol') === futebol).map((t) => t.keys[0]).join(', ');
+/**
+ * Lista de temas para o grupo escolher ("abrir impostor filmes"). No grupo
+ * que só tem o Impostor ("ativar impostor"), sem tema vale "geral".
+ */
+export function impostorThemesText(head = '', onlyImpostor = false): string {
+  const list = (category: string) => IMPOSTOR_THEMES.filter((t) => t.category === category).map(themeLabel).join(', ');
   return [
     head,
-    '😈 *Temas do Impostor* (mande *abrir impostor* + tema):',
-    `⚽ Futebol: ${keys(true)}`,
-    `🌎 Gerais: ${keys(false)}`,
-    'Sem tema: mistura os de futebol. *geral*: mistura os gerais. *rápido* no fim: 25s por dica.',
+    '🕵️ *Temas do Impostor*: mande *abrir impostor* + tema (ex.: *abrir impostor filmes*).',
+    `⚽ *Futebol*: ${list('futebol')}.`,
+    `🌎 *Gerais*: ${list('geral')}.`,
+    `🎌 *Anime*: ${list('anime')} · 📜 *História*: ${list('historia')}.`,
+    'Misturas: *futebol* (todos os de futebol), *geral* (todos os outros) e *tudo*.',
+    onlyImpostor ? 'Sem tema, neste grupo: *geral*.' : 'Sem tema: *futebol*.',
+    '*rápido* no fim: 25s por dica (ex.: *abrir impostor séries rápido*).',
   ]
     .filter(Boolean)
     .join('\n');
@@ -66,12 +73,12 @@ export function cardText(state: ImpostorParty, jid: string): string {
   const secret = secretOf(state);
   if (jid === state.impostor) {
     return (
-      `😈 *Impostor do Futebol*: você é o *IMPOSTOR*!\nTema: *${secret.theme}*.\n\n` +
+      `🎭 *Impostor*: você é o *IMPOSTOR*!\nTema: *${secret.theme}*.\n\n` +
       'Ouça as dicas, finja que sabe e tente descobrir o segredo. Se te pegarem, ainda dá para roubar a vitória acertando o segredo.'
     );
   }
   return (
-    `🤫 *Impostor do Futebol*: o segredo é *${secret.name}* (tema: ${secret.theme}).\n\n` +
+    `🤫 *Impostor*: o segredo é *${secret.name}* (tema: ${secret.theme}).\n\n` +
     'Não fale o nome! Dê dicas que mostrem que você sabe, sem entregar para o impostor.'
   );
 }
@@ -92,7 +99,7 @@ export function startImpostor(state: ImpostorParty, deps: PartyDeps): Outgoing[]
   const mesa = order.map((jid, i) => `${i + 1}. ${nameOf(state, jid)}`).join('\n');
   return [
     text(
-      `😈 *Impostor do Futebol* valendo! ${jids.length} jogadores, 1 impostor. Tema: *${secret.theme}*.\n` +
+      `🕵️ *Impostor* valendo! ${jids.length} jogadores, 1 impostor. Tema: *${secret.theme}*.\n` +
         '🃏 Mandei a carta no privado de cada um. Não recebeu? Mande *carta* aqui ou *oi* para o bot no privado.\n\n' +
         `Ordem da mesa:\n${mesa}\n\nA 1ª volta de dicas começa em ${IMPOSTOR_CARDS_SECONDS}s.`,
     ),
@@ -247,12 +254,12 @@ function guessAnswer(state: ImpostorParty, player: PartyPlayer, msg: IncomingMes
   const secret = secretOf(state);
   const hit = answerMatches([secret.name, ...secret.aliases], normalizeAnswer(raw));
   const now = deps.now.getTime();
-  if (hit) return save(finishImpostor(state, 'stole', `😈 *${nameOf(state, state.impostor)}* acertou *${secret.name}* e rouba a vitória!`, now));
+  if (hit) return save(finishImpostor(state, 'stole', `🎭 *${nameOf(state, state.impostor)}* acertou *${secret.name}* e rouba a vitória!`, now));
   return save(finishImpostor(state, 'caught', `❌ "${raw.slice(0, 40)}" não é o segredo. ✅ *Vitória do grupo!*`, now));
 }
 
 const escaped = (state: ImpostorParty, reason: string, deps: PartyDeps) =>
-  finishImpostor(state, 'escaped', `${reason}\n😈 O impostor era *${nameOf(state, state.impostor)}*: ele vence a rodada!`, deps.now.getTime());
+  finishImpostor(state, 'escaped', `${reason}\n🎭 O impostor era *${nameOf(state, state.impostor)}*: ele vence a rodada!`, deps.now.getTime());
 
 const fled = (state: ImpostorParty, deps: PartyDeps) =>
   finishImpostor(state, 'fled', `🏃 O impostor fugiu! Era *${nameOf(state, state.impostor)}*. ✅ Vitória do grupo.`, deps.now.getTime());

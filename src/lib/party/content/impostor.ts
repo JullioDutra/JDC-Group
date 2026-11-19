@@ -1,16 +1,19 @@
 import type { ContentCategory } from '../../game/types';
 import { normalize } from '../../game/text';
-import { ANAGRAM_THEMES, type AnagramTheme } from './anagramas';
+import { ANAGRAM_THEMES } from './anagramas';
+import { ANAGRAM_LABELS, EXTRA_NAMES, NEW_THEMES, type ImpostorThemeDef } from './impostor-temas';
 
 /**
- * Segredos do Impostor do Futebol. Mesmo critério do Anagrama: se alguém do
+ * Segredos do Impostor. Mesmo critério do Anagrama: se alguém do
  * grupo não reconheceria, não entra. Cada segredo sabe as palavras que
  * entregariam o nome (proibidas na dica) e os apelidos aceitos no palpite
  * final do impostor.
  *
  * Temas: os do Anagrama (com nomes a mais, que só o Impostor usa) e temas
- * próprios. Sem tema, a partida mistura só os de futebol; os gerais (filmes,
- * países, lugares...) vêm quando pedidos: "abrir impostor geral" ou o tema.
+ * próprios (aqui e em impostor-temas.ts). O grupo escolhe o tema na frente
+ * do comando ("abrir impostor filmes") ou uma mistura: "futebol", "geral"
+ * (tudo que não é futebol) ou "tudo". Sem tema: futebol, ou geral no grupo
+ * que só tem o Impostor ("ativar impostor").
  */
 export interface ImpostorSecret {
   id: string;
@@ -22,10 +25,17 @@ export interface ImpostorSecret {
   forbidden: string[];
 }
 
-/** Pedido "abrir impostor geral": mistura os temas gerais. */
+/** Misturas pedidas no comando: "abrir impostor futebol", "... geral" (tudo que não é futebol) e "... tudo". */
+export const IMPOSTOR_FUTEBOL = 'futebol';
 export const IMPOSTOR_GERAL = 'geral';
+export const IMPOSTOR_TUDO = 'tudo';
+const MIXES: Record<string, string[]> = {
+  [IMPOSTOR_FUTEBOL]: ['futebol', 'do futebol', 'futebol misturado', 'so futebol'],
+  [IMPOSTOR_GERAL]: ['geral', 'gerais', 'conhecimentos gerais', 'temas gerais', 'sem futebol'],
+  [IMPOSTOR_TUDO]: ['tudo', 'misturado', 'todos', 'todos os temas', 'qualquer', 'aleatorio'],
+};
 
-/** Nomes a mais nos temas do Anagrama (só no Impostor: o Anagrama precisa de palavras curtas). */
+/** Nomes a mais nos temas de futebol do Anagrama (rodada 7; os da rodada 8 estão em impostor-temas.ts). */
 const EXTRA: Record<string, string> = {
   'craque brasileiro':
     'Lucas Paquetá|paqueta, Gabriel Jesus, Roberto Firmino|firmino, Philippe Coutinho|coutinho, Paulo Henrique Ganso|ganso, Oscar, Willian, ' +
@@ -62,9 +72,9 @@ const COPAS = [1950, 1958, 1962, 1970, 1982, 1986, 1990, 1994, 1998, 2002, 2006,
   .join(', ');
 
 /** Temas que só o Impostor tem. */
-const OWN_THEMES: AnagramTheme[] = [
+const OWN_THEMES: ImpostorThemeDef[] = [
   {
-    theme: 'estádio do mundo', category: 'futebol',
+    theme: 'estádio do mundo', category: 'futebol', label: 'estádios do mundo',
     keys: ['estadios do mundo', 'estadio do mundo', 'estadios de fora', 'estadios gringos', 'estadios da europa'],
     list:
       'Camp Nou, Santiago Bernabéu|bernabeu, Old Trafford, Anfield, Wembley, San Siro|giuseppe meazza, Allianz Arena, La Bombonera|bombonera, ' +
@@ -72,7 +82,7 @@ const OWN_THEMES: AnagramTheme[] = [
       'Stamford Bridge, Emirates, Etihad, Metropolitano|wanda metropolitano, Estádio da Luz|da luz, Lusail, Mestalla',
   },
   {
-    theme: 'competição', category: 'futebol',
+    theme: 'competição', category: 'futebol', label: 'competições',
     keys: ['competicoes', 'competicao', 'campeonatos', 'campeonato', 'torneios', 'torneio', 'tacas'],
     list:
       'Copa do Mundo, Libertadores, Champions League|champions|liga dos campeoes, Copa do Brasil, Brasileirão|brasileiro, Copa América, ' +
@@ -81,7 +91,7 @@ const OWN_THEMES: AnagramTheme[] = [
       'Olimpíadas|olimpiada|jogos olimpicos',
   },
   {
-    theme: 'lance do futebol', category: 'futebol',
+    theme: 'lance do futebol', category: 'futebol', label: 'lances',
     keys: ['lances', 'lance', 'jogadas', 'jogada', 'dribles', 'drible', 'lances do futebol'],
     list:
       'Bicicleta, Chapéu, Caneta, Elástico, Lambreta, Paradinha, Pedalada, Trivela, Voleio, Cavadinha, Letra, Carretilha, ' +
@@ -89,12 +99,12 @@ const OWN_THEMES: AnagramTheme[] = [
       'Hat-trick|hat trick, Gol de placa',
   },
   {
-    theme: 'edição da Copa', category: 'futebol',
+    theme: 'edição da Copa', category: 'futebol', label: 'Copas do Mundo',
     keys: ['copas', 'copa', 'copas do mundo', 'copa do mundo', 'edicoes da copa', 'edicao da copa'],
     list: COPAS,
   },
   {
-    theme: 'lugar', category: 'geral',
+    theme: 'lugar', category: 'geral', label: 'lugares',
     keys: ['lugares', 'lugar', 'locais', 'local'],
     list:
       'Praia, Hospital, Escola, Aeroporto, Supermercado, Academia, Igreja, Cinema, Restaurante, Shopping, Padaria, Farmácia, ' +
@@ -103,17 +113,37 @@ const OWN_THEMES: AnagramTheme[] = [
   },
 ];
 
+const ORDER = ['futebol', 'geral', 'anime', 'historia'];
+const withExtra = (t: ImpostorThemeDef): ImpostorThemeDef => {
+  const extra = [EXTRA[t.theme], EXTRA_NAMES[t.theme]].filter(Boolean).join(', ');
+  return extra ? { ...t, list: `${t.list}, ${extra}` } : t;
+};
+
 /** Temas do Impostor e como o grupo pede cada um ("coisa do futebol" fica de fora: genérico demais para blefar). */
-export const IMPOSTOR_THEMES: AnagramTheme[] = [
-  ...ANAGRAM_THEMES.filter((t) => t.theme !== 'coisa do futebol').map((t) => (EXTRA[t.theme] ? { ...t, list: `${t.list}, ${EXTRA[t.theme]}` } : t)),
+export const IMPOSTOR_THEMES: ImpostorThemeDef[] = [
+  ...ANAGRAM_THEMES.filter((t) => t.theme !== 'coisa do futebol').map((t) => ({ ...t, label: ANAGRAM_LABELS[t.theme] })),
   ...OWN_THEMES,
-].sort((a, b) => Number(a.category !== 'futebol') - Number(b.category !== 'futebol'));
+  ...NEW_THEMES,
+]
+  .map(withExtra)
+  .sort((a, b) => ORDER.indexOf(a.category) - ORDER.indexOf(b.category));
+
+/** Como o tema aparece na lista ("seleções", "heróis e vilões"). */
+export const themeLabel = (t: ImpostorThemeDef) => t.label ?? t.keys[0];
 
 const slug = (x: string) => normalize(x).replace(/\s+/g, '-');
 
-/** Partes que entregam o segredo: o nome junto, cada palavra de 3+ letras e anos de 2 dígitos ("70"). */
+/**
+ * Partes que entregam o segredo: o nome e cada apelido inteiros (mesmo curtos:
+ * "U2", "Ka"), cada palavra de 3+ letras e anos de 2 dígitos ("70").
+ */
 const forbiddenOf = (forms: string[]) =>
-  [...new Set(forms.flatMap((f) => [f.replace(/\s+/g, ''), ...f.split(' ')]).filter((w) => w.length >= 3 || /^\d{2}$/.test(w)))];
+  [
+    ...new Set([
+      ...forms.map((f) => f.replace(/\s+/g, '')).filter(Boolean),
+      ...forms.flatMap((f) => f.split(' ')).filter((w) => w.length >= 3 || /^\d{2}$/.test(w)),
+    ]),
+  ];
 
 export const IMPOSTOR_SECRETS: ImpostorSecret[] = (() => {
   const seen = new Set<string>();
@@ -132,21 +162,26 @@ export function getImpostorSecret(id: string): ImpostorSecret | undefined {
   return IMPOSTOR_SECRETS.find((s) => s.id === id);
 }
 
-/** Segredos de uma partida: o tema pedido, "geral" (todos os gerais) ou, sem tema, todos os de futebol. */
+/** Segredos de uma partida: o tema pedido ou uma mistura. Sem tema (null): futebol. */
 export function impostorPool(theme: string | null): ImpostorSecret[] {
-  if (theme === IMPOSTOR_GERAL) return IMPOSTOR_SECRETS.filter((s) => s.category === 'geral');
-  if (theme) return IMPOSTOR_SECRETS.filter((s) => s.theme === theme);
+  if (theme === IMPOSTOR_TUDO) return IMPOSTOR_SECRETS;
+  if (theme === IMPOSTOR_GERAL) return IMPOSTOR_SECRETS.filter((s) => s.category !== 'futebol');
+  if (theme && theme !== IMPOSTOR_FUTEBOL) return IMPOSTOR_SECRETS.filter((s) => s.theme === theme);
   return IMPOSTOR_SECRETS.filter((s) => s.category === 'futebol');
 }
 
-/** Como o tema aparece na sala: o nome do tema, "temas gerais" ou nada (futebol misturado). */
+/** Como o tema aparece na sala: o nome do tema, a mistura ou nada (sem tema = futebol misturado). */
 export function impostorThemeLabel(theme: string | null): string | null {
-  return theme === IMPOSTOR_GERAL ? 'temas gerais' : theme;
+  if (theme === IMPOSTOR_FUTEBOL) return 'futebol (misturado)';
+  if (theme === IMPOSTOR_GERAL) return 'temas gerais (misturado)';
+  if (theme === IMPOSTOR_TUDO) return 'tudo misturado';
+  return theme;
 }
 
-/** Tema pedido no comando ("clubes", "craques do mundo", "geral"), ou undefined. */
+/** Tema pedido no comando ("clubes", "craques do mundo", "futebol", "geral", "tudo"), ou undefined. */
 export function findImpostorTheme(raw: string): string | undefined {
   const key = normalize(raw);
-  if (['geral', 'gerais', 'conhecimentos gerais', 'temas gerais'].includes(key)) return IMPOSTOR_GERAL;
-  return IMPOSTOR_THEMES.find((t) => t.keys.includes(key) || normalize(t.theme) === key)?.theme;
+  const mix = Object.entries(MIXES).find(([, keys]) => keys.includes(key));
+  if (mix) return mix[0];
+  return IMPOSTOR_THEMES.find((t) => t.keys.includes(key) || normalize(t.theme) === key || normalize(themeLabel(t)) === key)?.theme;
 }

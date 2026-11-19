@@ -60,7 +60,8 @@ import { anagramThemesText, newAnagrama } from './anagrama';
 import { isNextBlocked } from '../game/blocks';
 import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
 import { impostorThemesText, newImpostor } from './impostor';
-import { findImpostorTheme, impostorThemeLabel } from './content/impostor';
+import { IMPOSTOR_GERAL, findImpostorTheme, impostorThemeLabel } from './content/impostor';
+import { isImpostorOnly } from '../game/groupMode';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
 import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
@@ -119,7 +120,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (lei) return { game: 'leilao', rest: lei[4] ?? '' };
   if (/^((abrir|jogar) )?(o )?top ?100( do dia)?$/.test(norm) || norm === 'desafio do dia') return { game: 'top100', rest: '' };
   const imp = norm.match(/^(abrir|jogar) (o )?impostor( do futebol)?(?: (?:de |do |da |dos |das )?(.+))?$/);
-  if (imp) return { game: 'impostor', rest: imp[4] ?? '' };
+  // "abrir impostor do futebol" sem outro tema = tema futebol.
+  if (imp) return { game: 'impostor', rest: imp[4] ?? (imp[3] ? 'futebol' : '') };
   const ana = norm.match(/^(abrir|jogar) (o )?anagramas?(?: (?:de |do |da |dos |das )?(.+))?$/);
   if (ana) return { game: 'anagrama', rest: ana[3] ?? '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };
@@ -197,10 +199,11 @@ export async function createParty(
     const words = start.rest.split(' ').filter(Boolean);
     const fast = words.some((w) => ['rapido', 'turbo', 'relampago'].includes(w));
     const rest = words.filter((w) => !['rapido', 'turbo', 'relampago'].includes(w)).join(' ');
-    // "futebol" é o padrão (sem tema); "geral" mistura os temas gerais.
-    const asked = rest === 'futebol' ? '' : rest;
-    const theme = asked ? findImpostorTheme(asked) : undefined;
-    if (asked && !theme) return [text(impostorThemesText(`Não achei o tema "${asked}".`))];
+    // Tema na frente do comando, ou uma mistura (futebol, geral, tudo). Sem tema:
+    // futebol; no grupo que só tem o Impostor ("ativar impostor"), geral.
+    const onlyImpostor = await isImpostorOnly(deps.store, msg.groupJid);
+    const theme = rest ? findImpostorTheme(rest) : onlyImpostor ? IMPOSTOR_GERAL : undefined;
+    if (rest && !theme) return [text(impostorThemesText(`Não achei o tema "${rest}".`, onlyImpostor))];
     state = { ...base('impostor', host, nowMs), ...newImpostor(theme ?? null, fast) } as PartyState;
   } else if (start.game === 'leilao') {
     state = { ...base('leilao', host, nowMs), ...newLeilao(leilaoModeOf(start.rest) ?? 'overall') } as PartyState;
@@ -280,7 +283,7 @@ function lobbyCaption(state: PartyState): string {
     lines.push(
       state.theme
         ? `Tema: *${impostorThemeLabel(state.theme)}*.`
-        : 'Tema: futebol, misturado. Tem também filmes, lugares, países... (*temas do impostor*).',
+        : 'Tema: futebol, misturado. Para outro tema: *abrir impostor filmes*, *séries*, *lugares*... (*temas do impostor*).',
       `${state.host.name}, mande *começar* quando todos entrarem (mínimo ${cfg.minPlayers}).`,
     );
   } else {
