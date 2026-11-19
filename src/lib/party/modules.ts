@@ -6,12 +6,14 @@ import { PONTE_RULES, closePonteRound, newPonte, openPonteRound, ponteAnswer, st
 import { GRADE_RULES, finishGrade, gradeAnswer, gradeTimeout, newGrade, startGrade } from './grade';
 import { PENALTIS_RULES, finishPenaltis, goals, newPenaltis, penaltisAnswer, penaltisTimeout, scoreLine, startPenaltis } from './penaltis';
 import { finishByScore } from './common';
+import { LEILAO_RULES, closeLot, finishLeilao, leilaoAnswer, leilaoBoard, newLeilao, startLeilao } from './leilao';
+import type { LeilaoParty } from '../game/types';
 
 /**
  * Jogos gerados da base de jogadores (frente F2). Cada um declara as peças
  * que o motor das salas usa; assim o motor não precisa de um "if" por jogo.
  */
-export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty;
+export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty;
 
 export interface PartyModule {
   rules: string[];
@@ -83,7 +85,19 @@ const penaltis: PartyModule = {
   seenItems: () => [],
 };
 
-export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis };
+const leilao: PartyModule = {
+  rules: LEILAO_RULES,
+  create: newLeilao,
+  start: (s, d) => startLeilao(s as LeilaoParty, d),
+  answer: (s, p, m, d, save) => leilaoAnswer(s as LeilaoParty, p, m, d, save),
+  timeout: (s, d) => closeLot(s as LeilaoParty, d),
+  skip: (s, d) => closeLot(s as LeilaoParty, d, 'Martelo batido pelo anfitrião.'),
+  finish: (s, reason) => finishLeilao(s as LeilaoParty, reason),
+  board: (s, final) => leilaoBoard(s as LeilaoParty, final),
+  seenItems: (s) => (s as LeilaoParty).lots.map((l) => l.id),
+};
+
+export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao };
 
 export function isBaseGame(state: PartyState): state is BaseGameState {
   return state.game in MODULES;

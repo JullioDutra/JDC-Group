@@ -106,6 +106,16 @@ export const CHUTE_QUESTIONS: ChuteQuestion[] = [
   { id: 'c-populacao-br-2025', category: 'geral', prompt: 'Qual era a população estimada do Brasil em 2025, em milhões (IBGE)?', answer: 213, unit: 'milhões' },
   { id: 'c-medalhas-paris', category: 'geral', prompt: 'Quantas medalhas de ouro os EUA ganharam em Paris 2024?', answer: 40, unit: 'ouros' },
   { id: 'c-rebeca', category: 'geral', prompt: 'Quantas medalhas olímpicas Rebeca Andrade tem (até Paris 2024)?', answer: 6, unit: 'medalhas' },
+  // Mais 2026 (pesquisa de 19/11/2026)
+  { id: 'c-superbowl-2026', category: 'geral', prompt: 'Quantos pontos o Seattle Seahawks fez na vitória no Super Bowl LX (2026)?', answer: 29, unit: 'pontos' },
+  { id: 'c-knicks-jejum', category: 'geral', prompt: 'Quantos anos o New York Knicks ficou sem ganhar a NBA até o título de 2026?', answer: 53, unit: 'anos' },
+  { id: 'c-bbb26-votos', category: 'geral', prompt: 'Com quantos por cento dos votos Ana Paula Renault ganhou o BBB 26 (arredonde)?', answer: 76, unit: '%' },
+  { id: 'c-pecadores', category: 'geral', prompt: 'Quantas indicações ao Oscar "Pecadores" recebeu (recorde)?', answer: 16, unit: 'indicações' },
+  { id: 'c-oscar-edicao', category: 'geral', prompt: 'Que número de edição foi o Oscar de 2026?', answer: 98, unit: 'ª edição' },
+  { id: 'c-viradouro-titulos', category: 'geral', prompt: 'Quantos títulos a Viradouro tinha depois do Carnaval de 2026?', answer: 4, unit: 'títulos' },
+  { id: 'c-paulista-palmeiras', category: 'futebol', prompt: 'Quantos títulos paulistas o Palmeiras tinha depois de 2026?', answer: 27, unit: 'títulos' },
+  { id: 'c-carioca-flamengo', category: 'futebol', prompt: 'Quantos títulos cariocas o Flamengo tinha depois de 2026?', answer: 40, unit: 'títulos' },
+  { id: 'c-safonov', category: 'futebol', prompt: 'Quantos pênaltis Safonov defendeu na decisão da Intercontinental de 2025 contra o Flamengo?', answer: 4, unit: 'pênaltis' },
 ];
 
 export function getChute(id: string): ChuteQuestion | undefined {

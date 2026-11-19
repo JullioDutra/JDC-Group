@@ -57,6 +57,10 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     subtitle: `${PARTY_CONFIG.ponte.rounds} rodadas · 4 clubes por rodada`,
     rules: ['Cite quem passou pelos 4 clubes da rodada.', 'Passou pelos 4: 10 pts · por 3: 6 · por 2: 3 · por 1: 1.', '1 palpite por pessoa em cada rodada. Ninguém repete jogador.'],
   },
+  leilao: {
+    subtitle: '100 moedas · times de 4 · overall escondido',
+    rules: ['O bot leiloa craques; para dar lance, mande só o número.', 'Cada um monta um time de 4 com 100 moedas.', 'No fim o overall aparece: vence a maior soma (+10 com GOL, DEF, MEI e ATA).'],
+  },
   grade: {
     subtitle: 'Jogo da velha · clubes, ligas, seleções e títulos',
     rules: ['Linhas: clubes ou ligas. Colunas: seleções, títulos ou ligas.', 'Na sua vez: casa + jogador que cumpra as duas (A2 Neymar).', 'Errou: perde a vez. 3 em linha vence.'],
@@ -102,9 +106,9 @@ export function partyLobby(state: PartyState): ReactElement {
   } else if (state.game === 'intruso') {
     subtitle = `${PARTY_CONFIG.intruso.rounds} rodadas · 5 nomes, 1 intruso`;
     rules = [
-      'Marque com X quem pertence ao grupo (mande a letra).',
-      'Ninguém marca duas vezes seguidas. O que sobrar é o intruso.',
-      'No fim: certo ou errado em cada X e a justificativa.',
+      '4 nomes têm algo em comum; 1 é o intruso.',
+      'Cada um manda 1 palpite: a letra do intruso.',
+      'Acertou: 100 pontos. O primeiro a acertar ganha +50.',
     ];
   } else if (NEW_LOBBY[state.game]) {
     const info = NEW_LOBBY[state.game]!;
@@ -409,20 +413,21 @@ export function intrusoBoard(state: IntrusoParty, reason: string, reveal: boolea
       pill(reveal ? 'REVELAÇÃO' : `RODADA ${state.round + 1} DE ${state.totalRounds}`, reveal ? C.lime : C.panel, reveal ? C.ink : C.lime, 24),
     ),
     txt('QUEM É O INTRUSO?', { fontFamily: DISPLAY, fontSize: 80, lineHeight: 1.1, marginTop: 18 }),
-    txt(reveal ? 'Cada X: certo ou errado' : 'Marque com X quem pertence ao grupo', { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: 20 }),
+    txt(reveal ? 'Quem palpitou em cada um' : '4 têm algo em comum. Qual não pertence?', { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: 20 }),
     box(
       { flexDirection: 'column', gap: 12 },
       ...state.options.map((name, i) => {
-        const mark = state.marks.find((m) => m.index === i);
+        // Na rodada, os palpites ficam escondidos; na revelação, aparecem por opção.
+        const votes = reveal ? state.marks.filter((m) => m.index === i) : [];
         const isIntruder = i === state.intruderIndex;
         let border = C.panelLine;
         let tag: ReactElement | null = null;
         if (reveal && isIntruder) {
           border = C.lime;
-          tag = pill(mark ? 'INTRUSO · X ERRADO' : 'INTRUSO', mark ? RED : C.lime, C.ink, 22);
-        } else if (reveal && mark) {
-          border = '#34D399';
-          tag = pill('X CERTO', '#34D399', C.ink, 22);
+          tag = pill('INTRUSO', C.lime, C.ink, 22);
+        } else if (reveal && votes.length) {
+          border = RED;
+          tag = pill('ERRADO', RED, C.ink, 22);
         }
         return box(
           {
@@ -431,20 +436,15 @@ export function intrusoBoard(state: IntrusoParty, reason: string, reveal: boolea
           },
           txt(INTRUSO_LETTERS[i], {
             width: 64, height: 64, borderRadius: 16, flexShrink: 0, alignItems: 'center', justifyContent: 'center',
-            fontFamily: DISPLAY, fontSize: 36, color: C.ink, backgroundColor: mark ? 'rgba(255,255,255,0.35)' : C.lime,
+            fontFamily: DISPLAY, fontSize: 36, color: C.ink, backgroundColor: C.lime,
           }),
           box(
-            { flexGrow: 1, flexDirection: 'column', position: 'relative' },
-            txt(name, {
-              fontFamily: DISPLAY, fontSize: 46, letterSpacing: 0.5,
-              color: mark && !(reveal && isIntruder) ? 'rgba(255,255,255,0.45)' : C.white,
-              textDecoration: mark ? 'line-through' : 'none',
-            }),
-            ...(mark ? [txt(`X de ${firstName(mark.name)}`, { fontSize: 22, fontWeight: 700, color: colorOf(state, mark.jid) })] : []),
+            { flexGrow: 1, flexDirection: 'column' },
+            txt(name, { fontFamily: DISPLAY, fontSize: 46, letterSpacing: 0.5, color: reveal && !isIntruder ? 'rgba(255,255,255,0.6)' : C.white }),
+            ...(votes.length
+              ? [txt(votes.map((v) => firstName(v.name)).join(', '), { fontSize: 22, fontWeight: 700, color: isIntruder ? C.lime : RED })]
+              : []),
           ),
-          ...(mark
-            ? [txt('X', { fontFamily: DISPLAY, fontSize: 64, color: reveal ? (isIntruder ? RED : '#34D399') : C.white, width: 60, justifyContent: 'center' })]
-            : []),
           ...(tag ? [tag] : []),
         );
       }),
@@ -460,8 +460,8 @@ export function intrusoBoard(state: IntrusoParty, reason: string, reveal: boolea
         )
       : box(
           { flexGrow: 1, alignItems: 'flex-end', justifyContent: 'space-between' },
-          txt('Mande a letra · ninguém marca 2 vezes seguidas', { fontSize: 28, fontWeight: 700, color: C.lime }),
-          txt(`${state.marks.length}/4 X`, { fontSize: 28, color: C.muted, fontWeight: 700 }),
+          txt('Mande a letra do intruso · 1 palpite por pessoa', { fontSize: 28, fontWeight: 700, color: C.lime }),
+          txt(`${state.marks.length} palpite${state.marks.length === 1 ? '' : 's'}`, { fontSize: 28, color: C.muted, fontWeight: 700 }),
         ),
   );
 }

@@ -176,6 +176,20 @@ export const TOP10_EXTRA: Top10List[] = [
       ['Bebeto', '39 gols'],
     ),
   },
+  {
+    id: 'copa-2026-4-primeiros',
+    category: 'futebol',
+    title: 'Os 4 primeiros da Copa do Mundo de 2026',
+    source: 'FIFA',
+    items: seq(['Espanha', 'campeã'], ['Argentina', 'vice'], ['Inglaterra', '3º lugar'], ['França', '4º lugar', ['franca']]),
+  },
+  {
+    id: 'bola-de-ouro-2026-podio',
+    category: 'futebol',
+    title: 'Pódio da Bola de Ouro de 2026',
+    source: 'France Football, cerimônia de 26/10/2026 em Londres',
+    items: seq(['Harry Kane', 'Bayern', ['kane']], ['Kylian Mbappé', 'Real Madrid', ['mbappe']], ['Lamine Yamal', 'Barcelona', ['yamal', 'lamine']]),
+  },
   // ---------- Futebol: clubes e ligas ----------
   {
     id: 'mundial-clubes-2025',
@@ -278,16 +292,16 @@ export const TOP10_EXTRA: Top10List[] = [
     ],
   },
   {
-    id: 'copa-do-brasil-titulos-2024',
+    id: 'copa-do-brasil-titulos-2025',
     category: 'futebol',
-    title: 'Maiores campeões da Copa do Brasil (até 2024)',
-    source: 'CBF',
+    title: 'Maiores campeões da Copa do Brasil (até 2025)',
+    source: 'CBF; o Corinthians foi tetra em 2025, contra o Vasco',
     items: [
       it(1, 'Cruzeiro', '6'),
       it(2, 'Grêmio', '5', ['gremio']),
       it(2, 'Flamengo', '5', ['mengao', 'fla']),
       it(4, 'Palmeiras', '4', ['verdao']),
-      it(5, 'Corinthians', '3', ['timao']),
+      it(4, 'Corinthians', '4', ['timao']),
       it(6, 'Atlético-MG', '2', ['atletico mineiro', 'atletico mg', 'galo']),
     ],
   },

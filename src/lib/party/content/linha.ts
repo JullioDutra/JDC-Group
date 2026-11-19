@@ -145,6 +145,13 @@ export const TIMELINE: TimelineEvent[] = [
   e('t-papa-leao', 'historia', 2025, 'Eleição do papa Leão XIV'),
   e('t-cop30', 'geral', 2025, 'Belém sedia a COP30'),
   e('t-lula-2026', 'politica', 2026, 'Lula é eleito presidente pela quarta vez'),
+  // Mais 2026 (pesquisa de 19/11/2026)
+  e('t-psg-intercontinental', 'futebol', 2025, 'PSG ganha a Copa Intercontinental contra o Flamengo, nos pênaltis'),
+  e('t-braathen', 'geral', 2026, 'Lucas Pinheiro Braathen dá ao Brasil o 1º ouro em Olimpíadas de Inverno'),
+  e('t-knicks', 'geral', 2026, 'New York Knicks ganham a NBA depois de 53 anos'),
+  e('t-oscar-batalha', 'geral', 2026, '"Uma Batalha Após a Outra" ganha o Oscar de melhor filme'),
+  e('t-viradouro', 'geral', 2026, 'Viradouro ganha o Carnaval do Rio por 0,1 ponto'),
+  e('t-seahawks', 'geral', 2026, 'Seattle Seahawks ganham o Super Bowl LX'),
 ];
 
 export function getEvent(id: string): TimelineEvent | undefined {

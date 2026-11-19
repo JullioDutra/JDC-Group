@@ -25,7 +25,7 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   top10: { name: 'Top 10', maxPlayers: 10, minPlayers: 2, joinUntil: 2, seconds: 240 },
   quetime: { name: 'Que time é esse?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 6 },
   quemeh: { name: 'Quem é?', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 20, rounds: 8 },
-  intruso: { name: 'Intruso', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 75, rounds: 5 },
+  intruso: { name: 'Intruso', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 6 },
   emoji: { name: 'Emoji', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 45, rounds: 8 },
   relampago: { name: 'Quiz Relâmpago', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 10 },
   alfabeto: { name: 'Alfabeto', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 5 },
@@ -46,6 +46,8 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   ponte: { name: 'Ponte', maxPlayers: 12, minPlayers: 2, joinUntil: 2, seconds: 90, rounds: 4 },
   grade: { name: 'Grade 3x3', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 60 },
   penaltis: { name: 'Pênaltis', maxPlayers: 2, minPlayers: 2, joinUntil: 0, seconds: 45 },
+  // Leilão: 30 s por lote; ninguém entra depois de começar (os lotes são contados por pessoa).
+  leilao: { name: 'Leilão de Craques', maxPlayers: 8, minPlayers: 2, joinUntil: 0, seconds: 30 },
 };
 
 /** Jogos 1 x 1: quem aceitar entra e a partida começa sozinha. */

@@ -193,6 +193,30 @@ export const RELAMPAGO_CARDS: Card[] = [
   // Política 2026
   { id: 'r-eleicao-2026', category: 'politica', prompt: 'Quem foi eleito presidente do Brasil em 2026?', answer: 'Lula', aliases: ['luiz inacio lula da silva'] },
   { id: 'r-vice-2026', category: 'politica', prompt: 'Quem perdeu o 2º turno da eleição presidencial de 2026 para Lula?', answer: 'Flávio Bolsonaro', aliases: ['flavio bolsonaro', 'flavio'] },
+  // Mais 2026 (pesquisa de 19/11/2026): esportes, cultura e futebol brasileiro
+  { id: 'r-ao-2026', category: 'geral', prompt: 'Quem ganhou o Australian Open masculino de 2026, vencendo Djokovic na final?', answer: 'Carlos Alcaraz', aliases: ['alcaraz'] },
+  { id: 'r-wimbledon-2026', category: 'geral', prompt: 'Quem ganhou Wimbledon masculino em 2026?', answer: 'Jannik Sinner', aliases: ['sinner'] },
+  { id: 'r-usopen-2026', category: 'geral', prompt: 'Quem ganhou o US Open masculino de 2026, contra Ben Shelton na final?', answer: 'Alexander Zverev', aliases: ['zverev'] },
+  { id: 'r-rybakina-2026', category: 'geral', prompt: 'Qual tenista ganhou o Australian Open e o US Open femininos em 2026?', answer: 'Elena Rybakina', aliases: ['rybakina'] },
+  { id: 'r-braathen', category: 'geral', prompt: 'Quem deu ao Brasil a primeira medalha em Olimpíadas de Inverno, em 2026?', answer: 'Lucas Pinheiro Braathen', aliases: ['lucas pinheiro', 'braathen', 'lucas braathen'] },
+  { id: 'r-braathen-prova', category: 'geral', prompt: 'Em que prova o Brasil ganhou o ouro em Milão-Cortina 2026?', answer: 'Slalom gigante', aliases: ['slalom'] },
+  { id: 'r-superbowl-2026', category: 'geral', prompt: 'Qual time ganhou o Super Bowl LX, em 2026?', answer: 'Seattle Seahawks', aliases: ['seahawks', 'seattle'] },
+  { id: 'r-nba-2026', category: 'geral', prompt: 'Qual time ganhou a NBA em 2026, o primeiro título em 53 anos?', answer: 'New York Knicks', aliases: ['knicks', 'new york'] },
+  { id: 'r-nba-mvp-2026', category: 'geral', prompt: 'Quem foi o MVP das finais da NBA de 2026?', answer: 'Jalen Brunson', aliases: ['brunson'] },
+  { id: 'r-f1-2026', category: 'geral', prompt: 'Qual piloto italiano, da Mercedes, foi campeão da Fórmula 1 em 2026?', answer: 'Kimi Antonelli', aliases: ['antonelli', 'andrea kimi antonelli'] },
+  { id: 'r-oscar-2026', category: 'geral', prompt: 'Qual filme ganhou o Oscar de melhor filme em 2026?', answer: 'Uma Batalha Após a Outra', aliases: ['uma batalha apos a outra', 'one battle after another'] },
+  { id: 'r-oscar-ator-2026', category: 'geral', prompt: 'Quem ganhou o Oscar de melhor ator em 2026, por "Pecadores"?', answer: 'Michael B. Jordan', aliases: ['michael b jordan'] },
+  { id: 'r-oscar-animacao-2026', category: 'geral', prompt: 'Qual animação ganhou o Oscar em 2026 (e também o de canção, com "Golden")?', answer: 'Guerreiras do K-pop', aliases: ['guerreiras do kpop', 'kpop demon hunters', 'k pop demon hunters'] },
+  { id: 'r-oscar-internacional-2026', category: 'geral', prompt: 'Qual país ganhou o Oscar de filme internacional em 2026, com "Valor Sentimental"?', answer: 'Noruega' },
+  { id: 'r-bbb26', category: 'geral', prompt: 'Quem ganhou o BBB 26?', answer: 'Ana Paula Renault', aliases: ['ana paula'] },
+  { id: 'r-carnaval-2026', category: 'geral', prompt: 'Qual escola de samba ganhou o Carnaval do Rio em 2026?', answer: 'Viradouro', aliases: ['unidos do viradouro'] },
+  { id: 'r-intercontinental-2025', category: 'futebol', prompt: 'Qual clube brasileiro perdeu a final da Copa Intercontinental de 2025 para o PSG, nos pênaltis?', answer: 'Flamengo', aliases: ['mengao'] },
+  { id: 'r-cdb-2025', category: 'futebol', prompt: 'Qual clube ganhou a Copa do Brasil de 2025, na final contra o Vasco?', answer: 'Corinthians', aliases: ['timao'] },
+  { id: 'r-paulista-2026', category: 'futebol', prompt: 'Quem ganhou o Paulistão de 2026, contra o Novorizontino na final?', answer: 'Palmeiras', aliases: ['verdao'] },
+  { id: 'r-carioca-2026', category: 'futebol', prompt: 'Quem ganhou o Carioca de 2026, nos pênaltis contra o Fluminense?', answer: 'Flamengo', aliases: ['mengao'] },
+  { id: 'r-mineiro-2026', category: 'futebol', prompt: 'Quem ganhou o Campeonato Mineiro de 2026, com gol de Kaio Jorge na final?', answer: 'Cruzeiro' },
+  { id: 'r-gaucho-2026', category: 'futebol', prompt: 'Quem ganhou o Gauchão de 2026, empatando no Beira-Rio na final?', answer: 'Grêmio', aliases: ['gremio'] },
+  { id: 'r-sula-2026', category: 'futebol', prompt: 'Qual clube brasileiro enfrentou o Boca Juniors na final da Sul-Americana de 2026?', answer: 'Atlético-MG', aliases: ['atletico mineiro', 'atletico mg', 'galo'] },
 ];
 
 export const CARDS = { emoji: EMOJI_CARDS, relampago: RELAMPAGO_CARDS };

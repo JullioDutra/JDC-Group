@@ -41,50 +41,32 @@ test('conteúdo do Intruso: 4 membros + 1 intruso + motivo, ids únicos', () => 
   assert.equal(parsePartyStart('intruso'), null);
 });
 
-test('X aparece na hora, sem dizer se está certo; ninguém marca duas vezes seguidas', async () => {
+test('regra nova: 1 palpite por pessoa; acertou +100, o primeiro +50; todos palpitaram fecha a rodada', async () => {
   const { say, state } = setup();
   const out = await start(say);
-  assert.match(out, /Intruso\* valendo![\s\S]*img:intrusoBoard[\s\S]*Rodada 1\/5 · Quem é o intruso\?[\s\S]*timer:76s/);
-
+  assert.match(out, /Intruso\* valendo![\s\S]*img:intrusoBoard[\s\S]*Rodada 1\/6 · Quem é o intruso\?[\s\S]*1 palpite por pessoa[\s\S]*timer:46s/);
   const s = await state();
-  const members = s.options.map((_, i) => i).filter((i) => i !== s.intruderIndex);
-  const first = asText(await say('Ana', L[members[0]].toLowerCase()));
-  assert.match(first, new RegExp(`\\*Ana\\* marcou X em \\*${L[members[0]]}\\) ${s.options[members[0]]}\\*`));
-  assert.match(first, new RegExp(`${L[members[0]]}\\) ~${s.options[members[0]]}~  X \\(Ana\\)`), 'quadro mostra o X e o nome riscado');
-  assert.doesNotMatch(first, /certo|errado|intruso era/i, 'não revela nada antes do fim');
-
-  assert.match(asText(await say('Ana', L[members[1]])), /espere outra pessoa marcar/);
-  assert.match(asText(await say('Bia', L[members[0]])), /já está marcado/);
+  const right = L[s.intruderIndex];
+  const wrong = L[(s.intruderIndex + 1) % 5];
+  assert.equal(asText(await say('Bia', wrong)), '[react:🔒]', 'confirma sem dizer se acertou');
+  assert.equal(asText(await say('Bia', right)), '', 'segundo palpite é ignorado');
+  const reveal = asText(await say('Ana', right));
+  assert.match(reveal, /Todos palpitaram\.[\s\S]*O intruso era \*[A-E]\) [^*]+\*\.[\s\S]*Por quê:[\s\S]*Acertaram: Ana \+150 \(primeiro\)[\s\S]*Erraram: Bia/);
+  const after = await state();
+  assert.equal(after.players.find((p) => p.name === 'Ana')!.score, 150);
+  assert.equal(after.players.find((p) => p.name === 'Bia')!.score, 0);
 });
 
-test('sobrou o intruso: revela X certos, "Certo!", justificativa e bônus', async () => {
-  const { say, state } = setup();
+test('tempo esgotado revela; ninguém palpitou: ninguém pontua; nome também vale como palpite', async () => {
+  const { say, tick, state } = setup();
   await start(say);
   const s = await state();
-  const members = s.options.map((_, i) => i).filter((i) => i !== s.intruderIndex);
-  await say('Ana', L[members[0]]);
-  await say('Bia', L[members[1]]);
-  await say('Ana', L[members[2]]);
-  const reveal = asText(await say('Bia', s.options[members[3]]));
-  assert.match(reveal, new RegExp(`img:intrusoBoard[\\s\\S]*Certo! Sobrou \\*${s.options[s.intruderIndex]}\\*, e ele era o intruso\\.`));
-  assert.match(reveal, /Por quê: Os outros quatro/);
-  assert.match(reveal, /Pontos: Ana \+160 · Bia \+160/, '2 X certos (100) + bônus do grupo (30 por X)');
-  assert.match(reveal, /Rodada 2\/5/);
-});
-
-test('marcou X no intruso: revela "Errado" e quem marcou; tempo esgotado também revela', async () => {
-  const { say, state, tick } = setup();
-  await start(say);
-  let s = await state();
-  const members = s.options.map((_, i) => i).filter((i) => i !== s.intruderIndex);
-  await say('Ana', L[s.intruderIndex]);
-  await say('Bia', L[members[0]]);
-  await say('Ana', L[members[1]]);
-  const reveal = asText(await say('Bia', L[members[2]]));
-  assert.match(reveal, new RegExp(`Errado: o intruso era \\*${s.options[s.intruderIndex]}\\*, e Ana marcou X nele\\.`));
-  assert.match(reveal, /Pontos: Ana \+0 · Bia \+100|Pontos: Ana 0 · Bia \+100/);
-
-  s = await state();
   const timeout = asText(await tick());
-  assert.match(timeout, new RegExp(`Tempo esgotado\\. O intruso era \\*${s.options[s.intruderIndex]}\\*\\.[\\s\\S]*Por quê:`));
+  assert.match(timeout, new RegExp(`Tempo esgotado\\.[\\s\\S]*O intruso era \\*${L[s.intruderIndex]}\\) [\\s\\S]*Ninguém acertou\\.`));
+  // Nos testes não há pausa: a próxima rodada já abriu. Palpite pelo nome.
+  const s2 = await state();
+  const name = s2.options[s2.intruderIndex];
+  assert.equal(asText(await say('Ana', name)), '[react:🔒]');
+  const r = asText(await say('Bia', name));
+  assert.match(r, /Acertaram: Ana \+150 \(primeiro\) · Bia \+100/);
 });

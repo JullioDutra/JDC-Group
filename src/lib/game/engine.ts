@@ -87,6 +87,7 @@ const RULES = [
   '5. Jogador inválido não passa a vez: você tenta de novo. Ninguém pode repetir um jogador já escalado.',
   '6. Só os dois jogadores da partida podem escalar; mensagens de quem está de fora são ignoradas até o fim do jogo.',
   '7. No fim, somam-se os números dos 6 escalados. Dependendo do tema, vence a maior ou a menor soma.',
+  `8. Cada vez tem prazo (${TURN_SECONDS}s; 45s no relâmpago). Estourou: a vez passa com o pior valor do tema. ${'3'} vezes seguidas sem jogar: derrota por W.O.`,
 ].join('\n');
 
 function restrictionLine(restriction: Restriction): string {
@@ -101,8 +102,98 @@ function turnPrompt(state: MatchState): string {
   return (
     `*Rodada ${state.round + 1}/${SLOTS.length} · ${POSITION_LABEL[slot].toUpperCase()}*\n` +
     restrictionLine(state.restrictions[state.round]) +
-    `*${player.name}*, mande o nome do seu ${POSITION_LABEL[slot]}.`
+    `*${player.name}*, mande o nome do seu ${POSITION_LABEL[slot]}. Você tem ${turnSeconds(state)}s.`
   );
+}
+
+// ---------- Prazo automático do 1 x 1 ----------
+
+/** Sem estreitamento de tipo: o status muda dentro de duelTimeout. */
+const isFinished = (state: MatchState) => state.status === 'FINISHED';
+
+/** 3 vezes seguidas sem jogar = derrota por W.O. */
+export const DUEL_MAX_MISSES = 3;
+
+/** Abre o prazo da vez atual: agenda a cobrança no QStash (como nas salas). */
+function scheduleTurn(state: MatchState, nowMs: number): Outgoing {
+  state.seq = (state.seq ?? 0) + 1;
+  state.timerToken = `duel:${state.seq}`;
+  state.deadline = state.turnStartedAt + turnSeconds(state) * 1000;
+  return { type: 'schedule', delaySeconds: Math.max(1, Math.round((state.deadline - nowMs) / 1000)) + 1, token: state.timerToken };
+}
+
+function clearTimer(state: MatchState): void {
+  state.deadline = null;
+  state.timerToken = null;
+}
+
+/**
+ * Mensagens depois de uma escolha (ou de um tempo estourado). No meio da
+ * rodada vai só texto; ao fechar a rodada ou a partida, vai o campinho. Abre
+ * o prazo da próxima vez. Não salva: quem chama salva e grava o resultado.
+ */
+function duelAdvance(state: MatchState, mode: GameMode, lead: string, step: Step, nowMs: number): Outgoing[] {
+  if (step === 'same-round') return [text(`${lead}\n\n${turnPrompt(state)}`), scheduleTurn(state, nowMs)];
+  const image = { kind: 'pitch' as const, state: structuredClone(state) };
+  if (step === 'round-done') {
+    const head = isBlind(state) ? 'Placar escondido até o apito final.' : scoreLine(state, mode);
+    return [{ type: 'image', image, caption: `${lead}\n${head}` }, text(turnPrompt(state)), scheduleTurn(state, nowMs)];
+  }
+  clearTimer(state);
+  state.winner = leader(state, mode);
+  image.state.winner = state.winner;
+  const result =
+    state.winner === 'draw' ? '*Empate.* Ninguém leva essa.' : `🏆 *${state.players[state.winner]!.name}* venceu o duelo!`;
+  return [
+    {
+      type: 'image',
+      image,
+      caption: `${lead}\n${scoreLine(state, mode)}\n\n${result}\nMandem *iniciar jogo* para a revanche ou *ranking* para ver a tabela.`,
+    },
+  ];
+}
+
+/**
+ * Tempo da vez esgotado: a vez passa com o pior valor do tema. Três vezes
+ * seguidas do mesmo lado: derrota por W.O. (antes, 4 de cada 10 duelos
+ * ficavam pela metade porque o relógio só era cobrado com "tempo").
+ */
+export function duelTimeout(state: MatchState, mode: GameMode, nowMs: number): Outgoing[] {
+  const side = state.turn;
+  const late = state.players[side]!;
+  const misses = (state.misses ??= [0, 0]);
+  misses[side] += 1;
+  if (misses[side] >= DUEL_MAX_MISSES) {
+    clearTimer(state);
+    state.status = 'FINISHED';
+    state.winner = (1 - side) as Side;
+    return [
+      text(`⏱️ *${late.name}* ficou ${DUEL_MAX_MISSES} vezes seguidas sem jogar. Vitória de *${state.players[state.winner]!.name}* por W.O.\nMandem *iniciar jogo* para a revanche.`),
+    ];
+  }
+  const step = applyPick(state, side, { name: 'Tempo esgotado', key: `tempo-${state.round}-${side}`, value: mode.penalty }, nowMs);
+  const warn = misses[side] === DUEL_MAX_MISSES - 1 ? ` Mais uma e é W.O.` : '';
+  const lead = `⏱️ *${late.name}* estourou o tempo e ficou com o pior valor do tema nesta posição (*${formatNumber(mode.penalty)} ${mode.unit}*).${warn}`;
+  return duelAdvance(state, mode, lead, step, nowMs);
+}
+
+/** Cobrança automática do prazo do 1 x 1 (chamada pelo QStash). */
+async function handleDuelTick(match: Match, token: string | null, deps: EngineDeps, now: Date, force: boolean): Promise<Outgoing[]> {
+  const state = match.state;
+  if (state.status !== 'PLAYING') return [];
+  if (!force) {
+    if (!token || token !== state.timerToken) return []; // a vez já mudou
+    if (state.deadline && now.getTime() < state.deadline - 1500) return [];
+  }
+  const mode = getMode(state.modeId);
+  if (!mode) return [];
+  const out = duelTimeout(state, mode, now.getTime());
+  state.updatedAt = now.getTime();
+  if (!(await deps.store.saveMatch(match))) throw new ConflictError();
+  if (isFinished(state) && state.winner !== null) {
+    await deps.store.recordResult(match.groupJid, state.players as [MatchPlayer, MatchPlayer], state.winner);
+  }
+  return out;
 }
 
 function twistLabel(state: MatchState): string {
@@ -221,7 +312,10 @@ export async function handleTick(
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const session = await deps.store.getActiveMatch(groupJid);
-      if (!session || !isParty(session.state)) return [];
+      if (!session) return [];
+      if (!isParty(session.state)) {
+        return await handleDuelTick(session as Match, token, deps, (deps.now ?? (() => new Date()))(), force);
+      }
       const out = await handlePartyTick(
         session,
         token,
@@ -394,6 +488,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (norm === 'cancelar' || norm === 'desistir') {
     if (side === null) return [];
     state.status = 'CANCELLED';
+    clearTimer(state);
     if (state.players[1] && mode && state.picks.some((p) => p.some(Boolean))) {
       // Desistir com a bola rolando conta como derrota (W.O.).
       state.winner = (1 - side) as Side;
@@ -425,6 +520,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
         caption: `${lead}${label}${twistLabel(state)}. Bola rolando!`,
       },
       text(turnPrompt(state)),
+      scheduleTurn(state, nowMs),
     ]);
   };
 
@@ -454,6 +550,15 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
 
   if (state.status !== 'PLAYING' || !mode) return [];
 
+  // Prazo vencido sem o agendador ter chegado: cobra antes de qualquer coisa.
+  if (state.deadline && nowMs >= state.deadline + 2000) {
+    const out = await save(duelTimeout(state, mode, nowMs));
+    if (isFinished(state) && state.winner !== null) {
+      await store.recordResult(msg.groupJid, state.players as [MatchPlayer, MatchPlayer], state.winner);
+    }
+    return out;
+  }
+
   if (norm === 'placar') {
     const head = isBlind(state) ? 'Modo cego: os números aparecem no apito final.' : scoreLine(state, mode);
     return [{ type: 'image', image: { kind: 'pitch', state }, caption: `${head}\n\n${turnPrompt(state)}` }];
@@ -466,10 +571,11 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     if (elapsed < limit) {
       return [text(`Calma, *${state.players[state.turn]!.name}* ainda tem ${limit - elapsed}s.`)];
     }
-    const late = state.players[state.turn]!;
-    const step = applyPick(state, state.turn, { name: 'Tempo esgotado', key: `tempo-${state.round}-${state.turn}`, value: mode.penalty }, nowMs);
-    const lead = `*${late.name}* estourou o tempo e ficou com a pior nota possível nesta posição (*${formatNumber(mode.penalty)} ${mode.unit}*).`;
-    return advance(lead, step);
+    const out = await save(duelTimeout(state, mode, nowMs));
+    if (isFinished(state) && state.winner !== null) {
+      await store.recordResult(msg.groupJid, state.players as [MatchPlayer, MatchPlayer], state.winner);
+    }
+    return out;
   }
 
   // A partir daqui, só interessa a mensagem de um dos dois jogadores que pareça um nome.
@@ -525,40 +631,17 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return [text(`❌ Não tenho um dado confiável de ${mode.tagline.split(' · ')[0].toLowerCase()} para *${profile.name}*. Escolha outro. ${retry}`)];
   }
 
+  if (state.misses) state.misses[side] = 0;
   const step = applyPick(state, side, { name: profile.name, key, value, ...(typed !== key ? { aliases: [typed] } : {}) }, nowMs);
   const confirmed = isBlind(state)
     ? `✅ *${profile.name}* escalado. O número fica em segredo até o fim.`
     : `✅ *${profile.name}* — *${formatNumber(value)} ${mode.unit}*`;
   return advance(confirmed, step);
 
-  /**
-   * Responde a uma escolha. No meio da rodada vai só texto (rápido);
-   * ao fechar a rodada ou a partida, vai a imagem do campinho.
-   */
+  /** Responde a uma escolha: mensagens + prazo da próxima vez; no fim, grava o resultado. */
   async function advance(lead: string, step: Step): Promise<Outgoing[]> {
-    if (step === 'same-round') return save([text(`${lead}\n\n${turnPrompt(state)}`)]);
-    const image = { kind: 'pitch' as const, state: structuredClone(state) };
-    if (step === 'round-done') {
-      const head = isBlind(state) ? 'Placar escondido até o apito final.' : scoreLine(state, mode!);
-      return save([
-        { type: 'image', image, caption: `${lead}\n${head}` },
-        text(turnPrompt(state)),
-      ]);
-    }
-    state.winner = leader(state, mode!);
-    image.state.winner = state.winner;
-    const result =
-      state.winner === 'draw'
-        ? '*Empate.* Ninguém leva essa.'
-        : `🏆 *${state.players[state.winner]!.name}* venceu o duelo!`;
-    const saved = await save([
-      {
-        type: 'image',
-        image,
-        caption: `${lead}\n${scoreLine(state, mode!)}\n\n${result}\nMandem *iniciar jogo* para a revanche ou *ranking* para ver a tabela.`,
-      },
-    ]);
-    if (saved.length) {
+    const saved = await save(duelAdvance(state, mode!, lead, step, nowMs));
+    if (step === 'match-done' && saved.length && state.winner !== null) {
       await store.recordResult(msg.groupJid, state.players as [MatchPlayer, MatchPlayer], state.winner);
     }
     return saved;

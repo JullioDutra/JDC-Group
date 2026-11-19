@@ -21,6 +21,7 @@ export const GROUP_GAMES: Array<[command: string, what: string]> = [
   ['abrir fato ou fake', 'verdade ou mito?'],
   ['abrir carreira', 'de quem é a trajetória?'],
   ['abrir ponte', 'quem passou pelos 4 clubes'],
+  ['abrir leilão', 'monte o time com 100 moedas'],
 ];
 
 export const DUEL_COMMANDS: Array<[command: string, what: string]> = [

@@ -2,6 +2,12 @@
 
 18/11/2026. Junta o que foi entregue hoje, o diagnóstico com os números reais de uso e o plano das próximas fases.
 
+> **Atualização de 19/11/2026:** feitos os dois P0:
+> - **1 x 1:** prazo automático por jogada; 3 estouros seguidos = W.O.
+> - **Intruso:** 1 palpite por pessoa.
+>
+> Também entraram mais dados de 2026 (seção 6) e um modo novo, o **Leilão de Craques** (seção 7).
+
 ## 1. Onde estamos
 
 Números da página de saúde (`/api/health`, campo `partidas`), em 18/11, 15h UTC. É o primeiro levantamento com dados reais.
@@ -174,3 +180,47 @@ Números da página de saúde (`/api/health`, campo `partidas`), em 18/11, 15h U
 | Jogos com pelo menos 10 partidas | 5 de 22 | 12 de 22 |
 | Buscas resolvidas na base | 43% | ≥ 90% (depende da carga) |
 | Listas do Top 10 | 78 | 120 (com as geradas por clube, sem limite) |
+
+## 6. Mais dados de 2026 (19/11)
+
+| Área | O que entrou |
+|---|---|
+| Futebol brasileiro | Copa do Brasil 2025 (Corinthians tetra sobre o Vasco); Copa Intercontinental 2025 (PSG nos pênaltis sobre o Flamengo); estaduais de 2026 (Palmeiras, Flamengo, Cruzeiro, Grêmio); final da Sul-Americana 2026 (Atlético-MG x Boca, 21/11) |
+| Copa e Bola de Ouro | Os 4 primeiros da Copa de 2026 e o pódio da Bola de Ouro 2026 no Top 10 |
+| Outros esportes | Grand Slams de 2026 (Alcaraz, Sinner, Zverev, Rybakina); Super Bowl LX (Seahawks 29 x 13); NBA 2026 (Knicks, MVP Brunson); F1 2026 (Kimi Antonelli); ouro inédito do Brasil no inverno (Lucas Pinheiro Braathen, slalom gigante) |
+| Cultura | Oscar 2026 ("Uma Batalha Após a Outra"; Michael B. Jordan; "Guerreiras do K-pop"; "Valor Sentimental"); BBB 26 (Ana Paula Renault); Carnaval do Rio 2026 (Viradouro, por 0,1 ponto) |
+
+| Jogo | Novos itens |
+|---|---|
+| Quiz Relâmpago | +23 |
+| Fato ou Fake | +11 |
+| Chute Certo | +9 |
+| Linha do Tempo | +6 |
+| Top 10 | +2 listas; Copa do Brasil atualizada até 2025 |
+
+**Fontes:**
+- [Olympics.com, tênis 2026](https://www.olympics.com/pt/noticias/tenis-campeoes-cada-torneio-atp-wta-temporada-2026)
+- [COB, Braathen](https://www.cob.org.br/comunicacao/noticias/lucas-pinheiro-braathen-e-ouro-para-o-brasil-em-milao-cortina-2026)
+- [CBS, Super Bowl](https://www.cbssports.com/nfl/news/super-bowl-results-winners-mvps-history-full-list/)
+- [NBA.com, Finals MVP](https://www.nba.com/news/jalen-brunson-wins-bill-russell-trophy-as-2026-nba-finals-mvp)
+- [CNN Brasil, Oscar 2026](https://www.cnnbrasil.com.br/pop/cinema/oscar-2026-confira-a-lista-completa-de-vencedores/)
+- [Exame, BBB 26](https://exame.com/pop/quem-ganhou-o-big-brother-brasil-26-vencedora-faturou-maior-premio-da-historia-do-programa/)
+- [CNN Brasil, Carnaval 2026](https://www.cnnbrasil.com.br/entretenimento/carnaval/carnaval-2026-unidos-do-viradouro-e-campea-do-grupo-especial-do-rj/)
+- [CNN Brasil, Copa do Brasil 2025](https://www.cnnbrasil.com.br/esportes/futebol/copa-do-brasil/tetracampeao-corinthians-supera-o-vasco-e-leva-o-titulo-da-copa-do-brasil/)
+- [Olympics.com, Intercontinental](https://www.olympics.com/en/news/2025-fifa-intercontinental-cup-psg-beat-flamengo)
+- [CNN Brasil, estaduais](https://www.cnnbrasil.com.br/esportes/futebol/campeonatos-estaduais-conhecem-seus-campeoes-veja-resumo-das-finais/)
+- [F1Mania, F1 2026](https://www.f1mania.net/f1/confira-a-classificacao-do-campeonato-da-f1-2026-apos-o-gp-do-brasil/)
+- [Gazeta Esportiva, Sul-Americana](https://www.gazetaesportiva.com/campeonatos/copa-sulamericana/atletico-mg-x-boca-juniors-final-copa-sul-americana-2026/)
+
+**Ficou de fora por falta de confirmação:** a campeã de Wimbledon feminino e o resultado da final da Sul-Americana (21/11). Ela entra no calendário de atualização junto com a Libertadores (28/11) e a Copa do Brasil (06/12).
+
+## 7. Modo novo: Leilão de Craques (`abrir leilão`)
+
+Um jogo de mercado, diferente de todos os de pergunta.
+
+- **Moedas e time:** cada um (2 a 8 pessoas) começa com 100 moedas e monta um time de 4.
+- **Lotes:** o bot leiloa craques da base, um por vez, com 30 s por lote. Os lotes têm N + 1 craques de cada posição (N = número de pessoas), então todo mundo consegue fechar o time.
+- **Lance:** mande só o número ("15"). Ele precisa cobrir o anterior, e você guarda 1 moeda para cada vaga que ainda falta. O bot reage com 💰.
+- **Venda:** no fim do tempo, quem deu o maior lance leva o craque. O anfitrião pode bater o martelo antes com *pular*.
+- **Overall escondido:** cada craque tem um overall de 60 a 99, que mede a fama dele no mundo (número de Wikipédias com artigo). O número fica escondido até o fim: o jogo é saber quem vale mais.
+- **Resultado:** soma do overall + 10 para quem tiver GOL, DEF, MEI e ATA. No empate, vence quem gastou menos.

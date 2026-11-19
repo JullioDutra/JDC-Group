@@ -1,19 +1,18 @@
 import { firstName, normalize } from '../game/text';
 import type { IncomingMessage, IntrusoParty, Outgoing, PartyPlayer } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, answerMatches, pendingResults, schedule, text, warnOnce, pauseBeforeNext, freshFirst } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, answerMatches, award, pendingResults, react, schedule, text, pauseBeforeNext, freshFirst } from './common';
 import { INTRUSO_SETS, getIntrusoSet } from './content/intruso';
 
 /**
- * Intruso: o bot mostra 5 nomes (A a E). Os jogadores marcam X, um de cada
- * vez, em quem eles acham que PERTENCE ao grupo. O X aparece na hora, mas
- * sem dizer se está certo. Quando sobra um nome (o palpite de intruso do
- * grupo) ou o tempo acaba, o bot revela cada X como certo ou errado e a
- * justificativa.
+ * Intruso (regra de 18/11/2026): o bot mostra 5 nomes (A a E); 4 têm algo em
+ * comum e 1 é o intruso. Cada pessoa dá UM palpite: a letra (ou o nome) do
+ * intruso. Acertou: +100; o primeiro a acertar ganha +50. A rodada fecha
+ * quando todos palpitarem ou o tempo acabar, e o bot explica o porquê.
  *
- * Pontos: X em quem pertence = +50; X no intruso = -50.
- * Se o nome que sobrou for mesmo o intruso, todos que marcaram certo ganham +30.
+ * A regra antiga (marcar X, um de cada vez, em quem pertence) era a mais
+ * complicada do repertório: nenhuma das 3 primeiras partidas terminou.
  */
-export const INTRUSO_POINTS = { goodMark: 50, badMark: -50, groupBonus: 30 };
+export const INTRUSO_POINTS = { hit: 100, firstBonus: 50 };
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
@@ -33,9 +32,9 @@ export function newIntruso(
 }
 
 export const INTRUSO_RULES = [
-  'Marque com X quem PERTENCE ao grupo: mande a letra (A a E) ou o nome.',
-  'Ninguém marca duas vezes seguidas. O nome que sobrar é o palpite de intruso.',
-  `No fim: X certo +${INTRUSO_POINTS.goodMark}, X no intruso ${INTRUSO_POINTS.badMark}.`,
+  'Cada um dá 1 palpite por rodada: a letra (A a E) ou o nome do intruso.',
+  `Acertou: +${INTRUSO_POINTS.hit}. O primeiro a acertar ganha +${INTRUSO_POINTS.firstBonus}.`,
+  'A rodada fecha quando todos palpitarem ou o tempo acabar. Aí o bot explica o porquê.',
 ];
 
 export function startIntruso(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
@@ -64,8 +63,7 @@ export function openIntrusoRound(state: IntrusoParty, deps: PartyDeps): Outgoing
       image: { kind: 'intrusoBoard', state: structuredClone(state), reason: '', reveal: false },
       caption:
         `*Rodada ${state.round + 1}/${state.totalRounds} · Quem é o intruso?*\n` +
-        'Marquem com X quem *pertence* ao grupo: mande a letra (A a E).\n' +
-        'Ninguém marca duas vezes seguidas. O que sobrar é o palpite de intruso.',
+        `4 nomes têm algo em comum. Mande a *letra* do que não pertence: 1 palpite por pessoa. ${PARTY_CONFIG.intruso.seconds}s.`,
     },
     schedule(state, PARTY_CONFIG.intruso.seconds, deps.now.getTime(), 'in'),
   ];
@@ -80,16 +78,6 @@ export function parseIntrusoPick(state: IntrusoParty, raw: string): number {
   return state.options.findIndex((o) => answerMatches([o], norm));
 }
 
-/** Quadro em texto, com X e risco (~nome~) nos marcados. */
-function boardText(state: IntrusoParty): string {
-  return state.options
-    .map((o, i) => {
-      const mark = state.marks.find((m) => m.index === i);
-      return mark ? `${LETTERS[i]}) ~${o}~  X (${firstName(mark.name)})` : `${LETTERS[i]}) ${o}`;
-    })
-    .join('\n');
-}
-
 export async function intrusoAnswer(
   state: IntrusoParty,
   player: PartyPlayer,
@@ -99,56 +87,40 @@ export async function intrusoAnswer(
 ): Promise<Outgoing[]> {
   const index = parseIntrusoPick(state, msg.text);
   if (index < 0 || index >= state.options.length) return [];
-  const who = firstName(player.name);
-  if (state.lastJid === player.jid) {
-    return warnOnce(state, player.jid, `*${who}*, espere outra pessoa marcar antes do seu próximo X.`, save);
-  }
-  if (state.marks.some((m) => m.index === index)) {
-    return [text(`${LETTERS[index]}) ${state.options[index]} já está marcado. Escolha outro.`)];
-  }
+  if (state.marks.some((m) => m.jid === player.jid)) return []; // 1 palpite por rodada
   state.marks.push({ index, jid: player.jid, name: player.name });
-  state.lastJid = player.jid;
-  state.warned = [];
   player.missed = 0;
-
-  if (state.marks.length >= state.options.length - 1) return save(revealRound(state, deps, ''));
-  return save([text(`*${who}* marcou X em *${LETTERS[index]}) ${state.options[index]}*.\n\n${boardText(state)}`)]);
+  // Confirma que o palpite entrou, sem dizer se está certo.
+  const out: Outgoing[] = [react(msg, '🔒')];
+  if (activePlayers(state).every((p) => state.marks.some((m) => m.jid === p.jid))) {
+    return save([...out, ...revealRound(state, deps, 'Todos palpitaram.')]);
+  }
+  return save(out);
 }
 
 export function revealRound(state: IntrusoParty, deps: PartyDeps, reason: string): Outgoing[] {
   const set = getIntrusoSet(state.order[state.round])!;
-  const byPlayer = new Map<string, number>();
-  for (const m of state.marks) {
-    const delta = m.index === state.intruderIndex ? INTRUSO_POINTS.badMark : INTRUSO_POINTS.goodMark;
-    byPlayer.set(m.jid, (byPlayer.get(m.jid) ?? 0) + delta);
-  }
-  const remaining = state.options.map((_, i) => i).filter((i) => !state.marks.some((m) => m.index === i));
-  const groupRight = remaining.length === 1 && remaining[0] === state.intruderIndex;
-  if (groupRight) {
-    for (const m of state.marks) byPlayer.set(m.jid, (byPlayer.get(m.jid) ?? 0) + INTRUSO_POINTS.groupBonus);
-  }
-  for (const [jid, delta] of byPlayer) {
-    const p = state.players.find((x) => x.jid === jid);
-    if (!p) continue;
-    p.score += delta;
-    if (delta > 0) {
-      p.hits += 1;
-      p.lastHitAt = deps.now.getTime();
-    }
-  }
-  for (const p of state.players) if (!byPlayer.has(p.jid) && p.missed < 99) p.missed += 1;
+  const nowMs = deps.now.getTime();
+  const hits = state.marks.filter((m) => m.index === state.intruderIndex);
+  const lines: string[] = [];
+  hits.forEach((m, i) => {
+    const p = state.players.find((x) => x.jid === m.jid);
+    if (!p) return;
+    const points = INTRUSO_POINTS.hit + (i === 0 ? INTRUSO_POINTS.firstBonus : 0);
+    award(p, points, nowMs);
+    lines.push(`${firstName(p.name)} +${points}${i === 0 ? ' (primeiro)' : ''}`);
+  });
+  for (const p of state.players) if (!state.marks.some((m) => m.jid === p.jid) && p.missed < 99) p.missed += 1;
+  const misses = state.marks.filter((m) => m.index !== state.intruderIndex).map((m) => `${firstName(m.name)} (${LETTERS[m.index]})`);
 
   const intruder = state.options[state.intruderIndex];
-  const caught = state.marks.find((m) => m.index === state.intruderIndex);
-  const verdict = groupRight
-    ? `Certo! Sobrou *${intruder}*, e ele era o intruso.`
-    : caught
-      ? `Errado: o intruso era *${intruder}*, e ${firstName(caught.name)} marcou X nele.`
-      : `Tempo esgotado. O intruso era *${intruder}*.`;
-  const points = [...byPlayer.entries()]
-    .map(([jid, d]) => `${firstName(state.players.find((p) => p.jid === jid)?.name ?? '')} ${d > 0 ? '+' : ''}${d}`)
-    .join(' · ');
-  const caption = [reason, verdict, `Por quê: ${set.reason}`, points ? `Pontos: ${points}` : ''].filter(Boolean).join('\n');
+  const caption = [
+    reason,
+    `O intruso era *${LETTERS[state.intruderIndex]}) ${intruder}*.`,
+    `Por quê: ${set.reason}`,
+    lines.length ? `Acertaram: ${lines.join(' · ')}` : 'Ninguém acertou.',
+    misses.length ? `Erraram: ${misses.join(', ')}` : '',
+  ].filter(Boolean).join('\n');
   const reveal: Outgoing = {
     type: 'image',
     image: { kind: 'intrusoBoard', state: structuredClone(state), reason: set.reason, reveal: true },
@@ -160,7 +132,7 @@ export function revealRound(state: IntrusoParty, deps: PartyDeps, reason: string
 }
 
 export function intrusoTimeout(state: IntrusoParty, deps: PartyDeps): Outgoing[] {
-  return revealRound(state, deps, '');
+  return revealRound(state, deps, 'Tempo esgotado.');
 }
 
 export function finishIntruso(state: IntrusoParty, reason = ''): Outgoing[] {

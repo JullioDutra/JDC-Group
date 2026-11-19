@@ -107,6 +107,7 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   // Jogos gerados da base de jogadores.
   if (/^(abrir|jogar) (a )?carreira$/.test(norm)) return { game: 'carreira', rest: '' };
   if (/^(abrir|jogar) (a )?ponte$/.test(norm)) return { game: 'ponte', rest: '' };
+  if (/^(abrir|jogar) (o )?leilao( de craques)?$/.test(norm)) return { game: 'leilao', rest: '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };
   if (/^(abrir|jogar|desafio) (os )?(penaltis|penalti|disputa de penaltis)$/.test(norm)) return { game: 'penaltis', rest: '' };
   const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time((?: (?:ia|votacao|grupo|dificil))*)$/);

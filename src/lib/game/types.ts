@@ -119,6 +119,12 @@ export interface MatchState {
   winner: Side | 'draw' | null;
   /** turnStartedAt da vez em que já avisamos "não é sua vez" (1 aviso por vez). */
   nudgedAt?: number;
+  /** Prazo automático da vez (QStash): fim da vez e o token do agendamento. */
+  deadline?: number | null;
+  timerToken?: string | null;
+  seq?: number;
+  /** Vezes seguidas que cada lado estourou o tempo (3 = derrota por W.O.). */
+  misses?: [number, number];
 }
 
 export interface Match {
@@ -151,7 +157,8 @@ export type PartyGame =
   | 'carreira'
   | 'ponte'
   | 'grade'
-  | 'penaltis';
+  | 'penaltis'
+  | 'leilao';
 
 export interface PartyPlayer {
   jid: string;
@@ -463,6 +470,19 @@ export interface PenaltisParty extends PartyBase {
   round: number;
 }
 
+/** Leilão de Craques: orçamento, lances no chat, overall escondido até o fim. */
+export interface LeilaoParty extends PartyBase {
+  game: 'leilao';
+  /** Lote atual (índice em lots). */
+  round: number;
+  totalRounds: number;
+  lots: Array<{ id: string; name: string; positions: Position[]; nationality: string | null; path: string[]; overall: number }>;
+  budget: Record<string, number>;
+  squads: Record<string, Array<{ name: string; positions: Position[]; overall: number; price: number }>>;
+  /** Maior lance do lote atual. */
+  bid: { jid: string; name: string; value: number } | null;
+}
+
 export type PartyState =
   | EscalacaoParty
   | Top10Party
@@ -479,7 +499,8 @@ export type PartyState =
   | CarreiraParty
   | PonteParty
   | GradeParty
-  | PenaltisParty;
+  | PenaltisParty
+  | LeilaoParty;
 
 export type SessionState = MatchState | PartyState;
 

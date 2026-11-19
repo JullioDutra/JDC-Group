@@ -103,6 +103,18 @@ export const FACTS: FactCard[] = [
   f('ff-cdb-jogo-unico', 'futebol', true, 'A final da Copa do Brasil de 2026 é em jogo único.', 'É a primeira vez: Palmeiras x Grêmio, em Brasília, em 6 de dezembro.'),
   f('ff-psg-bi', 'futebol', true, 'O PSG ganhou a Champions duas vezes seguidas, em 2025 e 2026.', 'Em 2025 bateu a Inter por 5 a 0; em 2026, o Arsenal nos pênaltis.'),
   f('ff-lula-4', 'politica', true, 'Lula foi eleito presidente pela quarta vez em 2026.', 'Venceu em 2002, 2006, 2022 e 2026, este no 2º turno contra Flávio Bolsonaro, com 51,79% dos votos válidos.'),
+  // Mais 2026 (pesquisa de 19/11/2026)
+  f('ff-braathen', 'geral', true, 'O Brasil ganhou a primeira medalha olímpica de inverno em 2026, e foi de ouro.', 'Lucas Pinheiro Braathen venceu o slalom gigante em Milão-Cortina, à frente de Marco Odermatt.'),
+  f('ff-celtics-2026', 'geral', false, 'O Boston Celtics ganhou a NBA em 2026.', 'Foram os New York Knicks, que bateram o Spurs por 4 a 1 e acabaram com 53 anos de jejum.'),
+  f('ff-agente-secreto', 'geral', false, '"O Agente Secreto" ganhou o Oscar de filme internacional em 2026.', 'Foi indicado, mas quem ganhou foi "Valor Sentimental", da Noruega.'),
+  f('ff-bbb26-premio', 'geral', true, 'A campeã do BBB 26 recebeu o maior prêmio da história do programa.', 'Ana Paula Renault levou R$ 5,7 milhões, com 75,94% dos votos.'),
+  f('ff-viradouro', 'geral', true, 'A Viradouro ganhou o Carnaval do Rio de 2026 por apenas 0,1 ponto.', 'Fez 270 pontos, contra 269,9 da Beija-Flor.'),
+  f('ff-alcaraz-2026', 'geral', true, 'Alcaraz venceu Djokovic na final do Australian Open de 2026.', 'Com isso completou o Grand Slam de carreira, o mais jovem a conseguir.'),
+  f('ff-patriots-2026', 'geral', false, 'O New England Patriots ganhou o Super Bowl de 2026.', 'Perdeu para o Seattle Seahawks por 29 a 13. O MVP foi o running back Kenneth Walker III.'),
+  f('ff-verstappen-2026', 'geral', false, 'Max Verstappen foi campeão da Fórmula 1 em 2026.', 'O campeão foi o italiano Kimi Antonelli, da Mercedes.'),
+  f('ff-corinthians-cdb-2025', 'futebol', true, 'O Corinthians ganhou a Copa do Brasil de 2025 em cima do Vasco.', '0 a 0 em casa e 2 a 1 no Maracanã: o quarto título do clube.'),
+  f('ff-psg-intercontinental', 'futebol', true, 'O PSG ganhou a Copa Intercontinental de 2025 contra o Flamengo.', '1 a 1 e vitória nos pênaltis, em Doha. O goleiro Safonov defendeu quatro cobranças.'),
+  f('ff-carioca-2026', 'futebol', false, 'O Fluminense ganhou o Carioca de 2026.', 'O Flamengo foi campeão nos pênaltis (5 a 4), o seu 40º título estadual.'),
 ];
 
 export function getFact(id: string): FactCard | undefined {

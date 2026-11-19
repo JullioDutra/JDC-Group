@@ -57,9 +57,9 @@ export function imageAsText(spec: ImageSpec): string | null {
     case 'intrusoBoard':
       return spec.state.options
         .map((name, i) => {
-          const mark = spec.state.marks.find((m) => m.index === i);
+          const votes = spec.reveal ? spec.state.marks.filter((m) => m.index === i).map((m) => firstName(m.name)) : [];
           const tag = spec.reveal && i === spec.state.intruderIndex ? ' ← intruso' : '';
-          return `*${LETTERS[i]}* ${name}${mark ? ` (X de ${firstName(mark.name)})` : ''}${tag}`;
+          return `*${LETTERS[i]}* ${name}${votes.length ? ` (${votes.join(', ')})` : ''}${tag}`;
         })
         .join('\n');
     case 'draftBoard':
