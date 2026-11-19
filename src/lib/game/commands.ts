@@ -59,6 +59,6 @@ export function helpText(gameName: string): string {
     '',
     '*Jogadores:* *ficha <nome>* mostra a ficha e os números · admin: *corrigir <nome> <dado> <valor>*, *nome famoso <apelido> = <nome>*',
     '*Geral:* *regras* · *modos* · *ranking* (da temporada) · *campeões* (campeão de cada temporada) · *temas do anagrama*',
-    '*Admin:* *virada de temporada* (imagem com os melhores e ranking zerado) · *resetar top 100* (libera mais um Top 100 hoje) · *desativar jogos*',
+    '*Admin:* *virada de temporada* (imagem com os melhores e ranking zerado) · *resetar top 100* (libera mais um Top 100 hoje) · *bloquear próxima @pessoa* / *liberar próxima @pessoa* / *bloqueados* · *desativar jogos*',
   ].join('\n');
 }

@@ -57,6 +57,7 @@ import { SURVIVOR_LISTS } from './content/sobrevivente';
 import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
 import { anagramThemesText, newAnagrama } from './anagrama';
+import { isNextBlocked } from '../game/blocks';
 import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
 import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
@@ -460,6 +461,11 @@ export async function handlePartyMessage(
   }
 
   if (state.status !== 'PLAYING' || !player) return [];
+
+  // "próxima" de quem o admin bloqueou não vale (avisa uma vez por rodada).
+  if (NEXT_WORDS.includes(norm) && (await isNextBlocked(deps.store, msg))) {
+    return warnOnce(state, msg.senderJid, `*${firstName(msg.senderName)}*, o admin tirou o seu *próxima*. Espere o tempo ou outra pessoa.`, save);
+  }
 
   // Pausa entre rodadas: só "próxima" (de quem joga) adianta; o resto é ignorado.
   if (state.intermission) {

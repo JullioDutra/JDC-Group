@@ -109,3 +109,30 @@ test('contexto da jogada vai para a IA; temas regionais sorteiam clubes da regi�
     assert.ok(rs.every((r) => r.kind === 'club' && br.has(r.teamId!)), rs.map((r) => getTeam(r.teamId)?.name).join(', '));
   }
 });
+
+test('admin bloqueia o "próxima" de alguém (por @, resposta ou número); só o admin; liberar devolve', async () => {
+  const store = new MemoryStore();
+  let id = 0;
+  const deps = () => ({ store, lookup: createLookup(store, lookupDemo), rng: () => 0, now: () => new Date('2026-11-17T12:00:00Z'), canManageGroup: (jid: string) => jid === '5562000000001@s.whatsapp.net' });
+  const ids: Record<string, string> = { Ana: '5562000000001@s.whatsapp.net', Bia: '5562000000002@s.whatsapp.net', Caio: '5562000000003@s.whatsapp.net' };
+  const say = (who: string, text: string, extra: Partial<{ mentions: string[]; quotedParticipant: string }> = {}): Promise<Outgoing[]> =>
+    handleMessage({ id: `b${++id}`, groupJid: 'bloq@g.us', senderJid: ids[who], senderName: who, text, ...extra }, deps());
+  await say('Ana', 'ativar jogos');
+  assert.match(asText(await say('Bia', 'bloquear próxima @Caio', { mentions: [ids.Caio] })), /Só o admin/);
+  assert.match(asText(await say('Ana', 'bloquear próxima')), /Marque a pessoa/);
+  assert.match(asText(await say('Ana', 'bloquear próxima @Bia', { mentions: [ids.Bia] })), /Próxima\* bloqueado para: @5562000000002/);
+  assert.match(asText(await say('Ana', 'bloqueados')), /Sem \*próxima\*: @5562000000002/);
+  // Na partida: o "próxima" da Bia não vale; o da Ana vale.
+  await say('Ana', 'abrir relampago futebol');
+  await say('Bia', 'entrar');
+  await say('Ana', 'começar');
+  const s = (await store.getActiveMatch('bloq@g.us'))!.state as QuizParty;
+  assert.match(asText(await say('Bia', getCard(s.order[0])!.answer)), /Próxima rodada em/);
+  assert.match(asText(await say('Bia', 'próxima')), /o admin tirou o seu \*próxima\*/);
+  assert.deepEqual(await say('Bia', 'próxima'), [], 'avisa uma vez só');
+  assert.match(asText(await say('Ana', 'próxima')), /Rodada 2\/10/);
+  // Liberar: por resposta à mensagem da Bia, ou pelo número.
+  assert.match(asText(await say('Ana', 'liberar próxima', { quotedParticipant: ids.Bia })), /liberado de novo/);
+  assert.match(asText(await say('Ana', 'bloqueados')), /Ninguém está bloqueado/);
+  assert.match(asText(await say('Ana', 'bloquear proxima 5562000000003')), /bloqueado para: @5562000000003/);
+});

@@ -584,6 +584,10 @@ export interface IncomingMessage {
   keyParticipant?: string;
   senderName: string;
   text: string;
+  /** Quem foi marcado com @ na mensagem (ids do WhatsApp). */
+  mentions?: string[];
+  /** Autor da mensagem respondida (quando a mensagem é uma resposta). */
+  quotedParticipant?: string;
 }
 
 /** O que o motor quer mandar de volta para o grupo. */

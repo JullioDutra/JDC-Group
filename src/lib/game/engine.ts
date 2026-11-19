@@ -14,6 +14,7 @@ import { anagramThemesText } from '../party/anagrama';
 import { playedTodayKey, resetTodayKey } from '../party/top100';
 import { dayKey } from '../party/content/top100';
 import { championsText, seasonTurnover, shortDay } from './season';
+import { NEXT_BLOCK_KIND, blockedNames, targetsOf } from './blocks';
 import {
   IncomingMessage,
   Match,
@@ -395,6 +396,31 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (/^(virada de temporada|virar (a )?temporada|fim de temporada|fechar (a )?temporada|encerrar (a )?temporada|nova temporada)$/.test(norm)) {
     if (!manager) return [text('Só o admin do bot faz a virada de temporada.')];
     return seasonTurnover(store, msg.groupJid, msg.groupName, now);
+  }
+  // Bloqueio do "próxima": o admin marca (@), responde a mensagem da pessoa ou digita o número.
+  const nextCmd = norm.match(/^(bloquear|tirar|proibir|desativar|liberar|desbloquear|devolver|ativar) (o |a )?(proxima|proximo)\b/);
+  if (nextCmd) {
+    if (!manager) return [text('Só o admin do bot mexe em quem pode usar o *próxima*.')];
+    const targets = targetsOf(msg);
+    if (!targets.length) {
+      return [text('Marque a pessoa (@), responda a uma mensagem dela ou digite o número. Ex.: *bloquear próxima @fulano* · *liberar próxima @fulano*.')];
+    }
+    const block = ['bloquear', 'tirar', 'proibir', 'desativar'].includes(nextCmd[1]);
+    if (block) await store.markSeen(msg.groupJid, NEXT_BLOCK_KIND, targets);
+    else await store.unmarkSeen(msg.groupJid, NEXT_BLOCK_KIND, targets);
+    const names = (await blockedNames(store, msg.groupJid, targets)).join(', ');
+    return [
+      text(
+        block
+          ? `🚫 *Próxima* bloqueado para: ${names}. Só o admin libera (*liberar próxima @pessoa*).`
+          : `✅ *Próxima* liberado de novo para: ${names}.`,
+      ),
+    ];
+  }
+  if (/^(bloqueados|quem nao pode (usar )?(o |a )?proxima|sem proxima|bloqueados (da |do )?proxima)$/.test(norm)) {
+    const blocked = await store.getSeen(msg.groupJid, NEXT_BLOCK_KIND);
+    if (!blocked.length) return [text('Ninguém está bloqueado: todo mundo pode usar o *próxima*.')];
+    return [text(`🚫 Sem *próxima*: ${(await blockedNames(store, msg.groupJid, blocked)).join(', ')}.`)];
   }
   if (/^(resetar|liberar|zerar|reabrir|reset) (o )?(top ?)?100( do dia)?$/.test(norm)) {
     if (!manager) return [text('Só o admin do bot libera o Top 100 de novo.')];

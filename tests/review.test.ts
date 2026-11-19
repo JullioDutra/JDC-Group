@@ -120,6 +120,13 @@ test('Evolution: filtra instância, lê data.participant, mensagem temporária e
   });
   assert.equal(evolution.parseWebhook(msg({ instance: 'bot-pessoal' }, { participant: '5511@s.whatsapp.net' })), null);
   assert.equal(evolution.parseWebhook(msg({}, { participant: '5511@s.whatsapp.net' }))?.senderJid, '5511@s.whatsapp.net');
+  // Marcação (@) e resposta a uma mensagem chegam no contextInfo.
+  const tagged = evolution.parseWebhook(msg({}, {
+    participant: '5511@s.whatsapp.net',
+    message: { extendedTextMessage: { text: 'bloquear próxima @5522', contextInfo: { mentionedJid: ['5522@s.whatsapp.net'], participant: '5533@s.whatsapp.net' } } },
+  }));
+  assert.deepEqual(tagged?.mentions, ['5522@s.whatsapp.net']);
+  assert.equal(tagged?.quotedParticipant, '5533@s.whatsapp.net');
   const lid = evolution.parseWebhook(msg({}, {
     key: { remoteJid: '123@g.us', fromMe: false, id: 'X2', participant: '999@lid', participantAlt: '5511:3@s.whatsapp.net' },
   }));

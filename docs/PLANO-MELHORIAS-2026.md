@@ -450,3 +450,25 @@ O rodízio alterna futebol, música e geral, para dois dias seguidos não caíre
 - virada só pelo admin: campeão, destaques, ranking zerado, histórico em *campeões* e ranking da temporada nova.
 
 A imagem foi conferida com 2, 5 e 10+ jogadores.
+
+## 15. Admin: bloquear o "próxima" de algumas pessoas (19/11)
+
+**Pedido:** o admin pode tirar de algumas pessoas o poder de usar o *próxima*.
+
+**Como ficou (só quem está em ADMIN_NUMBERS):**
+- **Bloquear:** `bloquear próxima @pessoa` (também valem *tirar* e *proibir*). Para apontar a pessoa, o admin pode:
+  - marcar com @;
+  - responder a uma mensagem dela com o comando;
+  - digitar o número. Use o número se a marcação não funcionar, porque o WhatsApp às vezes manda o @ com outro id.
+- **Liberar:** `liberar próxima @pessoa` (do mesmo jeito).
+- **Ver a lista:** `bloqueados` mostra quem está sem *próxima*, com o nome do ranking ou o número.
+- **Na partida:** o *próxima* de quem está bloqueado não vale, nem para adiantar a pausa nem para pular a rodada. O bot avisa uma vez por rodada ("o admin tirou o seu próxima"). Os outros jogadores seguem normais.
+- **Onde fica guardado:** no histórico do grupo (`group_seen`, tipo `admin:sem-proxima`), com os dígitos do id, porque são eles que batem entre o número e o @lid.
+- O bot agora lê as marcações (@) e o autor da mensagem respondida (`contextInfo` da Evolution).
+
+**Planejado x entregue:** tudo entregue. Testes novos:
+- leitura do @ e da resposta no webhook;
+- só o admin bloqueia;
+- bloqueio por @, por resposta e por número;
+- *próxima* bloqueado na partida (avisa uma vez) e o de outra pessoa funcionando;
+- liberar e listar.

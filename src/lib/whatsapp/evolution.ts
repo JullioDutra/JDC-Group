@@ -9,7 +9,8 @@ import { getStore, hasDatabase } from '../store';
 
 interface TextContent {
   conversation?: string;
-  extendedTextMessage?: { text?: string };
+  /** contextInfo: quem foi marcado (@) e de quem é a mensagem respondida. */
+  extendedTextMessage?: { text?: string; contextInfo?: { mentionedJid?: string[]; participant?: string } };
   /** Grupos com mensagens temporárias embrulham o conteúdo aqui. */
   ephemeralMessage?: { message?: TextContent };
 }
@@ -52,6 +53,14 @@ function textOf(message: TextContent | undefined, depth = 0): string | undefined
   );
 }
 
+/** Marcações (@) e o autor da mensagem respondida, se houver. */
+function contextOf(message: TextContent | undefined, depth = 0): { mentions: string[]; quoted?: string } {
+  if (!message || depth > 2) return { mentions: [] };
+  const ctx = message.extendedTextMessage?.contextInfo;
+  if (ctx) return { mentions: (ctx.mentionedJid ?? []).filter(Boolean), quoted: ctx.participant || undefined };
+  return contextOf(message.ephemeralMessage?.message, depth + 1);
+}
+
 /** Prefere o JID de telefone (@s.whatsapp.net) ao @lid, que muda entre versões. */
 function pickSender(candidates: Array<string | undefined>): string | undefined {
   const list = candidates.filter((c): c is string => Boolean(c));
@@ -86,6 +95,9 @@ export const evolution: WhatsAppProvider = {
       senderName: payload.data?.pushName?.trim() || 'Jogador',
       text,
     };
+    const ctx = contextOf(payload.data?.message);
+    if (ctx.mentions.length) message.mentions = ctx.mentions;
+    if (ctx.quoted) message.quotedParticipant = ctx.quoted;
     return message;
   },
 
