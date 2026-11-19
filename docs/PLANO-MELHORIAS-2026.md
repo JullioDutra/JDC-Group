@@ -472,3 +472,19 @@ A imagem foi conferida com 2, 5 e 10+ jogadores.
 - bloqueio por @, por resposta e por número;
 - *próxima* bloqueado na partida (avisa uma vez) e o de outra pessoa funcionando;
 - liberar e listar.
+
+## 16. Correções: times futuros nas imagens e Leilão com 2 DEF e 2 MEI (19/11)
+
+**Pedido:**
+1. Nos jogos de soma de valores, a imagem mostrava o time das próximas rodadas: na rodada 3 já aparecia que a 4 era Atlético-MG. O time só pode aparecer quando a rodada abre.
+2. No Leilão, trocar para 2 defensores e 2 meias.
+
+**Causa e correção:**
+- **Escalação em Grupo:** a tabela mostrava no cabeçalho o clube ou seleção de todas as 6 rodadas desde o início. Agora mostra só das rodadas já abertas; as próximas ficam em branco. No fim da partida aparece tudo.
+- **1x1:** o campinho também mostrava os times de todas as rodadas ao lado das posições. Mesma correção.
+- **Leilão:** o time agora é de 6: 1 GOL, 2 DEF, 2 MEI e 1 ATA. Tem lotes de sobra em cada posição (jogadores x vagas + 1). Quem já completou a posição não dá lance (ex.: "você já tem 2 defensores"). O lance máximo guarda 1 moeda para cada vaga que falta. A imagem mostra as 6 vagas por time e cabe até com 8 técnicos.
+
+**Planejado x entregue:** tudo entregue. Testes novos:
+- a imagem da rodada 3 não mostra o time da 4, nem na Escalação em Grupo nem no 1x1;
+- o Leilão recusa lance em posição completa;
+- os times respeitam 1/2/2/1.

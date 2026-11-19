@@ -66,10 +66,10 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     rules: ['O bot mostra as letras embaralhadas e o tema.', 'Desembaralhe: o primeiro que acertar leva 100 (60 depois da dica).', 'Tema: abrir anagrama capitais, clubes, filmes... (temas do anagrama).'],
   },
   leilao: {
-    subtitle: '100 moedas · 1 GOL, 1 DEF, 1 MEI, 1 ATA',
+    subtitle: '100 moedas · 1 GOL, 2 DEF, 2 MEI, 1 ATA',
     rules: [
       'O bot leiloa craques; para dar lance, mande só o número.',
-      'Um por posição: quem já tem goleiro não dá lance em outro.',
+      'Posição completa (ex.: 2 defensores) não dá lance em outro dela.',
       'Anfitrião escolhe o modo: *overall* (maior soma) ou *votação* (o grupo vota).',
     ],
   },
@@ -227,7 +227,9 @@ export function partyTable(state: EscalacaoParty): ReactElement {
     { alignItems: 'center', height: 64, padding: '0 16px' },
     txt('', { width: nameW }),
     ...SLOTS.map((_, i) => {
-      const team = getTeam(state.restrictions[i]?.teamId);
+      // O time de cada rodada só aparece quando ela abre (nada de adiantar as próximas).
+      const revealed = finished || i <= state.round;
+      const team = revealed ? getTeam(state.restrictions[i]?.teamId) : undefined;
       const current = !finished && i === state.round;
       return box(
         { width: cellW, flexDirection: 'column', alignItems: 'center' },

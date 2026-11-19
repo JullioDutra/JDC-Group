@@ -6,7 +6,7 @@ import { handleMessage, handleTick } from '../src/lib/game/engine';
 import type { LeilaoParty, MatchState, Outgoing } from '../src/lib/game/types';
 import type { PlayerRecord } from '../src/lib/players/types';
 import { parsePartyStart } from '../src/lib/party/engine';
-import { leilaoEligible, leilaoModeOf, maxBid, overallOf, parseBid, teamScore } from '../src/lib/party/leilao';
+import { LEILAO_SLOTS, leilaoEligible, leilaoModeOf, maxBid, overallOf, parseBid, teamScore } from '../src/lib/party/leilao';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
 
@@ -94,16 +94,20 @@ test('Leilão: overall pela fama, lance pelo número, limite de saldo e time com
   ];
   assert.equal(teamScore(squad).total, 160);
   const st = { budget: { a: 100 }, squads: { a: [] } } as unknown as LeilaoParty;
-  assert.equal(maxBid(st, 'a'), 97, 'guarda 1 moeda para cada uma das outras 3 vagas');
+  assert.equal(maxBid(st, 'a'), 95, 'guarda 1 moeda para cada uma das outras 5 vagas');
 });
 
-/** Monta a base do leilão (4 craques por posição) e devolve as funções da partida. */
+/** Ainda cabe mais um dessa posição no time de quem (1 GOL, 2 DEF, 2 MEI, 1 ATA)? */
+const canTake = (s: LeilaoParty, who: string, slot: string) =>
+  s.squads[`${who}@s`].length < 6 && s.squads[`${who}@s`].filter((x) => (x.slot ?? x.positions[0]) === slot).length < LEILAO_SLOTS[slot as 'GOL'];
+
+/** Monta a base do leilão (6 craques por posição) e devolve as funções da partida. */
 async function leilaoSetup(group: string) {
   const store = new MemoryStore();
   const records: PlayerRecord[] = [];
   let n = 0;
   for (const pos of ['GOL', 'DEF', 'MEI', 'ATA'] as const) {
-    for (let i = 0; i < 4; i++) records.push(rec(`L${++n}`, `Craque ${pos} ${i + 1}`, [pos], 30 + n * 8));
+    for (let i = 0; i < 6; i++) records.push(rec(`L${++n}`, `Craque ${pos} ${i + 1}`, [pos], 30 + n * 8));
   }
   await store.upsertPlayers(records);
   let id = 0;
@@ -119,7 +123,7 @@ async function leilaoSetup(group: string) {
       const s = await state();
       if (!s || s.phase === 'voting') break;
       const slot = s.lots[s.round].positions[0];
-      const who = ['Ana', 'Bia'].find((w) => s.squads[`${w}@s`].length < 4 && !s.squads[`${w}@s`].some((x) => (x.slot ?? x.positions[0]) === slot));
+      const who = ['Ana', 'Bia'].find((w) => canTake(s, w, slot));
       if (who) await say(who, '1');
       out = asText(await tick());
     }
@@ -134,24 +138,29 @@ test('Leilão na partida: um por posição, venda no fim do tempo e resultado co
   await say('Ana', 'abrir leilão');
   await say('Bia', 'entrar');
   const start = asText(await say('Ana', 'começar'));
-  assert.match(start, /Leilão de Craques\* valendo![\s\S]*1 GOL, 1 DEF, 1 MEI e 1 ATA[\s\S]*Lote 1\/12\* · \*[A-Z]+\*[\s\S]*Podem dar lance: Ana, Bia[\s\S]*30s\.[\s\S]*\[timer:31s\]/);
+  assert.match(start, /Leilão de Craques\* valendo![\s\S]*1 GOL, 2 DEF, 2 MEI e 1 ATA[\s\S]*Lote 1\/\d+\* · \*[A-Z]+\*[\s\S]*Podem dar lance: Ana, Bia[\s\S]*30s\.[\s\S]*\[timer:31s\]/);
   assert.equal(asText(await say('Ana', '10')), '[react:💰]');
   assert.equal(asText(await say('Bia', '5')), '', 'lance menor que o atual não vale');
   assert.equal(asText(await say('Bia', '12')), '[react:💰]');
-  assert.match(asText(await say('Ana', '98')), /lance máximo agora é 97/);
+  assert.match(asText(await say('Ana', '98')), /lance máximo agora é 95/);
   const firstSlot = (await state())!.lots[0].positions[0];
   const sold = asText(await tick());
-  assert.match(sold, /✅ Vendido! \*[^*]+\* para \*Bia\* por 12 \(sobram 88\)\.[\s\S]*Lote 2\/12/);
-  // Um por posição: Bia não pode dar lance no próximo craque da mesma posição.
-  for (let i = 0; i < 12; i++) {
+  assert.match(sold, /✅ Vendido! \*[^*]+\* para \*Bia\* por 12 \(sobram 88\)\.[\s\S]*Lote 2\/\d+/);
+  // Posição completa: quando a Bia fecha uma posição, não pode dar lance em outro craque dela.
+  let refused = false;
+  for (let i = 0; i < 20 && !refused; i++) {
     const s = (await state())!;
-    if (s.lots[s.round].positions[0] === firstSlot) {
-      assert.match(asText(await say('Bia', '5')), /já tem [a-z]+: é um por posição/);
+    const slot = s.lots[s.round].positions[0];
+    if (!canTake(s, 'Bia', slot) && s.squads['Bia@s'].length < 6) {
+      assert.match(asText(await say('Bia', '5')), /já tem [a-z0-9 ]+: o time é 1 GOL, 2 DEF, 2 MEI e 1 ATA/);
+      refused = true;
       break;
     }
-    await say('Ana', '1');
+    await say(canTake(s, 'Bia', slot) ? 'Bia' : 'Ana', '1');
     await tick();
   }
+  assert.ok(refused, 'chegou a um lote de posição que a Bia já fechou');
+  void firstSlot;
   const out = await playOut();
   assert.match(out, /\[img:textBoard\][\s\S]*(Todos os times estão completos|Acabaram os lotes)[\s\S]*🏆/);
   assert.equal(await store.getActiveMatch('leilao@g.us'), null);
@@ -169,8 +178,10 @@ test('Leilão no modo votação: times de 1 por posição e o grupo vota (ningu�
   const s = (await state())!;
   assert.equal(s.phase, 'voting');
   for (const w of ['Ana@s', 'Bia@s']) {
-    const slots = s.squads[w].map((x) => x.slot ?? x.positions[0]);
-    assert.equal(new Set(slots).size, slots.length, 'nenhuma posição repetida no time');
+    for (const pos of ['GOL', 'DEF', 'MEI', 'ATA'] as const) {
+      const n = s.squads[w].filter((x) => (x.slot ?? x.positions[0]) === pos).length;
+      assert.ok(n <= LEILAO_SLOTS[pos], `no máximo ${LEILAO_SLOTS[pos]} de ${pos}`);
+    }
   }
   assert.match(asText(await say('Ana', '1')), /não vale votar no próprio time/);
   assert.equal(asText(await say('Ana', '2')), '[react:✅]');

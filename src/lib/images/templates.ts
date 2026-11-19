@@ -183,8 +183,10 @@ function token(pick: Pick | null, position: Position, color: string, hidden = fa
 
 /** Uma linha do campo: um ou dois jogadores da mesma posição. */
 function pitchRow(state: MatchState, side: Side, slots: number[]): ReactElement {
-  const team = getTeam(state.restrictions[slots[0]]?.teamId);
-  const teams = slots.map((s) => getTeam(state.restrictions[s]?.teamId)?.name).filter(Boolean) as string[];
+  // O time de cada rodada só aparece quando ela abre (nada de adiantar as próximas).
+  const open = slots.filter((s) => state.status === 'FINISHED' || s <= state.round);
+  const team = open.length ? getTeam(state.restrictions[open[0]]?.teamId) : undefined;
+  const teams = open.map((s) => getTeam(state.restrictions[s]?.teamId)?.name).filter(Boolean) as string[];
   return box(
     { height: ROW_H, alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%' },
     ...slots.map((s) => token(state.picks[side][s], SLOTS[s], SIDE_COLOR[side], isBlind(state))),

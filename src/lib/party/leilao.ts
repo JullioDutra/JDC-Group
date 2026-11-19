@@ -9,7 +9,7 @@ import { PARTY_CONFIG, PartyDeps, Save, award, freshFirst, pendingResults, react
 /**
  * Leilão de Craques: um jogo de mercado, bem diferente dos de pergunta.
  * Cada um começa com 100 moedas e monta um time de 4: um goleiro, um
- * defensor, um meia e um atacante (um por posição). O bot leiloa craques
+ * time de 6: 1 goleiro, 2 defensores, 2 meias e 1 atacante. O bot leiloa craques
  * conhecidos das grandes ligas, um por vez (30 s por lote): o lance é só
  * mandar o número. Quem der o maior lance leva.
  *
@@ -19,16 +19,20 @@ import { PARTY_CONFIG, PartyDeps, Save, award, freshFirst, pendingResults, react
  * - *votação*: no fim, o grupo vota no melhor time (ninguém vota no próprio).
  */
 export const LEILAO_BUDGET = 100;
-export const LEILAO_SQUAD = 4;
+export const LEILAO_SQUAD = 6;
 export const LEILAO_VOTE_SECONDS = 60;
 const POSITIONS: Position[] = ['GOL', 'DEF', 'MEI', 'ATA'];
+/** Quantos de cada posição o time tem: 1 GOL, 2 DEF, 2 MEI, 1 ATA. */
+export const LEILAO_SLOTS: Record<Position, number> = { GOL: 1, DEF: 2, MEI: 2, ATA: 1 };
+const PLURAL: Record<Position, string> = { GOL: 'goleiros', DEF: 'defensores', MEI: 'meias', ATA: 'atacantes' };
+const TEAM_SHAPE = '1 GOL, 2 DEF, 2 MEI e 1 ATA';
 
 export type LeilaoMode = 'overall' | 'votacao';
 
 export const LEILAO_RULES = [
-  `Cada um tem ${LEILAO_BUDGET} moedas para montar um time de ${LEILAO_SQUAD}: 1 goleiro, 1 defensor, 1 meia e 1 atacante.`,
+  `Cada um tem ${LEILAO_BUDGET} moedas para montar um time de ${LEILAO_SQUAD}: 1 goleiro, 2 defensores, 2 meias e 1 atacante.`,
   `O bot leiloa um craque por vez (${PARTY_CONFIG.leilao.seconds}s). Para dar lance, mande só o número: *15*. Tem que cobrir o lance anterior.`,
-  'Já tem jogador naquela posição? Não pode dar lance em outro.',
+  'Posição completa (ex.: já tem 2 defensores)? Não pode dar lance em outro dela.',
   'Modo *overall*: cada craque tem um overall (70 a 99) escondido; vence a maior soma. Modo *votação*: no fim o grupo vota no melhor time.',
   'Guarde moedas: cada vaga que falta precisa de pelo menos 1 moeda.',
 ];
@@ -84,10 +88,10 @@ export async function startLeilao(state: LeilaoParty, deps: PartyDeps): Promise<
   ]);
   const byId = new Map<string, PlayerRecord>([...stars, ...known].filter(leilaoEligible).map((r) => [r.id, r]));
   const fresh = freshFirst([...byId.keys()], deps.rng, deps.seen).map((id) => byId.get(id)!);
-  // N + 1 craques de cada posição (todo mundo consegue fechar o time): metade estrelas, metade bons jogadores.
-  const perPosition = state.players.length + 1;
+  // Craques de sobra em cada posição (todo mundo consegue fechar o time): metade estrelas, metade bons jogadores.
   const lots: LeilaoParty['lots'] = [];
   for (const pos of POSITIONS) {
+    const perPosition = state.players.length * LEILAO_SLOTS[pos] + 1;
     const here = fresh.filter((x) => x.positions[0] === pos);
     const top = here.filter((x) => x.sitelinks >= LEILAO_STAR_FAME);
     const mid = here.filter((x) => x.sitelinks < LEILAO_STAR_FAME);
@@ -119,7 +123,7 @@ export async function startLeilao(state: LeilaoParty, deps: PartyDeps): Promise<
   return [
     text(
       `🔨 *Leilão de Craques* valendo! ${state.players.length} técnicos, ${LEILAO_BUDGET} moedas cada.\n` +
-        `Cada time: 1 GOL, 1 DEF, 1 MEI e 1 ATA (um por posição). Lance = mande só o número. ${how}`,
+        `Cada time: ${TEAM_SHAPE}. Lance = mande só o número. ${how}`,
     ),
     ...openLot(state, deps),
   ];
@@ -127,7 +131,9 @@ export async function startLeilao(state: LeilaoParty, deps: PartyDeps): Promise<
 
 const full = (state: LeilaoParty, jid: string) => (state.squads[jid]?.length ?? 0) >= LEILAO_SQUAD;
 /** Já tem jogador nessa posição? */
-const hasSlot = (state: LeilaoParty, jid: string, slot: Position) => (state.squads[jid] ?? []).some((s) => (s.slot ?? slotOf(s)) === slot);
+const slotCount = (state: LeilaoParty, jid: string, slot: Position) => (state.squads[jid] ?? []).filter((s) => (s.slot ?? slotOf(s)) === slot).length;
+/** A posição já está completa no time (1 GOL, 2 DEF, 2 MEI, 1 ATA)? */
+const hasSlot = (state: LeilaoParty, jid: string, slot: Position) => slotCount(state, jid, slot) >= LEILAO_SLOTS[slot];
 /** Ainda pode comprar esse craque (time não está cheio e a posição está vaga)? */
 const canBuy = (state: LeilaoParty, jid: string, slot: Position) => !full(state, jid) && !hasSlot(state, jid, slot);
 
@@ -184,7 +190,9 @@ export function leilaoAnswer(state: LeilaoParty, player: PartyPlayer, msg: Incom
   if (!lot) return [];
   if (full(state, player.jid)) return warnOnce(state, player.jid, `*${who}*, seu time já está completo.`, save);
   if (hasSlot(state, player.jid, slotOf(lot))) {
-    return warnOnce(state, player.jid, `*${who}*, você já tem ${POSITION_LABEL[slotOf(lot)]}: é um por posição.`, save);
+    const slot = slotOf(lot);
+    const have = LEILAO_SLOTS[slot] === 1 ? POSITION_LABEL[slot] : `${LEILAO_SLOTS[slot]} ${PLURAL[slot]}`;
+    return warnOnce(state, player.jid, `*${who}*, você já tem ${have}: o time é ${TEAM_SHAPE}.`, save);
   }
   const limit = maxBid(state, player.jid);
   if (value > limit) return warnOnce(state, player.jid, `*${who}*, seu lance máximo agora é ${limit} (guarde 1 moeda para cada vaga que falta).`, save);
@@ -300,9 +308,12 @@ export function leilaoRows(state: LeilaoParty, final: boolean) {
   const revealOverall = final && !vote;
   return state.players.map((p, i) => {
     const squad = bySlot(state.squads[p.jid] ?? []);
-    const lines = POSITIONS.map((pos) => {
-      const s = squad.find((x) => (x.slot ?? slotOf(x)) === pos);
-      return s ? `${POSITION_LABEL[pos]} ${s.name}${revealOverall ? ` · overall ${s.overall}` : ''} · ${s.price} moedas` : `${POSITION_LABEL[pos]} — vaga —`;
+    const lines = POSITIONS.flatMap((pos) => {
+      const here = squad.filter((x) => (x.slot ?? slotOf(x)) === pos);
+      return Array.from({ length: LEILAO_SLOTS[pos] }, (_, k) => {
+        const s = here[k];
+        return s ? `${POSITION_LABEL[pos]} ${s.name}${revealOverall ? ` · overall ${s.overall}` : ''} · ${s.price} moedas` : `${POSITION_LABEL[pos]} — vaga —`;
+      });
     });
     lines.push(`Moedas: ${state.budget[p.jid] ?? 0}`);
     const head = vote
