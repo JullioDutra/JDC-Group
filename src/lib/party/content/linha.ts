@@ -152,6 +152,18 @@ export const TIMELINE: TimelineEvent[] = [
   e('t-oscar-batalha', 'geral', 2026, '"Uma Batalha Após a Outra" ganha o Oscar de melhor filme'),
   e('t-viradouro', 'geral', 2026, 'Viradouro ganha o Carnaval do Rio por 0,1 ponto'),
   e('t-seahawks', 'geral', 2026, 'Seattle Seahawks ganham o Super Bowl LX'),
+  // Rodada 4 (19/11/2026)
+  e('t-artemis-2', 'geral', 2026, 'Artemis II leva quatro astronautas para dar a volta na Lua'),
+  e('t-pele-milesimo', 'futebol', 1969, 'Pelé faz o milésimo gol, de pênalti, no Maracanã'),
+  e('t-zidane-cabecada', 'futebol', 2006, 'Zidane dá uma cabeçada em Materazzi na final da Copa'),
+  e('t-barca-sextuplo', 'futebol', 2009, 'Barcelona de Guardiola ganha seis títulos no mesmo ano'),
+  e('t-leicester', 'futebol', 2016, 'Leicester é campeão inglês contra todas as apostas'),
+  e('t-copa-feminina-1991', 'futebol', 1991, 'Primeira Copa do Mundo feminina, na China'),
+  e('t-libertadores-1960', 'futebol', 1960, 'Peñarol ganha a primeira Libertadores'),
+  e('t-brasileiro-1971', 'futebol', 1971, 'Atlético-MG vence o primeiro Campeonato Nacional de Clubes'),
+  e('t-chernobyl', 'historia', 1986, 'Acidente nuclear de Chernobyl'),
+  e('t-tsunami-2004', 'historia', 2004, 'Tsunami no Oceano Índico'),
+  e('t-vacina-covid-br', 'geral', 2021, 'Começa a vacinação contra a covid-19 no Brasil'),
 ];
 
 export function getEvent(id: string): TimelineEvent | undefined {

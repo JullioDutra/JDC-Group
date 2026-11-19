@@ -35,6 +35,12 @@ export const ANAGRAMS: AnagramWord[] = [
   ...words('geral', 'fruta ou comida', 'Abacaxi, Morango, Melancia, Laranja, Goiaba, Jabuticaba, Maracujá, Feijoada, Brigadeiro, Coxinha, Pastel, Tapioca, Churrasco, Pamonha, Lasanha, Macarrão, Chocolate, Pipoca, Sorvete, Mandioca'),
   ...words('geral', 'profissão', 'Engenheiro, Professor, Advogado, Enfermeiro, Bombeiro, Jornalista, Cozinheiro, Carpinteiro, Dentista, Veterinário, Arquiteto, Motorista, Fotógrafo, Eletricista, Astronauta'),
   ...words('geral', 'artista brasileiro', 'Anitta, Ivete Sangalo, Caetano Veloso, Djavan, Ludmilla, Marília Mendonça, Alcione, Xuxa, Chico Buarque, Gilberto Gil, Rita Lee, Cazuza, Tim Maia, Roberto Carlos|rei roberto, Zeca Pagodinho'),
+  // Rodada 4 (19/11/2026): temas novos
+  ...words('geral', 'país', 'Austrália, Canadá, Egito, Grécia, Índia, Irlanda, Jamaica, Nicarágua, Polônia, Rússia, Suíça, Tailândia, Turquia, Venezuela, Vietnã|vietna, Indonésia, Finlândia, Islândia, Quênia|quenia'),
+  ...words('geral', 'esporte', 'Basquete, Vôlei|volei, Handebol, Natação, Ciclismo, Atletismo, Ginástica, Esgrima, Judô|judo, Boxe, Surfe|surf, Skate, Tênis|tenis, Golfe|golf, Xadrez, Badminton, Beisebol, Canoagem'),
+  ...words('futebol', 'estádio brasileiro', 'Maracanã, Mineirão, Morumbi|morumbis, Pacaembu, Beira-Rio|beira rio, Castelão, Arruda, Vila Belmiro, Fonte Nova, São Januário, Couto Pereira, Barradão, Independência, Engenhão|nilton santos, Serra Dourada, Mangueirão'),
+  ...words('futebol', 'técnico', 'Felipão|scolari|luiz felipe scolari, Zagallo, Telê Santana|tele, Parreira, Tite, Dunga, Luxemburgo, Abel Ferreira|abel, Jorge Jesus, Ancelotti, Guardiola, Mourinho, Klopp, Cuca, Renato Gaúcho|renato portaluppi, Dorival'),
+  ...words('geral', 'novela', 'Pantanal, Avenida Brasil, Vale Tudo, Tieta, Roque Santeiro, O Clone, Terra Nostra, Senhora do Destino, Mulheres Apaixonadas, Explode Coração, O Rei do Gado|rei do gado, Fina Estampa, Laços de Família, Por Amor, Caminho das Índias'),
 ];
 
 export function getAnagram(id: string): AnagramWord | undefined {

@@ -204,3 +204,16 @@ test('Top 100 do Dia: lista do dia igual para todos, acerto vale a posição, 1 
   assert.match(asText(await say('Ana', 'top 100')), /img:partyLobby/);
   assert.notEqual(listOfDay(new Date(clock)).id, list.id);
 });
+
+test('resposta com artigo no começo é aceita com ou sem o artigo (Emoji, Top 100)', async () => {
+  const { answerMatches, normalizeAnswer } = await import('../src/lib/party/common');
+  const { matchTop100 } = await import('../src/lib/party/top100');
+  const { getTop100 } = await import('../src/lib/party/content/top100');
+  assert.ok(answerMatches(['O Rei Leão'], normalizeAnswer('o rei leão')));
+  assert.ok(answerMatches(['O Rei Leão'], normalizeAnswer('rei leao')));
+  assert.ok(answerMatches(['A Bela e a Fera'], normalizeAnswer('A bela e a fera')));
+  const musicas = getTop100('rs-100-musicas')!;
+  const banda = musicas.items.findIndex((it) => it.name === 'A Banda');
+  assert.deepEqual(matchTop100(musicas, 'a banda'), [banda]);
+  assert.deepEqual(matchTop100(musicas, 'banda'), [banda]);
+});

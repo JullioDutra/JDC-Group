@@ -57,8 +57,8 @@ import { SURVIVOR_LISTS } from './content/sobrevivente';
 import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
 import { newAnagrama } from './anagrama';
-import { newTop100, playedTodayKey } from './top100';
-import { dayKey } from './content/top100';
+import { matchTop100, newTop100, playedTodayKey } from './top100';
+import { dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS } from './content/anagramas';
 import { ONE_X_ONE, freshFirst } from './common';
 
@@ -431,7 +431,9 @@ export async function handlePartyMessage(
   }
 
   // Top 100 do Dia: quem mandar um palpite com o jogo rolando já entra.
-  if (state.status === 'PLAYING' && !player && state.game === 'top100' && !isChatterText(msg.text) && state.players.length < cfg.maxPlayers) {
+  const top100Guess = (s: typeof state) =>
+    s.game === 'top100' && (!isChatterText(msg.text) || matchTop100(getTop100(s.listId)!, msg.text).length > 0);
+  if (state.status === 'PLAYING' && !player && state.game === 'top100' && top100Guess(state) && state.players.length < cfg.maxPlayers) {
     const joined = newPlayer({ jid: msg.senderJid, name: msg.senderName });
     state.players.push(joined);
     return moduleOf(state).answer(state, joined, msg, deps, save);

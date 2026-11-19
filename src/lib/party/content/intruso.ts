@@ -388,6 +388,84 @@ export const INTRUSO_SETS: IntrusoSet[] = [
     intruder: 'Arsenal',
     reason: 'PSG (Champions 2026), Aston Villa (Liga Europa 2026), Crystal Palace (Conference 2026) e Chelsea (Mundial de 2025) ganharam torneios internacionais. O Arsenal perdeu a final da Champions.',
   },
+  // ---------- Rodada 4 (19/11/2026) ----------
+  {
+    id: 'semis-copa-2026',
+    members: ['Espanha', 'Argentina', 'Inglaterra', 'França'],
+    intruder: 'Brasil',
+    reason: 'Os outros quatro foram semifinalistas da Copa de 2026. O Brasil caiu nas oitavas, para a Noruega.',
+  },
+  {
+    id: 'estreantes-2026',
+    members: ['Cabo Verde', 'Curaçao', 'Jordânia', 'Uzbequistão'],
+    intruder: 'Haiti',
+    reason: 'Os outros quatro estrearam em Copas em 2026. O Haiti já tinha jogado a Copa de 1974.',
+  },
+  {
+    id: 'nordeste-campeoes',
+    members: ['Bahia', 'Vitória', 'Ceará', 'Fortaleza'],
+    intruder: 'Náutico',
+    reason: 'Os outros quatro já ganharam a Copa do Nordeste (em 2026 o Vitória chegou ao 5º título, igualando o Bahia). O Náutico nunca ganhou.',
+  },
+  {
+    id: 'supercopa-campeoes',
+    members: ['Corinthians', 'Flamengo', 'Palmeiras', 'São Paulo'],
+    intruder: 'Botafogo',
+    reason: 'Os outros quatro já ganharam a Supercopa do Brasil (o Corinthians foi bi em 2026, sobre o Flamengo). O Botafogo perdeu a de 2025.',
+  },
+  {
+    id: 'mundial-clubes-br',
+    members: ['Santos', 'Flamengo', 'Grêmio', 'Internacional'],
+    intruder: 'Atlético-MG',
+    reason: 'Os outros quatro foram campeões do mundo (Santos em 1962 e 1963, Flamengo em 1981, Grêmio em 1983, Inter em 2006). O Atlético-MG nunca ganhou.',
+  },
+  {
+    id: 'brasileirao-anos-2020',
+    members: ['Flamengo', 'Atlético-MG', 'Palmeiras', 'Botafogo'],
+    intruder: 'São Paulo',
+    reason: 'Os outros quatro foram campeões brasileiros nos anos 2020 (Flamengo em 2020 e 2025, Atlético-MG em 2021, Palmeiras em 2022 e 2023, Botafogo em 2024). O último título do São Paulo foi em 2008.',
+  },
+  {
+    id: 'nunca-na-copa',
+    members: ['Venezuela', 'Índia', 'Finlândia', 'Luxemburgo'],
+    intruder: 'Islândia',
+    reason: 'Os outros quatro nunca jogaram uma Copa do Mundo (até 2026). A Islândia jogou a de 2018, na Rússia.',
+  },
+  {
+    id: 'artemis-2',
+    category: 'geral',
+    members: ['Reid Wiseman', 'Victor Glover', 'Christina Koch', 'Jeremy Hansen'],
+    intruder: 'Marcos Pontes',
+    reason: 'Os outros quatro foram a tripulação da Artemis II, que deu a volta na Lua em abril de 2026. Marcos Pontes, o primeiro astronauta brasileiro, foi à Estação Espacial em 2006.',
+  },
+  {
+    id: 'oscar-internacional-br',
+    category: 'geral',
+    members: ['O Pagador de Promessas', 'O Quatrilho', 'Central do Brasil', 'Ainda Estou Aqui'],
+    intruder: 'Cidade de Deus',
+    reason: 'Os outros quatro foram indicados ao Oscar de filme estrangeiro/internacional (e Ainda Estou Aqui ganhou, em 2025). Cidade de Deus teve 4 indicações, mas não nessa categoria.',
+  },
+  {
+    id: 'campeoes-bbb',
+    category: 'geral',
+    members: ['Juliette', 'Davi', 'Jean Wyllys', 'Ana Paula Renault'],
+    intruder: 'Gil do Vigor',
+    reason: 'Os outros quatro ganharam o BBB (Jean Wyllys no 5, Juliette no 21, Davi no 24 e Ana Paula Renault no 26). Gil do Vigor ficou em 4º no BBB 21.',
+  },
+  {
+    id: 'nobel-paz',
+    category: 'historia',
+    members: ['Nelson Mandela', 'Malala', 'Martin Luther King', 'Navi Pillay'],
+    intruder: 'Gandhi',
+    reason: 'Os outros quatro ganharam o Nobel da Paz (Navi Pillay em 2026). Gandhi foi indicado cinco vezes e nunca ganhou.',
+  },
+  {
+    id: 'campeoes-f1',
+    category: 'geral',
+    members: ['Ayrton Senna', 'Nelson Piquet', 'Emerson Fittipaldi', 'Kimi Antonelli'],
+    intruder: 'Rubens Barrichello',
+    reason: 'Os outros quatro foram campeões mundiais de Fórmula 1 (Kimi Antonelli em 2026). Rubinho foi vice duas vezes, em 2002 e 2004.',
+  },
 ];
 
 export function getIntrusoSet(id: string): IntrusoSet | undefined {

@@ -189,6 +189,127 @@ export const CONEXOES: ConexoesPuzzle[] = [
       { label: 'Cachoeiras e quedas brasileiras', items: ['Iguaçu', 'Caracol', 'Itiquira', 'Véu da Noiva'] },
     ],
   },
+  // ---------- Rodada 4 (19/11/2026) ----------
+  {
+    id: 'cx-copa-2026',
+    category: 'futebol',
+    groups: [
+      { label: 'Semifinalistas da Copa de 2026', items: ['Espanha', 'Argentina', 'Inglaterra', 'França'] },
+      { label: 'Adversários do Brasil na Copa de 2026', items: ['Marrocos', 'Haiti', 'Escócia', 'Japão'] },
+      { label: 'Cidades-sede da Copa de 2026 nos EUA', items: ['Miami', 'Houston', 'Atlanta', 'Seattle'] },
+      { label: 'Estreantes em Copas em 2026', items: ['Cabo Verde', 'Curaçao', 'Jordânia', 'Uzbequistão'] },
+    ],
+  },
+  {
+    id: 'cx-tecnicos',
+    category: 'futebol',
+    groups: [
+      { label: 'Técnicos da seleção entre 2006 e 2024', items: ['Dunga', 'Mano Menezes', 'Tite', 'Dorival'] },
+      { label: 'Campeões da Champions como técnico', items: ['Guardiola', 'Mourinho', 'Klopp', 'Zidane'] },
+      { label: 'Campeões da Copa do Mundo como técnico', items: ['Scaloni', 'Deschamps', 'Löw', 'De la Fuente'] },
+      { label: 'Técnicos argentinos em clubes brasileiros', items: ['Sampaoli', 'Coudet', 'Vojvoda', 'Zubeldía'] },
+    ],
+  },
+  {
+    id: 'cx-apelidos-clubes',
+    category: 'futebol',
+    groups: [
+      { label: 'Apelidos do Palmeiras', items: ['Verdão', 'Porco', 'Palestra', 'Academia'] },
+      { label: 'Apelidos do Flamengo', items: ['Mengão', 'Urubu', 'Mais Querido', 'Mengo'] },
+      { label: 'Apelidos do Corinthians', items: ['Timão', 'Coringão', 'Todo-Poderoso', 'Bando de Loucos'] },
+      { label: 'Apelidos do Vasco', items: ['Gigante da Colina', 'Cruzmaltino', 'Bacalhau', 'Vascão'] },
+    ],
+  },
+  {
+    id: 'cx-cores-clubes',
+    category: 'futebol',
+    groups: [
+      { label: 'Clubes alvinegros', items: ['Corinthians', 'Botafogo', 'Santos', 'Atlético-MG'] },
+      { label: 'Clubes rubro-negros', items: ['Flamengo', 'Sport', 'Vitória', 'Athletico'] },
+      { label: 'Clubes tricolores', items: ['São Paulo', 'Fluminense', 'Grêmio', 'Bahia'] },
+      { label: 'Clubes alviverdes', items: ['Palmeiras', 'Coritiba', 'Goiás', 'Chapecoense'] },
+    ],
+  },
+  {
+    id: 'cx-estadios-europa',
+    category: 'futebol',
+    groups: [
+      { label: 'Estádios de clubes ingleses', items: ['Anfield', 'Old Trafford', 'Stamford Bridge', 'Emirates'] },
+      { label: 'Estádios de clubes espanhóis', items: ['Camp Nou', 'Bernabéu', 'Mestalla', 'Metropolitano'] },
+      { label: 'Estádios de clubes alemães', items: ['Allianz Arena', 'Signal Iduna Park', 'Veltins-Arena', 'BayArena'] },
+      { label: 'Estádios de clubes italianos', items: ['San Siro', 'Diego Armando Maradona', 'Artemio Franchi', 'Olímpico de Roma'] },
+    ],
+  },
+  {
+    id: 'cx-linguas',
+    category: 'geral',
+    groups: [
+      { label: 'Países que falam inglês', items: ['Jamaica', 'Nigéria', 'Nova Zelândia', 'Gana'] },
+      { label: 'Países que falam espanhol', items: ['Bolívia', 'Cuba', 'Guatemala', 'Equador'] },
+      { label: 'Países que falam português', items: ['Angola', 'Moçambique', 'Cabo Verde', 'Timor-Leste'] },
+      { label: 'Países que falam francês', items: ['Senegal', 'Haiti', 'Mônaco', 'Costa do Marfim'] },
+    ],
+  },
+  {
+    id: 'cx-tv',
+    category: 'geral',
+    groups: [
+      { label: 'Novelas da Globo', items: ['Avenida Brasil', 'Vale Tudo', 'O Clone', 'Senhora do Destino'] },
+      { label: 'Vilãs de novela', items: ['Odete Roitman', 'Carminha', 'Nazaré Tedesco', 'Flora'] },
+      { label: 'Apresentadores de programa de auditório', items: ['Faustão', 'Silvio Santos', 'Gugu', 'Luciano Huck'] },
+      { label: 'Campeões do BBB', items: ['Juliette', 'Davi', 'Jean Wyllys', 'Arthur Aguiar'] },
+    ],
+  },
+  {
+    id: 'cx-musica-br',
+    category: 'geral',
+    groups: [
+      { label: 'Duplas sertanejas', items: ['Chitãozinho & Xororó', 'Jorge & Mateus', 'Henrique & Juliano', 'Maiara & Maraisa'] },
+      { label: 'Cantores de pagode', items: ['Thiaguinho', 'Péricles', 'Belo', 'Ferrugem'] },
+      { label: 'Cantoras de axé', items: ['Ivete Sangalo', 'Claudia Leitte', 'Daniela Mercury', 'Margareth Menezes'] },
+      { label: 'Cantoras de funk', items: ['Anitta', 'Valesca Popozuda', 'Tati Quebra Barraco', 'MC Carol'] },
+    ],
+  },
+  {
+    id: 'cx-disney',
+    category: 'geral',
+    groups: [
+      { label: 'Personagens de Toy Story', items: ['Woody', 'Buzz', 'Jessie', 'Rex'] },
+      { label: 'Princesas da Disney', items: ['Ariel', 'Bela', 'Jasmine', 'Mulan'] },
+      { label: 'Vilões da Disney', items: ['Úrsula', 'Scar', 'Jafar', 'Malévola'] },
+      { label: 'Anões da Branca de Neve', items: ['Mestre', 'Dunga', 'Atchim', 'Soneca'] },
+    ],
+  },
+  {
+    id: 'cx-herois',
+    category: 'geral',
+    groups: [
+      { label: 'Vingadores', items: ['Homem de Ferro', 'Thor', 'Hulk', 'Capitão América'] },
+      { label: 'Liga da Justiça', items: ['Batman', 'Superman', 'Mulher-Maravilha', 'Aquaman'] },
+      { label: 'Vilões do Batman', items: ['Coringa', 'Pinguim', 'Charada', 'Bane'] },
+      { label: 'X-Men', items: ['Wolverine', 'Ciclope', 'Tempestade', 'Jean Grey'] },
+    ],
+  },
+  {
+    id: 'cx-cozinha',
+    category: 'geral',
+    groups: [
+      { label: 'Doces brasileiros', items: ['Brigadeiro', 'Beijinho', 'Quindim', 'Paçoca'] },
+      { label: 'Queijos', items: ['Brie', 'Gorgonzola', 'Parmesão', 'Coalho'] },
+      { label: 'Tipos de massa', items: ['Penne', 'Fusilli', 'Talharim', 'Farfalle'] },
+      { label: 'Temperos', items: ['Orégano', 'Cominho', 'Páprica', 'Açafrão'] },
+    ],
+  },
+  {
+    id: 'cx-esportes',
+    category: 'geral',
+    groups: [
+      { label: 'Termos do futebol', items: ['Impedimento', 'Escanteio', 'Pênalti', 'Tiro de meta'] },
+      { label: 'Termos do basquete', items: ['Enterrada', 'Rebote', 'Garrafão', 'Toco'] },
+      { label: 'Termos do vôlei', items: ['Manchete', 'Levantamento', 'Cortada', 'Líbero'] },
+      { label: 'Termos do tênis', items: ['Break point', 'Smash', 'Voleio', 'Tie-break'] },
+    ],
+  },
 ];
 
 export function getConexoes(id: string): ConexoesPuzzle | undefined {

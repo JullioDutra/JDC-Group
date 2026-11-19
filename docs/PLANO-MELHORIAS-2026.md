@@ -274,3 +274,113 @@ O desafio diário: uma lista de 100 itens, a mesma para todos os grupos, e cada 
 - [Goal, artilheiros da Libertadores 2025](https://www.goal.com/br/listas/artilheiros-copa-libertadores-2025/blt623e9e4058612fc8)
 - [CBF, eliminação do Brasil](https://www.cbf.com.br/selecao-brasileira/noticias/selecao-masculina/a/ancelotti-lamenta-eliminacao-do-brasil-na-copa-do-mundo)
 - Wikipédia: "O Maior Brasileiro de Todos os Tempos", "Lista de municípios do Brasil por população" e "Lista de Estados por área territorial".
+
+## 11. Planejamento de adições, rodada 4 (19/11)
+
+> **Regra fixa:** toda rodada de conteúdo começa por esta seção. Primeiro o inventário, as metas e as fontes; depois a adição; no fim, o quadro "planejado x entregue". Dado que ainda pode mudar (campeonato em andamento, final que não aconteceu) fica de fora até ser confirmado.
+
+### 11.1 Inventário e metas
+
+| Jogo | Hoje | Meta | Foco |
+|---|---|---|---|
+| Top 100 do Dia | 5 listas | 15 | futebol (Brasileirão, seleções), música brasileira, mundo |
+| Conexões | 17 | 29 | é o jogo com menos conteúdo |
+| Emoji | 52 | 72 | clubes, filmes, novelas, músicas |
+| Intruso | 61 | 73 | 2026 e clássicos |
+| Quem é | 66 | 78 | craques em atividade e ídolos |
+| Sobrevivente | 32 | 40 | listas longas (muitos acertos possíveis) |
+| Anagrama | 267 | 340 | temas novos: país, esporte, marca, novela/filme |
+| Quiz Relâmpago | 148 | +15 | dados de 2026 |
+| Fato ou Fake | 98 | +10 | dados de 2026 |
+| Chute Certo | 102 | +6 | dados de 2026 |
+| Linha do Tempo | 126 | +10 | dados de 2026 |
+| Top 10 | 81 listas | +3 | dados de 2026 |
+| Que time é esse | 33 | próxima rodada | exige escalação conferida jogador a jogador |
+| Bandeiraço | 58 | próxima rodada | cada bandeira é desenhada no código |
+
+### 11.2 Top 100: listas planejadas
+
+| Lista | Fonte | Tipo |
+|---|---|---|
+| Maiores artilheiros da história do Brasileirão | Wikipédia (pt) | pessoas |
+| Jogadores com mais jogos por seleções | Wikipédia (en) | pessoas |
+| Maiores artilheiros de seleções | Wikipédia (en) | pessoas |
+| Os 100 maiores artistas da música brasileira | Rolling Stone Brasil (2008), via Wikipédia | pessoas |
+| As 100 maiores vozes da música brasileira | Rolling Stone Brasil (2012), via Wikipédia | pessoas |
+| As 100 maiores músicas brasileiras | Rolling Stone Brasil (2009), via Wikipédia | coisas |
+| Os 100 maiores discos da música brasileira | Rolling Stone Brasil (2007), via Wikipédia | coisas |
+| Os 100 países mais populosos | Wikipédia (pt) | coisas |
+| Quadro de medalhas olímpicas de todos os tempos | COI, via Wikipédia (en) | coisas |
+| As 100 maiores economias (PIB) | FMI, via Wikipédia (en) | coisas |
+
+O rodízio alterna futebol, música e geral, para dois dias seguidos não caírem no mesmo assunto. A ordem fica em `ROTATION` (`src/lib/party/content/top100.ts`) e começa em 19/11/2026.
+
+### 11.3 Dados de 2026 conferidos (entram nesta rodada)
+
+- **Futebol:**
+  - Supercopa do Brasil: Corinthians 2 x 0 Flamengo, em Brasília (1º/2).
+  - Recopa: Lanús sobre o Flamengo, na prorrogação no Maracanã.
+  - Copa do Nordeste: Vitória penta, com gol de Renato Kayzer no fim.
+  - Brasileirão Feminino: São Paulo campeão sobre o Corinthians, com recorde de 49.405 pessoas no MorumBIS e fim do hexa corintiano.
+  - Série B 2026: Novorizontino campeão (título inédito), Juventude com o acesso direto e mata-mata do 3º ao 6º.
+  - Libertadores: Palmeiras eliminou LDU e Fluminense nos pênaltis e chegou à 8ª final.
+  - Mercado: Enzo Fernández do Chelsea para o Manchester City no último dia da janela, igualando o recorde britânico.
+  - Seleção: Ancelotti anunciou o fim do ciclo de Neymar.
+- **Outros esportes:** Wimbledon feminino, com Linda Noskova sobre Muchová.
+- **Cultura e ciência:**
+  - Grammy: álbum do ano de Bad Bunny ("DeBÍ TiRAR MáS FOTOS"), gravação do ano "Luther" e Caetano e Bethânia premiados.
+  - Eurovision: Bulgária, com Dara e "Bangaranga", em Viena.
+  - Artemis II: Wiseman, Glover, Koch e Hansen; volta em 10/4.
+  - Nobel da Paz: Navi Pillay. Nobel de Medicina: optogenética.
+
+**Fica de fora por enquanto (ainda pode mudar):**
+- Brasileirão 2026: líder e artilheiro (Viveros 21 x Pedro 20 em 7/11).
+- Finais da Sul-Americana (21/11), da Libertadores (28/11) e da Copa do Brasil.
+- Mata-mata da Série B.
+- Título da MotoGP.
+- Nobel de Literatura: só uma fonte.
+
+**Fontes:**
+- [Band, Supercopa](https://www.band.com.br/esportes/corinthians-e-bicampeao-da-supercopa-do-brasil-confira-todos-os-campeoes-202602011834)
+- [Band, Recopa](https://www.band.com.br/esportes/lanus-bate-flamengo-na-prorrogacao-e-e-campeao-da-recopa-sul-americana-202602270009)
+- [Bahia Notícias, Copa do Nordeste](https://www.bahianoticias.com.br/esportes/vitoria/31181-e-campeao-vitoria-supera-o-fortaleza-e-volta-a-vencer-a-copa-do-nordeste-apos-16-anos)
+- [NetVasco, Renato Kayzer](https://www.netvasco.com.br/n/386404/cria-renato-kayzer-faz-o-gol-do-titulo-do-vitoria-e-termina-a-copa-do-nordeste-como-artilheiro)
+- [Correio 24 Horas, Brasileirão Feminino](https://www.correio24horas.com.br/esportes/sao-paulo-e-campeao-do-brasileirao-feminino-com-recorde-de-publico-e-premio-historico-de-r-2-milhoes-1026)
+- [O Povo, Série B 2026](https://www.opovo.com.br/esportes/2026/11/15/novorizontino-conquista-a-serie-b-e-sobe-junto-com-o-juventude.html)
+- [O Liberal, Palmeiras na final](https://www.oliberal.com/esportes/palmeiras-sofre-em-casa-mas-vence-fluminense-nos-penaltis-para-ir-a-final-da-libertadores-1.1185369)
+- [Al Jazeera, Enzo Fernández](https://www.aljazeera.com/sports/2026/9/1/fernandez-transfers-to-man-city-from-chelsea-in-joint-british-record-fee)
+- [Band, fim do ciclo de Neymar](https://www.band.com.br/esportes/ancelotti-confirma-fim-do-ciclo-de-neymar-na-selecao-e-admite-erros-na-copa-ideia-e-renovar-202607292012)
+- [Band, Wimbledon](https://www.band.com.br/esportes/noskova-vence-final-100-tcheca-e-se-torna-aos-21-a-mais-jovem-campea-de-wimbledon-em-15-anos)
+- [IstoÉ, Grammy 2026](https://istoe.com.br/grammy-2026-bad-bunny-e-o-grande-vencedor-da-noite-veja-lista-de-premiados)
+- [NPR, Eurovision 2026](https://www.npr.org/2026/05/16/nx-s1-5824393/eurovision-winner-dara-bangaranga-bulgaria-vienna-austria)
+- [Olhar Digital, Artemis II](https://olhardigital.com.br/2026/04/10/ciencia-e-espaco/artemis-2-pousa-com-sucesso-apos-missao-historica-a-lua/)
+- [Al Jazeera, Nobel da Paz](https://www.aljazeera.com/news/2026/10/9/2026-nobel-peace-prize-awarded-to-navi-pillay)
+- [Folha PE, Nobel de Medicina](https://www.folhape.com.br/noticias/nobel-de-medicina-de-2026-premia-avancos-na-optogenetica/516650/)
+
+### 11.4 Planejado x entregue
+
+| Jogo | Meta | Entregue | Observação |
+|---|---|---|---|
+| Top 100 do Dia | 15 listas | 12 (+7) | artistas, vozes e músicas (Rolling Stone), países por população, medalhas olímpicas, PIB de 2026 (FMI) e estádios do Brasil |
+| Conexões | 29 | 29 (+12) | Copa 2026, técnicos, apelidos e cores de clubes, estádios europeus, línguas, TV, música, Disney, heróis, cozinha, esportes |
+| Emoji | 72 | 78 (+26) | clubes, craques, filmes, novelas, música |
+| Intruso | 73 | 73 (+12) | 2026 (semifinais, estreantes, Supercopa, Copa do Nordeste, Artemis II, Nobel) e clássicos |
+| Quem é | 78 | 78 (+12) | Vini Jr., Roberto Carlos, Rivaldo, Marcelo, Thiago Silva, Alisson, Arrascaeta, Modrić, Suárez, Dembélé, Ancelotti, Guardiola |
+| Sobrevivente | 40 | 40 (+8) | campeões brasileiros e da Copa do Brasil, Bola de Ouro desde 2000, convocados de 1994 e 2002, estados dos EUA, horóscopo chinês, planetas anões |
+| Anagrama | 340 | 351 (+84) | temas novos: país, esporte, estádio brasileiro, técnico, novela |
+| Quiz Relâmpago | +15 | +15 (163) | dados de 2026 da seção 11.3 |
+| Fato ou Fake | +10 | +11 (109) | dados de 2026 |
+| Chute Certo | +6 | +6 (108) | dados de 2026 |
+| Linha do Tempo | +10 | +11 (137) | Artemis II e eventos de anos variados (o jogo exige 3 anos de distância entre os eventos de uma rodada) |
+| Top 10 | +3 | 0 | adiado: as listas de 2026 que achei não tinham os 10 nomes confirmados |
+
+**Top 100, o que ficou de fora e por quê:**
+- *Classificação geral do Brasileirão* e *artilheiros da Seleção*: não achei a página com esse título, e a busca da Wikipédia ficou bloqueada pelo limite de chamadas. Fica para a próxima rodada.
+- *Mais jogos por seleções*: a lista tem quase só nomes pouco conhecidos aqui (o único brasileiro no top 100 é o Cafu).
+- *Mais gols por seleções*: só 87 jogadores têm 50 gols ou mais, menos de 100.
+- *Artilheiros do Brasileirão*: a tabela da Wikipédia só traz quem tem 100 gols ou mais (18 nomes).
+- *Maiores discos da música brasileira*: há discos com o mesmo nome (dois chamados "Cartola"), e o jogo não teria como saber qual é qual.
+
+**Bugs achados e corrigidos nesta rodada:**
+- Resposta que começa com artigo ("O Rei Leão", "A Banda") não era aceita em nenhum jogo, porque o palpite perdia o artigo e a resposta não. Agora as duas formas valem.
+- No Top 100, título com mais de 6 palavras ("Pra Não Dizer Que Não Falei das Flores") era tratado como conversa. Agora vale se bater com a lista; isso também vale para entrar no jogo no meio.

@@ -678,6 +678,127 @@ export const WHOIS: WhoIsCard[] = [
       'Melhor jogador da Copa do Mundo de 2026, campeão com a Espanha.',
     ],
   },
+  // ---------- Rodada 4 (19/11/2026) ----------
+  {
+    id: 'vinicius-junior', answer: 'Vinícius Júnior', aliases: ['vini jr', 'vinicius junior', 'vini', 'vinicius'],
+    clues: [
+      'Nasceu em São Gonçalo (RJ), em 2000.',
+      'Ponta-esquerda driblador, famoso pela dança na comemoração.',
+      'Revelado pelo Flamengo, estreou no Real Madrid em 2018, aos 18 anos.',
+      'Fez gol nas finais da Champions de 2022 e de 2024.',
+      'Eleito o melhor do mundo no The Best da FIFA de 2024.',
+    ],
+  },
+  {
+    id: 'roberto-carlos', answer: 'Roberto Carlos', aliases: ['roberto carlos da silva'],
+    clues: [
+      'Nasceu em Garça (SP), em 1973.',
+      'Lateral-esquerdo baixinho, de coxas grossas e chute fortíssimo.',
+      'Jogou no Palmeiras, na Inter de Milão, no Fenerbahçe e no Corinthians.',
+      'Ganhou três Champions em 11 anos de Real Madrid.',
+      'Fez o gol de falta \'impossível\' contra a França em 1997 e foi campeão do mundo em 2002.',
+    ],
+  },
+  {
+    id: 'rivaldo', answer: 'Rivaldo', aliases: ['rivaldo vitor borba ferreira'],
+    clues: [
+      'Nasceu em Recife (PE), em 1972.',
+      'Meia-atacante canhoto, especialista em bicicletas e chutes de longe.',
+      'Jogou no Mogi Mirim, Corinthians, Palmeiras, Deportivo La Coruña e Milan.',
+      'Bola de Ouro e melhor do mundo da FIFA em 1999, jogando pelo Barcelona.',
+      'Camisa 10 do Brasil pentacampeão em 2002, com 5 gols na Copa.',
+    ],
+  },
+  {
+    id: 'marcelo', answer: 'Marcelo', aliases: ['marcelo vieira', 'marcelo lateral'],
+    clues: [
+      'Nasceu no Rio de Janeiro, em 1988.',
+      'Lateral-esquerdo de muita técnica, quase um meia.',
+      'Ficou 15 anos no Real Madrid, de 2007 a 2022, e virou capitão.',
+      'Ganhou cinco Champions League pelo Real Madrid.',
+      'Revelado no Fluminense, voltou ao clube e ganhou a Libertadores de 2023.',
+    ],
+  },
+  {
+    id: 'thiago-silva', answer: 'Thiago Silva', aliases: ['thiago emiliano da silva'],
+    clues: [
+      'Nasceu no Rio de Janeiro, em 1984.',
+      'Zagueiro; quase largou o futebol depois de uma tuberculose na Rússia.',
+      'Jogou no Milan e foi capitão do PSG por oito temporadas.',
+      'Ganhou a Champions de 2021 pelo Chelsea, aos 36 anos.',
+      'Revelado no Fluminense (de onde saiu e para onde voltou em 2024), capitão do Brasil em Copas.',
+    ],
+  },
+  {
+    id: 'alisson', answer: 'Alisson', aliases: ['alisson becker'],
+    clues: [
+      'Nasceu em Novo Hamburgo (RS), em 1992.',
+      'Goleiro; o irmão mais velho, Muriel, também é goleiro.',
+      'Revelado no Internacional, foi para a Roma em 2016.',
+      'Em 2021 fez um gol de cabeça, nos acréscimos, contra o West Bromwich.',
+      'Goleiro do Liverpool campeão da Champions de 2019 e titular do Brasil em Copas.',
+    ],
+  },
+  {
+    id: 'arrascaeta', answer: 'Arrascaeta', aliases: ['giorgian de arrascaeta', 'de arrascaeta'],
+    clues: [
+      'Nasceu em Nuevo Berlín, no Uruguai, em 1994.',
+      'Meia criativo e camisa 14 do clube onde virou ídolo.',
+      'Começou no Defensor e jogou no Cruzeiro de 2015 a 2018.',
+      'Titular do Uruguai em Copas do Mundo.',
+      'Ganhou três Libertadores pelo Flamengo (2019, 2022 e 2025).',
+    ],
+  },
+  {
+    id: 'modric', answer: 'Luka Modrić', aliases: ['modric', 'luka modric'],
+    clues: [
+      'Nasceu em Zadar, na Croácia, em 1985, e cresceu como refugiado de guerra.',
+      'Meia de passe curto e longo, baixinho e incansável.',
+      'Jogou no Dinamo Zagreb e no Tottenham antes da Espanha.',
+      'Ganhou a Bola de Ouro de 2018, quebrando a sequência de Messi e Cristiano Ronaldo.',
+      'Ganhou seis Champions pelo Real Madrid e levou a Croácia à final da Copa de 2018.',
+    ],
+  },
+  {
+    id: 'luis-suarez', answer: 'Luis Suárez', aliases: ['suarez', 'luis suarez'],
+    clues: [
+      'Nasceu em Salto, no Uruguai, em 1987.',
+      'Centroavante raçudo; jogou no Groningen e no Ajax.',
+      'Na Copa de 2010, salvou com a mão um gol de Gana em cima da linha.',
+      'Mordeu o italiano Chiellini na Copa de 2014.',
+      'Fez o trio MSN com Messi e Neymar no Barcelona e jogou no Grêmio em 2023.',
+    ],
+  },
+  {
+    id: 'dembele', answer: 'Ousmane Dembélé', aliases: ['dembele', 'ousmane dembele'],
+    clues: [
+      'Nasceu em Vernon, na França, em 1997.',
+      'Ponta que chuta com as duas pernas.',
+      'Jogou no Rennes e no Borussia Dortmund antes de ir para a Espanha.',
+      'Campeão do mundo com a França em 2018, quando jogava no Barcelona.',
+      'Pelo PSG, ganhou a Champions, a Bola de Ouro e o The Best de 2025.',
+    ],
+  },
+  {
+    id: 'ancelotti', answer: 'Carlo Ancelotti', aliases: ['ancelotti', 'carletto'],
+    clues: [
+      'Nasceu em Reggiolo, na Itália, em 1959.',
+      'Como jogador, foi meia da Roma e do Milan.',
+      'Como técnico, ganhou ligas na Itália, Inglaterra, França, Alemanha e Espanha.',
+      'Recordista de títulos da Champions como técnico: dois pelo Milan e três pelo Real Madrid.',
+      'Assumiu a seleção brasileira em 2025 e a dirigiu na Copa de 2026.',
+    ],
+  },
+  {
+    id: 'guardiola', answer: 'Pep Guardiola', aliases: ['guardiola', 'pep'],
+    clues: [
+      'Nasceu em Santpedor, na Catalunha, em 1971.',
+      'Foi volante do Barcelona de Johan Cruyff.',
+      'Começou como técnico no time B do Barcelona.',
+      'Em 2009 ganhou seis títulos no mesmo ano com o Barça de Messi.',
+      'Técnico do Manchester City desde 2016, campeão da Champions em 2023.',
+    ],
+  },
 ];
 
 export function getWhoIs(id: string): WhoIsCard | undefined {

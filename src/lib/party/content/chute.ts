@@ -122,6 +122,13 @@ export const CHUTE_QUESTIONS: ChuteQuestion[] = [
   { id: 'c-messi-bola-2026', category: 'futebol', prompt: 'Em que posição Messi ficou na Bola de Ouro de 2026?', answer: 5, unit: 'º lugar' },
   { id: 'c-vini-bola-2026', category: 'futebol', prompt: 'Em que posição Vinícius Júnior ficou na Bola de Ouro de 2026?', answer: 17, unit: 'º lugar' },
   { id: 'c-flaco-2025', category: 'futebol', prompt: 'Quantos gols Flaco López fez ao ser artilheiro da Libertadores de 2025?', answer: 7, unit: 'gols' },
+  // 2026, rodada 4
+  { id: 'c-feminino-publico-2026', category: 'futebol', prompt: 'Quantas pessoas foram ao MorumBIS na final do Brasileirão Feminino de 2026?', answer: 49405, unit: 'pessoas' },
+  { id: 'c-palmeiras-finais-2026', category: 'futebol', prompt: 'Contando a de 2026, quantas finais de Libertadores o Palmeiras já disputou?', answer: 8, unit: 'finais' },
+  { id: 'c-vitoria-nordeste-2026', category: 'futebol', prompt: 'Quantos títulos da Copa do Nordeste o Vitória tem depois de 2026?', answer: 5, unit: 'títulos' },
+  { id: 'c-vitoria-jejum-2026', category: 'futebol', prompt: 'Quantos anos o Vitória ficou sem ganhar a Copa do Nordeste até o título de 2026?', answer: 16, unit: 'anos' },
+  { id: 'c-artemis-dias-2026', category: 'geral', prompt: 'Mais ou menos quantos dias durou a missão Artemis II, que deu a volta na Lua em 2026?', answer: 10, unit: 'dias' },
+  { id: 'c-grammy-edicao-2026', category: 'geral', prompt: 'Que número de edição foi o Grammy de 2026?', answer: 68, unit: 'ª edição' },
 ];
 
 export function getChute(id: string): ChuteQuestion | undefined {

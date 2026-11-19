@@ -210,6 +210,39 @@ export const SURVIVOR_LISTS: SurvivorList[] = [
       ['Ranieri Mazzilli', 'mazzilli'], ['Junta Militar', 'junta', 'junta militar de 1969'],
     ],
   },
+  // ---------- Rodada 4 (19/11/2026) ----------
+  {
+    id: 's-campeoes-brasileiros', category: 'futebol', level: 2, title: 'clubes campeões brasileiros da Série A (até 2025, com Taça Brasil e Robertão)',
+    items: [['Palmeiras'], ['Santos'], ['Flamengo'], ['Corinthians'], ['São Paulo', 'sao paulo'], ['Cruzeiro'], ['Vasco'], ['Fluminense'], ['Internacional', 'inter'], ['Atlético-MG', 'atletico mineiro', 'atletico mg', 'galo'], ['Grêmio', 'gremio'], ['Botafogo'], ['Bahia'], ['Sport'], ['Guarani'], ['Coritiba'], ['Athletico-PR', 'athletico', 'athletico paranaense', 'atletico paranaense', 'atletico pr']],
+  },
+  {
+    id: 's-campeoes-copa-do-brasil', category: 'futebol', level: 2, title: 'clubes campeões da Copa do Brasil (até 2025)',
+    items: [['Grêmio', 'gremio'], ['Cruzeiro'], ['Palmeiras'], ['Corinthians'], ['Flamengo'], ['Internacional', 'inter'], ['Criciúma', 'criciuma'], ['Juventude'], ['Sport'], ['Santo André', 'santo andre'], ['Paulista'], ['Fluminense'], ['Vasco'], ['Santos'], ['Atlético-MG', 'atletico mineiro', 'atletico mg', 'galo'], ['Athletico-PR', 'athletico', 'athletico paranaense', 'atletico paranaense', 'atletico pr'], ['São Paulo', 'sao paulo']],
+  },
+  {
+    id: 's-bola-de-ouro-2000', category: 'futebol', level: 2, title: 'jogadores que ganharam a Bola de Ouro de 2000 a 2026',
+    items: [['Figo', 'luis figo'], ['Owen', 'michael owen'], ['Ronaldo', 'ronaldo fenomeno'], ['Nedved', 'pavel nedved'], ['Shevchenko'], ['Ronaldinho'], ['Cannavaro', 'fabio cannavaro'], ['Kaká', 'kaka'], ['Cristiano Ronaldo', 'cr7'], ['Messi', 'lionel messi'], ['Modrić', 'modric', 'luka modric'], ['Benzema', 'karim benzema'], ['Rodri'], ['Dembélé', 'dembele', 'ousmane dembele'], ['Harry Kane', 'kane']],
+  },
+  {
+    id: 's-penta-2002', category: 'futebol', level: 3, title: 'convocados do Brasil pentacampeão da Copa de 2002',
+    items: [['Marcos'], ['Dida'], ['Rogério Ceni'], ['Cafu'], ['Belletti'], ['Lúcio'], ['Roque Júnior'], ['Edmílson'], ['Anderson Polga'], ['Roberto Carlos'], ['Júnior'], ['Gilberto Silva'], ['Kléberson'], ['Vampeta'], ['Ricardinho'], ['Juninho Paulista'], ['Kaká'], ['Ronaldinho'], ['Rivaldo'], ['Denílson'], ['Edílson'], ['Luizão'], ['Ronaldo']],
+  },
+  {
+    id: 's-tetra-1994', category: 'futebol', level: 3, title: 'convocados do Brasil tetracampeão da Copa de 1994',
+    items: [['Taffarel'], ['Zetti'], ['Gilmar Rinaldi'], ['Jorginho'], ['Cafu'], ['Aldair'], ['Márcio Santos'], ['Ricardo Rocha'], ['Ronaldão'], ['Branco'], ['Leonardo'], ['Mauro Silva'], ['Dunga'], ['Mazinho'], ['Raí'], ['Zinho'], ['Paulo Sérgio'], ['Viola'], ['Bebeto'], ['Romário'], ['Ronaldo'], ['Müller']],
+  },
+  {
+    id: 's-estados-eua', category: 'geral', level: 3, title: 'estados dos Estados Unidos',
+    items: [['Alabama'], ['Alasca', 'alaska'], ['Arizona'], ['Arkansas'], ['Califórnia', 'california'], ['Carolina do Norte', 'north carolina'], ['Carolina do Sul', 'south carolina'], ['Colorado'], ['Connecticut'], ['Dakota do Norte', 'north dakota'], ['Dakota do Sul', 'south dakota'], ['Delaware'], ['Flórida', 'florida'], ['Geórgia', 'georgia'], ['Havaí', 'havai', 'hawaii'], ['Idaho'], ['Illinois'], ['Indiana'], ['Iowa'], ['Kansas'], ['Kentucky'], ['Luisiana', 'louisiana'], ['Maine'], ['Maryland'], ['Massachusetts'], ['Michigan'], ['Minnesota'], ['Mississippi'], ['Missouri'], ['Montana'], ['Nebraska'], ['Nevada'], ['Nova Hampshire', 'new hampshire'], ['Nova Jersey', 'new jersey'], ['Nova York', 'new york'], ['Novo México', 'novo mexico', 'new mexico'], ['Ohio'], ['Oklahoma'], ['Oregon'], ['Pensilvânia', 'pensilvania', 'pennsylvania'], ['Rhode Island'], ['Tennessee'], ['Texas'], ['Utah'], ['Vermont'], ['Virgínia', 'virginia'], ['Virgínia Ocidental', 'virginia ocidental', 'west virginia'], ['Washington'], ['Wisconsin'], ['Wyoming']],
+  },
+  {
+    id: 's-horoscopo-chines', category: 'geral', level: 1, title: 'animais do horóscopo chinês',
+    items: [['Rato'], ['Boi', 'bufalo'], ['Tigre'], ['Coelho', 'lebre'], ['Dragão', 'dragao'], ['Serpente', 'cobra'], ['Cavalo'], ['Cabra', 'carneiro', 'ovelha', 'bode'], ['Macaco'], ['Galo'], ['Cão', 'cao', 'cachorro'], ['Porco', 'javali']],
+  },
+  {
+    id: 's-planetas-anoes', category: 'geral', level: 3, title: 'planetas anões reconhecidos pela União Astronômica Internacional',
+    items: [['Plutão', 'plutao'], ['Ceres'], ['Éris', 'eris'], ['Haumea'], ['Makemake']],
+  },
 ];
 
 /** Listas com menos itens que isso ficam fora do sorteio. */

@@ -122,6 +122,18 @@ export const FACTS: FactCard[] = [
   f('ff-messi-top5-2026', 'futebol', true, 'Messi ficou entre os 5 primeiros da Bola de Ouro de 2026.', 'Foi o 5º, aos 39 anos.'),
   f('ff-vini-top10-2026', 'futebol', false, 'Vinícius Júnior ficou no top 10 da Bola de Ouro de 2026.', 'Ficou em 17º. O top 10 teve Kane, Mbappé, Yamal, Rodri, Messi, Kvaratskhelia, Dembélé, Haaland, Olise e Fabián Ruiz.'),
   f('ff-cabo-verde-2026', 'futebol', true, 'Cabo Verde disputou sua primeira Copa do Mundo em 2026.', 'Liderou o grupo das eliminatórias à frente de Camarões e caiu no grupo da Espanha.'),
+  // 2026, rodada 4
+  f('ff-supercopa-2026', 'futebol', true, 'O Corinthians ganhou a Supercopa do Brasil de 2026 em cima do Flamengo.', '2 a 0, no Mané Garrincha, em Brasília. Foi o segundo título (o primeiro foi em 1991).'),
+  f('ff-recopa-2026', 'futebol', false, 'O Flamengo ganhou a Recopa Sul-Americana de 2026.', 'Perdeu para o Lanús: 1 a 0 na Argentina e 3 a 2 na prorrogação, no Maracanã.'),
+  f('ff-vitoria-nordeste-2026', 'futebol', true, 'Com o título de 2026, o Vitória igualou o Bahia como maior campeão da Copa do Nordeste.', 'São 5 títulos para cada um.'),
+  f('ff-feminino-publico-2026', 'futebol', true, 'A final do Brasileirão Feminino de 2026 bateu o recorde de público da competição.', '49.405 pessoas no MorumBIS, no título do São Paulo sobre o Corinthians.'),
+  f('ff-serie-b-mata-mata', 'futebol', true, 'Em 2026, a Série B passou a ter mata-mata para definir parte dos acessos.', 'Campeão e vice sobem direto; do 3º ao 6º colocado disputam as outras duas vagas.'),
+  f('ff-palmeiras-8-final', 'futebol', true, 'A final da Libertadores de 2026 é a 8ª da história do Palmeiras.', 'O time passou por LDU e Fluminense, as duas vezes nos pênaltis.'),
+  f('ff-neymar-ciclo-2026', 'futebol', true, 'Depois da Copa de 2026, Ancelotti disse que o ciclo de Neymar na seleção tinha chegado ao fim.', 'Foi em entrevista no fim de julho de 2026, ao falar da renovação do time.'),
+  f('ff-swiatek-wimbledon-2026', 'geral', false, 'Iga Swiatek ganhou Wimbledon em 2026.', 'Quem ganhou foi a tcheca Linda Noskova, de 21 anos, contra a também tcheca Karolina Muchová. Swiatek tinha ganhado em 2025.'),
+  f('ff-bad-bunny-2026', 'geral', true, 'Em 2026, um álbum em espanhol ganhou o Grammy de álbum do ano pela primeira vez.', '"DeBÍ TiRAR MáS FOTOS", de Bad Bunny.'),
+  f('ff-artemis-pouso-2026', 'geral', false, 'Os astronautas da Artemis II pousaram na Lua em 2026.', 'Eles deram a volta na Lua sem pousar e voltaram à Terra em 10 de abril. O pouso ficou para uma missão futura.'),
+  f('ff-eurovision-2026', 'geral', true, 'A Bulgária ganhou o Eurovision pela primeira vez em 2026.', 'Com Dara e a música "Bangaranga", na final em Viena.'),
 ];
 
 export function getFact(id: string): FactCard | undefined {

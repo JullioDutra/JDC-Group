@@ -220,7 +220,8 @@ export function normalizeAnswer(raw: string): string {
 
 /** O palpite (já normalizado) bate com alguma das formas? Tolera erro de digitação em nomes longos. */
 export function answerMatches(forms: string[], guess: string): boolean {
-  const norm = forms.map((f) => normalize(f));
+  // Cada forma vale com e sem artigo: o palpite chega sem ele ("o rei leao" vira "rei leao").
+  const norm = forms.flatMap((f) => [normalize(f), normalizeAnswer(f)]);
   if (norm.includes(guess)) return true;
   const tolerance = guess.length >= 9 ? 2 : guess.length >= 5 ? 1 : 0;
   return tolerance > 0 && norm.some((f) => f.length >= 5 && editDistance(f, guess) <= tolerance);

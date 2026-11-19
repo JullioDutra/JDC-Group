@@ -53,7 +53,32 @@ const POKEMON: Top100List = {
   ),
 };
 
-export const TOP100_LISTS: Top100List[] = [...TOP100_WIKI, ELEMENTOS, POKEMON];
+/**
+ * Ordem do rodízio: alterna futebol, música e "geral" para dois dias seguidos
+ * não caírem no mesmo assunto. Lista nova que não estiver aqui entra no fim.
+ */
+const ROTATION = [
+  'rs-100-musicas',
+  'medalhas-olimpicas',
+  'maior-brasileiro-2012',
+  'estadios-brasil',
+  'pib-2026',
+  'rs-100-artistas',
+  'pokemon-1-100',
+  'municipios-2022',
+  'rs-100-vozes',
+  'paises-area',
+  'elementos-1-100',
+  'paises-populacao',
+];
+/** Primeiro dia (Brasília) desta ordem: ROTATION[0] cai nele. */
+const ROTATION_START = '2026-11-19';
+
+const ALL_LISTS: Top100List[] = [...TOP100_WIKI, ELEMENTOS, POKEMON];
+export const TOP100_LISTS: Top100List[] = [
+  ...ROTATION.map((id) => ALL_LISTS.find((l) => l.id === id)).filter((l): l is Top100List => Boolean(l)),
+  ...ALL_LISTS.filter((l) => !ROTATION.includes(l.id)),
+];
 
 export function getTop100(id: string | null): Top100List | undefined {
   return TOP100_LISTS.find((l) => l.id === id);
@@ -66,6 +91,7 @@ export function dayKey(now: Date): string {
 
 /** Lista do dia: a mesma para todos os grupos; gira pela lista inteira. */
 export function listOfDay(now: Date): Top100List {
-  const days = Math.floor(Date.parse(`${dayKey(now)}T00:00:00Z`) / 86_400_000);
-  return TOP100_LISTS[days % TOP100_LISTS.length];
+  const days = Math.round((Date.parse(`${dayKey(now)}T00:00:00Z`) - Date.parse(`${ROTATION_START}T00:00:00Z`)) / 86_400_000);
+  const n = TOP100_LISTS.length;
+  return TOP100_LISTS[((days % n) + n) % n];
 }

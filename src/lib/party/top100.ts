@@ -50,7 +50,8 @@ export function startTop100(state: Top100Party, deps: PartyDeps): Outgoing[] {
 export function matchTop100(list: Top100List, raw: string): number[] {
   const g = normalizeAnswer(raw);
   if (!g) return [];
-  const forms = list.items.map((it) => [it.name, ...(it.aliases ?? [])].map((f) => normalize(f)));
+  // O palpite perde o artigo inicial ("a banda" vira "banda"); a resposta também precisa da forma sem artigo.
+  const forms = list.items.map((it) => [it.name, ...(it.aliases ?? [])].flatMap((f) => [normalize(f), normalizeAnswer(f)]));
   const exact = forms.map((fs, i) => (fs.includes(g) ? i : -1)).filter((i) => i >= 0);
   if (exact.length) return exact;
   const tol = g.length >= 9 ? 2 : g.length >= 5 ? 1 : 0;
@@ -66,12 +67,14 @@ export function matchTop100(list: Top100List, raw: string): number[] {
 
 export function top100Answer(state: Top100Party, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
   const raw = msg.text.trim();
-  if (raw.length < 2 || raw.length > 50 || /[?\n]/.test(raw) || isChatter(raw)) return [];
+  if (raw.length < 2 || raw.length > 60 || /[?\n]/.test(raw)) return [];
+  const list = getTop100(state.listId)!;
+  const hits = matchTop100(list, raw);
+  // Título longo de música parece conversa (mais de 6 palavras): se bate com a lista, vale.
+  if (!hits.length && isChatter(raw)) return [];
   if (!(player.jid in state.lives)) state.lives[player.jid] = TOP100_LIVES;
   if (state.lives[player.jid] <= 0) return [];
-  const list = getTop100(state.listId)!;
   const who = firstName(player.name);
-  const hits = matchTop100(list, raw);
   const open = hits.filter((i) => !state.found[i]);
   if (hits.length && !open.length) {
     const i = hits[0];
