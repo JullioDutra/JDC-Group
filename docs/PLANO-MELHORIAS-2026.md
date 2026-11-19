@@ -610,3 +610,188 @@ A imagem foi conferida com 2, 5 e 10+ jogadores.
 3. **Técnico por um Dia:** o mais trabalhoso; vale fazer com calma e testar o equilíbrio.
 
 **Reserva (se algum não agradar):** "Trunfo de Craques", uma batalha de cartas por atributo (gols, jogos, altura, valor, títulos) com os números da base, mão secreta no privado e quem ganha a rodada leva as cartas.
+
+## 18. Impostor do Futebol: planejamento detalhado (19/11)
+
+> Escolhido na seção 17. Aqui está o desenho completo, para construir sem surpresa: regras, cada mensagem do bot, casos difíceis, o que muda no código, testes, piloto e as decisões que faltam.
+
+### 18.1 Resumo em uma frase
+
+Todo mundo recebe no privado o mesmo segredo (um craque, clube, seleção…), menos o impostor, que só sabe o tema. Cada um dá uma dica de uma palavra no grupo, em 2 voltas; o grupo debate e vota. Se pegarem o impostor, ele ainda pode roubar a vitória adivinhando o segredo.
+
+### 18.2 Quem joga e quanto dura
+
+| Item | Valor |
+|---|---|
+| Pessoas | 4 a 10 (com 3 fica fácil demais) |
+| Impostores | 1 (opção de 2 com 8 ou mais: `abrir impostor 2`) |
+| Voltas de dicas | 2 |
+| Tempo por dica | 40 s (`abrir impostor rápido`: 25 s) |
+| Debate | 60 s livres (o anfitrião pode pular com *votar*) |
+| Votação | 45 s, ou até todos votarem |
+| Palpite do impostor | 20 s, uma tentativa |
+| Duração típica | 6 a 10 min (10 pessoas, todo mundo no limite: ~17 min) |
+
+### 18.3 O que fica secreto (conteúdo)
+
+- **Lista própria (`content/impostor.ts`):** 150 a 200 segredos, só nomes conhecidos (mesmo critério do Anagrama), em 6 temas:
+  - craque brasileiro e craque do mundo (40 cada);
+  - clube brasileiro e clube do exterior (25 cada);
+  - seleção (20);
+  - estádio ou técnico (20).
+- **Cada segredo traz:**
+  - nome;
+  - apelidos aceitos no palpite do impostor (ex.: "R10", "Ronaldinho Gaúcho");
+  - **palavras proibidas na dica:** as partes do nome e os apelidos, para ninguém entregar.
+- **Escolha do tema:** como no Anagrama (`abrir impostor clubes`, `abrir impostor craques`…). Sem tema, mistura.
+- **Sem repetir:** o sorteio usa o histórico do grupo (`group_seen`, tipo `impostor`), e um segredo só volta quando os do tema acabarem.
+
+### 18.4 Passo a passo (com as mensagens)
+
+**1. Sala (lobby):** `abrir impostor` (ou `abrir impostor clubes`, `abrir impostor 2` para 2 impostores).
+- O bot manda a imagem da sala:
+  - título: "IMPOSTOR DO FUTEBOL · tema: misturado · 1 impostor";
+  - regras: "Todos recebem o segredo no privado, menos o impostor. Dica de 1 palavra, 2 voltas. Depois, votação.".
+- As pessoas mandam *entrar*. O bot avisa: "⚠️ O bot vai te mandar uma mensagem no privado. Se não chegar, mande *oi* para ele no privado."
+
+**2. Cartas (15 s):** o anfitrião manda *começar*.
+- O bot sorteia o impostor e o segredo e manda no privado de cada um:
+  - **inocente:** "🤫 *Impostor do Futebol*: seu segredo é *Ronaldinho* (tema: craque brasileiro). Não fale o nome! Dê dicas que mostrem que você sabe, sem entregar para o impostor.";
+  - **impostor:** "😈 Você é o *IMPOSTOR*. Tema: *craque brasileiro*. Ouça as dicas, finja que sabe e tente descobrir o segredo.".
+- No grupo: "🃏 Cartas entregues no privado. Quem não recebeu manda *carta* aqui ou *oi* para o bot no privado. A 1ª volta começa em 15s."
+- A ordem da mesa é sorteada, e **o impostor nunca é o primeiro da 1ª volta**: seria difícil demais para ele.
+
+**3. Dicas (2 voltas):**
+- **Na vez:** "🗣️ Vez de *Ana* (1/6 · volta 1). Mande 1 palavra. 40s."
+- **Dica aceita:** o bot reage ✅ e já chama o próximo.
+- **Dica recusada** (a pessoa continua na vez, sem perder tempo):
+  - mais de uma palavra: "Só 1 palavra, *Ana*." Hífen vale ("pé-de-meia"), e números também ("10");
+  - palavra proibida (parte do nome ou apelido): "Essa entrega o segredo! Mande outra.";
+  - palavra já usada por alguém: "*Barcelona* já foi. Mande outra.".
+- **Fim do tempo:** "⏱️ *Ana* não deu dica." Fica "—" na mesa, e isso conta como suspeito.
+- **Conversa no meio:** só a mensagem de quem está na vez conta como dica. As outras são ignoradas, então a resenha fica liberada.
+- **Fim de cada volta:** o bot manda a **imagem da mesa** (cada um com a sua dica: Ana "drible", Bia "Barcelona", Caio "sorriso"…).
+
+**4. Debate (60 s):** "💬 Debate! 60s para acusar e se defender. Anfitrião: *votar* encerra antes."
+
+**5. Votação (45 s):** "🗳️ Votem em quem é o impostor: mande o número (1 a 6). Não vale votar em si mesmo."
+- O bot mostra a lista numerada com a dica de cada um.
+- Votam só os jogadores, um voto cada (dá para trocar até fechar). O bot reage ✅ e não mostra o voto antes do fim.
+- **Empate no topo:** segundo turno de 30 s só entre os empatados (eles não votam). Se empatar de novo, o impostor escapa.
+
+**6. Desfecho:**
+- **Votaram num inocente:** "😱 *Bia* era INOCENTE! O impostor era *Caio*. Ele vence a rodada! O segredo era *Ronaldinho*."
+- **Pegaram o impostor:** "🎯 Pegaram o impostor: *Caio*! Última chance: Caio, mande o segredo em 20s."
+  - se acertar (nome ou apelido, tolerando erro de digitação): "😈 Caio acertou *Ronaldinho* e rouba a vitória!";
+  - se errar ou estourar o tempo: "✅ Vitória do grupo! O segredo era *Ronaldinho*."
+- No fim vem a **imagem do resultado**:
+  - o segredo revelado em destaque e o impostor marcado;
+  - as dicas das 2 voltas;
+  - quem votou em quem (com setas ou uma lista "Ana → Caio");
+  - os pontos.
+
+### 18.5 Pontos e ranking
+
+| Situação | Pontos |
+|---|---|
+| Inocente que votou no impostor (grupo venceu) | +2 |
+| Inocente, grupo venceu, mas votou errado | +1 |
+| Impostor escapou da votação | +5 |
+| Impostor pego, mas acertou o segredo | +4 |
+| Cada inocente, quando o impostor vence | 0 |
+
+**Ranking da temporada:** vitória para o lado vencedor (o impostor sozinho, ou todos os inocentes) e derrota para o outro.
+
+**Com 2 impostores:**
+- eles sabem quem é o parceiro (vem na mensagem do privado);
+- o grupo vota em 2 nomes;
+- é preciso pegar os dois para vencer;
+- se pegarem os dois, qualquer um deles pode chutar o segredo.
+
+### 18.6 Casos difíceis (e o que o bot faz)
+
+- **Mensagem no privado que não chega** (o WhatsApp às vezes só informa o @lid):
+  - o bot tenta primeiro o número (@s.whatsapp.net), depois o @lid;
+  - se os dois falharem, avisa no grupo "Não consegui te mandar a carta, *Ana*: mande *oi* para o bot no privado";
+  - a 1ª volta só começa quando todos receberam, ou depois de 45 s (com quem recebeu).
+- **"carta" no grupo:** o bot reenvia a carta no privado de quem pediu. Nunca mostra no grupo.
+- **Alguém sai (*sair*) no meio:**
+  - inocente: sai da ordem e o jogo segue (mínimo de 3; abaixo disso, cancela);
+  - impostor: "🏃 O impostor fugiu! Era *Caio*." Vitória do grupo e segredo revelado.
+- **Impostor fala o segredo por acaso** (adivinhou) na dica: a dica é recusada como as outras. A regra é igual para todos, então isso não denuncia ninguém.
+- **Inocente fala o nome sem querer:** dica recusada antes de aparecer na mesa. Não dá para apagar a mensagem do grupo; o bot só recusa e pede outra. O risco existe, e o próprio grupo cobra.
+- **Ninguém vota:** o impostor escapa.
+- **Partida esquecida:** a regra que já existe encerra salas paradas.
+
+### 18.7 Mensagens no privado: como funciona e limites
+
+- **Envio:** o motor ganha um tipo novo de saída, `{ type: 'dm', to, text }`. O `dispatch` envia pela Evolution para o número da pessoa (`sendText` já aceita qualquer número).
+- **Recebimento:** o webhook hoje ignora tudo que não é grupo. Ele passa a aceitar mensagem privada **só** para o Impostor:
+  - se a pessoa está numa partida aberta do Impostor e manda *oi*, *carta* ou *segredo*, o bot reenvia a carta;
+  - qualquer outra mensagem privada continua ignorada, sem resposta. O bot não vira chat.
+- **Segurança:**
+  - é a instância do jogo (`EVOLUTION_INSTANCE`);
+  - o bot pessoal de finanças (instância `financas`) não é tocado;
+  - o filtro de instância que já existe continua.
+- **Volume:** no máximo 10 mensagens privadas por partida, mais reenvios, longe de qualquer limite do WhatsApp.
+- **Privacidade:** o segredo nunca vai para o grupo antes do fim, nem para os logs.
+
+### 18.8 O que muda no código (mapa)
+
+| Arquivo | Mudança |
+|---|---|
+| `src/lib/party/content/impostor.ts` (novo) | segredos por tema, com apelidos e palavras proibidas |
+| `src/lib/party/impostor.ts` (novo) | módulo: sala, cartas, vez, validação da dica, debate, votação, segundo turno, palpite, pontos |
+| `src/lib/party/modules.ts` | registra o módulo (`rules`, `create`, `start`, `answer`, `timeout`, `skip`, `finish`, `board`, `seenItems`) |
+| `src/lib/game/types.ts` | `ImpostorParty` (tema, segredo, impostores, ordem, vez, volta, fase, dicas, votos, segundo turno, quem recebeu a carta) e a saída `dm` |
+| `src/lib/dispatch.ts` | envia `dm` para o número (falha não para o jogo; avisa no grupo) |
+| `src/lib/whatsapp/evolution.ts` | aceita mensagem privada (com marca `isPrivate`) |
+| `src/lib/game/engine.ts` | rota da mensagem privada: acha a partida do Impostor da pessoa e reenvia a carta; ignora o resto |
+| `src/lib/store/*` | busca da partida aberta do Impostor de uma pessoa (pelo id, entre as salas abertas) |
+| `src/lib/images/*` | imagens da mesa (dicas) e do resultado (segredo, votos, pontos) |
+| `src/lib/party/engine.ts` | comando `abrir impostor [tema] [2] [rápido]`; *carta* e *votar* |
+| `src/lib/game/commands.ts` + ajuda | "ABRIR IMPOSTOR · blefe: ache o impostor" (a imagem da ajuda passa a ter 22 jogos) |
+
+**Agendamentos (QStash):** um por vez de dica, mais cartas, debate, votação e palpite. Dá ~17 por partida com 6 pessoas, dentro da cota diária (350), que é dividida com a carga da base. A dica que chega antes do prazo cancela o agendamento pelo token, como já é feito.
+
+### 18.9 Testes (antes de publicar)
+
+1. **Sorteio:** impostor nunca é o 1º da volta 1; o segredo respeita o tema e o histórico do grupo.
+2. **Cartas:** cada inocente recebe o segredo e o impostor só o tema; com 2 impostores, cada um sabe o parceiro; o segredo não aparece em nenhuma mensagem do grupo antes do fim (o teste varre todas as saídas).
+3. **Dicas:**
+   - mais de uma palavra, palavra proibida e palavra repetida são recusadas, e a pessoa segue na vez;
+   - dica de quem não está na vez é ignorada;
+   - fim do tempo marca "—".
+4. **Votação:** voto em si mesmo recusado; um voto por pessoa (troca permitida); empate leva ao segundo turno; novo empate deixa o impostor escapar.
+5. **Desfechos:** impostor escapa (+5); pego e acerta (+4, rouba); pego e erra (grupo +2 / +1); impostor sai no meio; inocente sai e fica abaixo de 3.
+6. **Privado:**
+   - o webhook lê mensagem privada;
+   - *oi* no privado de quem está na partida reenvia a carta;
+   - *oi* de quem não está é ignorado;
+   - qualquer outra mensagem privada é ignorada;
+   - falha no envio avisa no grupo.
+7. **Imagens:** mesa e resultado com 4 e 10 jogadores (sem estourar a altura).
+8. **Partida inteira simulada:** 6 pessoas, ponta a ponta, com o relógio de mentira.
+
+### 18.10 Piloto e publicação
+
+- **Fase 1 (núcleo, ~1,5 dia):** conteúdo, módulo, regras, pontos, testes 1 a 5 e 8.
+- **Fase 2 (privado, ~1 dia):** saída `dm`, webhook privado, *carta*/*oi*, testes 6.
+- **Fase 3 (imagens e ajuda, ~0,5 dia):** mesa, resultado, ajuda, sala, testes 7.
+- **Piloto:** uma partida no grupo do admin antes de anunciar. É ali que se confirma, ao vivo, que a mensagem privada chega a quem só tem @lid.
+- **Métricas (pelo `/api/health`, por jogo):** partidas terminadas contra canceladas, quantos pediram *carta* de novo e quanto o impostor vence. O alvo é entre 35% e 50%: se passar de 60%, aumentam as voltas ou o tempo de debate; se ficar abaixo de 25%, entra o modo disfarce, que é mais difícil para o grupo.
+
+### 18.11 Ideias para depois (fase 2 do jogo)
+
+- **Modo disfarce:** o impostor recebe um segredo parecido (ex.: todos "Neymar", ele "Vinícius Júnior") e **não sabe** que é o impostor. É mais difícil e mais engraçado.
+- **Tema do grupo:** o admin cadastra segredos próprios (apelidos de gente do grupo, times da várzea), com `impostor adicionar <tema>: <nome>`.
+- **Dica em áudio:** fora de escopo; o bot só lê texto.
+
+### 18.12 Decisões para o dono (com a recomendação)
+
+1. **Quem vota:** só quem joga (recomendado) ou o grupo todo?
+2. **Empate na votação:** segundo turno entre os empatados (recomendado) ou o impostor escapa direto?
+3. **Debate de 60 s antes do voto:** sim (recomendado), com *votar* para pular.
+4. **2 impostores com 8 ou mais:** como opção `abrir impostor 2` (recomendado) ou automático?
+5. **Palpite final do impostor:** no grupo, à vista de todos (recomendado, dá tensão), ou no privado?
+6. **Conta para o ranking da temporada:** sim (recomendado).
