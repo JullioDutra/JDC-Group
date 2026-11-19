@@ -1,7 +1,8 @@
 import { firstName, normalize } from '../game/text';
 import type { ImpostorParty, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, freshFirst, normalizeAnswer, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
-import { IMPOSTOR_SECRETS, IMPOSTOR_THEMES, getImpostorSecret } from './content/impostor';
+import { IMPOSTOR_THEMES, getImpostorSecret, impostorPool } from './content/impostor';
+import { safeFirstName } from '../images/glyphs';
 
 /**
  * Impostor do Futebol (blefe e dedução). Todos recebem no privado o mesmo
@@ -30,7 +31,14 @@ export const IMPOSTOR_RULES = [
 
 /** Lista de temas para o grupo escolher ("abrir impostor clubes"). */
 export function impostorThemesText(head = ''): string {
-  return [head, '😈 *Temas do Impostor* (mande *abrir impostor* + tema):', IMPOSTOR_THEMES.map((t) => t.keys[0]).join(', '), 'Sem tema: mistura tudo. *rápido* no fim: 25s por dica.']
+  const keys = (futebol: boolean) => IMPOSTOR_THEMES.filter((t) => (t.category === 'futebol') === futebol).map((t) => t.keys[0]).join(', ');
+  return [
+    head,
+    '😈 *Temas do Impostor* (mande *abrir impostor* + tema):',
+    `⚽ Futebol: ${keys(true)}`,
+    `🌎 Gerais: ${keys(false)}`,
+    'Sem tema: mistura os de futebol. *geral*: mistura os gerais. *rápido* no fim: 25s por dica.',
+  ]
     .filter(Boolean)
     .join('\n');
 }
@@ -48,6 +56,8 @@ export function newImpostor(
 const inGame = (state: ImpostorParty, jid: string) => state.players.some((p) => p.jid === jid && p.missed < 99);
 const alive = (state: ImpostorParty) => state.order.filter((jid) => inGame(state, jid));
 const nameOf = (state: ImpostorParty, jid: string | undefined) => firstName(state.players.find((p) => p.jid === jid)?.name ?? '?');
+/** Na imagem: primeiro nome sem emoji (o resto da linha não some). */
+const boardName = (state: ImpostorParty, jid: string | undefined) => safeFirstName(state.players.find((p) => p.jid === jid)?.name ?? '?');
 const clueSeconds = (state: ImpostorParty) => (state.fast ? IMPOSTOR_FAST_SECONDS : PARTY_CONFIG.impostor.seconds);
 const secretOf = (state: ImpostorParty) => getImpostorSecret(state.secretId)!;
 
@@ -69,8 +79,8 @@ export function cardText(state: ImpostorParty, jid: string): string {
 const dm = (state: ImpostorParty, jid: string): Outgoing => ({ type: 'dm', to: jid, text: cardText(state, jid), name: nameOf(state, jid) });
 
 export function startImpostor(state: ImpostorParty, deps: PartyDeps): Outgoing[] {
-  const pool = IMPOSTOR_SECRETS.filter((s) => !state.theme || s.theme === state.theme);
-  state.secretId = freshFirst(pool.map((s) => s.id), deps.rng, deps.seen)[0];
+  // Sem tema: futebol misturado; "geral": os temas gerais. O que o grupo não viu vem primeiro.
+  state.secretId = freshFirst(impostorPool(state.theme).map((s) => s.id), deps.rng, deps.seen)[0];
   const jids = state.players.map((p) => p.jid);
   state.impostor = jids[Math.floor(deps.rng() * jids.length)];
   // Ordem sorteada; o impostor nunca abre a 1ª volta (seria difícil demais para ele).
@@ -343,13 +353,13 @@ export function impostorBoard(state: ImpostorParty, final: boolean, subtitle?: s
     const lines = [`Dicas: ${words.map((c) => (c ? (c.word ?? '—') : '…')).join(' · ')}`];
     if (final) {
       const vote = state.runoffVotes[jid] ?? state.votes[jid];
-      lines.push(vote ? `Votou em: ${nameOf(state, vote)}` : 'Não votou');
+      lines.push(vote ? `Votou em: ${boardName(state, vote)}` : 'Não votou');
       const score = state.players.find((p) => p.jid === jid)?.score ?? 0;
       if (score) lines.push(`+${score} pontos`);
     }
     const isImpostor = final && jid === state.impostor;
     return {
-      head: `${i + 1}. ${nameOf(state, jid)}${isImpostor ? ' · IMPOSTOR' : ''}${inGame(state, jid) ? '' : ' (saiu)'}`,
+      head: `${i + 1}. ${boardName(state, jid)}${isImpostor ? ' · IMPOSTOR' : ''}${inGame(state, jid) ? '' : ' (saiu)'}`,
       lines,
       highlight: isImpostor,
     };

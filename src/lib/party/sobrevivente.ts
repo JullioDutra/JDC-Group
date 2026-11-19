@@ -2,6 +2,7 @@ import { firstName, isChatter } from '../game/text';
 import type { ContentCategory, IncomingMessage, Outgoing, PartyPlayer, SobreviventeParty } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, normalizeAnswer, pendingResults, react, schedule, shuffle, text, freshFirst } from './common';
 import { getSurvivorList, survivorPool } from './content/sobrevivente';
+import { safeName } from '../images/glyphs';
 
 /**
  * Sobrevivente: uma categoria fechada por volta. Na ordem da sala, cada um diz
@@ -167,8 +168,8 @@ export function finishSobrevivente(state: SobreviventeParty, reason: string): Ou
   const rows = ranked.map((p) => {
     const outAt = state.out.includes(p.jid);
     return {
-      head: p.name,
-      lines: [`${state.answers[p.jid] ?? 0} acertos · ${outAt ? 'eliminado' : livesLabel(state.lives[p.jid])}`],
+      head: safeName(p.name, 24),
+      lines: [`${state.answers[p.jid] ?? 0} acerto${state.answers[p.jid] === 1 ? '' : 's'} · ${outAt ? 'eliminado' : livesLabel(state.lives[p.jid])}`],
       highlight: winners.includes(p),
     };
   });

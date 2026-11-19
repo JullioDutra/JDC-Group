@@ -4,6 +4,7 @@ import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { DraftParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
 import { POSITION_LABEL } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, award, freshPick, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
+import { safeName } from '../images/glyphs';
 
 /**
  * Draft da Resenha (do "Draft 5x5" do Projeto Trivia): até 8 pessoas, ordem em
@@ -130,7 +131,7 @@ function advance(state: DraftParty, deps: PartyDeps): Outgoing[] {
 export function draftRows(state: DraftParty, withVotes: boolean) {
   const counts = voteCounts(state);
   return state.players.map((p, i) => ({
-    head: `${i + 1} · ${p.name}${withVotes ? ` · ${counts[i]} voto${counts[i] === 1 ? '' : 's'}` : ''}`,
+    head: `${i + 1} · ${safeName(p.name, 16)}${withVotes ? ` · ${counts[i]} voto${counts[i] === 1 ? '' : 's'}` : ''}`,
     lines: state.rules.map((r, k) => `${r.pos}: ${state.picks[p.jid]?.[k]?.name ?? '—'}`),
   }));
 }

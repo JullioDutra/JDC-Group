@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import { createLookup } from '../src/lib/ai';
 import { handleMessage, handleTick } from '../src/lib/game/engine';
 import type { ImpostorParty, Outgoing } from '../src/lib/game/types';
-import { IMPOSTOR_SECRETS, findImpostorTheme, getImpostorSecret } from '../src/lib/party/content/impostor';
+import { IMPOSTOR_GERAL, IMPOSTOR_SECRETS, IMPOSTOR_THEMES, findImpostorTheme, getImpostorSecret, impostorPool } from '../src/lib/party/content/impostor';
+import { ANAGRAMS } from '../src/lib/party/content/anagramas';
 import { IMPOSTOR_POINTS, givesAway } from '../src/lib/party/impostor';
 import { parsePartyStart } from '../src/lib/party/engine';
 import { MemoryStore } from '../src/lib/store/memory';
@@ -226,4 +227,54 @@ test('Impostor no privado: "oi" de quem joga reenvia a carta; resto e quem não 
   assert.equal(parsed?.private, true);
   assert.equal(parsed?.senderJid, '5511999@s.whatsapp.net');
   assert.equal(evolution.parseWebhook({ event: 'messages.upsert', instance: 'jogos', data: { key: { remoteJid: 'status@broadcast', fromMe: false, id: 'S1' }, message: { conversation: 'x' } } }), null);
+});
+
+// ---------- Rodada 7: mais conteúdo ----------
+
+test('Impostor: 4 temas novos de futebol, temas gerais só quando pedidos e nomes a mais só no Impostor', async () => {
+  const futebol = IMPOSTOR_SECRETS.filter((s) => s.category === 'futebol');
+  const gerais = IMPOSTOR_SECRETS.filter((s) => s.category === 'geral');
+  assert.ok(futebol.length >= 350, `${futebol.length} de futebol`);
+  assert.ok(gerais.length >= 240, `${gerais.length} gerais`);
+  for (const t of IMPOSTOR_THEMES) {
+    const n = IMPOSTOR_SECRETS.filter((s) => s.theme === t.theme).length;
+    assert.ok(n >= 15, `tema ${t.theme} tem só ${n}`);
+  }
+  assert.equal(new Set(IMPOSTOR_SECRETS.map((s) => s.id)).size, IMPOSTOR_SECRETS.length, 'ids únicos');
+  assert.ok(!IMPOSTOR_THEMES.some((t) => t.theme === 'coisa do futebol'));
+  // Os nomes a mais não vazam para o Anagrama.
+  assert.ok(IMPOSTOR_SECRETS.some((s) => s.name === 'Lucas Paquetá'));
+  assert.ok(!ANAGRAMS.some((a) => a.answer === 'Lucas Paquetá'));
+  // Temas pedidos pelo nome.
+  assert.equal(findImpostorTheme('copas'), 'edição da Copa');
+  assert.equal(findImpostorTheme('estadios do mundo'), 'estádio do mundo');
+  assert.equal(findImpostorTheme('lances'), 'lance do futebol');
+  assert.equal(findImpostorTheme('competicoes'), 'competição');
+  assert.equal(findImpostorTheme('lugares'), 'lugar');
+  assert.equal(findImpostorTheme('filmes'), 'filme');
+  assert.equal(findImpostorTheme('geral'), IMPOSTOR_GERAL);
+  // Sem tema: só futebol; "geral": só os gerais.
+  assert.ok(impostorPool(null).every((s) => s.category === 'futebol'));
+  assert.ok(impostorPool(IMPOSTOR_GERAL).every((s) => s.category === 'geral'));
+  assert.ok(impostorPool('lugar').every((s) => s.theme === 'lugar'));
+  // Copa: o ano (inteiro ou de 2 dígitos) entrega; "tri" não.
+  const copa70 = IMPOSTOR_SECRETS.find((s) => s.name === 'Copa de 1970')!;
+  assert.ok(givesAway(copa70.id, '1970') && givesAway(copa70.id, '70'));
+  assert.ok(!givesAway(copa70.id, 'tri') && !givesAway(copa70.id, 'Pelé'));
+  const lance = IMPOSTOR_SECRETS.find((s) => s.name === 'Gol olímpico')!;
+  assert.ok(givesAway(lance.id, 'olímpico') && !givesAway(lance.id, 'escanteio'));
+
+  // No grupo: "temas do impostor" separa futebol e gerais; "abrir impostor geral" sorteia um tema geral.
+  const t = await table(4, 11, 'geral');
+  assert.equal(getImpostorSecret(t.s.secretId)!.category, 'geral');
+  assert.equal(t.s.theme, IMPOSTOR_GERAL);
+  const temas = asText(await t.say('Bia', 'temas do impostor'));
+  assert.match(temas, /Futebol: [^\n]*estadios do mundo[^\n]*copas/);
+  assert.match(temas, /Gerais: [^\n]*filmes[^\n]*lugares/);
+  const f = await table(4, 12, 'futebol');
+  assert.equal(f.s.theme, null, '"futebol" é o mesmo que sem tema');
+  assert.equal(getImpostorSecret(f.s.secretId)!.category, 'futebol');
+  const c = await table(4, 13, 'copas rapido');
+  assert.equal(getImpostorSecret(c.s.secretId)!.theme, 'edição da Copa');
+  assert.equal(c.s.fast, true);
 });

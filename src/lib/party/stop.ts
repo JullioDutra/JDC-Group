@@ -3,6 +3,7 @@ import { firstName, normalize } from '../game/text';
 import type { IncomingMessage, Outgoing, PartyPlayer, StopParty } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, activePlayers, answerMatches, award, finishByScore, freshPick, react, schedule, shuffle, text, warnOnce, pauseBeforeNext } from './common';
 import { STOP_CATEGORIES, STOP_LETTERS, getStopCategory } from './content/stop';
+import { safeName } from '../images/glyphs';
 
 /**
  * Stop coletivo (Adedonha): letra + 5 categorias. Cada um manda UMA mensagem
@@ -152,11 +153,14 @@ export async function closeStopRound(state: StopParty, deps: PartyDeps, reason: 
     const points = verdicts[jid].filter((v) => v === 'ok').length * STOP_POINTS;
     award(p, points, nowMs);
     return {
-      head: `${p.name} · ${points}`,
+      head: `${safeName(p.name)} · ${points}`,
       lines: cats.map((c, i) => `${c.label}: ${state.sheets[jid][i] || '—'} ${verdicts[jid][i] === 'vazia' ? '' : LABEL[verdicts[jid][i]]}`.trim()),
     };
   });
-  const summary = rows.length ? rows.map((r) => r.head).join('\n') : 'Ninguém mandou.';
+  // Na legenda (texto do WhatsApp) vai o nome inteiro; o card da imagem usa o nome curto.
+  const summary = rows.length
+    ? state.arrival.map((jid) => `${state.players.find((x) => x.jid === jid)!.name} · ${verdicts[jid].filter((v) => v === 'ok').length * STOP_POINTS}`).join('\n')
+    : 'Ninguém mandou.';
   const out: Outgoing[] = [
     {
       type: 'image',

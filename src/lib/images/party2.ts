@@ -149,15 +149,23 @@ export function textBoard(
 ): ReactElement {
   const two = rows.length > 3;
   const totalLines = rows.reduce((a, r) => a + r.lines.length + 1, 0) / (two ? 2 : 1);
-  const font = totalLines > 24 ? 20 : totalLines > 16 ? 24 : 28;
+  // Quantos caracteres cabem na linha (Barlow ~0,37 em) e no título do card (Anton maiúsculo ~0,45 em).
+  const room = (font: number) => Math.floor(((two ? 434 : 928) / (font * 0.37)) * 0.95);
+  const headRoom = (size: number) => Math.floor((two ? 430 : 924) / (size * 0.44));
+  const longest = Math.max(0, ...rows.flatMap((r) => r.lines.map((l) => l.length)));
+  // Maior letra que cabe na altura e, se der, sem cortar a linha mais longa.
+  const byHeight = totalLines > 24 ? 20 : totalLines > 16 ? 24 : 28;
+  const font = [28, 24, 20].find((f) => f <= byHeight && longest <= room(f)) ?? 20;
+  // Título do card (nome · pontos/votos): encolhe antes de cortar, para o fim não sumir.
+  const headSize = (head: string) => [font + 6, font + 2, font - 2].find((size) => head.length <= headRoom(size)) ?? font - 2;
   const card = (r: (typeof rows)[number]) =>
     box(
       {
         flexDirection: 'column', width: two ? 470 : 968, backgroundColor: r.highlight ? 'rgba(200,255,62,0.12)' : C.panel,
         border: `2px solid ${r.highlight ? C.lime : C.panelLine}`, borderRadius: 18, padding: '12px 18px',
       },
-      txt(upper(fit(r.head, 34)), { fontFamily: DISPLAY, fontSize: font + 6, color: r.highlight ? C.lime : r.color ?? C.white }),
-      ...r.lines.map((l) => txt(fit(l, two ? 38 : 70), { fontSize: font, fontWeight: 500, lineHeight: 1.25 })),
+      txt(upper(fit(r.head, headRoom(headSize(r.head)))), { fontFamily: DISPLAY, fontSize: headSize(r.head), color: r.highlight ? C.lime : r.color ?? C.white }),
+      ...r.lines.map((l) => txt(fit(l, room(font)), { fontSize: font, fontWeight: 500, lineHeight: 1.25 })),
     );
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(upper(PARTY_CONFIG[game].name), C.panel, C.lime, 24)),

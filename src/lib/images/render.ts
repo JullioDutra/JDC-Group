@@ -1,7 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { ImageResponse } from 'next/og';
 import type { ImageSpec } from '../game/types';
+import { glyphSafe } from './glyphs';
 import { buildImage } from './templates';
 import { BODY, DISPLAY, H, W } from './theme';
 
@@ -27,8 +29,35 @@ function loadFonts(): Promise<Font[]> {
   return fontsPromise;
 }
 
-/** Renderiza uma imagem do jogo em PNG. */
+/** O filtro de glifos em todo texto dos dados da imagem (nomes de jogadores, palpites...). */
+export function glyphSafeSpec<T>(value: T): T {
+  if (typeof value === 'string') return glyphSafe(value) as T;
+  if (Array.isArray(value)) return value.map(glyphSafeSpec) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, glyphSafeSpec(v)])) as T;
+  }
+  return value;
+}
+
+/** E de novo na árvore pronta: pega o texto montado no próprio template. */
+export function glyphSafeTree(node: ReactNode): ReactNode {
+  if (typeof node === 'string') return glyphSafe(node);
+  if (Array.isArray(node)) return node.map(glyphSafeTree);
+  if (isValidElement(node)) {
+    const children = (node.props as { children?: ReactNode }).children;
+    if (children === undefined || children === null) return node;
+    const next = Array.isArray(children) ? children.map(glyphSafeTree) : [glyphSafeTree(children)];
+    return cloneElement(node, undefined, ...next);
+  }
+  return node;
+}
+
+/**
+ * Renderiza uma imagem do jogo em PNG. Todo texto passa pelo filtro de glifos:
+ * nada de baixar fonte ou emoji da internet na hora (ver glyphs.ts).
+ */
 export async function renderImage(spec: ImageSpec): Promise<Buffer> {
-  const response = new ImageResponse(buildImage(spec), { width: W, height: H, fonts: await loadFonts() });
+  const element = glyphSafeTree(buildImage(glyphSafeSpec(spec))) as ReactElement;
+  const response = new ImageResponse(element, { width: W, height: H, fonts: await loadFonts() });
   return Buffer.from(await response.arrayBuffer());
 }

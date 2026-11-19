@@ -5,6 +5,7 @@ import { firstName, formatNumber } from '../game/text';
 import { EscalacaoParty, IntrusoParty, MelhorTimeParty, PartyState, QuizParty, SLOTS, Top10List, Top10Party } from '../game/types';
 import { PARTY_CONFIG, standings } from '../party/engine';
 import { ONE_X_ONE } from '../party/common';
+import { impostorThemeLabel } from '../party/content/impostor';
 import { BODY, C, DISPLAY, H, W, box, brand, fit, pill, stage, txt } from './theme';
 
 /** Imagens do Modo em Grupo: sala aberta, tabela da Escalação e quadro do Top 10. */
@@ -78,7 +79,7 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     rules: [
       'O bot leiloa craques; para dar lance, mande só o número.',
       'Posição completa (ex.: 2 defensores) não dá lance em outro dela.',
-      'Anfitrião escolhe o modo: *overall* (maior soma) ou *votação* (o grupo vota).',
+      'Anfitrião escolhe o modo: overall (maior soma) ou votação (o grupo vota).',
     ],
   },
   grade: {
@@ -136,7 +137,7 @@ export function partyLobby(state: PartyState): ReactElement {
     const cat = 'category' in state && state.category ? ` · ${catLabel[state.category] ?? state.category}` : '';
     subtitle =
       state.game === 'impostor' && state.theme
-        ? `${info.subtitle} · tema: ${state.theme}`
+        ? `${info.subtitle} · tema: ${impostorThemeLabel(state.theme)}`
         : state.game === 'anagrama' && state.theme
         ? `${PARTY_CONFIG.anagrama.rounds} palavras · tema: ${state.theme}`
         : state.game === 'leilao'
@@ -396,6 +397,8 @@ export function partyScore(state: PartyState, title: string, final: boolean): Re
   const ranked = [...state.players].sort((a, b) => b.score - a.score || a.lastHitAt - b.lastHitAt);
   const top = Math.max(1, ranked[0]?.score ?? 1);
   const rowH = Math.min(84, Math.floor(860 / Math.max(ranked.length, 1)));
+  // A bolinha da posição não pode passar da altura da linha (20 jogadores no Top 100).
+  const dot = Math.min(48, rowH - 10);
   const cfg = PARTY_CONFIG[state.game];
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(upper(cfg.name), final ? C.lime : C.panel, final ? C.ink : C.lime, 24)),
@@ -414,8 +417,8 @@ export function partyScore(state: PartyState, title: string, final: boolean): Re
             backgroundColor: lead ? 'rgba(200,255,62,0.16)' : 'rgba(255,255,255,0.05)',
           }),
           txt(i + 1, {
-            width: 48, height: 48, borderRadius: 24, flexShrink: 0, alignItems: 'center', justifyContent: 'center',
-            fontFamily: DISPLAY, fontSize: 26, color: lead ? C.ink : C.white, backgroundColor: lead ? C.lime : 'rgba(255,255,255,0.08)',
+            width: dot, height: dot, borderRadius: dot / 2, flexShrink: 0, alignItems: 'center', justifyContent: 'center',
+            fontFamily: DISPLAY, fontSize: Math.min(26, dot - 12), color: lead ? C.ink : C.white, backgroundColor: lead ? C.lime : 'rgba(255,255,255,0.08)',
           }),
           box({ width: 14, height: 14, borderRadius: 7, backgroundColor: colorOf(state, p.jid), flexShrink: 0 }),
           txt(upper(fit(firstName(p.name), 16)), { flexGrow: 1, fontFamily: DISPLAY, fontSize: 34 }),

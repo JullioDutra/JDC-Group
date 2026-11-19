@@ -5,6 +5,7 @@ import type { PlayerRecord } from '../players/types';
 import { BASE_LOADING, careerPath } from './basegames';
 import { featuresOf } from './gridCriteria';
 import { PARTY_CONFIG, PartyDeps, Save, award, freshFirst, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
+import { safeFirstName } from '../images/glyphs';
 
 /**
  * Leilão de Craques: um jogo de mercado, bem diferente dos de pergunta.
@@ -312,13 +313,14 @@ export function leilaoRows(state: LeilaoParty, final: boolean) {
       const here = squad.filter((x) => (x.slot ?? slotOf(x)) === pos);
       return Array.from({ length: LEILAO_SLOTS[pos] }, (_, k) => {
         const s = here[k];
-        return s ? `${POSITION_LABEL[pos]} ${s.name}${revealOverall ? ` · overall ${s.overall}` : ''} · ${s.price} moedas` : `${POSITION_LABEL[pos]} — vaga —`;
+        // No resultado do overall vale o overall (o preço já não importa e a linha cabe em letra maior).
+        return s ? `${pos} ${s.name} · ${revealOverall ? `overall ${s.overall}` : `${s.price} moedas`}` : `${pos} — vaga —`;
       });
     });
     lines.push(`Moedas: ${state.budget[p.jid] ?? 0}`);
     const head = vote
-      ? `${i + 1}. ${firstName(p.name)}${final ? ` · ${counts[i]} voto${counts[i] === 1 ? '' : 's'}` : ''}`
-      : `${firstName(p.name)}${revealOverall ? ` · ${teamScore(squad).total}` : ''}`;
+      ? `${i + 1}. ${safeFirstName(p.name)}${final ? ` · ${counts[i]} voto${counts[i] === 1 ? '' : 's'}` : ''}`
+      : `${safeFirstName(p.name)}${revealOverall ? ` · ${teamScore(squad).total}` : ''}`;
     return { head, lines };
   });
 }

@@ -60,7 +60,7 @@ import { anagramThemesText, newAnagrama } from './anagrama';
 import { isNextBlocked } from '../game/blocks';
 import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
 import { impostorThemesText, newImpostor } from './impostor';
-import { findImpostorTheme } from './content/impostor';
+import { findImpostorTheme, impostorThemeLabel } from './content/impostor';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
 import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
@@ -197,8 +197,10 @@ export async function createParty(
     const words = start.rest.split(' ').filter(Boolean);
     const fast = words.some((w) => ['rapido', 'turbo', 'relampago'].includes(w));
     const rest = words.filter((w) => !['rapido', 'turbo', 'relampago'].includes(w)).join(' ');
-    const theme = rest ? findImpostorTheme(rest) : undefined;
-    if (rest && !theme) return [text(impostorThemesText(`Não achei o tema "${rest}".`))];
+    // "futebol" é o padrão (sem tema); "geral" mistura os temas gerais.
+    const asked = rest === 'futebol' ? '' : rest;
+    const theme = asked ? findImpostorTheme(asked) : undefined;
+    if (asked && !theme) return [text(impostorThemesText(`Não achei o tema "${asked}".`))];
     state = { ...base('impostor', host, nowMs), ...newImpostor(theme ?? null, fast) } as PartyState;
   } else if (start.game === 'leilao') {
     state = { ...base('leilao', host, nowMs), ...newLeilao(leilaoModeOf(start.rest) ?? 'overall') } as PartyState;
@@ -273,6 +275,13 @@ function lobbyCaption(state: PartyState): string {
   } else if (state.game === 'top10') {
     lines.push(
       `${state.host.name}, escolha a categoria (*futebol*, *geral*, *política* ou *aleatório*) e mande *começar*.`,
+    );
+  } else if (state.game === 'impostor') {
+    lines.push(
+      state.theme
+        ? `Tema: *${impostorThemeLabel(state.theme)}*.`
+        : 'Tema: futebol, misturado. Tem também filmes, lugares, países... (*temas do impostor*).',
+      `${state.host.name}, mande *começar* quando todos entrarem (mínimo ${cfg.minPlayers}).`,
     );
   } else {
     lines.push(`${state.host.name}, mande *começar* quando todos entrarem.`);

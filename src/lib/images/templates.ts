@@ -285,17 +285,20 @@ function ranking(groupName: string, rows: RankingRow[], season?: number, since?:
   const cell = (v: string | number, width: number, strong = false) =>
     txt(v, { width, justifyContent: 'center', fontSize: 34, fontWeight: strong ? 700 : 500, color: strong ? C.lime : C.white });
   const head = (v: string, width: number) => txt(v, { width, justifyContent: 'center', fontSize: 22, fontWeight: 700, color: C.muted, letterSpacing: 2 });
+  // Até 7 linhas no tamanho grande; com 8 a 10 (o ranking mostra o top 10) tudo encolhe para caber.
+  const many = rows.length > 7;
+  const rowH = many ? 66 : 84;
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(upper(fit(groupName, 20)), C.panel, C.lime, 24)),
-    txt('RANKING', { fontFamily: DISPLAY, fontSize: 150, lineHeight: 1, marginTop: 36 }),
-    txt(`${season ? `Temporada ${season}${since ? ` · desde ${since}` : ''} · ` : ''}Vitória 3 pts · empate 1 pt`, { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: 26 }),
+    txt('RANKING', { fontFamily: DISPLAY, fontSize: many ? 112 : 150, lineHeight: 1, marginTop: many ? 22 : 36, flexShrink: 0 }),
+    txt(`${season ? `Temporada ${season}${since ? ` · desde ${since}` : ''} · ` : ''}Vitória 3 pts · empate 1 pt`, { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: many ? 16 : 26, flexShrink: 0 }),
     box({ padding: '0 24px', marginBottom: 8 }, txt('', { width: 70 }), txt('', { flexGrow: 1 }), head('J', 90), head('V', 90), head('E', 90), head('D', 90), head('PTS', 110)),
     box(
-      { flexDirection: 'column', gap: 10, flexGrow: 1 },
+      { flexDirection: 'column', gap: many ? 8 : 10, flexGrow: 1 },
       ...rows.map((r, i) =>
         box(
           {
-            alignItems: 'center', height: 84, padding: '0 24px', borderRadius: 18,
+            alignItems: 'center', height: rowH, padding: '0 24px', borderRadius: 18, flexShrink: 0,
             backgroundColor: i === 0 ? 'rgba(200,255,62,0.14)' : C.panel,
             border: `2px solid ${i === 0 ? C.lime : C.panelLine}`,
           },

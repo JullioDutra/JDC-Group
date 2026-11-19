@@ -828,3 +828,89 @@ Todo mundo recebe no privado o mesmo segredo (um craque, clube, seleção…), m
 **Bug achado no caminho:** a comparação de pessoa pelo "número" usava só os dígitos do id. Em id sem números, qualquer pessoa "batia". Agora compara o id inteiro e só usa os dígitos quando há pelo menos 6. Vale para o privado do Impostor e para o bloqueio do *próxima*.
 
 **Falta (só ao vivo):** confirmar no piloto que a carta chega a quem o WhatsApp só identifica pelo @lid.
+
+## 19. Rodada 7: revisão das imagens e mais conteúdo no Impostor (19/11)
+
+> Pedido: "Faça uma revisão de como ficaram as imagens, verifique possíveis erros. Adicione mais conteúdo nesse modo (Impostor)."
+
+### 19.1 Revisão das imagens: como foi feita
+
+- **Todas as telas geradas:** 37 imagens, uma para cada tipo e situação.
+  - Casos difíceis: 10 a 20 jogadores, nomes longos ("João Pedro de Oliveira Santos"), letras de fora do português (Modrić, Čech, Szczęsny, Çalhanoğlu) e nomes do WhatsApp com emoji ("Júllio 🔥", "🦁🦁").
+  - O roteiro ficou no projeto: `npm run render:stress` (os PNGs vão para `samples/stress`).
+- **Fontes conferidas letra a letra:** as fontes das imagens (Anton e Barlow) só desenham o alfabeto latino, os acentos do português, espanhol e francês e algumas pontuações.
+
+### 19.2 Revisão das imagens: o que estava errado
+
+| # | Problema | Onde | Efeito |
+|---|---|---|---|
+| 1 | Emoji no nome do jogador | todas as imagens com nomes | o gerador tenta baixar o emoji da internet; se falha, **a imagem não sai** (e sempre demora mais) |
+| 2 | Letra fora da fonte (ć, č, ł, ę, ğ) | nomes de craques (Modrić, Čech na escalação do Chelsea 2012) e de jogadores | a letra sai em outra fonte, torta, depois de um download |
+| 3 | Ranking com 8 a 10 linhas | `ranking` | a tabela sobe por cima do título "RANKING" |
+| 4 | Nome longo no título do card | Draft (votos), Stop (pontos), Impostor (IMPOSTOR) | o que vem depois do nome some ("3 votos") |
+| 5 | Linhas longas do Leilão | resultado do Leilão | o overall de cada craque saía cortado ("overal…") |
+| 6 | Asteriscos do WhatsApp | sala do Leilão | "\*overall\*" aparecia com os asteriscos na imagem |
+| 7 | Nome só de emoji | Intruso, Escalação, Impostor, Leilão | ficava vazio ("Zé, , Bia") |
+| 8 | Bolinha da posição | placar com 20 jogadores (Top 100) | maior que a linha |
+| 9 | "1 acertos" | resultado do Sobrevivente | plural errado |
+
+### 19.3 Inventário do Impostor (antes)
+
+| Tema | Segredos |
+|---|---|
+| craque brasileiro | 30 |
+| craque do mundo | 28 |
+| clube brasileiro | 25 |
+| clube do exterior | 26 |
+| seleção | 26 |
+| técnico | 18 |
+| estádio (Brasil) | 16 |
+| **Total** | **169**, todos de futebol |
+
+### 19.4 Metas de conteúdo
+
+- **Temas de futebol que já existem:** todos com pelo menos 24 segredos. Os nomes a mais entram só no Impostor; o Anagrama não muda.
+- **4 temas novos de futebol:**
+  - estádio do mundo (Camp Nou, Anfield, La Bombonera…);
+  - competição (Libertadores, Champions, Copa do Brasil…);
+  - lance do futebol (bicicleta, chapéu, caneta, paradinha…);
+  - Copa do Mundo, por edição (Copa de 1970, Copa de 2002…).
+- **Temas gerais, só quando pedidos:** `abrir impostor geral` mistura os gerais, e `abrir impostor filmes` (ou países, animais…) escolhe um tema. Usa os 11 temas gerais do Anagrama mais um tema novo: **lugar** (praia, hospital, aeroporto…), o clássico do jogo.
+- **Sem tema continua só futebol.** `temas do impostor` mostra os de futebol e os gerais separados.
+- **Alvo:** cerca de 350 segredos de futebol e 250 gerais.
+
+### 19.5 Fontes e critério
+
+- **Mesmo critério do Anagrama:** só nome que um grupo brasileiro comum reconhece. Craque recente só entra se já for muito conhecido.
+- **Copa do Mundo:** sede e campeão de cada edição são fatos históricos (FIFA). Entram as 15 edições mais lembradas no Brasil, de 1950 a 2022.
+- **Nada que muda:** nenhum segredo diz em que clube alguém joga hoje nem quem é o técnico atual.
+
+### 19.6 O que fica de fora
+
+- **Copa de 2026:** não conferi a fonte nesta rodada (regra do projeto).
+- **Apelidos de clube** (Tricolor, Timão, Galo): ambíguos, vários clubes têm o mesmo.
+- **"Coisa do futebol" do Anagrama** (goleiro, chuteira): genérico demais para o impostor blefar. Entra o tema "lance do futebol", mais concreto.
+- **Modo disfarce e tema do grupo:** continuam como ideias para depois (18.11).
+
+### 19.7 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Emoji e letra de fora nas imagens | sem download na hora da imagem | **Filtro de glifos** (`images/glyphs.ts`) em todo texto da imagem, nos dados e na árvore pronta. Letra de fora vira a sem acento (ć → c, ł → l, ğ → g), emoji sai, e nome só de emoji vira "?". O texto do WhatsApp continua com emoji. |
+| Ranking com 8 a 10 linhas | caber sem encostar no título | linhas de 66 px e título menor quando passa de 7 |
+| Títulos dos cards (Draft, Stop, Impostor) | o fim não some | nome cortado antes do sufixo (votos, pontos, IMPOSTOR) e letra do título que encolhe antes de cortar |
+| Linhas dos quadros de texto | sem cortar informação | tamanho da letra pela altura **e** pela linha mais longa; o corte depende do tamanho da letra |
+| Leilão | overall visível | linha curta: "DEF Trent Alexander-Arnold · overall 87" (no resultado) ou "· 19 moedas" (durante) |
+| Sala do Leilão | sem asteriscos | corrigido |
+| Placar com 20 | bolinha cabe na linha | bolinha no tamanho da linha |
+| Sobrevivente | "1 acerto" | corrigido |
+| Impostor: temas que já existiam | 24+ cada | craque brasileiro 59, craque do mundo 58, clube do exterior 46, seleção 41, clube brasileiro 37, técnico 30, estádio 25 |
+| Impostor: temas novos de futebol | 4 | estádio do mundo (20), competição (18), lance do futebol (24), edição da Copa (15, de 1950 a 2022) |
+| Impostor: temas gerais | só quando pedidos | 12 temas, 248 segredos: os 11 gerais do Anagrama e **lugar** (24). Pedido com `abrir impostor geral` (mistura) ou pelo tema (`filmes`, `lugares`...). |
+| Total | ~350 futebol + ~250 gerais | **373 de futebol + 248 gerais = 621** (eram 169) |
+| Sem tema | só futebol | igual; `abrir impostor futebol` também |
+| Lista de temas | futebol e gerais separados | `temas do impostor` mostra as duas listas. A legenda da sala diz o tema e lembra dos outros. |
+| Palavra proibida | ano da Copa entrega | ano inteiro ou de 2 dígitos ("70") não vale como dica |
+| Testes | conteúdo, temas, imagens | 5 testes novos: filtro de glifos, nada fora da fonte, imagem com emoji sem rede, cards sem corte, conteúdo e temas do Impostor. **130 passando**; o build passa. |
+
+**Ficou de fora, como planejado:** Copa de 2026, apelidos de clube e "coisa do futebol".
