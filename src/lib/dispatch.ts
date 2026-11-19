@@ -31,6 +31,14 @@ export async function dispatch(
         // WHATSAPP_REACTIONS=0 desliga as reações (✅/❌) sem mexer no jogo.
         if (process.env.WHATSAPP_REACTIONS === '0' || !out.emoji) continue;
         await provider.sendReaction(groupJid, out.messageId, out.participant ?? out.senderJid, out.emoji).catch((e) => console.error('reaction failed', e));
+      } else if (out.type === 'dm') {
+        // Privado (carta do Impostor): se não sair, avisa no grupo sem revelar nada.
+        try {
+          await provider.sendText(out.to, out.text);
+        } catch (error) {
+          console.error('privado falhou', error);
+          await provider.sendText(groupJid, `📭 Não consegui te mandar a carta no privado, *${out.name}*. Mande *oi* para o bot no privado.`);
+        }
       } else if (out.type === 'schedule') {
         await scheduleTick(origin, groupJid, out.token, out.delaySeconds).catch((e) => console.error('schedule failed', e));
       }

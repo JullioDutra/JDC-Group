@@ -18,11 +18,18 @@ export function targetsOf(msg: IncomingMessage): string[] {
   return [...new Set(all.filter((d) => d.length >= 8))];
 }
 
+/** A pessoa (id e apelidos) é a dona deste jid? Compara o id inteiro e, se houver, os dígitos. */
+export function sameMember(ids: string[], jid: string): boolean {
+  if (ids.includes(jid)) return true;
+  const d = digitsOf(jid);
+  return d.length >= 6 && ids.map(digitsOf).includes(d);
+}
+
 /** O remetente está bloqueado para o "próxima"? */
 export async function isNextBlocked(store: Store, msg: IncomingMessage): Promise<boolean> {
   const blocked = await store.getSeen(msg.groupJid, NEXT_BLOCK_KIND).catch(() => [] as string[]);
   if (!blocked.length) return false;
-  const ids = [msg.senderJid, ...(msg.senderAliases ?? [])].map(digitsOf);
+  const ids = [msg.senderJid, ...(msg.senderAliases ?? [])].map(digitsOf).filter((d) => d.length >= 6);
   return ids.some((id) => blocked.includes(id));
 }
 

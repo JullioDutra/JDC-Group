@@ -23,6 +23,7 @@ export const GROUP_GAMES: Array<[command: string, what: string]> = [
   ['abrir ponte', 'quem passou pelos 4 clubes'],
   ['abrir leilão', 'monte o time com 100 moedas'],
   ['abrir anagrama', '+ tema: clubes, capitais, filmes…'],
+  ['abrir impostor', 'blefe: achem o impostor'],
   ['top 100', 'a lista do dia (1 vez por dia)'],
 ];
 

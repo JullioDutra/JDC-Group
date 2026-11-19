@@ -795,3 +795,36 @@ Todo mundo recebe no privado o mesmo segredo (um craque, clube, seleção…), m
 4. **2 impostores com 8 ou mais:** como opção `abrir impostor 2` (recomendado) ou automático?
 5. **Palpite final do impostor:** no grupo, à vista de todos (recomendado, dá tensão), ou no privado?
 6. **Conta para o ranking da temporada:** sim (recomendado).
+
+### 18.13 Decisões do dono (19/11) e ajustes no desenho
+
+| # | Decisão | Efeito no desenho |
+|---|---|---|
+| 1 | Só quem joga vota | igual à 18.4 |
+| 2 | Empate: segundo turno | igual à 18.4 (novo empate: o impostor escapa) |
+| 3 | Debate de **30 s** | era 60 s; o anfitrião ainda pode pular com *votar* |
+| 4 | **Sempre 1 impostor** | sai a opção `abrir impostor 2` e as regras de 2 impostores |
+| 5 | Palpite final no grupo | igual à 18.4 |
+| 6 | Conta para o ranking da temporada | igual à 18.5 |
+
+### 18.14 Planejado x entregue
+
+| Item | Entregue |
+|---|---|
+| Conteúdo | 169 segredos em 7 temas (craque brasileiro, craque do mundo, clube brasileiro, clube do exterior, seleção, técnico, estádio). Vêm das listas do Anagrama, que são só de nomes conhecidos. Cada um tem as palavras proibidas e os apelidos aceitos. |
+| Sala | `abrir impostor [tema] [rápido]`, `temas do impostor`; 4 a 10 pessoas; ninguém entra depois de começar. A sala mostra o tema. |
+| Cartas | No privado de cada um (inocente: o segredo; impostor: só o tema). *carta* no grupo reenvia no privado. O impostor nunca abre a 1ª volta. |
+| Dicas | 2 voltas, 40 s por vez (25 s no rápido). Recusa mais de 1 palavra, pedaço do nome ou apelido e dica repetida; a pessoa segue na vez. Mensagem fora da vez é ignorada. Fim do tempo marca "—". Imagem da mesa no fim de cada volta. |
+| Debate | 30 s; *votar* do anfitrião abre a votação antes. |
+| Votação | Só quem joga; não vale em si mesmo; dá para trocar o voto. Fecha quando todos votam ou no fim do tempo. Empate vai para o 2º turno, em que os empatados não votam. Novo empate: o impostor escapa. |
+| Palpite | No grupo, 20 s, uma tentativa; aceita nome ou apelido com erro pequeno de digitação. |
+| Pontos | Impostor escapa +5; rouba acertando +4; grupo vence: +2 para quem votou certo, +1 para os outros. Vitória ou derrota no ranking da temporada. |
+| Casos difíceis | Impostor sai: vitória do grupo. Ficam menos de 3: cancela. Ninguém vota: o impostor escapa. *encerrar* revela o impostor e não conta vitória. |
+| Privado | Saída `dm` no envio; se falhar, o grupo recebe "não consegui te mandar a carta, mande *oi* para o bot no privado". O webhook aceita mensagem privada, mas o motor só responde a *oi*/*carta* de quem está numa partida aberta. O resto é ignorado e nada mexe em grupo. |
+| Imagens | Mesa (dicas) e resultado (segredo no título, impostor em destaque, dicas, votos e pontos). Conferidas com 4 e 10 jogadores. O texto da imagem não leva emoji, que dependeria de baixar o desenho da internet. |
+| Ajuda | "ABRIR IMPOSTOR · blefe: achem o impostor" (a ajuda tem 22 jogos de grupo e cabe). |
+| Testes | 6 testes novos: conteúdo; partida inteira (cartas, segredo nunca no grupo antes do fim, dicas recusadas, votação, palpite errado e ranking); 2º turno com novo empate; voto em inocente e roubo pelo palpite; fuga do impostor; privado (reenvio, ignora o resto e quem não joga) e o webhook. |
+
+**Bug achado no caminho:** a comparação de pessoa pelo "número" usava só os dígitos do id. Em id sem números, qualquer pessoa "batia". Agora compara o id inteiro e só usa os dígitos quando há pelo menos 6. Vale para o privado do Impostor e para o bloqueio do *próxima*.
+
+**Falta (só ao vivo):** confirmar no piloto que a carta chega a quem o WhatsApp só identifica pelo @lid.

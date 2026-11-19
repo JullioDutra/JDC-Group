@@ -137,7 +137,8 @@ test('Evolution: filtra instância, lê data.participant, mensagem temporária e
   }));
   assert.equal(eph?.text, 'iniciar jogo');
   assert.equal(evolution.parseWebhook({ ...msg({}, { participant: '5511@s.whatsapp.net' }), event: 'MESSAGES_UPSERT' })?.text, 'aceitar');
-  assert.equal(evolution.parseWebhook(msg({}, { key: { remoteJid: '5511@s.whatsapp.net', fromMe: false, id: 'X3' } })), null, 'privado é ignorado');
+  // Privado chega marcado; o motor só responde a quem está numa partida do Impostor (tests/impostor.test.ts).
+  assert.equal(evolution.parseWebhook(msg({}, { key: { remoteJid: '5511@s.whatsapp.net', fromMe: false, id: 'X3' } }))?.private, true, 'privado vem marcado');
   delete process.env.EVOLUTION_INSTANCE;
 });
 

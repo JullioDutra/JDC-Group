@@ -24,6 +24,8 @@ interface UpsertPayload {
       fromMe?: boolean;
       id?: string;
       participant?: string;
+      /** Em conversas privadas, o outro id da pessoa (número ou @lid). */
+      remoteJidAlt?: string;
       participantAlt?: string;
       participantPn?: string;
       senderPn?: string;
@@ -81,7 +83,24 @@ export const evolution: WhatsAppProvider = {
 
     const key = payload.data?.key;
     if (!key?.id || key.fromMe) return null;
-    if (!key.remoteJid?.endsWith('@g.us')) return null; // só grupos
+    if (!key.remoteJid) return null;
+    if (!key.remoteJid.endsWith('@g.us')) {
+      // Privado: só passa adiante; o motor responde apenas a quem está numa partida do Impostor (*oi*/*carta*).
+      if (!/@(s\.whatsapp\.net|lid)$/.test(key.remoteJid)) return null; // status, canais, listas
+      const dmText = textOf(payload.data?.message);
+      const dmCandidates = [key.remoteJid, key.remoteJidAlt, key.senderPn, key.participantPn, key.participantAlt];
+      const dmSender = pickSender(dmCandidates);
+      if (!dmText || !dmSender) return null;
+      return {
+        id: key.id,
+        groupJid: key.remoteJid,
+        senderJid: dmSender,
+        senderAliases: [...new Set(dmCandidates.filter((c): c is string => Boolean(c)).map((c) => c.replace(/:\d+@/, '@')))],
+        senderName: payload.data?.pushName?.trim() || 'Jogador',
+        text: dmText,
+        private: true,
+      };
+    }
     const text = textOf(payload.data?.message);
     const candidates = [key.participant, payload.data?.participant, key.participantAlt, key.participantPn, key.senderPn, payload.data?.participantPn, key.participantLid];
     const sender = pickSender(candidates);

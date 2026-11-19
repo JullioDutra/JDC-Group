@@ -34,6 +34,10 @@ export class MemoryStore implements Store {
     return match ? structuredClone(match) : null;
   }
 
+  async openMatchesByGame(game: string) {
+    return [...this.matches.values()].filter((m) => (m.state as { game?: string }).game === game).map((m) => structuredClone(m));
+  }
+
   async createMatch(groupJid: string, state: SessionState) {
     if (this.matches.has(groupJid)) return null;
     const match: Session = { id: `m${++this.seq}`, groupJid, version: 1, state: structuredClone(state) };

@@ -59,6 +59,8 @@ import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
 import { anagramThemesText, newAnagrama } from './anagrama';
 import { isNextBlocked } from '../game/blocks';
 import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
+import { impostorThemesText, newImpostor } from './impostor';
+import { findImpostorTheme } from './content/impostor';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
 import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
@@ -116,6 +118,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   const lei = norm.match(/^(abrir|jogar) (o )?leilao( de craques)?(?: (?:por |no |modo )?(overall|over|pontos|votacao|voto|votos|grupo))?$/);
   if (lei) return { game: 'leilao', rest: lei[4] ?? '' };
   if (/^((abrir|jogar) )?(o )?top ?100( do dia)?$/.test(norm) || norm === 'desafio do dia') return { game: 'top100', rest: '' };
+  const imp = norm.match(/^(abrir|jogar) (o )?impostor( do futebol)?(?: (?:de |do |da |dos |das )?(.+))?$/);
+  if (imp) return { game: 'impostor', rest: imp[4] ?? '' };
   const ana = norm.match(/^(abrir|jogar) (o )?anagramas?(?: (?:de |do |da |dos |das )?(.+))?$/);
   if (ana) return { game: 'anagrama', rest: ana[3] ?? '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };
@@ -188,6 +192,14 @@ export async function createParty(
     const listIds = TOP100_LISTS.map((l) => l.id);
     const extra = seen.includes(resetTodayKey(day)) ? freshFirst(listIds, deps.rng, seen.filter((x) => listIds.includes(x)))[0] : undefined;
     state = { ...base('top100', host, nowMs), ...newTop100(deps.now, extra) } as PartyState;
+  } else if (start.game === 'impostor') {
+    // "abrir impostor clubes rápido": tema opcional e 25 s por dica.
+    const words = start.rest.split(' ').filter(Boolean);
+    const fast = words.some((w) => ['rapido', 'turbo', 'relampago'].includes(w));
+    const rest = words.filter((w) => !['rapido', 'turbo', 'relampago'].includes(w)).join(' ');
+    const theme = rest ? findImpostorTheme(rest) : undefined;
+    if (rest && !theme) return [text(impostorThemesText(`Não achei o tema "${rest}".`))];
+    state = { ...base('impostor', host, nowMs), ...newImpostor(theme ?? null, fast) } as PartyState;
   } else if (start.game === 'leilao') {
     state = { ...base('leilao', host, nowMs), ...newLeilao(leilaoModeOf(start.rest) ?? 'overall') } as PartyState;
   } else if (start.game === 'anagrama') {
@@ -475,7 +487,7 @@ export async function handlePartyMessage(
 
   // "próxima" no meio da rodada (anfitrião): revela e já abre a seguinte, sem pausa.
   if (NEXT_WORDS.includes(norm) && !isHost) return []; // comando, nunca palpite
-  if (NEXT_WORDS.includes(norm) && isHost && !['melhortime', 'top10', 'sobrevivente', 'draft', 'grade', 'penaltis'].includes(state.game)) {
+  if (NEXT_WORDS.includes(norm) && isHost && !['melhortime', 'top10', 'sobrevivente', 'draft', 'grade', 'penaltis', 'impostor'].includes(state.game)) {
     const out = await skipRound(state, deps);
     if (state.status === 'PLAYING' && state.intermission) {
       const next = resumeNext(state, deps);

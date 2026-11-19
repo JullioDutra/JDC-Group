@@ -160,7 +160,8 @@ export type PartyGame =
   | 'penaltis'
   | 'leilao'
   | 'anagrama'
-  | 'top100';
+  | 'top100'
+  | 'impostor';
 
 export interface PartyPlayer {
   jid: string;
@@ -472,6 +473,40 @@ export interface PenaltisParty extends PartyBase {
   round: number;
 }
 
+/**
+ * Impostor do Futebol: todos recebem no privado o mesmo segredo, menos o
+ * impostor (só o tema). Dicas de 1 palavra em 2 voltas, debate, votação
+ * (2º turno no empate) e, se pegarem o impostor, o palpite final dele.
+ */
+export interface ImpostorParty extends PartyBase {
+  game: 'impostor';
+  /** Tema escolhido no comando ("craque brasileiro"); null = mistura. */
+  theme: string | null;
+  /** Segredo sorteado (id em content/impostor). */
+  secretId: string;
+  /** Jid do impostor. */
+  impostor: string;
+  /** Ordem da mesa (jids). */
+  order: string[];
+  /** Volta das dicas (0 ou 1) e posição na ordem. */
+  lap: number;
+  turn: number;
+  phase: 'cards' | 'clues' | 'debate' | 'voting' | 'runoff' | 'guess';
+  /** Dicas dadas (word null = passou o tempo). */
+  clues: Array<{ jid: string; lap: number; word: string | null }>;
+  /** Votos da votação (quem votou -> em quem) e do 2º turno. */
+  votes: Record<string, string>;
+  runoffVotes: Record<string, string>;
+  /** Empatados que vão para o 2º turno. */
+  runoff: string[];
+  /** Cédula da votação (jids, na ordem dos números). */
+  ballot: string[];
+  /** "abrir impostor rápido": 25 s por dica. */
+  fast: boolean;
+  round: number;
+  totalRounds: number;
+}
+
 /** Top 100 do dia: uma lista de 100 por dia; cada acerto vale a posição. */
 export interface Top100Party extends PartyBase {
   game: 'top100';
@@ -544,7 +579,8 @@ export type PartyState =
   | PenaltisParty
   | LeilaoParty
   | AnagramaParty
-  | Top100Party;
+  | Top100Party
+  | ImpostorParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -588,6 +624,8 @@ export interface IncomingMessage {
   mentions?: string[];
   /** Autor da mensagem respondida (quando a mensagem é uma resposta). */
   quotedParticipant?: string;
+  /** Mensagem no privado do bot (groupJid = a conversa com a pessoa). Só o Impostor usa. */
+  private?: boolean;
 }
 
 /** O que o motor quer mandar de volta para o grupo. */
@@ -597,7 +635,9 @@ export type Outgoing =
   /** Reação (ex.: ✅) na mensagem de um jogador: confirma sem poluir o grupo. */
   | { type: 'react'; messageId: string; senderJid: string; emoji: string; participant?: string }
   /** Agenda o fim da rodada (QStash). Não é enviado ao grupo. */
-  | { type: 'schedule'; delaySeconds: number; token: string };
+  | { type: 'schedule'; delaySeconds: number; token: string }
+  /** Mensagem no privado de uma pessoa (o segredo do Impostor). name = para avisar no grupo se falhar. */
+  | { type: 'dm'; to: string; text: string; name: string };
 
 export type ImageSpec =
   | { kind: 'challenge'; host: string }

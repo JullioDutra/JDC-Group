@@ -7,7 +7,8 @@ import { GRADE_RULES, finishGrade, gradeAnswer, gradeTimeout, newGrade, startGra
 import { PENALTIS_RULES, finishPenaltis, goals, newPenaltis, penaltisAnswer, penaltisTimeout, scoreLine, startPenaltis } from './penaltis';
 import { finishByScore } from './common';
 import { LEILAO_RULES, closeLot, endLeilao, leilaoAnswer, leilaoBoard, newLeilao, startLeilao } from './leilao';
-import type { AnagramaParty, LeilaoParty, Top100Party } from '../game/types';
+import type { AnagramaParty, ImpostorParty, LeilaoParty, Top100Party } from '../game/types';
+import { IMPOSTOR_RULES, endImpostor, impostorAnswer, impostorBoard, impostorSkip, impostorTimeout, newImpostor, startImpostor } from './impostor';
 import { TOP100_RULES, finishTop100, newTop100, playedTodayKey, startTop100, top100Answer, top100Timeout } from './top100';
 import { ANAGRAMA_RULES, anagramaAnswer, anagramaTimeout, newAnagrama, openAnagramaRound, skipAnagrama, startAnagrama } from './anagrama';
 
@@ -15,7 +16,7 @@ import { ANAGRAMA_RULES, anagramaAnswer, anagramaTimeout, newAnagrama, openAnagr
  * Jogos gerados da base de jogadores (frente F2). Cada um declara as peças
  * que o motor das salas usa; assim o motor não precisa de um "if" por jogo.
  */
-export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty | AnagramaParty | Top100Party;
+export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty | AnagramaParty | Top100Party | ImpostorParty;
 
 export interface PartyModule {
   rules: string[];
@@ -124,7 +125,19 @@ const top100: PartyModule = {
   seenItems: (s) => [playedTodayKey((s as Top100Party).day), (s as Top100Party).listId],
 };
 
-export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao, anagrama, top100 };
+const impostor: PartyModule = {
+  rules: IMPOSTOR_RULES,
+  create: () => newImpostor(),
+  start: async (s, d) => startImpostor(s as ImpostorParty, d),
+  answer: (s, p, m, d, save) => impostorAnswer(s as ImpostorParty, p, m, d, save),
+  timeout: (s, d) => impostorTimeout(s as ImpostorParty, d),
+  skip: (s, d) => impostorSkip(s as ImpostorParty, d),
+  finish: (s, reason) => endImpostor(s as ImpostorParty, reason),
+  board: (s, final) => impostorBoard(s as ImpostorParty, final),
+  seenItems: (s) => [(s as ImpostorParty).secretId],
+};
+
+export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao, anagrama, top100, impostor };
 
 export function isBaseGame(state: PartyState): state is BaseGameState {
   return state.game in MODULES;

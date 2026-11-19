@@ -61,6 +61,8 @@ export interface Store {
   /** Itens de um jogo que o grupo já viu (do mais antigo para o mais recente). */
   getSeen(groupJid: string, kind: string): Promise<string[]>;
   markSeen(groupJid: string, kind: string, items: string[]): Promise<void>;
+  /** Salas abertas de um jogo em todos os grupos (o privado do Impostor acha a partida da pessoa). */
+  openMatchesByGame(game: string): Promise<Session[]>;
   /** Tira itens do histórico (ex.: o admin libera o Top 100 de hoje). */
   unmarkSeen(groupJid: string, kind: string, items: string[]): Promise<void>;
   countPlayers(): Promise<number>;

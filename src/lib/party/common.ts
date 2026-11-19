@@ -52,6 +52,8 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   anagrama: { name: 'Anagrama', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 40, rounds: 12 },
   // Top 100 do dia: 8 minutos no total; uma partida por dia em cada grupo.
   top100: { name: 'Top 100 do Dia', maxPlayers: 20, minPlayers: 1, joinUntil: 0, seconds: 480 },
+  // Impostor: 40 s por dica (25 no rápido); ninguém entra depois de começar (as cartas já foram).
+  impostor: { name: 'Impostor do Futebol', maxPlayers: 10, minPlayers: 4, joinUntil: 0, seconds: 40 },
 };
 
 /** Jogos 1 x 1: quem aceitar entra e a partida começa sozinha. */

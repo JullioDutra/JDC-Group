@@ -14,8 +14,10 @@ import { anagramThemesText } from '../party/anagrama';
 import { playedTodayKey, resetTodayKey } from '../party/top100';
 import { dayKey } from '../party/content/top100';
 import { championsText, seasonTurnover, shortDay } from './season';
-import { NEXT_BLOCK_KIND, blockedNames, targetsOf } from './blocks';
+import { NEXT_BLOCK_KIND, blockedNames, sameMember, targetsOf } from './blocks';
+import { cardText, impostorThemesText } from '../party/impostor';
 import {
+  ImpostorParty,
   IncomingMessage,
   Match,
   MatchPlayer,
@@ -349,7 +351,27 @@ export async function handleTick(
 const ACTIVATE = ['ativar jogos', 'ativar jogo', 'ativar duelo'];
 const DEACTIVATE = ['desativar jogos', 'desativar jogo', 'desativar duelo'];
 
+/**
+ * Mensagem no privado do bot: só o Impostor usa. Quem está numa partida
+ * aberta e manda "oi" ou "carta" recebe a carta de novo; o resto é ignorado
+ * (o bot não vira chat, e nada no privado mexe em grupo).
+ */
+async function handlePrivate(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
+  const norm = normalize(msg.text);
+  if (!['oi', 'ola', 'oi bot', 'carta', 'minha carta', 'segredo', 'meu segredo'].includes(norm)) return [];
+  const ids = [msg.senderJid, ...(msg.senderAliases ?? [])];
+  const matches = await deps.store.openMatchesByGame('impostor').catch(() => []);
+  for (const m of matches) {
+    const st = m.state as ImpostorParty;
+    if (st.status !== 'PLAYING' || !st.secretId) continue;
+    const player = st.players.find((p) => p.missed < 99 && sameMember(ids, p.jid));
+    if (player) return [text(cardText(st, player.jid))];
+  }
+  return [];
+}
+
 async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
+  if (msg.private) return handlePrivate(msg, deps);
   const { store } = deps;
   const now = (deps.now ?? (() => new Date()))();
   const nowMs = now.getTime();
@@ -385,6 +407,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (norm === 'ajuda texto') return [text(HELP)];
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
+  if (/^temas (do |de )?impostor$/.test(norm)) return [text(impostorThemesText())];
   if (norm === 'ranking') {
     const [rows, season] = await Promise.all([store.getRanking(msg.groupJid, 10), store.getSeason(msg.groupJid)]);
     if (rows.length === 0) return [text(`Ainda não há partidas finalizadas na *Temporada ${season.season}*.`)];

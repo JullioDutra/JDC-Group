@@ -47,6 +47,14 @@ export class NeonStore implements Store {
     return { id: String(rows[0].id), groupJid, version: rows[0].version, state: rows[0].state as SessionState };
   }
 
+  async openMatchesByGame(game: string): Promise<Session[]> {
+    const rows = await this.sql`
+      SELECT id, group_jid, version, state FROM matches
+      WHERE status NOT IN ('FINISHED', 'CANCELLED') AND state->>'game' = ${game}
+      LIMIT 50`;
+    return rows.map((r) => ({ id: String(r.id), groupJid: r.group_jid as string, version: r.version as number, state: r.state as SessionState }));
+  }
+
   async createMatch(groupJid: string, state: SessionState): Promise<Session | null> {
     const rows = await this.sql`
       INSERT INTO matches (group_jid, status, mode_id, state)

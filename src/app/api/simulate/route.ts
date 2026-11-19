@@ -63,6 +63,7 @@ export async function POST(request: Request) {
       });
     } else if (out.type === 'react') messages.push({ type: 'react', messageId: out.messageId, emoji: out.emoji });
     else if (out.type === 'schedule') messages.push({ type: 'timer', seconds: out.delaySeconds - 1 });
+    else if (out.type === 'dm') messages.push({ type: 'text', text: `[privado para ${out.name}] ${out.text}` });
   }
   return NextResponse.json({ messageId, messages, demoAi: !hasMaritacaKey(), volatile: !hasDatabase() });
 }

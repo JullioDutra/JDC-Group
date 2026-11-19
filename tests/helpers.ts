@@ -11,6 +11,7 @@ export const asText = (out: Outgoing[]) =>
       if (o.type === 'text') return o.text;
       if (o.type === 'image') return `[img:${o.image.kind}] ${o.caption ?? ''}`;
       if (o.type === 'react') return `[react:${o.emoji}]`;
+      if (o.type === 'dm') return `[dm:${o.name}]`; // o conteúdo do privado não aparece no grupo
       return `[timer:${o.delaySeconds}s]`;
     })
     .join('\n');
