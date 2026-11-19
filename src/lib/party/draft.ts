@@ -1,9 +1,9 @@
 import { playContext } from '../game/validate';
-import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from '../game/teams';
+import { CLUBS, NATIONS, getTeam, isFromNation, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { DraftParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
 import { POSITION_LABEL } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, award, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, award, freshPick, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
 
 /**
  * Draft da Resenha (do "Draft 5x5" do Projeto Trivia): até 8 pessoas, ordem em
@@ -23,11 +23,12 @@ export const DRAFT_RULES = [
   'No fim, todo o grupo vota no melhor time (ninguém vota no próprio).',
 ];
 
-function drawRules(rng: () => number): DraftParty['rules'] {
+function drawRules(rng: () => number, seen?: string[]): DraftParty['rules'] {
   // Toda rodada tem um time (clube ou seleção): não existe rodada "livre" nem só de letra.
   const kinds = shuffle<DraftParty['rules'][number]['kind']>(['club', 'nation', 'club', 'nation', 'club'], rng);
-  const clubs = drawTeams(CLUBS, 3, rng, 1);
-  const nations = drawTeams(NATIONS, 2, rng, 1);
+  // Clubes e seleções que o grupo ainda não teve no Draft primeiro.
+  const clubs = freshPick(CLUBS.filter((t) => t.tier <= 1), (t) => `club:${t.id}`, 3, rng, seen);
+  const nations = freshPick(NATIONS.filter((t) => t.tier <= 1), (t) => `nation:${t.id}`, 2, rng, seen);
   return DRAFT_POSITIONS.map((pos, i) => {
     const kind = kinds[i];
     const posLabel = POSITION_LABEL[pos];
@@ -46,7 +47,7 @@ const snake = (state: DraftParty, round: number) => {
 };
 
 export function startDraft(state: DraftParty, deps: PartyDeps): Outgoing[] {
-  state.rules = drawRules(deps.rng);
+  state.rules = drawRules(deps.rng, deps.seen);
   state.status = 'PLAYING';
   state.phase = 'draft';
   state.round = 0;

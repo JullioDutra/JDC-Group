@@ -1,6 +1,7 @@
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
 import type { FactCheck, TeamJudge, WordCheck } from '../party/common';
+import { freshPick } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
@@ -9,6 +10,7 @@ import { helpText } from './commands';
 import { applyCorrection, applyFamousName, findRecords, formatCard, parseCorrection, parseFamousName } from '../players/admin';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
+import { anagramThemesText } from '../party/anagrama';
 import {
   IncomingMessage,
   Match,
@@ -378,6 +380,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   if (norm === 'ajuda texto') return [text(HELP)];
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
+  if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
   if (norm === 'ranking') {
     const rows = await store.getRanking(msg.groupJid, 10);
     if (rows.length === 0) return [text('Ainda não há partidas finalizadas neste grupo.')];
@@ -499,8 +502,17 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return save([text('Partida cancelada.')]);
   }
 
+  /** Tema sorteado no 1x1: prioriza o que o grupo ainda não jogou (e grava no histórico). */
+  const freshMode = async (): Promise<GameMode> => {
+    const seen = await store.getSeen(msg.groupJid, '1x1-tema').catch(() => [] as string[]);
+    const mode = (seen.length ? freshPick(MODES, (m) => `modo:${m.id}`, 1, rng, seen)[0] : undefined) ?? randomMode(rng);
+    await store.markSeen(msg.groupJid, '1x1-tema', [`modo:${mode.id}`]).catch(() => undefined);
+    return mode;
+  };
+
   /** Sorteia restrições, liga os extras e manda a imagem de abertura. */
-  const kickoff = (chosen: GameMode, twists: Twists, random: boolean, lead = ''): Promise<Outgoing[]> => {
+  const kickoff = async (chosen: GameMode, twists: Twists, random: boolean, lead = ''): Promise<Outgoing[]> => {
+    if (random) chosen = await freshMode();
     state.modeId = chosen.id;
     state.options = {
       blind: twists.blind,

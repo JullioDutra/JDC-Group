@@ -40,7 +40,7 @@ import { EMOJI_CARDS, RELAMPAGO_CARDS } from './content/cards';
 import { INTRUSO_SETS } from './content/intruso';
 import { WHOIS } from './content/whois';
 import type { ContentCategory } from '../game/types';
-import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List } from './top10-lists';
+import { TOP10_CATEGORIES, TOP10_LISTS, getTop10List, top10Theme } from './top10-lists';
 import { melhorTimeAnswer, melhorTimeTimeout, melhorTimeVote, newMelhorTime, startMelhorTime } from './melhortime';
 import { ALFABETO_RULES, alfabetoAnswer, closeAlfabetoRound, finishAlfabeto, newAlfabeto, openAlfabetoRound, startAlfabeto } from './alfabeto';
 import { CHUTE_RULES, chuteAnswer, closeChuteRound, finishChute, newChute, openChuteRound, startChute } from './chute';
@@ -56,11 +56,11 @@ import { TIMELINE } from './content/linha';
 import { SURVIVOR_LISTS } from './content/sobrevivente';
 import { closeQuizRound, finishQuiz, newQuiz, openQuizRound, quizAnswer, quizRules, quizTimeout, scoreImage, startQuiz } from './quiz';
 import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
-import { newAnagrama } from './anagrama';
+import { anagramThemesText, newAnagrama } from './anagrama';
 import { matchTop100, newTop100, playedTodayKey } from './top100';
 import { dayKey, getTop100 } from './content/top100';
-import { ANAGRAMS } from './content/anagramas';
-import { ONE_X_ONE, freshFirst } from './common';
+import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
+import { ONE_X_ONE, freshFirst, freshPick } from './common';
 
 const LOBBY_TTL_MS = 15 * 60_000;
 const IDLE_TTL_MS = 20 * 60_000;
@@ -113,8 +113,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (/^(abrir|jogar) (a )?ponte$/.test(norm)) return { game: 'ponte', rest: '' };
   if (/^(abrir|jogar) (o )?leilao( de craques)?$/.test(norm)) return { game: 'leilao', rest: '' };
   if (/^((abrir|jogar) )?(o )?top ?100( do dia)?$/.test(norm) || norm === 'desafio do dia') return { game: 'top100', rest: '' };
-  const ana = norm.match(/^(abrir|jogar) (o )?anagramas?( (futebol|geral))?$/);
-  if (ana) return { game: 'anagrama', rest: ana[4] ?? '' };
+  const ana = norm.match(/^(abrir|jogar) (o )?anagramas?(?: (?:de |do |da |dos |das )?(.+))?$/);
+  if (ana) return { game: 'anagrama', rest: ana[3] ?? '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };
   if (/^(abrir|jogar|desafio) (os )?(penaltis|penalti|disputa de penaltis)$/.test(norm)) return { game: 'penaltis', rest: '' };
   const mt = norm.match(/^(iniciar|abrir|jogar|desafio) (o )?melhor time((?: (?:ia|votacao|grupo|dificil))*)$/);
@@ -183,7 +183,11 @@ export async function createParty(
     }
     state = { ...base('top100', host, nowMs), ...newTop100(deps.now) } as PartyState;
   } else if (start.game === 'anagrama') {
-    state = { ...base('anagrama', host, nowMs), ...newAnagrama(contentCategory(start.rest, ANAGRAMS)) } as PartyState;
+    // "abrir anagrama capitais": tema escolhido; "futebol"/"geral": a categoria toda.
+    const rest = start.rest.trim();
+    const theme = rest && !['futebol', 'geral'].includes(rest) ? findAnagramTheme(rest) : undefined;
+    if (rest && !['futebol', 'geral'].includes(rest) && !theme) return [text(anagramThemesText(`Não achei o tema "${rest}".`))];
+    state = { ...base('anagrama', host, nowMs), ...newAnagrama(theme ? theme.category : contentCategory(rest, ANAGRAMS), theme?.theme ?? null) } as PartyState;
   } else if (MODULES[start.game]) {
     state = { ...base(start.game, host, nowMs), ...MODULES[start.game]!.create() } as PartyState;
   } else if (start.game === 'alfabeto') {
@@ -681,8 +685,10 @@ function boardImage(state: PartyState, final: boolean): Outgoing {
 
 function startEscalacao(state: EscalacaoParty, deps: PartyDeps): Outgoing[] {
   let mode = getMode(state.modeId);
-  if (!mode) {
-    mode = randomMode(deps.rng);
+  // Tema sorteado (ou nenhum): sorteia na hora, priorizando o que o grupo não jogou.
+  if (!mode || state.randomMode) {
+    // Tema que o grupo ainda não jogou primeiro.
+    mode = (deps.seen?.length ? freshPick(MODES, (m) => `modo:${m.id}`, 1, deps.rng, deps.seen)[0] : undefined) ?? randomMode(deps.rng);
     state.modeId = mode.id;
     state.randomMode = true;
   }
@@ -826,14 +832,37 @@ function finishEscalacao(state: EscalacaoParty, deps: PartyDeps, reason: string)
 
 // ---------- Top 10 ----------
 
+/**
+ * Escolhe a lista do Top 10 sem repetir assunto: primeiro um tema que o grupo
+ * ainda não jogou; acabados os temas, um tema que ainda tem lista nova (o
+ * que foi jogado há mais tempo); só depois repete lista.
+ */
+export function pickTop10(pool: Top10List[], rng: () => number, seen: string[] = []): Top10List {
+  const ids = new Set(pool.map((l) => l.id));
+  const seenLists = seen.filter((id) => ids.has(id));
+  if (!seenLists.length) return pool[Math.floor(rng() * pool.length)];
+  // Tema de cada lista vista, na ordem em que foi vista (a última vez conta).
+  const seenThemes = seenLists.map((id) => top10Theme(id));
+  const themes = [...new Set(pool.map((l) => top10Theme(l.id)))];
+  const seenThemeSet = new Set(seenThemes);
+  const seenListSet = new Set(seenLists);
+  const hasNewList = (t: string) => pool.some((l) => top10Theme(l.id) === t && !seenListSet.has(l.id));
+  const rank = (t: string) => (!seenThemeSet.has(t) ? 0 : hasNewList(t) ? 1 : 2);
+  const ordered = freshFirst(themes, rng, seenThemes)
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => rank(a.t) - rank(b.t) || a.i - b.i);
+  const theme = ordered[0].t;
+  const inTheme = pool.filter((l) => top10Theme(l.id) === theme).map((l) => l.id);
+  const id = freshFirst(inTheme, rng, seenLists)[0];
+  return pool.find((l) => l.id === id)!;
+}
+
 function startTop10(state: Top10Party, deps: PartyDeps): Outgoing[] {
   // "aleatório" sorteia entre futebol e geral; política só quando pedida.
   const pool = TOP10_LISTS.filter((l) =>
     state.category ? l.category === state.category : (TOP10_CATEGORIES as readonly string[]).includes(l.category),
   );
-  // Lista que o grupo ainda não viu primeiro.
-  const freshId = deps.seen?.length ? freshFirst(pool.map((l) => l.id), deps.rng, deps.seen)[0] : undefined;
-  const list = pool.find((l) => l.id === freshId) ?? pool[Math.floor(deps.rng() * pool.length)];
+  const list = pickTop10(pool, deps.rng, deps.seen);
   state.listId = list.id;
   state.category = list.category;
   state.found = list.items.map(() => null);
@@ -992,6 +1021,12 @@ async function finishAndSave(
 function seenItems(state: PartyState): string[] {
   if (isBaseGame(state)) return moduleOf(state).seenItems(state);
   if (state.game === 'top10') return state.listId ? [state.listId] : [];
+  // Jogos sem lista fixa: guarda o que foi sorteado (tema, letras, clubes, seleções).
+  if (state.game === 'escalacao') return state.modeId ? [`modo:${state.modeId}`] : [];
+  if (state.game === 'alfabeto') return state.rounds.flatMap((r) => [`${r.kind}:${r.value}`, `letra:${r.letter}`]);
+  if (state.game === 'stop') return state.letters.map((l) => `letra:${l}`);
+  if (state.game === 'draft') return state.rules.map((r) => `${r.kind}:${r.value}`);
+  if (state.game === 'melhortime') return state.clubs.map((c) => `club:${c}`);
   return 'order' in state && Array.isArray(state.order) ? state.order : [];
 }
 

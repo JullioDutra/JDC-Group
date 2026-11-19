@@ -21,27 +21,107 @@ const words = (category: ContentCategory, theme: string, list: string): AnagramW
     return { id, category, theme, answer, ...(aliases.length ? { aliases } : {}) };
   });
 
-export const ANAGRAMS: AnagramWord[] = [
-  ...words('futebol', 'clube brasileiro', 'Flamengo, Palmeiras, Corinthians, Santos, Grêmio, Internacional|inter, Cruzeiro, Botafogo, Fluminense, Vasco, Bahia, Sport, Fortaleza, Ceará, Coritiba, Athletico|athletico paranaense, Juventude, Chapecoense|chape, Bragantino, Náutico, Guarani, Paysandu, Remo, Criciúma, Figueirense, Cuiabá, Mirassol, Ponte Preta'),
-  ...words('futebol', 'clube do exterior', 'Barcelona, Liverpool, Chelsea, Arsenal, Juventus, Milan, Benfica, Porto, Ajax, Napoli, Sevilla, Valencia, Marseille, Monaco, Tottenham, Everton, Celtic, River Plate|river, Galatasaray, Atalanta, Lazio, Feyenoord, Boca Juniors|boca, Peñarol|penarol, Independiente'),
-  ...words('futebol', 'craque brasileiro', 'Ronaldinho, Romário, Neymar, Rivaldo, Garrincha, Ronaldo, Adriano, Casemiro, Marquinhos, Alisson, Richarlison, Raphinha, Endrick, Rodrygo, Bebeto, Rivellino, Sócrates, Taffarel, Marcelo, Robinho, Jairzinho, Tostão, Roberto Carlos, Daniel Alves, Rogério Ceni, Vinícius Júnior|vinicius junior|vini jr'),
-  ...words('futebol', 'craque do mundo', 'Maradona, Mbappé, Haaland, Zidane, Beckham, Ibrahimovic, Lewandowski, Modric, Benzema, Salah, Iniesta, Platini, Cruyff, Beckenbauer, Bellingham, Griezmann, Pirlo, Totti, Buffon, Henry, Neuer, Lamine Yamal|yamal, Cristiano Ronaldo, Messi'),
-  ...words('futebol', 'seleção', 'Argentina, Alemanha, Uruguai, Inglaterra, Portugal, Espanha, França, Holanda, Croácia, Bélgica, Marrocos, Colômbia, Paraguai, Equador, México, Senegal, Camarões, Nigéria, Noruega, Dinamarca, Suécia, Itália, Escócia, Japão'),
-  ...words('futebol', 'coisa do futebol', 'Goleiro, Zagueiro, Escanteio, Impedimento, Pênalti, Artilheiro, Lateral, Volante, Carrinho, Chuteira, Travessão, Estádio, Torcida, Árbitro, Bandeirinha, Prorrogação, Campeonato, Gandula, Vestiário, Uniforme'),
-  ...words('geral', 'capital', 'Brasília, Montevidéu, Lisboa, Madri, Paris, Londres, Berlim, Tóquio, Pequim, Moscou, Camberra, Ottawa, Santiago, Bogotá, Caracas, Cairo, Atenas, Buenos Aires, Washington, Assunção'),
-  ...words('geral', 'estado brasileiro', 'Pernambuco, Amazonas, Maranhão, Tocantins, Rondônia, Roraima, Sergipe, Alagoas, Paraíba, Rio Grande do Norte, Mato Grosso, Santa Catarina, Espírito Santo, Minas Gerais, Piauí'),
-  ...words('geral', 'cidade brasileira', 'Florianópolis, Salvador, Curitiba, Manaus, Recife, Belém, Natal, Teresina, Campinas, Gramado, Petrópolis, Aracaju, Maceió, Goiânia, Uberlândia'),
-  ...words('geral', 'animal', 'Elefante, Girafa, Jacaré, Tartaruga, Leopardo, Cachorro, Golfinho, Borboleta, Camaleão, Pinguim, Tamanduá, Capivara, Papagaio, Crocodilo, Hipopótamo, Rinoceronte, Canguru, Tubarão, Coruja, Morcego'),
-  ...words('geral', 'fruta ou comida', 'Abacaxi, Morango, Melancia, Laranja, Goiaba, Jabuticaba, Maracujá, Feijoada, Brigadeiro, Coxinha, Pastel, Tapioca, Churrasco, Pamonha, Lasanha, Macarrão, Chocolate, Pipoca, Sorvete, Mandioca'),
-  ...words('geral', 'profissão', 'Engenheiro, Professor, Advogado, Enfermeiro, Bombeiro, Jornalista, Cozinheiro, Carpinteiro, Dentista, Veterinário, Arquiteto, Motorista, Fotógrafo, Eletricista, Astronauta'),
-  ...words('geral', 'artista brasileiro', 'Anitta, Ivete Sangalo, Caetano Veloso, Djavan, Ludmilla, Marília Mendonça, Alcione, Xuxa, Chico Buarque, Gilberto Gil, Rita Lee, Cazuza, Tim Maia, Roberto Carlos|rei roberto, Zeca Pagodinho'),
-  // Rodada 4 (19/11/2026): temas novos
-  ...words('geral', 'país', 'Austrália, Canadá, Egito, Grécia, Índia, Irlanda, Jamaica, Nicarágua, Polônia, Rússia, Suíça, Tailândia, Turquia, Venezuela, Vietnã|vietna, Indonésia, Finlândia, Islândia, Quênia|quenia'),
-  ...words('geral', 'esporte', 'Basquete, Vôlei|volei, Handebol, Natação, Ciclismo, Atletismo, Ginástica, Esgrima, Judô|judo, Boxe, Surfe|surf, Skate, Tênis|tenis, Golfe|golf, Xadrez, Badminton, Beisebol, Canoagem'),
-  ...words('futebol', 'estádio brasileiro', 'Maracanã, Mineirão, Morumbi|morumbis, Pacaembu, Beira-Rio|beira rio, Castelão, Arruda, Vila Belmiro, Fonte Nova, São Januário, Couto Pereira, Barradão, Independência, Engenhão|nilton santos, Serra Dourada, Mangueirão'),
-  ...words('futebol', 'técnico', 'Felipão|scolari|luiz felipe scolari, Zagallo, Telê Santana|tele, Parreira, Tite, Dunga, Luxemburgo, Abel Ferreira|abel, Jorge Jesus, Ancelotti, Guardiola, Mourinho, Klopp, Cuca, Renato Gaúcho|renato portaluppi, Dorival'),
-  ...words('geral', 'novela', 'Pantanal, Avenida Brasil, Vale Tudo, Tieta, Roque Santeiro, O Clone, Terra Nostra, Senhora do Destino, Mulheres Apaixonadas, Explode Coração, O Rei do Gado|rei do gado, Fina Estampa, Laços de Família, Por Amor, Caminho das Índias'),
+/**
+ * Temas que dá para escolher no comando ("abrir anagrama capitais"). Só nomes
+ * conhecidos: se alguém do grupo não reconheceria, não entra.
+ */
+export interface AnagramTheme {
+  /** Nome do tema, como aparece na rodada. */
+  theme: string;
+  category: ContentCategory;
+  /** Como o grupo pede o tema (sem acento). */
+  keys: string[];
+  /** Palavras: "Resposta|apelido aceito, Outra". */
+  list: string;
+}
+
+export const ANAGRAM_THEMES: AnagramTheme[] = [
+  {
+    theme: 'clube brasileiro', category: 'futebol', keys: ['clubes', 'clube', 'times', 'time', 'clubes brasileiros', 'times brasileiros'],
+    list: 'Flamengo, Palmeiras, Corinthians, Santos, Grêmio, Internacional|inter, Cruzeiro, Botafogo, Fluminense, Vasco, Bahia, Sport, Fortaleza, Ceará, Coritiba, Athletico|athletico paranaense, São Paulo, Vitória, Goiás, Chapecoense|chape, Juventude, Bragantino, Atlético Mineiro|atletico mg|galo, Ponte Preta, Guarani',
+  },
+  {
+    theme: 'clube do exterior', category: 'futebol', keys: ['clubes de fora', 'times de fora', 'clubes do exterior', 'times do exterior', 'clubes gringos', 'times gringos', 'exterior', 'gringos', 'europa'],
+    list: 'Barcelona, Liverpool, Chelsea, Arsenal, Juventus, Milan, Benfica, Porto, Ajax, Napoli, Real Madrid, Bayern de Munique|bayern, Manchester United, Manchester City, Tottenham, Inter de Milão|inter, Boca Juniors|boca, River Plate|river, Roma, Atlético de Madrid|atletico madrid, Borussia Dortmund|dortmund|borussia, Sevilla|sevilha, Lazio, Galatasaray, Peñarol|penarol, Monaco',
+  },
+  {
+    theme: 'craque brasileiro', category: 'futebol', keys: ['craques', 'craque', 'jogadores', 'craques brasileiros', 'jogadores brasileiros'],
+    list: 'Ronaldinho, Romário, Neymar, Rivaldo, Garrincha, Ronaldo, Adriano, Casemiro, Marquinhos, Alisson, Richarlison, Raphinha, Endrick, Rodrygo, Bebeto, Sócrates, Taffarel, Marcelo, Robinho, Daniel Alves, Rogério Ceni, Vinícius Júnior|vinicius junior|vini jr, Kaká, Zico, Pelé, Cafu, Júlio César, Hulk, Gabigol, Roberto Carlos',
+  },
+  {
+    theme: 'craque do mundo', category: 'futebol', keys: ['craques do mundo', 'craques de fora', 'jogadores de fora', 'craques gringos', 'jogadores gringos'],
+    list: 'Maradona, Mbappé, Haaland, Zidane, Beckham, Ibrahimovic, Lewandowski, Modric, Benzema, Salah, Iniesta, Cruyff, Beckenbauer, Bellingham, Griezmann, Pirlo, Totti, Buffon, Henry, Neuer, Lamine Yamal|yamal, Cristiano Ronaldo, Messi, Suárez, De Bruyne, Xavi, Dembélé, Harry Kane|kane',
+  },
+  {
+    theme: 'seleção', category: 'futebol', keys: ['selecoes', 'selecao', 'paises da copa'],
+    list: 'Argentina, Alemanha, Uruguai, Inglaterra, Portugal, Espanha, França, Holanda, Croácia, Bélgica, Marrocos, Colômbia, Paraguai, Equador, México, Senegal, Camarões, Nigéria, Noruega, Dinamarca, Suécia, Itália, Escócia, Japão, Estados Unidos, Chile',
+  },
+  {
+    theme: 'coisa do futebol', category: 'futebol', keys: ['termos', 'coisas do futebol', 'termos do futebol', 'futebol raiz'],
+    list: 'Goleiro, Zagueiro, Escanteio, Impedimento, Pênalti, Artilheiro, Lateral, Volante, Carrinho, Chuteira, Travessão, Estádio, Torcida, Árbitro, Bandeirinha, Prorrogação, Campeonato, Gandula, Vestiário, Uniforme',
+  },
+  {
+    theme: 'técnico', category: 'futebol', keys: ['tecnicos', 'tecnico', 'treinadores', 'treinador'],
+    list: 'Felipão|scolari|luiz felipe scolari, Zagallo, Telê Santana|tele, Parreira, Tite, Dunga, Luxemburgo, Abel Ferreira|abel, Jorge Jesus, Ancelotti, Guardiola, Mourinho, Klopp, Cuca, Renato Gaúcho|renato portaluppi, Dorival, Simeone, Diniz',
+  },
+  {
+    theme: 'estádio', category: 'futebol', keys: ['estadios', 'estadio'],
+    list: 'Maracanã, Mineirão, Morumbi|morumbis, Pacaembu, Beira-Rio|beira rio, Castelão, Vila Belmiro, Fonte Nova, São Januário, Engenhão|nilton santos, Mané Garrincha, Arena da Baixada, Arena do Grêmio, Itaquerão|neo quimica arena|arena corinthians, Arena MRV, Allianz Parque|nubank parque',
+  },
+  {
+    theme: 'país', category: 'geral', keys: ['paises', 'pais'],
+    list: 'Austrália, Canadá, Egito, Grécia, Índia, Irlanda, Jamaica, Rússia, Suíça, Tailândia, Turquia, Venezuela, Vietnã|vietna, China, Bolívia, Peru, Cuba, Israel, Ucrânia, Polônia, Áustria, Nova Zelândia, Islândia',
+  },
+  {
+    theme: 'capital', category: 'geral', keys: ['capitais', 'capital'],
+    list: 'Brasília, Montevidéu, Lisboa, Madri, Paris, Londres, Berlim, Tóquio, Pequim, Moscou, Roma, Santiago, Bogotá, Cairo, Atenas, Buenos Aires, Washington, Lima, Amsterdã|amsterda|amsterdam, Havana, Caracas, Assunção',
+  },
+  {
+    theme: 'estado brasileiro', category: 'geral', keys: ['estados', 'estado', 'estados brasileiros'],
+    list: 'Pernambuco, Amazonas, Maranhão, Tocantins, Rondônia, Roraima, Sergipe, Alagoas, Paraíba, Rio Grande do Norte, Mato Grosso, Santa Catarina, Espírito Santo, Minas Gerais, Piauí, Rio de Janeiro, Rio Grande do Sul, Mato Grosso do Sul, Pará, Amapá, Acre',
+  },
+  {
+    theme: 'cidade brasileira', category: 'geral', keys: ['cidades', 'cidade', 'cidades brasileiras'],
+    list: 'Florianópolis, Salvador, Curitiba, Manaus, Recife, Belém, Natal, Teresina, Campinas, Gramado, Petrópolis, Aracaju, Maceió, Goiânia, Uberlândia, Porto Alegre, Belo Horizonte, João Pessoa, Foz do Iguaçu, Ribeirão Preto',
+  },
+  {
+    theme: 'animal', category: 'geral', keys: ['animais', 'animal', 'bichos', 'bicho'],
+    list: 'Elefante, Girafa, Jacaré, Tartaruga, Leopardo, Cachorro, Golfinho, Borboleta, Camaleão, Pinguim, Tamanduá, Capivara, Papagaio, Crocodilo, Hipopótamo, Rinoceronte, Canguru, Tubarão, Coruja, Morcego, Cavalo, Macaco',
+  },
+  {
+    theme: 'fruta ou comida', category: 'geral', keys: ['comidas', 'comida', 'frutas', 'fruta'],
+    list: 'Abacaxi, Morango, Melancia, Laranja, Goiaba, Jabuticaba, Maracujá, Feijoada, Brigadeiro, Coxinha, Pastel, Tapioca, Churrasco, Pamonha, Lasanha, Macarrão, Chocolate, Pipoca, Sorvete, Mandioca, Banana, Hambúrguer|hamburguer',
+  },
+  {
+    theme: 'profissão', category: 'geral', keys: ['profissoes', 'profissao'],
+    list: 'Engenheiro, Professor, Advogado, Enfermeiro, Bombeiro, Jornalista, Cozinheiro, Carpinteiro, Dentista, Veterinário, Arquiteto, Motorista, Fotógrafo, Eletricista, Astronauta, Policial, Médico, Cabeleireiro',
+  },
+  {
+    theme: 'artista brasileiro', category: 'geral', keys: ['artistas', 'artista', 'cantores', 'cantor', 'cantoras', 'musica', 'musicas'],
+    list: 'Anitta, Ivete Sangalo, Caetano Veloso, Djavan, Ludmilla, Marília Mendonça, Alcione, Xuxa, Chico Buarque, Gilberto Gil, Rita Lee, Cazuza, Tim Maia, Roberto Carlos|rei roberto, Zeca Pagodinho, Gusttavo Lima, Luan Santana, Pabllo Vittar, Marisa Monte, Elis Regina, Seu Jorge, Wesley Safadão|safadao',
+  },
+  {
+    theme: 'esporte', category: 'geral', keys: ['esportes', 'esporte', 'modalidades'],
+    list: 'Basquete, Vôlei|volei, Handebol, Natação, Ciclismo, Atletismo, Ginástica, Judô|judo, Boxe, Surfe|surf, Skate, Tênis|tenis, Golfe|golf, Xadrez, Beisebol, Futsal, Karatê|karate, Esgrima',
+  },
+  {
+    theme: 'novela', category: 'geral', keys: ['novelas', 'novela'],
+    list: 'Pantanal, Avenida Brasil, Vale Tudo, O Clone, Senhora do Destino, Mulheres Apaixonadas, Fina Estampa, Laços de Família, Por Amor, Caminho das Índias, O Rei do Gado|rei do gado, A Favorita|favorita, Amor à Vida, Império, Terra Nostra, Cheias de Charme',
+  },
+  {
+    theme: 'filme', category: 'geral', keys: ['filmes', 'filme', 'cinema'],
+    list: 'Titanic, Avatar, Matrix, Shrek, Frozen, Toy Story, Rocky, Tubarão, Gladiador, Coringa, Barbie, Oppenheimer, Cidade de Deus, Tropa de Elite, Central do Brasil, Harry Potter, Star Wars, Jurassic Park, Procurando Nemo, Ainda Estou Aqui',
+  },
 ];
+
+export const ANAGRAMS: AnagramWord[] = ANAGRAM_THEMES.flatMap((t) => words(t.category, t.theme, t.list));
+
+/** Tema pedido no comando ("capitais", "clubes de fora"), ou undefined. */
+export function findAnagramTheme(raw: string): AnagramTheme | undefined {
+  const key = raw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+  return ANAGRAM_THEMES.find((t) => t.keys.includes(key) || t.theme.normalize('NFD').replace(/[̀-ͯ]/g, '') === key);
+}
+
 
 export function getAnagram(id: string): AnagramWord | undefined {
   return ANAGRAMS.find((a) => a.id === id);

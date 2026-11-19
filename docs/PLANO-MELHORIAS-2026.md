@@ -384,3 +384,31 @@ O rodízio alterna futebol, música e geral, para dois dias seguidos não caíre
 **Bugs achados e corrigidos nesta rodada:**
 - Resposta que começa com artigo ("O Rei Leão", "A Banda") não era aceita em nenhum jogo, porque o palpite perdia o artigo e a resposta não. Agora as duas formas valem.
 - No Top 100, título com mais de 6 palavras ("Pra Não Dizer Que Não Falei das Flores") era tratado como conversa. Agora vale se bater com a lista; isso também vale para entrar no jogo no meio.
+
+## 12. Rodada 5: correções pedidas (19/11)
+
+### 12.1 Pedido e diagnóstico
+
+| Pedido | O que o código fazia | O que muda |
+|---|---|---|
+| Leilão só com jogadores conhecidos, das principais ligas, misturando craques e jogadores medianos | Sorteava qualquer jogador da base com artigo em 12 ou mais Wikipédias. Entravam nomes obscuros e de ligas pequenas. | Só entra quem jogou nas 5 grandes ligas da Europa ou no Brasileirão, com artigo em 30+ Wikipédias e estreia a partir de 1995 (ou lenda com 100+). Cada posição mistura metade de craques (90+ Wikipédias) e metade de bons jogadores. O overall vai de 70 a 99. |
+| Anagrama: escolher o tema; só nomes conhecidos | Só dava para filtrar por "futebol" ou "geral", e havia palavras pouco conhecidas | `abrir anagrama <tema>` com 19 temas (clubes, craques, seleções, capitais, animais, filmes…). Palavras obscuras saem e entram nomes conhecidos. |
+| Top 10 e outros: só repetir quando acabarem os temas | **Top 10:** não repetia a mesma lista, mas listas diferentes têm o mesmo tema (três de artilheiros de Copa, cinco de títulos de ligas europeias). **Stop, Alfabeto, Melhor Time, Draft e Escalação (tema sorteado):** sorteavam sem olhar o histórico do grupo. | **Top 10:** listas agrupadas por tema; o sorteio só volta a um tema depois de passar por todos. **Os outros cinco:** passam a usar o histórico do grupo (letras, clubes, seleções, temas). |
+
+### 12.2 Anagrama: temas e palavras
+
+- Todas as palavras precisam ser nomes que qualquer pessoa do grupo reconhece.
+- Saem clubes pequenos (Náutico, Paysandu, Remo, Criciúma, Figueirense, Mirassol), estádios regionais (Arruda, Barradão, Couto Pereira, Serra Dourada, Mangueirão, Independência), capitais confusas (Camberra, Ottawa), novelas antigas (Tieta, Roque Santeiro, Explode Coração) e esportes pouco jogados aqui (badminton, canoagem).
+- Entram clubes e craques de hoje, capitais conhecidas, filmes e mais artistas.
+- Cada tema fica com pelo menos 16 palavras: dá para jogar 12 rodadas sem repetir.
+
+### 12.3 Planejado x entregue
+
+| Item | Entregue |
+|---|---|
+| Leilão | Filtro de jogadores conhecidos das grandes ligas, cada posição meio estrelas, meio bons jogadores, overall de 70 a 99. Testes cobrem o filtro: liga pequena, jogador antigo e pouco famoso e menos de 30 Wikipédias ficam de fora; lenda entra. |
+| Anagrama | 19 temas escolhíveis (`abrir anagrama capitais`, `abrir anagrama clubes de fora`…) e o comando `temas do anagrama`. Tema que não existe responde com a lista. 413 palavras, todas conhecidas, com no mínimo 16 por tema. A sala e a ajuda mostram o tema. |
+| Top 10 | As 81 listas viraram 30 temas. O tema só volta depois de todos; depois disso, primeiro os temas que ainda têm lista nova. Teste com todas as listas de futebol: nenhuma lista repete antes de acabar. |
+| Stop, Alfabeto, Draft, Melhor Time, Escalação | Sorteio pelo histórico do grupo: letras, clubes, seleções e tema sorteado. |
+| 1x1 (`iniciar aleatório` e "aleatório" no menu) | O tema sorteado também segue o histórico do grupo. |
+| Jogos que já usavam o histórico | Seguem iguais: Relâmpago, Emoji, Quem é, Que time é esse, Bandeiraço, Intruso, Chute Certo, Sobrevivente, Conexões, Linha do Tempo, Fato ou Fake, Carreira, Ponte, Leilão e Anagrama. |

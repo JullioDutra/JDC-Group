@@ -106,6 +106,15 @@ export function freshFirst(ids: string[], rng: () => number, seen?: string[]): s
   return [...unseen, ...old];
 }
 
+/**
+ * Sorteia `count` itens priorizando o que o grupo ainda não viu (chave
+ * `key(item)` no histórico); depois, o que ele viu há mais tempo.
+ */
+export function freshPick<T>(items: T[], key: (item: T) => string, count: number, rng: () => number, seen?: string[]): T[] {
+  const byKey = new Map(items.map((t) => [key(t), t]));
+  return freshFirst([...byKey.keys()], rng, seen).slice(0, count).map((k) => byKey.get(k)!);
+}
+
 export function scoreImage(state: PartyState, final: boolean): Outgoing {
   const round = 'round' in state ? state.round : 0;
   const title = final ? 'Resultado final' : `Placar após a rodada ${round + 1}`;

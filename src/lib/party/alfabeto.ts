@@ -1,8 +1,8 @@
 import { playContext } from '../game/validate';
-import { CLUBS, NATIONS, drawTeams, getTeam, isFromNation, playedForClub } from '../game/teams';
+import { CLUBS, NATIONS, getTeam, isFromNation, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import type { AlfabetoParty, IncomingMessage, Outgoing, PartyPlayer, PlayerProfile, Position } from '../game/types';
-import { PARTY_CONFIG, PartyDeps, Save, activePlayers, pendingResults, react, schedule, text, pauseBeforeNext } from './common';
+import { PARTY_CONFIG, PartyDeps, Save, activePlayers, freshPick, pendingResults, react, schedule, text, pauseBeforeNext } from './common';
 import { scoreImage } from './quiz';
 
 /**
@@ -33,10 +33,11 @@ export const ALFABETO_RULES = [
 ];
 
 /** Sorteia as rodadas: posições, seleções e clubes (só os gigantes), letras diferentes. */
-function drawRounds(state: AlfabetoParty, rng: () => number) {
-  const letters = shuffle(LETTERS, rng);
-  const clubs = drawTeams(CLUBS, 3, rng, 1);
-  const nations = drawTeams(NATIONS, 2, rng, 1);
+function drawRounds(state: AlfabetoParty, rng: () => number, seen?: string[]) {
+  // Letras, clubes e seleções que o grupo ainda não teve no Alfabeto primeiro.
+  const letters = freshPick(LETTERS, (l) => `letra:${l}`, LETTERS.length, rng, seen);
+  const clubs = freshPick(CLUBS.filter((t) => t.tier <= 1), (t) => `club:${t.id}`, 3, rng, seen);
+  const nations = freshPick(NATIONS.filter((t) => t.tier <= 1), (t) => `nation:${t.id}`, 2, rng, seen);
   // Toda rodada tem um time (clube ou seleção) além da letra.
   const options: AlfabetoParty['rounds'] = [
     ...nations.slice(0, 2).map((n) => ({ kind: 'nation' as const, value: n.id, label: `jogadores da seleção ${n.name === 'Brasil' ? 'brasileira' : `de ${n.name}`}`, letter: '' })),
@@ -49,7 +50,7 @@ function drawRounds(state: AlfabetoParty, rng: () => number) {
 }
 
 export function startAlfabeto(state: AlfabetoParty, deps: PartyDeps): Outgoing[] {
-  drawRounds(state, deps.rng);
+  drawRounds(state, deps.rng, deps.seen);
   state.status = 'PLAYING';
   state.round = -1;
   return [text(`*Alfabeto* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openAlfabetoRound(state, deps)];

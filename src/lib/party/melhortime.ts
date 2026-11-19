@@ -1,8 +1,8 @@
 import { playContext } from '../game/validate';
-import { CLUBS, drawTeams, getTeam, playedForClub } from '../game/teams';
+import { CLUBS, getTeam, playedForClub } from '../game/teams';
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
 import { DraftPick, IncomingMessage, MelhorTimeParty, Outgoing, POSITION_LABEL, PartyPlayer, Position, SLOTS } from '../game/types';
-import { JudgeTeam, PARTY_CONFIG, PartyDeps, Save, pendingResults, react, schedule, text, warnOnce } from './common';
+import { JudgeTeam, PARTY_CONFIG, PartyDeps, Save, freshPick, pendingResults, react, schedule, text, warnOnce } from './common';
 
 /**
  * Melhor Time (1 x 1). A cada rodada sorteia um clube; cada um, na sua vez,
@@ -75,7 +75,9 @@ function prompt(state: MelhorTimeParty): string {
 
 export function startMelhorTime(state: MelhorTimeParty, deps: PartyDeps): Outgoing[] {
   // Gigantes + conhecidos (nível 2); com "difícil", qualquer clube.
-  state.clubs = drawTeams(CLUBS, SLOTS.length, deps.rng, state.hard ? 3 : 2).map((c) => c.id);
+  // Clubes que o grupo ainda não teve no Melhor Time primeiro.
+  const level = state.hard ? 3 : 2;
+  state.clubs = freshPick(CLUBS.filter((t) => t.tier <= level), (t) => `club:${t.id}`, SLOTS.length, deps.rng, deps.seen).map((c) => c.id);
   state.status = 'PLAYING';
   state.phase = 'draft';
   state.round = 0;

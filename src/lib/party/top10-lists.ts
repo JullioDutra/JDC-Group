@@ -525,6 +525,42 @@ const BASE_LISTS: Top10List[] = [
 /** Listas antigas + as de 18/11/2026 (com os dados de 2026). */
 export const TOP10_LISTS: Top10List[] = [...BASE_LISTS, ...TOP10_EXTRA];
 
+/**
+ * Listas diferentes com o mesmo assunto: o sorteio trata como um tema só e
+ * só volta a ele depois de passar por todos os outros. Lista fora daqui é um
+ * tema sozinha.
+ */
+const THEME_GROUPS: Record<string, string[]> = {
+  'artilheiros-copa': ['artilheiros-copas-2002-2022', 'artilheiros-copas-2026', 'artilheiros-copa-2026'],
+  'tecnicos-copa': ['tecnicos-campeoes-brasil', 'tecnicos-campeoes-1998-2026', 'capitaes-campeoes-1994-2026'],
+  'sedes-copa': ['sedes-copa-2026', 'sedes-copas-1990-2022', 'brasil-campeao-paises', 'estadios-finais-1994-2026'],
+  'copa-2026': ['copa-2026-4-primeiros', 'brasil-copa-2026-jogos'],
+  'bola-de-ouro': ['bolas-de-ouro-2026', 'bola-de-ouro-2026-top10', 'melhor-do-mundo-fifa-br', 'melhor-jogador-copas-1982-2018'],
+  'libertadores': ['libertadores-titulos-2025', 'brasileiros-libertadores-2025'],
+  champions: ['champions-titulos-2025', 'champions-artilheiros-2026', 'tecnicos-champions-2026', 'jogadores-6-champions'],
+  'ligas-europa': ['ingles-titulos-2026', 'laliga-titulos-2026', 'scudetto-titulos-2026', 'alemao-titulos-2026', 'frances-titulos-2026'],
+  'titulos-brasil': ['brasileirao-titulos-2025', 'copa-do-brasil-titulos-2025'],
+  'selecoes-titulos': ['copas-titulos-2026', 'copa-america-titulos-2024', 'eurocopa-titulos-2024'],
+  'paises-area': ['paises-area', 'america-do-sul-area', 'africa-area', 'eua-estados-area'],
+  'paises-populacao': ['populosos-2024', 'america-do-sul-populacao', 'aglomeracoes-urbanas-2018'],
+  'estados-brasil': ['estados-populosos-2022', 'estados-menos-populosos-2022', 'estados-area', 'estados-municipios', 'nordeste-estados-2022', 'regioes-populacao-2022'],
+  'cidades-brasil': ['capitais-populosas-2022', 'nordeste-capitais-2022', 'municipios-populosos-2025'],
+  espaco: ['planetas', 'maiores-luas', 'planetas-anoes', 'estrelas-brilhantes'],
+  natureza: ['oceanos', 'lagos', 'ilhas', 'desertos', 'montanhas', 'continentes-area'],
+  olimpiadas: ['paris-2024-ouros', 'medalhistas-olimpicos-br'],
+  'outros-esportes': ['tenis-grand-slams-2025', 'f1-titulos-2024', 'nba-titulos-2025'],
+  ciencia: ['crosta', 'elementos-1-10', 'ossos-longos'],
+  presidentes: ['presidentes-nova-republica', 'presidentes-militares', 'presidentes-eleitos-diretos'],
+  'mundo-politica': ['presidentes-eua-1989', 'premies-reino-unido'],
+  militar: ['arsenal-nuclear-2025', 'gasto-militar-2025'],
+};
+const THEME_OF = new Map(Object.entries(THEME_GROUPS).flatMap(([theme, ids]) => ids.map((id) => [id, theme] as const)));
+
+/** Tema de uma lista (o próprio id quando ela não está em nenhum grupo). */
+export function top10Theme(id: string): string {
+  return THEME_OF.get(id) ?? id;
+}
+
 export const TOP10_CATEGORIES = ['futebol', 'geral'] as const;
 
 export function getTop10List(id: string | null): Top10List | undefined {

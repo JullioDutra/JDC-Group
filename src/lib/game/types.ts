@@ -491,6 +491,8 @@ export interface Top100Party extends PartyBase {
 export interface AnagramaParty extends PartyBase {
   game: 'anagrama';
   category: ContentCategory | null;
+  /** Tema escolhido no comando ("capital", "clube do exterior"); null = mistura. */
+  theme?: string | null;
   round: number;
   totalRounds: number;
   order: string[];

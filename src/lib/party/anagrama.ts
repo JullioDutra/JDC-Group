@@ -1,7 +1,7 @@
 import { firstName, isChatter, normalize } from '../game/text';
 import type { AnagramaParty, ContentCategory, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, finishByScore, freshFirst, normalizeAnswer, pauseBeforeNext, react, schedule, scoreImage, text } from './common';
-import { ANAGRAMS, getAnagram, plainUpper, scramble } from './content/anagramas';
+import { ANAGRAMS, ANAGRAM_THEMES, getAnagram, plainUpper, scramble } from './content/anagramas';
 
 /**
  * Anagrama (em grupo, corrida): o bot mostra as letras embaralhadas e o
@@ -12,26 +12,45 @@ import { ANAGRAMS, getAnagram, plainUpper, scramble } from './content/anagramas'
 export const ANAGRAMA_POINTS = { early: 100, late: 60 };
 export const ANAGRAMA_TRIES = 3;
 
+/** Lista de temas para o grupo escolher ("abrir anagrama capitais"). */
+export function anagramThemesText(head = ''): string {
+  const fut = ANAGRAM_THEMES.filter((t) => t.category === 'futebol').map((t) => t.keys[0]);
+  const ger = ANAGRAM_THEMES.filter((t) => t.category !== 'futebol').map((t) => t.keys[0]);
+  return [
+    head,
+    '🔤 *Temas do Anagrama* (mande *abrir anagrama* + tema):',
+    `⚽ ${fut.join(', ')}`,
+    `🌎 ${ger.join(', ')}`,
+    'Sem tema: mistura tudo. *abrir anagrama futebol* ou *abrir anagrama geral* juntam os temas de cada lado.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 export const ANAGRAMA_RULES = [
   'O bot mostra as letras embaralhadas e o tema. Desembaralhe e mande a palavra.',
+  'Dá para escolher o tema: *abrir anagrama capitais*, *abrir anagrama clubes*... (mande *temas do anagrama* para ver todos).',
   `O primeiro que acertar leva ${ANAGRAMA_POINTS.early} pontos (${ANAGRAMA_POINTS.late} depois da dica, que sai na metade do tempo).`,
   `Cada um tem ${ANAGRAMA_TRIES} tentativas por rodada. Vence quem acertar mais.`,
 ];
 
 const half = () => Math.round(PARTY_CONFIG.anagrama.seconds / 2);
 
-export function newAnagrama(category: ContentCategory | null = null): Pick<AnagramaParty, 'game' | 'category' | 'round' | 'totalRounds' | 'order' | 'scrambled' | 'hint' | 'tries' | 'solved'> {
-  return { game: 'anagrama', category, round: -1, totalRounds: PARTY_CONFIG.anagrama.rounds!, order: [], scrambled: '', hint: false, tries: {}, solved: false };
+export function newAnagrama(
+  category: ContentCategory | null = null,
+  theme: string | null = null,
+): Pick<AnagramaParty, 'game' | 'category' | 'theme' | 'round' | 'totalRounds' | 'order' | 'scrambled' | 'hint' | 'tries' | 'solved'> {
+  return { game: 'anagrama', category, theme, round: -1, totalRounds: PARTY_CONFIG.anagrama.rounds!, order: [], scrambled: '', hint: false, tries: {}, solved: false };
 }
 
 export function startAnagrama(state: AnagramaParty, deps: PartyDeps): Outgoing[] {
-  const pool = ANAGRAMS.filter((a) => !state.category || a.category === state.category);
-  // Sem categoria: mistura futebol e geral, metade de cada (quando dá).
+  const pool = ANAGRAMS.filter((a) => (state.theme ? a.theme === state.theme : !state.category || a.category === state.category));
   state.order = freshFirst(pool.map((a) => a.id), deps.rng, deps.seen).slice(0, state.totalRounds);
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`🔤 *Anagrama* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openAnagramaRound(state, deps)];
+  const tema = state.theme ? ` Tema: *${state.theme}*.` : '';
+  return [text(`🔤 *Anagrama* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.${tema}`), ...openAnagramaRound(state, deps)];
 }
 
 export function openAnagramaRound(state: AnagramaParty, deps: PartyDeps): Outgoing[] {

@@ -6,7 +6,7 @@ import { handleMessage, handleTick } from '../src/lib/game/engine';
 import type { LeilaoParty, MatchState, Outgoing } from '../src/lib/game/types';
 import type { PlayerRecord } from '../src/lib/players/types';
 import { parsePartyStart } from '../src/lib/party/engine';
-import { LEILAO_BONUS, completeTeam, maxBid, overallOf, parseBid, teamScore } from '../src/lib/party/leilao';
+import { LEILAO_BONUS, completeTeam, leilaoEligible, maxBid, overallOf, parseBid, teamScore } from '../src/lib/party/leilao';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
 
@@ -65,12 +65,20 @@ test('1 x 1: o agendador antigo não cobra a vez nova; prazo vencido cobra na pr
 
 const rec = (id: string, name: string, pos: PlayerRecord['positions'], sitelinks: number): PlayerRecord => ({
   id, name, aliases: [], positions: pos, nationality: 'Brasil', birthDate: null, heightCm: null,
-  clubs: ['Flamengo', 'Real Madrid'], debutYear: null, sitelinks, stats: {}, source: 'wikidata',
+  clubs: ['Flamengo', 'Real Madrid'], debutYear: 2010, sitelinks, stats: {}, source: 'wikidata',
 });
 
 test('Leilão: overall pela fama, lance pelo número, limite de saldo e time completo', () => {
   assert.equal(overallOf(250), 99);
-  assert.ok(overallOf(30) > overallOf(5) && overallOf(5) >= 60);
+  assert.equal(overallOf(30), 70);
+  assert.equal(overallOf(5), 70);
+  assert.ok(overallOf(90) >= 83 && overallOf(90) <= 87, 'estrela começa perto de 85');
+  // Só conhecidos das grandes ligas e da era recente (ou lendas).
+  assert.ok(leilaoEligible(rec('a', 'Conhecido', ['ATA'], 40)));
+  assert.ok(!leilaoEligible(rec('b', 'Pouco conhecido', ['ATA'], 20)), 'menos de 30 Wikipédias não entra');
+  assert.ok(!leilaoEligible({ ...rec('c', 'Liga pequena', ['ATA'], 60), clubs: ['FC Sheriff', 'Ludogorets'] }), 'fora das grandes ligas não entra');
+  assert.ok(!leilaoEligible({ ...rec('d', 'Antigo', ['ATA'], 60), debutYear: 1960 }), 'antigo e pouco famoso não entra');
+  assert.ok(leilaoEligible({ ...rec('e', 'Lenda', ['ATA'], 150), debutYear: 1960 }), 'lenda entra');
   assert.equal(parseBid('15'), 15);
   assert.equal(parseBid('lance 30'), 30);
   assert.equal(parseBid('quinze'), null);
@@ -94,7 +102,7 @@ test('Leilão na partida: lances, venda no fim do tempo e resultado com o overal
   const records: PlayerRecord[] = [];
   let n = 0;
   for (const pos of ['GOL', 'DEF', 'MEI', 'ATA'] as const) {
-    for (let i = 0; i < 4; i++) records.push(rec(`L${++n}`, `Craque ${pos} ${i + 1}`, [pos], 10 + n * 7));
+    for (let i = 0; i < 4; i++) records.push(rec(`L${++n}`, `Craque ${pos} ${i + 1}`, [pos], 30 + n * 8));
   }
   await store.upsertPlayers(records);
   let id = 0;

@@ -3,13 +3,14 @@ import type { IncomingMessage, LeilaoParty, Outgoing, PartyPlayer, Position } fr
 import { POSITION_LABEL } from '../game/types';
 import type { PlayerRecord } from '../players/types';
 import { BASE_LOADING, careerPath } from './basegames';
+import { featuresOf } from './gridCriteria';
 import { PARTY_CONFIG, PartyDeps, Save, award, freshFirst, pendingResults, react, schedule, shuffle, text, warnOnce } from './common';
 
 /**
  * Leilão de Craques: um jogo de mercado, bem diferente dos de pergunta.
  * Cada um começa com 100 moedas e precisa montar um time de 4. O bot leiloa
  * craques da base, um por vez (30 s por lote): o lance é só mandar o número.
- * Quem der o maior lance leva. O "overall" de cada craque (de 60 a 99, pela
+ * Quem der o maior lance leva. O "overall" de cada craque (de 70 a 99, pela
  * fama dele no mundo) fica escondido até o fim: aí soma-se o time, com +10
  * para quem fechar GOL, DEF, MEI e ATA. Vence a maior soma; no empate, quem
  * gastou menos.
@@ -22,15 +23,35 @@ const POSITIONS: Position[] = ['GOL', 'DEF', 'MEI', 'ATA'];
 export const LEILAO_RULES = [
   `Cada um tem ${LEILAO_BUDGET} moedas para montar um time de ${LEILAO_SQUAD} craques.`,
   `O bot leiloa um craque por vez (${PARTY_CONFIG.leilao.seconds}s). Para dar lance, mande só o número: *15*. Tem que cobrir o lance anterior.`,
-  'O overall de cada craque (60 a 99) fica escondido e só aparece no fim.',
+  'Só craques conhecidos das grandes ligas: metade estrelas, metade bons jogadores. O overall (70 a 99) fica escondido até o fim.',
   `No fim soma o overall do time; quem tiver GOL, DEF, MEI e ATA ganha +${LEILAO_BONUS}. Empate: vence quem gastou menos.`,
   'Guarde moedas: cada vaga que falta precisa de pelo menos 1 moeda.',
 ];
 
-/** Overall de 60 a 99 pela fama (Wikipédias com artigo): Messi ~99, um titular de seleção ~85. */
+/**
+ * Quem entra no leilão: jogador conhecido (artigo em 30+ Wikipédias), que
+ * passou por um clube das 5 grandes ligas da Europa ou do Brasileirão, e da
+ * era recente (estreia a partir de 1995) ou lenda (100+ Wikipédias).
+ */
+export const LEILAO_MIN_FAME = 30;
+/** A partir daqui é "estrela"; cada posição tem metade de estrelas. */
+export const LEILAO_STAR_FAME = 90;
+const MAIN_LEAGUES = ['premier', 'laliga', 'seriea', 'bundesliga', 'ligue1', 'brasileirao'];
+
+export function leilaoEligible(r: PlayerRecord): boolean {
+  if (r.sitelinks < LEILAO_MIN_FAME || !r.positions.length) return false;
+  const year = r.debutYear ?? (r.birthDate ? Number(r.birthDate.slice(0, 4)) + 19 : null);
+  const recent = year !== null ? year >= 1995 : r.sitelinks >= 60;
+  if (!recent && r.sitelinks < 100) return false;
+  const leagues = featuresOf(r).leagues;
+  return MAIN_LEAGUES.some((l) => leagues.has(l));
+}
+
+/** Overall de 70 a 99 pela fama (Wikipédias com artigo): 30 = 70, ~90 = 85, 250+ = 99. */
 export function overallOf(sitelinks: number): number {
-  const v = 60 + 39 * Math.min(1, Math.log1p(Math.max(0, sitelinks)) / Math.log(251));
-  return Math.max(60, Math.min(99, Math.round(v)));
+  const lo = Math.log1p(LEILAO_MIN_FAME);
+  const v = 70 + 29 * ((Math.log1p(Math.max(0, sitelinks)) - lo) / (Math.log(251) - lo));
+  return Math.max(70, Math.min(99, Math.round(v)));
 }
 
 export function newLeilao(): Pick<LeilaoParty, 'game' | 'round' | 'totalRounds' | 'lots' | 'budget' | 'squads' | 'bid'> {
@@ -40,14 +61,25 @@ export function newLeilao(): Pick<LeilaoParty, 'game' | 'round' | 'totalRounds' 
 const posLabel = (ps: Position[]) => ps.map((p) => POSITION_LABEL[p]).join('/');
 
 export async function startLeilao(state: LeilaoParty, deps: PartyDeps): Promise<Outgoing[]> {
-  const sample = await deps.store.samplePlayers({ minSitelinks: 12, minClubs: 1, limit: 600 });
-  const byId = new Map<string, PlayerRecord>(sample.filter((r) => r.positions.length).map((r) => [r.id, r]));
+  // Duas amostras: estrelas (raras) e o resto dos conhecidos.
+  const [stars, known] = await Promise.all([
+    deps.store.samplePlayers({ minSitelinks: LEILAO_STAR_FAME, minClubs: 2, limit: 400 }),
+    deps.store.samplePlayers({ minSitelinks: LEILAO_MIN_FAME, minClubs: 2, limit: 1200 }),
+  ]);
+  const byId = new Map<string, PlayerRecord>([...stars, ...known].filter(leilaoEligible).map((r) => [r.id, r]));
   const fresh = freshFirst([...byId.keys()], deps.rng, deps.seen).map((id) => byId.get(id)!);
-  // N + 1 craques de cada posição: todo mundo consegue fechar o time.
+  // N + 1 craques de cada posição (todo mundo consegue fechar o time): metade estrelas, metade bons jogadores.
   const perPosition = state.players.length + 1;
   const lots: LeilaoParty['lots'] = [];
   for (const pos of POSITIONS) {
-    for (const r of fresh.filter((x) => x.positions[0] === pos).slice(0, perPosition)) {
+    const here = fresh.filter((x) => x.positions[0] === pos);
+    const top = here.filter((x) => x.sitelinks >= LEILAO_STAR_FAME);
+    const mid = here.filter((x) => x.sitelinks < LEILAO_STAR_FAME);
+    const wantTop = Math.ceil(perPosition / 2);
+    const picked = [...top.slice(0, wantTop), ...mid.slice(0, perPosition - Math.min(wantTop, top.length))];
+    // Faltou de um lado: completa com o outro.
+    for (const r of [...top.slice(wantTop), ...mid]) if (picked.length < perPosition && !picked.includes(r)) picked.push(r);
+    for (const r of picked.slice(0, perPosition)) {
       lots.push({ id: r.id, name: r.name, positions: r.positions, nationality: r.nationality, path: careerPath(r).slice(-4), overall: overallOf(r.sitelinks) });
     }
   }
