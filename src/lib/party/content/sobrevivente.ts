@@ -243,6 +243,125 @@ export const SURVIVOR_LISTS: SurvivorList[] = [
     id: 's-planetas-anoes', category: 'geral', level: 3, title: 'planetas anões reconhecidos pela União Astronômica Internacional',
     items: [['Plutão', 'plutao'], ['Ceres'], ['Éris', 'eris'], ['Haumea'], ['Makemake']],
   },
+  // ---------- Futebol (rodada 9) ----------
+  {
+    id: 's-clubes-neymar', category: 'futebol', level: 1, title: 'clubes em que Neymar jogou como profissional (até 2025)',
+    items: [['Santos'], ['Barcelona', 'barca'], ['PSG', 'paris saint germain', 'paris'], ['Al-Hilal', 'al hilal']],
+  },
+  {
+    id: 's-clubes-cr7', category: 'futebol', level: 2, title: 'clubes em que Cristiano Ronaldo jogou como profissional (até 2025)',
+    items: [['Sporting', 'sporting lisboa'], ['Manchester United', 'man united', 'united'], ['Real Madrid', 'real'], ['Juventus', 'juve'], ['Al-Nassr', 'al nassr']],
+  },
+  {
+    id: 's-clubes-ronaldinho', category: 'futebol', level: 3, title: 'clubes em que Ronaldinho Gaúcho jogou como profissional',
+    items: [
+      ['Grêmio', 'gremio'], ['PSG', 'paris saint germain', 'paris'], ['Barcelona', 'barca'], ['Milan'], ['Flamengo'],
+      ['Atlético-MG', 'atletico mineiro', 'atletico mg', 'galo'], ['Querétaro', 'queretaro'], ['Fluminense'],
+    ],
+  },
+  {
+    id: 's-clubes-kaka', category: 'futebol', level: 2, title: 'clubes em que Kaká jogou como profissional',
+    items: [['São Paulo', 'sao paulo'], ['Milan'], ['Real Madrid', 'real'], ['Orlando City', 'orlando']],
+  },
+  {
+    id: 's-clubes-romario', category: 'futebol', level: 3, title: 'clubes em que Romário jogou como profissional',
+    items: [
+      ['Vasco', 'vasco da gama'], ['PSV', 'psv eindhoven'], ['Barcelona', 'barca'], ['Flamengo'], ['Valencia', 'valência'], ['Fluminense'],
+      ['Al-Sadd', 'al sadd'], ['Miami FC', 'miami'], ['Adelaide United', 'adelaide'], ['América-RJ', 'america', 'america rj'],
+    ],
+  },
+  {
+    id: 's-final-1970', category: 'futebol', level: 3, title: 'titulares do Brasil na final da Copa de 1970 (4 x 1 na Itália)',
+    items: [
+      ['Félix', 'felix'], ['Carlos Alberto', 'carlos alberto torres'], ['Brito'], ['Piazza'], ['Everaldo'], ['Clodoaldo'], ['Gérson', 'gerson'],
+      ['Jairzinho'], ['Tostão', 'tostao'], ['Pelé', 'pele'], ['Rivellino', 'rivelino'],
+    ],
+  },
+  {
+    id: 's-final-1994', category: 'futebol', level: 3, title: 'titulares do Brasil na final da Copa de 1994 (contra a Itália)',
+    items: [
+      ['Taffarel'], ['Jorginho'], ['Aldair'], ['Márcio Santos', 'marcio santos'], ['Branco'], ['Mauro Silva'], ['Dunga'], ['Mazinho'],
+      ['Zinho'], ['Bebeto'], ['Romário', 'romario'],
+    ],
+  },
+  {
+    id: 's-final-2002', category: 'futebol', level: 2, title: 'titulares do Brasil na final da Copa de 2002 (2 x 0 na Alemanha)',
+    items: [
+      ['Marcos'], ['Cafu'], ['Lúcio', 'lucio'], ['Edmílson', 'edmilson'], ['Roque Júnior', 'roque junior'], ['Roberto Carlos'],
+      ['Gilberto Silva'], ['Kléberson', 'kleberson'], ['Ronaldinho', 'ronaldinho gaucho'], ['Rivaldo'], ['Ronaldo', 'ronaldo fenomeno'],
+    ],
+  },
+  {
+    id: 's-12-grandes', category: 'futebol', level: 1, title: 'os 12 grandes do futebol brasileiro (os 4 do Rio, os 4 de São Paulo, os 2 de Minas e os 2 do Rio Grande do Sul)',
+    items: [
+      ['Flamengo'], ['Fluminense'], ['Vasco', 'vasco da gama'], ['Botafogo'], ['Corinthians'], ['Palmeiras'], ['São Paulo', 'sao paulo'], ['Santos'],
+      ['Atlético-MG', 'atletico mineiro', 'atletico mg', 'galo'], ['Cruzeiro'], ['Grêmio', 'gremio'], ['Internacional', 'inter'],
+    ],
+  },
+  {
+    id: 's-libertadores-br', category: 'futebol', level: 2, title: 'clubes brasileiros campeões da Libertadores (até 2025)',
+    items: [
+      ['Santos'], ['Cruzeiro'], ['Flamengo'], ['Grêmio', 'gremio'], ['São Paulo', 'sao paulo'], ['Vasco', 'vasco da gama'], ['Palmeiras'],
+      ['Internacional', 'inter'], ['Corinthians'], ['Atlético-MG', 'atletico mineiro', 'atletico mg', 'galo'], ['Fluminense'], ['Botafogo'],
+    ],
+  },
+  {
+    id: 's-mundiais-br', category: 'futebol', level: 2, title: 'clubes brasileiros campeões da Copa Intercontinental ou do Mundial de Clubes da FIFA (até 2025)',
+    items: [['Santos'], ['Flamengo'], ['Grêmio', 'gremio'], ['São Paulo', 'sao paulo'], ['Corinthians'], ['Internacional', 'inter']],
+  },
+  {
+    id: 's-copa-feminina', category: 'futebol', level: 3, title: 'seleções campeãs da Copa do Mundo feminina (até 2023)',
+    items: [['Estados Unidos', 'eua', 'usa'], ['Noruega'], ['Alemanha'], ['Japão', 'japao'], ['Espanha']],
+  },
+  // ---------- Gerais (rodada 9) ----------
+  {
+    id: 's-regioes-br', category: 'geral', level: 1, title: 'regiões do Brasil',
+    items: [['Norte'], ['Nordeste'], ['Centro-Oeste', 'centro oeste'], ['Sudeste'], ['Sul']],
+  },
+  {
+    id: 's-estados-norte', category: 'geral', level: 2, title: 'estados da Região Norte',
+    items: [['Acre'], ['Amapá', 'amapa'], ['Amazonas'], ['Pará', 'para'], ['Rondônia', 'rondonia'], ['Roraima'], ['Tocantins']],
+  },
+  {
+    id: 's-capitais-nordeste', category: 'geral', level: 2, title: 'capitais dos estados do Nordeste',
+    items: [
+      ['Salvador'], ['Aracaju'], ['Maceió', 'maceio'], ['Recife'], ['João Pessoa', 'joao pessoa'], ['Natal'], ['Fortaleza'], ['Teresina'],
+      ['São Luís', 'sao luis'],
+    ],
+  },
+  {
+    id: 's-beatles', category: 'geral', level: 1, title: 'integrantes dos Beatles (a formação famosa)',
+    items: [['John Lennon', 'john', 'lennon'], ['Paul McCartney', 'paul', 'mccartney'], ['George Harrison', 'george', 'harrison'], ['Ringo Starr', 'ringo']],
+  },
+  {
+    id: 's-notas-musicais', category: 'geral', level: 1, title: 'notas musicais',
+    items: [['Dó', 'do'], ['Ré', 're'], ['Mi'], ['Fá', 'fa'], ['Sol'], ['Lá', 'la'], ['Si']],
+  },
+  {
+    id: 's-america-central', category: 'geral', level: 3, title: 'países da América Central continental',
+    items: [['Guatemala'], ['Belize'], ['Honduras'], ['El Salvador', 'salvador'], ['Nicarágua', 'nicaragua'], ['Costa Rica'], ['Panamá', 'panama']],
+  },
+  {
+    id: 's-tartarugas-ninja', category: 'geral', level: 1, title: 'as Tartarugas Ninja',
+    items: [['Leonardo', 'leo'], ['Raphael', 'rafael', 'rafa'], ['Donatello', 'donatelo'], ['Michelangelo', 'michelangelo', 'miguelangelo']],
+  },
+  {
+    id: 's-sete-anoes', category: 'geral', level: 2, title: 'os sete anões da Branca de Neve (nomes em português)',
+    items: [['Mestre'], ['Zangado'], ['Feliz'], ['Soneca'], ['Dengoso'], ['Atchim'], ['Dunga']],
+  },
+  {
+    id: 's-meses', category: 'geral', level: 1, title: 'meses do ano',
+    items: one(['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']),
+  },
+  {
+    id: 's-cores-bandeira', category: 'geral', level: 1, title: 'cores da bandeira do Brasil',
+    items: [['Verde'], ['Amarelo'], ['Azul'], ['Branco']],
+  },
+  // ---------- Anime ----------
+  {
+    id: 's-cavaleiros-bronze', category: 'anime', level: 2, title: 'os 5 Cavaleiros de Bronze principais de Os Cavaleiros do Zodíaco',
+    items: [['Seiya'], ['Shiryu'], ['Hyoga'], ['Shun'], ['Ikki']],
+  },
 ];
 
 /** Listas com menos itens que isso ficam fora do sorteio. */

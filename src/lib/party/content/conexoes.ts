@@ -310,6 +310,67 @@ export const CONEXOES: ConexoesPuzzle[] = [
       { label: 'Termos do tênis', items: ['Break point', 'Smash', 'Voleio', 'Tie-break'] },
     ],
   },
+  // ---------- Rodada 9 ----------
+  {
+    id: 'cx-copas',
+    category: 'futebol',
+    groups: [
+      { label: 'Europeus campeões da Copa', items: ['Itália', 'Alemanha', 'Inglaterra', 'Espanha'] },
+      { label: 'Sedes de Copa nas Américas', items: ['Uruguai', 'Brasil', 'Chile', 'México'] },
+      { label: 'Africanos que chegaram às quartas de final', items: ['Camarões', 'Senegal', 'Gana', 'Marrocos'] },
+      { label: 'Vices da Copa que nunca foram campeões', items: ['Holanda', 'Hungria', 'Tchecoslováquia', 'Suécia'] },
+    ],
+  },
+  {
+    id: 'cx-jogadas',
+    category: 'futebol',
+    groups: [
+      { label: 'Dribles', items: ['Chapéu', 'Caneta', 'Elástico', 'Pedalada'] },
+      { label: 'Jeitos de finalizar', items: ['Trivela', 'Bicicleta', 'Voleio', 'Cavadinha'] },
+      { label: 'Posições', items: ['Volante', 'Zagueiro', 'Centroavante', 'Ponta'] },
+      { label: 'Partes do campo', items: ['Grande área', 'Marca do pênalti', 'Linha de fundo', 'Círculo central'] },
+    ],
+  },
+  {
+    id: 'cx-bola-de-ouro',
+    category: 'futebol',
+    groups: [
+      { label: 'Brasileiros com Bola de Ouro', items: ['Ronaldo', 'Rivaldo', 'Ronaldinho', 'Kaká'] },
+      { label: 'Franceses com Bola de Ouro', items: ['Platini', 'Papin', 'Zidane', 'Benzema'] },
+      { label: 'Alemães com Bola de Ouro', items: ['Beckenbauer', 'Gerd Müller', 'Rummenigge', 'Matthäus'] },
+      { label: 'Ingleses com Bola de Ouro', items: ['Stanley Matthews', 'Bobby Charlton', 'Kevin Keegan', 'Michael Owen'] },
+    ],
+  },
+  {
+    id: 'cx-estadios-br',
+    category: 'futebol',
+    groups: [
+      { label: 'Estádios da cidade de São Paulo', items: ['Morumbi', 'Pacaembu', 'Allianz Parque', 'Neo Química Arena'] },
+      { label: 'Estádios da cidade do Rio', items: ['Maracanã', 'São Januário', 'Nilton Santos', 'Laranjeiras'] },
+      { label: 'Estádios do Nordeste', items: ['Fonte Nova', 'Castelão', 'Arruda', 'Ilha do Retiro'] },
+      { label: 'Estádios do Sul', items: ['Beira-Rio', 'Couto Pereira', 'Arena da Baixada', 'Arena do Grêmio'] },
+    ],
+  },
+  {
+    id: 'cx-capitais',
+    category: 'geral',
+    groups: [
+      { label: 'Capitais da Europa', items: ['Madri', 'Paris', 'Roma', 'Berlim'] },
+      { label: 'Capitais da América do Sul', items: ['Lima', 'Quito', 'Bogotá', 'Caracas'] },
+      { label: 'Capitais da Ásia', items: ['Tóquio', 'Seul', 'Pequim', 'Bangkok'] },
+      { label: 'Capitais da África', items: ['Cairo', 'Nairóbi', 'Luanda', 'Dacar'] },
+    ],
+  },
+  {
+    id: 'cx-frutas',
+    category: 'geral',
+    groups: [
+      { label: 'Frutas vermelhas', items: ['Morango', 'Framboesa', 'Amora', 'Cereja'] },
+      { label: 'Frutas cítricas', items: ['Laranja', 'Limão', 'Tangerina', 'Toranja'] },
+      { label: 'Frutas da Amazônia', items: ['Açaí', 'Cupuaçu', 'Pupunha', 'Bacuri'] },
+      { label: 'Castanhas e nozes', items: ['Amêndoa', 'Avelã', 'Noz', 'Pistache'] },
+    ],
+  },
 ];
 
 export function getConexoes(id: string): ConexoesPuzzle | undefined {

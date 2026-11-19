@@ -180,6 +180,85 @@ export const LINEUPS: Lineup[] = [
     id: 'flamengo-2022', team: 'Flamengo', aliases: ['flamengo', 'mengao', 'fla'], year: 2022,
     match: 'final da Libertadores de 2022, 1 x 0 no Athletico-PR',
     lines: [['Santos'], ['Rodinei', 'David Luiz', 'Léo Pereira', 'Filipe Luís'], ['Thiago Maia', 'João Gomes'], ['Everton Ribeiro', 'Arrascaeta'], ['Gabigol', 'Pedro']],
+  },  {
+    id: 'franca-1998', team: 'França', aliases: ['franca', 'selecao francesa'], year: 1998,
+    match: 'final da Copa de 1998, 3 x 0 no Brasil',
+    lines: [['Barthez'], ['Thuram', 'Leboeuf', 'Desailly', 'Lizarazu'], ['Karembeu', 'Deschamps', 'Petit'], ['Zidane', 'Djorkaeff'], ['Guivarc’h']],
+  },
+  {
+    id: 'italia-1982', team: 'Itália', aliases: ['italia', 'selecao italiana'], year: 1982,
+    match: 'final da Copa de 1982, 3 x 1 na Alemanha Ocidental',
+    lines: [['Zoff'], ['Bergomi', 'Collovati', 'Scirea', 'Gentile', 'Cabrini'], ['Oriali', 'Tardelli', 'Conti'], ['Graziani', 'Paolo Rossi']],
+  },
+  {
+    id: 'inglaterra-1966', team: 'Inglaterra', aliases: ['inglaterra', 'selecao inglesa'], year: 1966,
+    match: 'final da Copa de 1966, 4 x 2 na Alemanha Ocidental',
+    lines: [['Banks'], ['Cohen', 'Jack Charlton', 'Moore', 'Wilson'], ['Stiles', 'Bobby Charlton'], ['Ball', 'Hunt', 'Hurst', 'Peters']],
+  },
+  {
+    id: 'brasil-2014', team: 'Brasil', aliases: ['brasil', 'selecao brasileira', 'selecao'], year: 2014,
+    match: 'semifinal da Copa de 2014, 1 x 7 para a Alemanha',
+    lines: [['Júlio César'], ['Maicon', 'David Luiz', 'Dante', 'Marcelo'], ['Luiz Gustavo', 'Fernandinho'], ['Hulk', 'Oscar', 'Bernard'], ['Fred']],
+  },
+  {
+    id: 'real-madrid-2002', team: 'Real Madrid', aliases: ['real madrid', 'real'], year: 2002,
+    match: 'final da Champions de 2002, 2 x 1 no Bayer Leverkusen (o voleio de Zidane)',
+    lines: [['César'], ['Míchel Salgado', 'Hierro', 'Helguera', 'Roberto Carlos'], ['Figo', 'Makélélé', 'Solari', 'Zidane'], ['Raúl', 'Morientes']],
+  },
+  {
+    id: 'real-madrid-2018', team: 'Real Madrid', aliases: ['real madrid', 'real'], year: 2018,
+    match: 'final da Champions de 2018, 3 x 1 no Liverpool',
+    lines: [['Keylor Navas'], ['Carvajal', 'Varane', 'Sergio Ramos', 'Marcelo'], ['Casemiro', 'Modrić', 'Kroos'], ['Isco'], ['Benzema', 'Cristiano Ronaldo']],
+  },
+  {
+    id: 'barcelona-2006', team: 'Barcelona', aliases: ['barcelona', 'barca'], year: 2006,
+    match: 'final da Champions de 2006, 2 x 1 no Arsenal',
+    lines: [['Víctor Valdés'], ['Oleguer', 'Puyol', 'Márquez', 'Van Bronckhorst'], ['Edmílson', 'Deco', 'Van Bommel'], ['Giuly', 'Eto’o', 'Ronaldinho']],
+  },
+  {
+    id: 'manchester-city-2023', team: 'Manchester City', aliases: ['manchester city', 'city', 'man city'], year: 2023,
+    match: 'final da Champions de 2023, 1 x 0 na Inter de Milão',
+    lines: [['Ederson'], ['Walker', 'Rúben Dias', 'Akanji'], ['Stones', 'Rodri'], ['Bernardo Silva', 'De Bruyne', 'Gündoğan', 'Grealish'], ['Haaland']],
+  },
+  {
+    id: 'psg-2025', team: 'PSG', aliases: ['psg', 'paris saint germain', 'paris'], year: 2025,
+    match: 'final da Champions de 2025, 5 x 0 na Inter de Milão',
+    lines: [['Donnarumma'], ['Hakimi', 'Marquinhos', 'Pacho', 'Nuno Mendes'], ['João Neves', 'Vitinha', 'Fabián Ruiz'], ['Doué', 'Dembélé', 'Kvaratskhelia']],
+  },
+  {
+    id: 'sao-paulo-1992', team: 'São Paulo', aliases: ['sao paulo', 'spfc', 'tricolor'], year: 1992,
+    match: 'final do Mundial de 1992, 2 x 1 no Barcelona',
+    lines: [['Zetti'], ['Vítor', 'Adílson', 'Ronaldão', 'Ronaldo Luís'], ['Pintado', 'Toninho Cerezo'], ['Cafu', 'Raí'], ['Palhinha', 'Müller']],
+  },
+  {
+    id: 'corinthians-2000', team: 'Corinthians', aliases: ['corinthians', 'timao'], year: 2000,
+    match: 'final do Mundial de Clubes de 2000, 0 x 0 com o Vasco (título nos pênaltis)',
+    lines: [['Dida'], ['Índio', 'Adílson', 'Fábio Luciano', 'Kléber'], ['Rincón', 'Vampeta'], ['Marcelinho Carioca', 'Ricardinho'], ['Edílson', 'Luizão']],
+  },
+  {
+    id: 'internacional-2006', team: 'Internacional', aliases: ['internacional', 'inter', 'colorado'], year: 2006,
+    match: 'final do Mundial de 2006, 1 x 0 no Barcelona',
+    lines: [['Clemer'], ['Ceará', 'Índio', 'Fabiano Eller', 'Rubens Cardoso'], ['Edinho', 'Wellington Monteiro'], ['Alex', 'Fernandão'], ['Iarley', 'Alexandre Pato']],
+  },
+  {
+    id: 'atletico-mg-2013', team: 'Atlético-MG', aliases: ['atletico mineiro', 'atletico mg', 'atletico', 'galo'], year: 2013,
+    match: 'final da Libertadores de 2013, 2 x 0 no Olimpia (título nos pênaltis)',
+    lines: [['Victor'], ['Marcos Rocha', 'Réver', 'Leonardo Silva', 'Richarlyson'], ['Pierre', 'Josué'], ['Diego Tardelli', 'Ronaldinho', 'Bernard'], ['Jô']],
+  },
+  {
+    id: 'gremio-2017', team: 'Grêmio', aliases: ['gremio', 'tricolor gaucho'], year: 2017,
+    match: 'final da Libertadores de 2017, 2 x 1 no Lanús, na Argentina',
+    lines: [['Marcelo Grohe'], ['Edílson', 'Geromel', 'Kannemann', 'Bruno Cortez'], ['Jailson', 'Arthur'], ['Ramiro', 'Luan', 'Fernandinho'], ['Lucas Barrios']],
+  },
+  {
+    id: 'fluminense-2023', team: 'Fluminense', aliases: ['fluminense', 'flu'], year: 2023,
+    match: 'final da Libertadores de 2023, 2 x 1 no Boca Juniors',
+    lines: [['Fábio'], ['Samuel Xavier', 'Nino', 'Felipe Melo', 'Marcelo'], ['André', 'Martinelli'], ['Jhon Arias', 'Ganso', 'Keno'], ['Cano']],
+  },
+  {
+    id: 'botafogo-2024', team: 'Botafogo', aliases: ['botafogo', 'fogao'], year: 2024,
+    match: 'final da Libertadores de 2024, 3 x 1 no Atlético-MG',
+    lines: [['John'], ['Vitinho', 'Bastos', 'Barboza', 'Alex Telles'], ['Gregore', 'Marlon Freitas'], ['Luiz Henrique', 'Thiago Almada', 'Savarino'], ['Igor Jesus']],
   },
 ];
 

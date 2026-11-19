@@ -1,3 +1,5 @@
+import { IMPOSTOR_SECRETS } from './impostor';
+
 /**
  * Stop (Adedonha): categorias e listas de palavras aceitas na hora.
  * Palavra fora da lista vai para a IA (se houver chave da Maritaca); sem IA,
@@ -12,6 +14,29 @@ export interface StopCategory {
 }
 
 const split = (s: string) => s.split(',').map((w) => w.trim()).filter(Boolean);
+
+/** Nomes e apelidos de temas do Impostor: base generosa para as categorias novas (rodada 9). */
+const fromImpostor = (...themes: string[]) =>
+  IMPOSTOR_SECRETS.filter((x) => themes.includes(x.theme)).flatMap((x) => [x.name, ...x.aliases]);
+
+const OBJETOS_EXTRA = split(`
+agulha, alicate, almofada, anel, apito, balde, bacia, banco, bandeja, baú, bengala, bola, bolsa, borracha, caderno, cadeado, caixa, calculadora,
+caneca, caneta, carteira, celular, chave, chaleira, cinzeiro, colher, copo, corda, cuia, dado, escada, escova, esponja, estojo, faca, fita,
+fósforo, frigideira, funil, garfo, garrafa, gaveta, guarda-chuva, isqueiro, jarra, lanterna, lápis, livro, lixeira, lupa, mala, martelo, mochila,
+navalha, notebook, óculos, panela, pente, pincel, prato, prego, quadro, régua, relógio, rodo, sabonete, serrote, tesoura, tigela, tijolo, tomada,
+travessa, vaso, vela, xícara, zíper
+`);
+const CORPO_EXTRA = split(`
+abdômen, axila, barriga, bíceps, boca, braço, cabeça, canela, cintura, clavícula, coxa, dedão, esôfago, gengiva, joelho, lábio, mandíbula, mão,
+nádega, nuca, olho, osso, palma, pálpebra, panturrilha, pâncreas, pé, peito, pele, perna, quadril, rótula, sangue, tendão, tórax, traqueia,
+tríceps, umbigo, unha, útero, veia, virilha
+`);
+const CARROS_EXTRA = split(`
+Audi, BMW, BYD, Chevrolet, Citroën, Dodge, Ferrari, Fiat, Ford, Honda, Hyundai, Jeep, Kia, Lamborghini, Land Rover, Mercedes, Mitsubishi,
+Nissan, Peugeot, Porsche, Renault, Tesla, Toyota, Volkswagen, Volvo, Agile, Astra, Bravo, Cobalt, Cruze, Doblò, Duster, Elantra, Fox, Gurgel,
+Jetta, Kicks, Lancer, Marea, Meriva, Mobi, Nivus, Pajero, Prisma, Punto, Ranger, Spin, Tempra, Tiguan, Tracker, Up, Vectra, Versa, Virtus,
+Yaris, Zafira
+`);
 
 const PAISES = split(`
 Afeganistão, África do Sul, Albânia, Alemanha, Andorra, Angola, Antígua e Barbuda, Arábia Saudita, Argélia, Argentina, Armênia, Austrália, Áustria, Azerbaijão,
@@ -102,6 +127,18 @@ export const STOP_CATEGORIES: StopCategory[] = [
   { id: 'comida', label: 'Comida', kind: 'list', words: COMIDAS },
   { id: 'time', label: 'Time de futebol', kind: 'team' },
   { id: 'jogador', label: 'Jogador de futebol', kind: 'player' },
+  // Rodada 9: listas a partir dos temas do Impostor (o que faltar vai para a IA, como nas outras).
+  { id: 'marca', label: 'Marca', kind: 'list', words: [...fromImpostor('marca', 'carro'), ...CARROS_EXTRA] },
+  { id: 'objeto', label: 'Objeto', kind: 'list', words: [...fromImpostor('objeto da casa', 'instrumento musical'), ...OBJETOS_EXTRA] },
+  { id: 'corpo', label: 'Parte do corpo', kind: 'list', words: [...fromImpostor('parte do corpo'), ...CORPO_EXTRA] },
+  { id: 'filme', label: 'Filme ou série', kind: 'list', words: fromImpostor('filme', 'série') },
+  { id: 'carro', label: 'Carro', kind: 'list', words: [...fromImpostor('carro'), ...CARROS_EXTRA] },
+  { id: 'bebida', label: 'Bebida', kind: 'list', words: fromImpostor('bebida') },
+  { id: 'esporte', label: 'Esporte', kind: 'list', words: fromImpostor('esporte') },
+  {
+    id: 'artista', label: 'Cantor ou banda', kind: 'list',
+    words: fromImpostor('artista brasileiro', 'cantor internacional', 'banda brasileira', 'banda internacional'),
+  },
 ];
 
 export function getStopCategory(id: string): StopCategory | undefined {

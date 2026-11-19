@@ -184,32 +184,35 @@ const textOfElement = (el: unknown): string => {
   return props ? textOfElement(props.children) : '';
 };
 
-test('Escalação em Grupo e 1x1: a imagem só mostra o time das rodadas já abertas', async () => {
+test('Escalação em Grupo e 1x1: a imagem só mostra o time das rodadas que já terminaram', async () => {
   const { buildImage } = await import('../src/lib/images/templates');
   const { MODES } = await import('../src/lib/game/modes');
   const teams = ['flamengo', 'palmeiras', 'corinthians', 'atletico-mg', 'santos', 'gremio'];
   const restrictions = teams.map((teamId) => ({ kind: 'club' as const, teamId }));
   const mode = MODES.find((m) => m.restriction === 'club') ?? MODES[0];
-  // Rodada 3 (índice 2): o Atlético-MG da rodada 4 não pode aparecer.
+  // Fim da rodada 3: o bot já está no índice 3 (rodada 4, Atlético-MG), que não pode aparecer.
   const party = {
-    kind: 'party', game: 'escalacao', status: 'PLAYING', modeId: mode.id, randomMode: false,
-    options: { blind: false, turnSeconds: 60, hard: false }, restrictions, round: 2,
+    kind: 'party', game: 'escalacao', status: 'PLAYING', modeId: mode.id, randomMode: false, intermission: true,
+    options: { blind: false, turnSeconds: 60, hard: false }, restrictions, round: 3,
     players: [{ jid: 'a', name: 'Ana', score: 0, missed: 0, hits: 0 }], picks: { a: [null, null, null, null, null, null] },
     host: { jid: 'a', name: 'Ana' }, used: [], deadline: null, timerToken: null, seq: 0, warned: [], createdAt: 0, updatedAt: 0,
   };
   const table = textOfElement(buildImage({ kind: 'partyTable', state: party as never }));
-  assert.match(table, /Corinthians/, 'a rodada atual aparece');
-  assert.doesNotMatch(table, /Atlético|Santos|Grêmio/, 'as próximas não');
+  assert.match(table, /Flamengo[\s\S]*Palmeiras[\s\S]*Corinthians/, 'as 3 rodadas que terminaram aparecem');
+  assert.doesNotMatch(table, /Atlético|Santos|Grêmio/, 'a rodada 4 e as próximas não');
+  // Começo da partida: nenhum time na imagem (o da rodada 1 vai no texto).
+  const start = textOfElement(buildImage({ kind: 'partyTable', state: { ...party, round: 0, intermission: false } as never }));
+  assert.doesNotMatch(start, /Flamengo|Palmeiras|Corinthians/);
   const done = textOfElement(buildImage({ kind: 'partyTable', state: { ...party, status: 'FINISHED' } as never }));
   assert.match(done, /Atlético/, 'no fim, tudo aparece');
 
   const match = {
-    status: 'PLAYING', modeId: mode.id, restrictions, round: 2, turn: 0, turnStartedAt: 0, createdAt: 0, updatedAt: 0, winner: null,
+    status: 'PLAYING', modeId: mode.id, restrictions, round: 3, turn: 0, turnStartedAt: 0, createdAt: 0, updatedAt: 0, winner: null,
     players: [{ jid: 'a', name: 'Ana' }, { jid: 'b', name: 'Bia' }],
     picks: [[null, null, null, null, null, null], [null, null, null, null, null, null]],
     options: { blind: false, turnSeconds: 60, hard: false },
   };
   const pitch = textOfElement(buildImage({ kind: 'pitch', state: match as never }));
-  assert.doesNotMatch(pitch, /ATLÉTICO|SANTOS|GRÊMIO/, '1x1: as próximas rodadas não aparecem no campo');
-  assert.match(pitch, /CORINTHIANS/, '1x1: a rodada atual aparece');
+  assert.match(pitch, /CORINTHIANS/, '1x1: a rodada 3, que terminou, aparece');
+  assert.doesNotMatch(pitch, /ATLÉTICO|SANTOS|GRÊMIO/, '1x1: a rodada 4 (a da vez) e as próximas não aparecem no campo');
 });

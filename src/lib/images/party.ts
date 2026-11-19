@@ -238,8 +238,9 @@ export function partyTable(state: EscalacaoParty): ReactElement {
     { alignItems: 'center', height: 64, padding: '0 16px' },
     txt('', { width: nameW }),
     ...SLOTS.map((_, i) => {
-      // O time de cada rodada só aparece quando ela abre (nada de adiantar as próximas).
-      const revealed = finished || i <= state.round;
+      // O time de cada rodada só aparece depois que ela termina (no fim da partida, todos).
+      // A rodada em andamento vai no texto; a imagem de "fim da rodada" não adianta a próxima.
+      const revealed = finished || i < state.round;
       const team = revealed ? getTeam(state.restrictions[i]?.teamId) : undefined;
       const current = !finished && i === state.round;
       return box(

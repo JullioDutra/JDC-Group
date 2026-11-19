@@ -1010,3 +1010,64 @@ Todo mundo recebe no privado o mesmo segredo (um craque, clube, seleção…), m
 - **Os outros jogos não mudam:** quizzes e o palpite do Impostor continuam tolerando erro pequeno de digitação.
 - **Regras:** as do Anagrama ganharam a linha "Só vale a palavra certinha (acento não precisa)".
 - **Teste:** os dois casos do grupo, mais espaço/hífen/artigo e uma rodada de ponta a ponta. São 133 testes passando.
+
+## 22. Spoiler do time da rodada e mais conteúdo nos modos (19/11)
+
+> Pedido: "Sobre aquele tema do spoiler, ainda aparece na rodada atual. Tem que aparecer só depois de passar a rodada. Adicione mais conteúdo nos modos."
+
+### 22.1 Spoiler
+
+- **Causa:** no fim de cada rodada, o bot avança para a próxima **antes** de montar a imagem. A imagem de "Fim da rodada 3" saía com o time da rodada 4, que acabava de virar a "atual". Acontecia na Escalação em Grupo e no 1x1.
+- **Regra nova:** nas imagens, o time de uma rodada só aparece depois que ela termina. No fim da partida, aparecem todos.
+- **A rodada da vez continua no texto:** "Rodada 4/6 · MEIA · clube: Atlético-MG".
+
+### 22.2 Inventário (antes)
+
+Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padrão:
+
+| Modo | Conteúdo | Por partida | Partidas |
+|---|---|---|---|
+| Linha do Tempo | 29 fatos de futebol | 24 | **~1** |
+| Sobrevivente | 16 listas de futebol (40 no total) | até 8 | **~2** |
+| Emoji | 29 cartas de futebol (78 no total) | 8 | **~3** |
+| Que time é esse? | 33 escalações | 6 | **~5** |
+| Conexões | 11 tabuleiros de futebol (29 no total) | 2 | **~5** |
+| Stop | 10 categorias | 5 por rodada | repete muito |
+| Quem é, Fato ou Fake, Relâmpago, Chute, Intruso, Top 10 e Anagrama | 6 a 9 partidas ou mais | — | ficam para outra rodada |
+
+### 22.3 Metas
+
+| Modo | Meta |
+|---|---|
+| Linha do Tempo | +40 fatos de futebol (fundação dos clubes, Mundiais e Libertadores de clubes brasileiros, Bolas de Ouro, transferências) |
+| Sobrevivente | +12 listas de futebol (clubes de Neymar, CR7, Messi, Ronaldinho, Kaká e Romário; titulares das finais de 1970, 1994 e 2002; os 12 grandes; brasileiros campeões da Libertadores; campeãs da Copa feminina) e +10 gerais |
+| Emoji | +30 cartas de futebol (craques, clubes, torneios e lances) |
+| Que time é esse? | +15 escalações (França 98, Real Madrid 2002 e 2018, Internacional 2006, Grêmio 2017, Palmeiras 99, Corinthians 2000, Atlético-MG 2013, Brasil 2014, Barcelona 2006, Inglaterra 66, São Paulo 92, Botafogo 2024, Fluminense 2023, PSG 2025) |
+| Conexões | +4 tabuleiros de futebol e +2 gerais |
+| Stop | +8 categorias (marca, objeto, parte do corpo, filme ou série, carro, bebida, esporte, cantor ou banda), com as listas do Impostor como base |
+
+### 22.4 Fontes e critério
+
+- **Só fato histórico fechado, que não muda:** finais, fundações, prêmios já entregues.
+- **Escalações:** só as que eu tenho certeza, como já era a regra do arquivo ("escalação conferida").
+- **Listas do Sobrevivente:** precisam ser completas (errar tira vida). Por isso só entram conjuntos fechados, com data de corte no título ("até 2025").
+- **Dados de 2025 e 2026:** só os que o projeto já tem com fonte (Flamengo campeão da Libertadores de 2025, PSG campeão da Champions). Nada novo de 2026.
+
+### 22.5 O que fica de fora
+
+- Quem é, Fato ou Fake, Relâmpago e Chute: já aguentam de 6 a 10 partidas; ficam para a próxima rodada.
+- Bandeiras novas: cada uma precisa ser desenhada à mão em formas, e o modo já tem 58.
+- Escalações e clubes de jogadores ainda em atividade em 2026: podem ter mudado.
+
+### 22.6 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Spoiler | time só depois da rodada | **Escalação em Grupo e 1x1:** a imagem mostra só os times das rodadas que já terminaram (no fim, todos). A rodada da vez vai só no texto. O teste agora checa o "fim da rodada 3" (o time da 4 não aparece) e o começo da partida (nenhum time). |
+| Linha do Tempo | +40 de futebol | **+42**: 71 fatos de futebol (eram 29); 179 no total |
+| Sobrevivente | +12 de futebol, +10 gerais | **+12 de futebol, +10 gerais e +1 de anime**: 28 de futebol (eram 16); 63 no total |
+| Emoji | +30 de futebol | **+38**: 67 cartas de futebol (eram 29); 116 no total |
+| Que time é esse? | +15 | **+16**: 49 escalações. Palmeiras 1999 ficou de fora (sem certeza dos 11); entraram Itália 1982 e Manchester City 2023 |
+| Conexões | +4 de futebol, +2 gerais | igual: 15 de futebol (eram 11); 35 no total |
+| Stop | +8 categorias | igual: 18 categorias. Marca, objeto, parte do corpo, filme ou série, carro, bebida, esporte e cantor ou banda; as listas vêm dos temas do Impostor e o que faltar vai para a IA |
+| Testes | conteúdo e imagens | 3 testes novos: quantidades e ids únicos; 11 titulares por escalação; 16 nomes diferentes por tabuleiro; listas sem item repetido; letras cobertas nas categorias novas do Stop. **136 passando**; o build passa. |
