@@ -1071,3 +1071,74 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
 | Conexões | +4 de futebol, +2 gerais | igual: 15 de futebol (eram 11); 35 no total |
 | Stop | +8 categorias | igual: 18 categorias. Marca, objeto, parte do corpo, filme ou série, carro, bebida, esporte e cantor ou banda; as listas vêm dos temas do Impostor e o que faltar vai para a IA |
 | Testes | conteúdo e imagens | 3 testes novos: quantidades e ids únicos; 11 titulares por escalação; 16 nomes diferentes por tabuleiro; listas sem item repetido; letras cobertas nas categorias novas do Stop. **136 passando**; o build passa. |
+
+## 23. Simulador do Brasileirão 2026 e conteúdo fora do futebol (19/11)
+
+> Pedido: "Consegue fazer um simulador simples para o pessoal ver a possibilidade das últimas rodadas? (Ver quem cai). E depois adicione mais conteúdo, mas só conteúdo sem ser de futebol para os temas que têm outros assuntos. Vamos deixar bem completo."
+
+### 23.1 Simulador: como fica
+
+- **Página `/simulador`** (no mesmo site do bot), no estilo do simulador do ge:
+  - tabela atual, com as zonas: G4, pré-Libertadores, Sul-Americana e Z4;
+  - os jogos que faltam, cada um com 3 botões: vitória do mandante, empate, vitória do visitante;
+  - a tabela e as chances mudam na hora a cada palpite.
+- **Chances:** "chance de cair", "chance de título" e "chance de G4" vêm de 5.000 simulações dos jogos sem palpite.
+  - Modelo simples: gols de Poisson pela força de ataque e defesa de cada time na campanha, mais o mando de campo.
+  - Palpite marcado vale 1 x 0, 1 x 1 ou 0 x 1.
+- **Filtro "só a briga contra a queda":** mostra só os jogos de quem ainda pode cair ou escapar.
+- **No grupo:** `simulador` (ou `quem cai`, `brasileirão`) responde com as chances de cair e de título e manda o link da página.
+
+### 23.2 Simulador: dados e fonte
+
+- **Fonte:** página "2026 Campeonato Brasileiro Série A" da Wikipédia em inglês. Ela cita a CBF e traz a matriz de resultados (380 jogos) e a tabela.
+  - Na versão de 18/11/2026: 347 jogos feitos e 33 faltando.
+  - A tabela recalculada a partir da matriz bate 100% com a tabela publicada.
+- **Atualização:** o servidor relê a página a cada hora. Rodada nova aparece sozinha assim que a Wikipédia for atualizada.
+- **Plano B:** se a leitura falhar ou vier com menos jogos que a versão guardada no projeto, vale a guardada (18/11/2026).
+- **Leitura segura:** do texto da página só se aproveitam as siglas dos 20 times conhecidos e os placares (números). Os nomes dos times vêm do projeto.
+- **Na página:** "Fonte: CBF, via Wikipédia · atualizado em <data>".
+- **Por que pode entrar dado de 2026:** é o pedido em si (campeonato em andamento), com fonte e data à vista. Não vira conteúdo de jogo.
+
+### 23.3 Conteúdo fora do futebol: inventário (antes)
+
+| Jogo | Gerais | História | Anime | Política |
+|---|---|---|---|---|
+| Quem é? | 14 | 15 | — | — |
+| Emoji | 42 | — | 7 | — |
+| Quiz Relâmpago | 70 | 15 | — | 12 |
+| Fato ou Fake | 46 | 8 | — | 13 |
+| Chute Certo | 32 | 15 | — | 14 |
+| Linha do Tempo | 41 | 51 | — | 16 |
+| Intruso | 24 | 2 | — | 9 |
+| Conexões | 17 | 1 | 1 | 1 |
+| Sobrevivente | 31 | — | 1 | 3 |
+| Top 10 | 40 | — | — | 7 |
+| Anagrama / Impostor / Top 100 | 224 / 1.647 / 12 listas | — | — / 41 | — |
+
+### 23.4 Conteúdo: metas
+
+- **Gerais, história e anime** em todos os jogos que têm esses assuntos. Os mais magros primeiro: Quem é?, Intruso, Fato ou Fake, Chute Certo, Emoji de anime e Conexões.
+- **Alvo:** cada jogo aguentar pelo menos 5 partidas seguidas em cada assunto sem repetir.
+
+| Jogo | Meta |
+|---|---|
+| Quem é? | +20 gerais, +15 história, +10 anime |
+| Emoji | +35 gerais, +15 anime |
+| Quiz Relâmpago | +40 gerais, +25 história, +15 anime |
+| Fato ou Fake | +35 gerais, +25 história, +12 anime |
+| Chute Certo | +25 gerais, +15 história |
+| Linha do Tempo | +25 gerais, +20 história |
+| Intruso | +20 gerais, +12 história, +8 anime |
+| Conexões | +6 gerais, +3 história, +2 anime |
+| Sobrevivente | +8 gerais, +4 história, +3 anime |
+
+### 23.5 Conteúdo: critério e fonte
+
+- **Só fato estável e conhecido:** datas, recordes e números que não mudam. Número que muda (população, por exemplo) leva o ano no enunciado.
+- **Mesmo critério das rodadas anteriores:** resposta única e conferida; na dúvida, fica de fora.
+
+### 23.6 O que fica de fora
+
+- **Política:** é assunto que o bot só usa quando pedido, e 2026 teve eleição. Nada de político atual nem de resultado de 2026.
+- **Futebol:** pedido explícito ("só conteúdo sem ser de futebol").
+- **Simulador:** Série B, Copa do Brasil e outras ligas; probabilidade "por rodada" (a Wikipédia não traz a rodada de cada jogo que falta).

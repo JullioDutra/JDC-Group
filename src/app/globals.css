@@ -109,3 +109,54 @@ footer { color: var(--muted); padding: 32px 0 48px; font-size: 17px; border-top:
   .steps { grid-template-columns: repeat(2, 1fr); }
 }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* Simulador do Brasileirão (/simulador) */
+.br { display: grid; gap: 20px; padding-bottom: 32px; }
+.br-title { font-size: clamp(44px, 9vw, 96px); }
+.br-sub { color: var(--muted); font-size: 21px; margin-top: 10px; max-width: 60ch; }
+.br-sub b { color: var(--white); }
+.br-panel { background: var(--panel); border: 2px solid var(--panel-line); border-radius: 20px; padding: 18px; display: grid; gap: 12px; }
+.br-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.br-head h2 { font-size: clamp(28px, 5vw, 40px); margin: 0; }
+.br-legend { color: var(--muted); font-size: 16px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.br-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+.br-scroll { overflow-x: auto; margin: 0 -6px; }
+.br-table { width: 100%; border-collapse: collapse; font-size: 19px; font-variant-numeric: tabular-nums; }
+.br-table th { color: var(--muted); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 4px 6px; text-align: center; }
+.br-table td { padding: 6px; text-align: center; border-top: 1px solid var(--panel-line); }
+.br-table .l { text-align: left; }
+.br-table .team { font-weight: 700; white-space: nowrap; }
+.br-table .pos { font-family: var(--display); font-size: 20px; border-left: 5px solid transparent; }
+.br-table .pts { font-family: var(--display); font-size: 21px; color: var(--lime); }
+.br-table .zero { color: rgba(147, 173, 156, 0.45); }
+.br-table .warm { color: #fdba74; font-weight: 700; }
+.br-table .hot { color: #f87171; font-weight: 700; }
+.z-libertadores .pos, .br-legend .z-libertadores { border-left-color: #38bdf8; background: #38bdf8; }
+.z-pre .pos, .br-legend .z-pre { border-left-color: #2dd4bf; background: #2dd4bf; }
+.z-sula .pos, .br-legend .z-sula { border-left-color: #a3e635; background: #a3e635; }
+.z-z4 .pos, .br-legend .z-z4 { border-left-color: #f87171; background: #f87171; }
+.br-table tr .pos { background: transparent; }
+.br-table tr.z-z4 { background: rgba(248, 113, 113, 0.08); }
+.br-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.br-tabs button, .br-picks button {
+  font: inherit; font-weight: 700; font-size: 17px; color: var(--white); background: transparent; cursor: pointer;
+  border: 2px solid var(--panel-line); border-radius: 999px; padding: 4px 14px;
+}
+.br-tabs button.on { background: var(--lime); border-color: var(--lime); color: var(--night); }
+.br-games { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); }
+.br-games li { border: 2px solid var(--panel-line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; background: rgba(6, 19, 12, 0.5); }
+.br-match { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 700; font-size: 19px; }
+.br-match .x { color: var(--muted); }
+.br-team small { color: var(--muted); font-weight: 500; font-size: 15px; }
+.br-team.fight { color: #fca5a5; }
+.br-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.br-picks button { border-radius: 10px; padding: 6px 4px; font-size: 15px; line-height: 1.15; overflow-wrap: anywhere; }
+.br-picks button.on { background: var(--lime); border-color: var(--lime); color: var(--night); }
+.br-tabs button:focus-visible, .br-picks button:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+.br-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 520px) {
+  .br-panel { padding: 12px; }
+  .br-table { font-size: 16px; }
+  .br-table td, .br-table th { padding: 5px 3px; }
+  .br-table th:nth-child(5), .br-table td:nth-child(5) { display: none; }
+}

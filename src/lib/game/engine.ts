@@ -17,6 +17,10 @@ import { championsText, seasonTurnover, shortDay } from './season';
 import { NEXT_BLOCK_KIND, blockedNames, sameMember, targetsOf } from './blocks';
 import { IMPOSTOR_RULES, cardText, impostorThemesText } from '../party/impostor';
 import { ACTIVATE_IMPOSTOR, IMPOSTOR_GROUP_HELP, isImpostorOnly, setImpostorOnly } from './groupMode';
+import type { SimData } from '../sim/brasileirao';
+import { SIM_COMMAND, simulatorText } from '../sim/text';
+import { SNAPSHOT_2026 } from '../sim/snapshot-2026';
+import { siteUrl } from '../sim/data';
 import {
   ImpostorParty,
   IncomingMessage,
@@ -52,6 +56,8 @@ export interface EngineDeps {
   checkWords?: WordCheck;
   /** Grade: títulos fora das listas curadas (IA). */
   checkFact?: FactCheck;
+  /** Simulador do Brasileirão: dados ao vivo (sem a função, a versão guardada). */
+  brasileirao?: () => Promise<SimData>;
 }
 
 
@@ -464,6 +470,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return [{ type: 'image', image: { kind: 'ranking', groupName: msg.groupName ?? 'Grupo', rows, season: season.season, since: shortDay(season.startedAt) } }];
   }
   if (/^(campeoes|temporadas|hall da fama|historico de campeoes)$/.test(norm)) return [text(await championsText(store, msg.groupJid))];
+  if (SIM_COMMAND.test(norm)) return [text(simulatorText(await (deps.brasileirao ?? (async () => SNAPSHOT_2026))(), siteUrl()))];
 
   // ----- Comandos do admin -----
   if (/^(virada de temporada|virar (a )?temporada|fim de temporada|fechar (a )?temporada|encerrar (a )?temporada|nova temporada)$/.test(norm)) {

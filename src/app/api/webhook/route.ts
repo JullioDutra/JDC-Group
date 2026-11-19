@@ -8,6 +8,7 @@ import { ownerCheck } from '@/lib/owners';
 import { getStore } from '@/lib/store';
 import { publicOrigin } from '@/lib/scheduler';
 import { getProvider } from '@/lib/whatsapp';
+import { loadBrasileirao } from '@/lib/sim/data';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   if (!(await store.markProcessed(message.id))) return NextResponse.json({ ok: true, duplicate: true });
 
   try {
-    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck(), judge: defaultJudge(), checkWords: defaultWordCheck(), checkFact: defaultFactCheck() });
+    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck(), judge: defaultJudge(), checkWords: defaultWordCheck(), checkFact: defaultFactCheck(), brasileirao: () => loadBrasileirao() });
     await dispatch(provider, message.groupJid, outgoing, publicOrigin(request));
     return NextResponse.json({ ok: true, sent: outgoing.length });
   } catch (error) {

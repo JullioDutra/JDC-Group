@@ -37,6 +37,7 @@ const COMMANDS: Array<[string, string]> = [
   ['modos', 'mostra os temas'],
   ['placar', 'campinho da partida'],
   ['ranking', 'tabela do grupo'],
+  ['simulador', 'Brasileirão 2026: quem cai (e a página para simular)'],
   ['tempo', 'cobra quem estourou o relógio'],
   ['cancelar', 'desiste da partida'],
   ['desativar jogos', 'desliga o bot'],
