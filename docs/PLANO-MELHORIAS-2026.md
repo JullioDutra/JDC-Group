@@ -488,3 +488,125 @@ A imagem foi conferida com 2, 5 e 10+ jogadores.
 - a imagem da rodada 3 não mostra o time da 4, nem na Escalação em Grupo nem no 1x1;
 - o Leilão recusa lance em posição completa;
 - os times respeitam 1/2/2/1.
+
+## 17. Proposta: três modos novos "bem diferentes" (19/11)
+
+> Só planejamento: nada construído ainda. Os três fogem do formato pergunta e resposta que quase todos os jogos atuais usam. Um é de **blefe e dedução**, outro **dura dias e usa jogos de verdade**, o terceiro é de **gestão e simulação**.
+
+### 17.1 Impostor do Futebol (dedução social)
+
+**A ideia:** todo mundo recebe no privado o mesmo craque secreto, menos um: o impostor, que só sabe o tema. Cada um dá uma dica de uma palavra no grupo, e o grupo vota em quem está blefando.
+
+**Como se joga (4 a 10 pessoas):**
+1. `abrir impostor` → *entrar* → *começar*.
+2. O bot manda no privado de cada um: "🤫 Seu craque: *Ronaldinho*". Para o sorteado: "😈 Você é o IMPOSTOR. Tema: *craque brasileiro*. Não deixe perceberem."
+3. **Rodada de dicas** (a ordem é sorteada; 40 s por vez): cada um manda UMA palavra no grupo ("drible", "Barcelona", "sorriso"…). Palavra repetida ou o nome do craque não valem (o bot apaga a vez e avisa).
+4. São 2 voltas de dicas. Depois vem a **votação** (45 s): cada um manda o número de quem acha que é o impostor.
+5. **Desfecho:**
+   - Se o impostor foi o mais votado, ele ainda tem 20 s para **adivinhar o craque**. Se acertar, rouba a vitória.
+   - Se não foi pego, ele vence sozinho.
+
+**Pontos (entram no ranking):**
+- grupo pega o impostor: +2 para cada um que votou certo;
+- impostor escapa: +5 para ele;
+- impostor pego, mas acerta o craque: +4 para ele.
+
+**Temas:** craque brasileiro, craque do mundo, clube, seleção, estádio, técnico. Os nomes vêm das listas do Anagrama, que já são só de conhecidos.
+
+**Por que é diferente:** é o primeiro jogo de blefe; quem fala bem ganha, não só quem sabe mais. Os vídeos de "impostor" fazem sucesso justamente por isso.
+
+**O que construir:**
+- **Mensagem no privado:** o bot hoje só fala em grupo. Dá para enviar para o número da pessoa, mas quando o WhatsApp só informa o @lid, o envio pode falhar.
+  - Plano B: o bot avisa no grupo "quem não recebeu, mande *oi* para o bot no privado".
+  - Isso exige aceitar mensagem privada só para esse fim (hoje o webhook ignora tudo fora de grupo).
+- **Partida:** fluxo de vez (como o Sobrevivente), votação (como o Draft) e o palpite final do impostor.
+- **Imagem:** resultado com o craque revelado e quem votou em quem.
+
+**Riscos:**
+- Mandar mensagem para quem não salvou o número do bot é aceito, mas em grande volume o WhatsApp pode desconfiar. Aqui são no máximo 10 mensagens por partida.
+- O bot pessoal de finanças não é tocado (instância separada).
+
+**Tamanho:** médio (2 a 3 dias de trabalho).
+
+### 17.2 Bolão do Grupo (palpites em jogos de verdade)
+
+**A ideia:** o admin cadastra os jogos da rodada real (Brasileirão, Libertadores, Copa do Brasil, Champions). O grupo manda os placares até o apito inicial, e o bot pontua quando o admin lança o resultado. Dura a semana toda, não só uma partida.
+
+**Como se joga:**
+1. **Admin cadastra:** `bolão jogo Flamengo x Palmeiras dom 16h` (dá para mandar vários de uma vez, um por linha). O bot responde com a imagem "Bolão da Rodada": jogos numerados, data e hora.
+2. **Palpites:** qualquer um manda `1: 2x1` ou `Fla 2x1 Pal`, e dá para mandar vários numa mensagem só. O bot reage ✅. Dá para mudar até o horário do jogo; depois fecha sozinho. O bot avisa 30 min antes ("faltam 30 min para fechar Fla x Pal").
+3. **Resultado:** o admin manda `resultado 1 2x1`. O bot manda a imagem do jogo, com quem cravou, quem acertou o vencedor e o placar.
+4. **Comandos de consulta:**
+   - `bolão`: jogos abertos e quantos palpites cada um tem (os palpites dos outros só aparecem quando fecha, para ninguém copiar);
+   - `ranking bolão`: tabela própria do bolão;
+   - a virada de temporada também fecha a do bolão.
+
+**Pontos:** placar exato 10; vencedor ou empate certo 5; acertou os gols de um dos times +1. O palpite dos outros só aparece quando o jogo fecha, então ninguém copia.
+
+**Por que é diferente:**
+- Usa futebol de verdade e dá assunto para a semana inteira ("vai, Mengão, salva meu bolão").
+- Cria motivo para voltar ao grupo todo dia, mesmo sem ninguém abrir sala.
+
+**O que construir:**
+- **Tabelas novas:** `bolao_jogos` (grupo, número, times, horário, resultado) e `bolao_palpites`.
+- **Interpretar o texto:** datas como "dom 16h" e "21/11 21h30", e palpites como "2x1", "2 x 1" e "Fla 2x1 Pal" (os apelidos de clube já existem no código).
+- **Prazos:** aviso de 30 min e fechamento no horário, pelo agendador (QStash, dentro da cota diária).
+- **Imagens:** jogos da rodada, resultado do jogo e ranking do bolão.
+
+**Decisão do dono:** o resultado é sempre lançado pelo admin. Não há fonte automática de placares liberada aqui, e a regra é não raspar sites.
+
+**Tamanho:** médio a grande (3 a 4 dias).
+
+### 17.3 Técnico por um Dia (simulação de partida com decisões)
+
+**A ideia:** cada um monta um time e o bot **simula as partidas lance a lance**, com narração e imagem do placar. No intervalo e aos 70', cada técnico decide a tática. Fecha em mata-mata até o campeão.
+
+**Como se joga (2 a 8 técnicos):**
+1. **Montagem:** `abrir técnico` → *entrar* → *começar*. Cada técnico recebe 7 craques sorteados da base (conhecidos, das grandes ligas, como no Leilão) e escolhe 5 titulares: `1 3 4 6 7`. Dois minutos.
+2. **Chave:** o bot sorteia a chave (2 = final; 4 = semis; 8 = quartas). Cada partida tem 3 blocos narrados de 1 minuto real, mais ou menos:
+   - **1º tempo:** 4 ou 5 lances. Por exemplo: "⚽ 23' — Vinícius Júnior arranca pela esquerda e bate cruzado: GOL do Time do Ana!" ou "🧤 31' — Alisson voa e salva".
+   - **Intervalo (30 s):** cada técnico manda *atacar*, *equilibrar* ou *fechar*.
+   - **2º tempo:** mais lances. Aos 70', última decisão.
+   - **Empate no mata-mata:** pênaltis narrados.
+3. **Como o lance é decidido:** a força vem do overall dos titulares por setor (ataque contra defesa). A tática muda as chances, num esquema de pedra, papel e tesoura:
+   - atacar abre a defesa;
+   - fechar segura, mas quase não cria;
+   - atacar contra quem fecha dá mais posse e menos gol;
+   - contra-ataque pune quem ataca demais.
+   
+   Craque decide, mas a zebra existe.
+4. **Imagens:** escalação dos dois times antes do jogo, placar com os autores dos gols no fim de cada partida e a chave com o campeão no fim.
+
+**Pontos:** vitória numa partida, 3; campeão, +5. Entra no ranking da temporada.
+
+**Por que é diferente:** ninguém precisa saber resposta. É gestão: escolher o time e ler a hora de arriscar. A narração cria aquela torcida no grupo, como se fosse jogo de verdade.
+
+**O que construir:**
+- **Motor da partida:** força por setor, tática, sorteio dos lances e uma narração com 40 a 60 frases-modelo usando o nome dos jogadores do time. Opcional: a IA (Maritaca) enfeita a narração, sempre com uma frase pronta de reserva.
+- **Agenda:** os blocos de narração e os prazos das decisões (várias mensagens por partida). Precisa cuidar da cota diária do QStash: 4 técnicos dão umas 3 partidas × 4 blocos ≈ 12 agendamentos.
+- **Imagens:** escalação, placar e chave.
+- **Teste de equilíbrio:** simular mil jogos para conferir que o time mais forte ganha uns 60 a 65% das vezes, nem sempre.
+
+**Riscos:**
+- Muitas mensagens seguidas no grupo: limitar a 3 ou 4 lances por bloco e juntar no mesmo texto.
+- Partidas longas com 8 técnicos (~15 min): oferecer `abrir técnico rápido`, que simula sem pausas táticas.
+
+**Tamanho:** grande (4 a 5 dias).
+
+### 17.4 Comparação e ordem sugerida
+
+| | Impostor | Bolão | Técnico por um Dia |
+|---|---|---|---|
+| Tipo | blefe e dedução | palpite em jogo real | gestão e simulação |
+| Duração | 6 a 10 min | a semana toda | 8 a 15 min |
+| Pessoas | 4 a 10 | o grupo todo | 2 a 8 |
+| Precisa do admin? | não | sim (jogos e resultados) | não |
+| Novidade técnica | mensagem no privado | jogos que duram dias | motor de simulação |
+| Tamanho | médio | médio/grande | grande |
+
+**Ordem sugerida:**
+1. **Bolão:** mantém o grupo ativo a semana toda e combina com a temporada.
+2. **Impostor:** mais barato e mais "viral".
+3. **Técnico por um Dia:** o mais trabalhoso; vale fazer com calma e testar o equilíbrio.
+
+**Reserva (se algum não agradar):** "Trunfo de Craques", uma batalha de cartas por atributo (gols, jogos, altura, valor, títulos) com os números da base, mão secreta no privado e quem ganha a rodada leva as cartas.
