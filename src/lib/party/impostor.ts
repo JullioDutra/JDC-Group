@@ -17,6 +17,12 @@ export const IMPOSTOR_CARDS_SECONDS = 15;
 export const IMPOSTOR_DEBATE_SECONDS = 60;
 /** No modo rápido o debate também encurta. */
 export const IMPOSTOR_FAST_DEBATE_SECONDS = 30;
+/** "mais tempo" no debate: +30 s por pedido, até 2 vezes por debate. */
+export const IMPOSTOR_EXTRA_SECONDS = 30;
+export const IMPOSTOR_MAX_EXTRAS = 2;
+const MORE_TIME = /^(mais tempo( de debate| no debate)?|aumentar( o)? tempo( do debate)?|mais 30( ?s| segundos)?|estender( o)?( debate| tempo)?)$/;
+/** "+30" (o normalize tira o "+", então confere no texto original; "30" sozinho não vale). */
+const PLUS_30 = /^\+\s?30\s?s?$/i;
 export const IMPOSTOR_VOTE_SECONDS = 45;
 export const IMPOSTOR_RUNOFF_SECONDS = 30;
 export const IMPOSTOR_GUESS_SECONDS = 20;
@@ -26,7 +32,7 @@ export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1 };
 export const IMPOSTOR_RULES = [
   'Todos recebem o segredo no privado (um craque, um filme, um lugar... conforme o tema), menos o impostor, que só sabe o tema.',
   `Na sua vez, mande *1 palavra* de dica no grupo (${PARTY_CONFIG.impostor.seconds}s). São ${IMPOSTOR_LAPS} voltas. Não vale o nome do segredo nem repetir dica.`,
-  `Depois: ${IMPOSTOR_DEBATE_SECONDS}s de debate (${IMPOSTOR_FAST_DEBATE_SECONDS}s no rápido) e votação (só quem joga; empate vai para o 2º turno).`,
+  `Depois: ${IMPOSTOR_DEBATE_SECONDS}s de debate (${IMPOSTOR_FAST_DEBATE_SECONDS}s no rápido) e votação (só quem joga; empate vai para o 2º turno). No debate, *mais tempo* dá +${IMPOSTOR_EXTRA_SECONDS}s (até ${IMPOSTOR_MAX_EXTRAS} vezes).`,
   `Pegaram o impostor? Ele tem ${IMPOSTOR_GUESS_SECONDS}s para acertar o segredo e roubar a vitória.`,
   `Pontos: impostor que escapa +${IMPOSTOR_POINTS.escaped} (rouba acertando: +${IMPOSTOR_POINTS.stole}); grupo vence: +${IMPOSTOR_POINTS.rightVote} para quem votou certo, +${IMPOSTOR_POINTS.team} para os outros.`,
   'Não recebeu a carta? Mande *carta* aqui ou *oi* para o bot no privado.',
@@ -169,8 +175,12 @@ function clueAnswer(state: ImpostorParty, player: PartyPlayer, msg: IncomingMess
 function openDebate(state: ImpostorParty, deps: PartyDeps): Outgoing[] {
   state.phase = 'debate';
   state.warned = [];
+  state.extended = 0;
   return [
-    text(`💬 *Debate!* ${debateSeconds(state)}s para acusar e se defender. Anfitrião: *votar* abre a votação antes.`),
+    text(
+      `💬 *Debate!* ${debateSeconds(state)}s para acusar e se defender. Anfitrião: *votar* abre a votação antes. ` +
+        `Precisa de mais? *mais tempo* (+${IMPOSTOR_EXTRA_SECONDS}s).`,
+    ),
     schedule(state, debateSeconds(state), deps.now.getTime(), 'imp'),
   ];
 }
@@ -274,11 +284,32 @@ export function impostorAnswer(state: ImpostorParty, player: PartyPlayer, msg: I
   if (state.phase === 'clues') return clueAnswer(state, player, msg, deps, save);
   if (state.phase === 'debate') {
     if (norm === 'votar' && player.jid === state.host.jid) return save(openVoting(state, deps));
+    if (MORE_TIME.test(norm) || PLUS_30.test(msg.text.trim())) return extendDebate(state, player, deps, save);
     return [];
   }
   if (state.phase === 'voting' || state.phase === 'runoff') return voteAnswer(state, player, msg, deps, save);
   if (state.phase === 'guess') return guessAnswer(state, player, msg, deps, save);
   return [];
+}
+
+/** "mais tempo": qualquer um da mesa soma 30 s ao debate, até 2 vezes. */
+function extendDebate(state: ImpostorParty, player: PartyPlayer, deps: PartyDeps, save: Save): Promise<Outgoing[]> {
+  const used = state.extended ?? 0;
+  if (used >= IMPOSTOR_MAX_EXTRAS) {
+    return warnOnce(state, player.jid, `O debate já ganhou mais tempo ${IMPOSTOR_MAX_EXTRAS} vezes. Anfitrião: *votar* abre a votação.`, save);
+  }
+  const nowMs = deps.now.getTime();
+  const left = Math.max(0, Math.ceil(((state.deadline ?? nowMs) - nowMs) / 1000));
+  state.extended = used + 1;
+  const total = left + IMPOSTOR_EXTRA_SECONDS;
+  const more = IMPOSTOR_MAX_EXTRAS - state.extended;
+  return save([
+    text(
+      `⏳ *+${IMPOSTOR_EXTRA_SECONDS}s* de debate, a pedido de *${firstName(player.name)}*. Agora faltam ${total}s.` +
+        (more ? ` Dá para pedir mais ${more} vez.` : ' Não dá para pedir mais.'),
+    ),
+    schedule(state, total, nowMs, 'imp'),
+  ]);
 }
 
 /** Fim do prazo da fase atual. */

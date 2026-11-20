@@ -380,3 +380,26 @@ test('Impostor: debate de 60s (30s no rápido) e o anfitrião ainda pode encurta
     assert.equal((await t.state())!.phase, 'voting');
   }
 });
+
+test('Impostor: "mais tempo" soma 30s ao debate, até 2 vezes; depois o bot avisa', async () => {
+  const t = await table(4, 43);
+  await t.tick();
+  let word = 0;
+  for (let guard = 0; guard < 20; guard++) {
+    const s = (await t.state())!;
+    if (s.phase !== 'clues') break;
+    await t.say(t.name(s.order[s.turn]), `pista${++word}`);
+  }
+  assert.equal((await t.state())!.phase, 'debate');
+  // O relógio do teste não anda: 60s + 30 = 90; + 30 = 120.
+  assert.match(groupText(await t.say('Bia', 'mais tempo')), /\+30s\*[\s\S]*Bia[\s\S]*faltam 90s[\s\S]*mais 1 vez[\s\S]*\[timer:91s\]/);
+  assert.match(groupText(await t.say('Caio', 'aumentar o tempo')), /faltam 120s[\s\S]*Não dá para pedir mais[\s\S]*\[timer:121s\]/);
+  assert.match(groupText(await t.say('Duda', '+30')), /já ganhou mais tempo 2 vezes/);
+  assert.deepEqual(await t.say('Duda', 'mais tempo'), [], 'o aviso sai uma vez só');
+  const s = (await t.state())!;
+  assert.equal(s.extended, 2);
+  assert.equal(s.phase, 'debate');
+  // O prazo antigo (60s) não fecha o debate: o token mudou.
+  await t.say('Ana', 'votar');
+  assert.equal((await t.state())!.phase, 'voting');
+});

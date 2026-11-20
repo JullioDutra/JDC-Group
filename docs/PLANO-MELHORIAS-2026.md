@@ -1185,3 +1185,13 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
 - **Sem mudança:** o anfitrião ainda pode encurtar o debate com *votar*.
 - **Regras:** mostram os dois tempos.
 - **Teste:** um teste novo confere 60 s no modo normal, 30 s no rápido e o *votar*.
+
+### 24.1 Comando "mais tempo" no debate (20/11)
+
+- **Pedido:** "Adicione um comando de aumentar o tempo."
+- **Comando:** no debate do Impostor, *mais tempo* (ou *aumentar o tempo*, *+30*, *mais 30*, *estender*) soma **30 s** ao que falta.
+- **Quem pede:** qualquer jogador da mesa.
+- **Limite:** 2 pedidos por debate, para o impostor não enrolar à vontade. No terceiro, o bot avisa uma vez e sugere *votar*.
+- **Prazo:** o agendamento é refeito (token novo), então o prazo antigo não fecha o debate antes da hora.
+- **Onde aparece:** na mensagem do debate, nas regras e na ajuda do grupo só de Impostor.
+- **Teste:** 60 → 90 → 120 s, o terceiro pedido é recusado com um aviso só, e o *votar* continua abrindo a votação.

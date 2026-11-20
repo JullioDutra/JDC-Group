@@ -499,6 +499,8 @@ export interface ImpostorParty extends PartyBase {
   runoffVotes: Record<string, string>;
   /** Empatados que vão para o 2º turno. */
   runoff: string[];
+  /** Vezes que o debate ganhou tempo extra ("mais tempo"). */
+  extended?: number;
   /** Cédula da votação (jids, na ordem dos números). */
   ballot: string[];
   /** "abrir impostor rápido": 25 s por dica. */
