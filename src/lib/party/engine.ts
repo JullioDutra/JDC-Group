@@ -100,7 +100,7 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (ch) return { game: 'chute', rest: ch[4] ?? '' };
   const rl = norm.match(new RegExp(`^(abrir|jogar) (o )?(quiz )?relampago( ${cats})?$`));
   if (rl) return { game: 'relampago', rest: rl[5] ?? '' };
-  const intr = norm.match(/^(abrir|jogar) (o )?(intruso|quem nao pertence)( (futebol|geral|politica))?$/);
+  const intr = norm.match(new RegExp(`^(abrir|jogar) (o )?(intruso|quem nao pertence)( ${cats})?$`));
   if (intr) return { game: 'intruso', rest: intr[5] ?? '' };
   if (/^(abrir|jogar) (o )?(bandeiraco|bandeiras|bandeira)$/.test(norm)) return { game: 'bandeira', rest: '' };
   const sv = norm.match(new RegExp(`^(abrir|jogar) (o )?sobrevivente( ${cats})?$`));

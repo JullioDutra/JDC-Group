@@ -5,7 +5,8 @@ import { lookupDemo } from '../src/lib/ai/demo';
 import { handleMessage, handleTick } from '../src/lib/game/engine';
 import { normalize } from '../src/lib/game/text';
 import { CLUBS, NATIONS } from '../src/lib/game/teams';
-import type { AlfabetoParty, ChuteParty, Outgoing, QuizParty } from '../src/lib/game/types';
+import type { AlfabetoParty, ChuteParty, Outgoing, QuizParty, RodadaParty } from '../src/lib/game/types';
+import { getEvent } from '../src/lib/party/content/linha';
 import { CHUTE_QUESTIONS, getChute } from '../src/lib/party/content/chute';
 import { EMOJI_CARDS, RELAMPAGO_CARDS, getCard } from '../src/lib/party/content/cards';
 import { INTRUSO_SETS } from '../src/lib/party/content/intruso';
@@ -133,12 +134,18 @@ test('Chute Certo: número único, o mais perto ganha, cravou leva bônus', asyn
 });
 
 test('categoria sem conteúdo cai na mistura (sem política)', async () => {
+  // Linha do Tempo não tem anime: cai na mistura, sem política.
   const { say, session } = setup();
-  await open(say, 'abrir chute certo anime');
-  const s = (await session()).state as ChuteParty;
+  await open(say, 'abrir linha do tempo anime');
+  const s = (await session()).state as RodadaParty;
   assert.equal(s.category, null);
-  assert.equal(s.order.length, 6);
-  assert.ok(s.order.every((id) => getChute(id)!.category !== 'politica'));
+  assert.ok(s.order.flatMap((ids) => ids.split(',')).every((id) => getEvent(id)!.category !== 'politica'));
+  // Chute Certo agora tem anime (rodada 10): a categoria vale.
+  const c = setup();
+  await open(c.say, 'abrir chute certo anime');
+  const cs = (await c.session()).state as ChuteParty;
+  assert.equal(cs.category, 'anime');
+  assert.ok(cs.order.every((id) => getChute(id)!.category === 'anime'));
   const h = setup();
   await open(h.say, 'abrir quem é história');
   assert.equal(((await h.session()).state as QuizParty).category, 'historia');

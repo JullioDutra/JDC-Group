@@ -3,6 +3,7 @@
  * que ser verificável e estável (com data de corte quando puder mudar).
  */
 import type { ContentCategory } from '../../game/types';
+import { INTRUSO_GERAIS } from './intruso-gerais';
 
 export interface IntrusoSet {
   id: string;
@@ -466,6 +467,8 @@ export const INTRUSO_SETS: IntrusoSet[] = [
     intruder: 'Rubens Barrichello',
     reason: 'Os outros quatro foram campeões mundiais de Fórmula 1 (Kimi Antonelli em 2026). Rubinho foi vice duas vezes, em 2002 e 2004.',
   },
+  // Fora do futebol (rodada 10).
+  ...INTRUSO_GERAIS,
 ];
 
 export function getIntrusoSet(id: string): IntrusoSet | undefined {

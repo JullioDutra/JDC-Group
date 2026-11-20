@@ -3,6 +3,7 @@
  * Curadoria: só fatos estáveis e conferidos (nada que mude com a temporada).
  */
 import type { ContentCategory } from '../../game/types';
+import { WHOIS_GERAIS } from './whois-gerais';
 
 export interface WhoIsCard {
   id: string;
@@ -799,6 +800,8 @@ export const WHOIS: WhoIsCard[] = [
       'Técnico do Manchester City desde 2016, campeão da Champions em 2023.',
     ],
   },
+  // Fora do futebol (rodada 10): gerais, história e anime.
+  ...WHOIS_GERAIS,
 ];
 
 export function getWhoIs(id: string): WhoIsCard | undefined {

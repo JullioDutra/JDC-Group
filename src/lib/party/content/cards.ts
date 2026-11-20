@@ -1,4 +1,5 @@
 import type { ContentCategory } from '../../game/types';
+import { EMOJI_GERAIS, RELAMPAGO_GERAIS } from './cards-gerais';
 
 /**
  * Cartas de pergunta-e-resposta curta: Emoji (adivinhe pelo emoji) e Quiz
@@ -137,6 +138,8 @@ export const EMOJI_CARDS: Card[] = [
   { id: 'e-bicicleta', category: 'futebol', prompt: '🚲 ⚽ 🙃 (lance)', answer: 'Bicicleta', aliases: ['gol de bicicleta'] },
   { id: 'e-chapeu', category: 'futebol', prompt: '🎩 ⚽ 🤸 (drible)', answer: 'Chapéu', aliases: ['chapeu', 'chapeuzinho'] },
   { id: 'e-caneta', category: 'futebol', prompt: '🖊️ ⚽ 🦵🦵 (drible)', answer: 'Caneta', aliases: ['canetinha'] },
+  // Fora do futebol (rodada 10).
+  ...EMOJI_GERAIS,
 ];
 
 export const RELAMPAGO_CARDS: Card[] = [
@@ -314,6 +317,8 @@ export const RELAMPAGO_CARDS: Card[] = [
   { id: 'r-artemis-2026', category: 'geral', prompt: 'Qual missão da NASA levou quatro astronautas para dar a volta na Lua em abril de 2026?', answer: 'Artemis II', aliases: ['artemis 2', 'artemis'] },
   { id: 'r-nobel-paz-2026', category: 'geral', prompt: 'Que jurista sul-africana, ex-chefe de direitos humanos da ONU, ganhou o Nobel da Paz de 2026?', answer: 'Navi Pillay', aliases: ['pillay', 'navanethem pillay'] },
   { id: 'r-optogenetica-2026', category: 'geral', prompt: 'O Nobel de Medicina de 2026 premiou a técnica que controla neurônios com luz. Qual é o nome dela?', answer: 'Optogenética', aliases: ['optogenetica'] },
+  // Fora do futebol (rodada 10).
+  ...RELAMPAGO_GERAIS,
 ];
 
 export const CARDS = { emoji: EMOJI_CARDS, relampago: RELAMPAGO_CARDS };

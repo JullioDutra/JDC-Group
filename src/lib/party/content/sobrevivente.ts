@@ -362,6 +362,84 @@ export const SURVIVOR_LISTS: SurvivorList[] = [
     id: 's-cavaleiros-bronze', category: 'anime', level: 2, title: 'os 5 Cavaleiros de Bronze principais de Os Cavaleiros do Zodíaco',
     items: [['Seiya'], ['Shiryu'], ['Hyoga'], ['Shun'], ['Ikki']],
   },
+  // ---------- Fora do futebol (rodada 10) ----------
+  {
+    id: 's-sentidos', category: 'geral', level: 1, title: 'os cinco sentidos',
+    items: [['Visão', 'visao'], ['Audição', 'audicao'], ['Olfato'], ['Paladar', 'gosto'], ['Tato']],
+  },
+  {
+    id: 's-naipes', category: 'geral', level: 1, title: 'naipes do baralho',
+    items: [['Copas'], ['Espadas'], ['Ouros', 'ouro'], ['Paus', 'pau']],
+  },
+  {
+    id: 's-xadrez', category: 'geral', level: 1, title: 'peças do xadrez',
+    items: [['Rei'], ['Dama', 'rainha'], ['Torre'], ['Bispo'], ['Cavalo'], ['Peão', 'peao']],
+  },
+  {
+    id: 's-dias-semana', category: 'geral', level: 1, title: 'dias da semana',
+    items: [
+      ['Domingo'], ['Segunda-feira', 'segunda'], ['Terça-feira', 'terca', 'terca-feira'], ['Quarta-feira', 'quarta'],
+      ['Quinta-feira', 'quinta'], ['Sexta-feira', 'sexta'], ['Sábado', 'sabado'],
+    ],
+  },
+  {
+    id: 's-estacoes', category: 'geral', level: 1, title: 'estações do ano',
+    items: [['Primavera'], ['Verão', 'verao'], ['Outono'], ['Inverno']],
+  },
+  {
+    id: 's-fases-lua', category: 'geral', level: 1, title: 'as quatro fases principais da Lua',
+    items: [['Nova', 'lua nova'], ['Crescente', 'lua crescente', 'quarto crescente'], ['Cheia', 'lua cheia'], ['Minguante', 'lua minguante', 'quarto minguante']],
+  },
+  {
+    id: 's-sudeste', category: 'geral', level: 1, title: 'estados do Sudeste',
+    items: [['São Paulo', 'sao paulo', 'sp'], ['Rio de Janeiro', 'rj'], ['Minas Gerais', 'minas', 'mg'], ['Espírito Santo', 'espirito santo', 'es']],
+  },
+  {
+    id: 's-centro-oeste', category: 'geral', level: 2, title: 'unidades da federação do Centro-Oeste (com o DF)',
+    items: [['Goiás', 'goias'], ['Mato Grosso', 'mt'], ['Mato Grosso do Sul', 'ms'], ['Distrito Federal', 'df', 'brasilia']],
+  },
+  {
+    id: 's-capitais-norte', category: 'geral', level: 3, title: 'capitais dos estados da Região Norte',
+    items: [['Rio Branco'], ['Macapá', 'macapa'], ['Manaus'], ['Belém', 'belem'], ['Porto Velho'], ['Boa Vista'], ['Palmas']],
+  },
+  {
+    id: 's-vingadores', category: 'geral', level: 2, title: 'os seis Vingadores do primeiro filme (2012)',
+    items: [['Homem de Ferro', 'tony stark'], ['Capitão América', 'capitao america'], ['Thor'], ['Hulk'], ['Viúva Negra', 'viuva negra'], ['Gavião Arqueiro', 'gaviao arqueiro']],
+  },
+  {
+    id: 's-maravilhas-antigas', category: 'historia', level: 3, title: 'as 7 maravilhas do mundo antigo',
+    items: [
+      ['Pirâmide de Gizé', 'piramide de gize', 'piramides', 'grande piramide'], ['Jardins Suspensos da Babilônia', 'jardins suspensos'],
+      ['Templo de Ártemis', 'templo de artemis'], ['Estátua de Zeus', 'estatua de zeus'], ['Mausoléu de Halicarnasso', 'mausoleu'],
+      ['Colosso de Rodes', 'colosso'], ['Farol de Alexandria', 'farol'],
+    ],
+  },
+  {
+    id: 's-regencia', category: 'historia', level: 3, title: 'revoltas do Período Regencial (1831 a 1840)',
+    items: [
+      ['Cabanagem'], ['Sabinada'], ['Balaiada'], ['Farroupilha', 'revolucao farroupilha', 'guerra dos farrapos'], ['Revolta dos Malês', 'males', 'revolta dos males'],
+    ],
+  },
+  {
+    id: 's-julio-claudianos', category: 'historia', level: 3, title: 'imperadores romanos da dinastia júlio-claudiana',
+    items: [['Augusto', 'otaviano'], ['Tibério', 'tiberio'], ['Calígula', 'caligula'], ['Cláudio', 'claudio'], ['Nero']],
+  },
+  {
+    id: 's-chapeu-palha', category: 'anime', level: 3, title: 'a tripulação do Chapéu de Palha, em One Piece (até 2025)',
+    items: [['Luffy'], ['Zoro'], ['Nami'], ['Usopp'], ['Sanji'], ['Chopper'], ['Robin', 'nico robin'], ['Franky'], ['Brook'], ['Jinbe', 'jimbei']],
+  },
+  {
+    id: 's-cavaleiros-ouro', category: 'anime', level: 2, title: 'as 12 armaduras de ouro de Os Cavaleiros do Zodíaco',
+    items: one(['Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem', 'Libra', 'Escorpião', 'Sagitário', 'Capricórnio', 'Aquário', 'Peixes']),
+  },
+  {
+    id: 's-eevee', category: 'anime', level: 3, title: 'as evoluções do Eevee',
+    items: one(['Vaporeon', 'Jolteon', 'Flareon', 'Espeon', 'Umbreon', 'Leafeon', 'Glaceon', 'Sylveon']),
+  },
+  {
+    id: 's-time-7', category: 'anime', level: 1, title: 'o Time 7 original de Naruto (com o professor)',
+    items: [['Naruto'], ['Sasuke'], ['Sakura'], ['Kakashi']],
+  },
 ];
 
 /** Listas com menos itens que isso ficam fora do sorteio. */

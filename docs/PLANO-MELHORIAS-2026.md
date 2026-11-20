@@ -1142,3 +1142,37 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
 - **Política:** é assunto que o bot só usa quando pedido, e 2026 teve eleição. Nada de político atual nem de resultado de 2026.
 - **Futebol:** pedido explícito ("só conteúdo sem ser de futebol").
 - **Simulador:** Série B, Copa do Brasil e outras ligas; probabilidade "por rodada" (a Wikipédia não traz a rodada de cada jogo que falta).
+
+### 23.7 Planejado x entregue
+
+**Simulador**
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Página | `/simulador` com tabela, zonas, palpites e chances | Igual. Tabela com G4, pré, Sula e Z4; 33 jogos com 3 botões; chance de cair, de G4 e de título (5.000 simulações). Filtro "briga contra a queda", "Copiar para o grupo" e "Mandar no WhatsApp". Conferida no celular, sem rolagem lateral. |
+| Dados | Wikipédia (CBF), relida a cada hora, com plano B | Igual. A tabela recalculada bate 100% com a publicada (18/11/2026). A leitura recusa página fora do formato, com time desconhecido, com menos de 380 jogos ou com placar absurdo. Página atrasada (menos jogos que a guardada) também cai no plano B. |
+| No grupo | `simulador` / `quem cai` / `brasileirão` | Igual, mais `z4` e `simulador do brasileirão`. Na ajuda (texto e imagem) e na página inicial. |
+| Testes | leitura, tabela, chances, plano B, comando | 5 testes |
+
+**Conteúdo fora do futebol**
+
+| Jogo | Antes (gerais / história / anime) | Depois |
+|---|---|---|
+| Quem é? | 14 / 15 / 0 | **36 / 30 / 16** |
+| Emoji | 42 / — / 7 | **81 / — / 22** |
+| Quiz Relâmpago | 70 / 15 / 0 | **113 / 41 / 17** |
+| Fato ou Fake | 46 / 8 / 0 | **81 / 32 / 12** |
+| Chute Certo | 32 / 15 / 0 | **57 / 30 / 9** |
+| Linha do Tempo | 41 / 51 / — | **71 / 71 / —** |
+| Intruso | 24 / 2 / 0 | **46 / 14 / 8** (o comando agora aceita `história` e `anime`) |
+| Conexões | 17 / 1 / 1 | **22 / 4 / 3** |
+| Sobrevivente | 31 / 0 / 1 | **41 / 3 / 5** |
+
+- **Total:** cerca de 450 itens novos, todos fora do futebol e sem política.
+- **Ajustes de plano:**
+  - Heróis, animes clássicos e revoltas regenciais já existiam nas Conexões; os tabuleiros novos usam outros grupos.
+  - Chute Certo ganhou anime: antes "abrir chute certo anime" caía na mistura.
+- **Testes:**
+  - 3 testes novos: quantidades por assunto, ids únicos, resposta do Quem é? fora das 3 primeiras dicas, intruso fora dos membros, emoji sem a resposta escrita e o comando do Intruso;
+  - o teste da mistura foi para a Linha do Tempo, que segue sem anime;
+  - **144 passando**; o build passa.

@@ -1,4 +1,5 @@
 import type { ContentCategory } from '../../game/types';
+import { FACTS_GERAIS } from './fato-gerais';
 
 /**
  * Fato ou Fake: afirmações curtas, verdadeiras ou falsas, com a explicação que
@@ -134,6 +135,8 @@ export const FACTS: FactCard[] = [
   f('ff-bad-bunny-2026', 'geral', true, 'Em 2026, um álbum em espanhol ganhou o Grammy de álbum do ano pela primeira vez.', '"DeBÍ TiRAR MáS FOTOS", de Bad Bunny.'),
   f('ff-artemis-pouso-2026', 'geral', false, 'Os astronautas da Artemis II pousaram na Lua em 2026.', 'Eles deram a volta na Lua sem pousar e voltaram à Terra em 10 de abril. O pouso ficou para uma missão futura.'),
   f('ff-eurovision-2026', 'geral', true, 'A Bulgária ganhou o Eurovision pela primeira vez em 2026.', 'Com Dara e a música "Bangaranga", na final em Viena.'),
+  // Fora do futebol (rodada 10).
+  ...FACTS_GERAIS,
 ];
 
 export function getFact(id: string): FactCard | undefined {

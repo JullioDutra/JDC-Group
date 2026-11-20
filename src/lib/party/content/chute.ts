@@ -1,4 +1,5 @@
 import type { ContentCategory } from '../../game/types';
+import { CHUTE_GERAIS } from './chute-gerais';
 
 /** Chute Certo: perguntas com resposta numérica exata e estável. */
 export interface ChuteQuestion {
@@ -129,6 +130,8 @@ export const CHUTE_QUESTIONS: ChuteQuestion[] = [
   { id: 'c-vitoria-jejum-2026', category: 'futebol', prompt: 'Quantos anos o Vitória ficou sem ganhar a Copa do Nordeste até o título de 2026?', answer: 16, unit: 'anos' },
   { id: 'c-artemis-dias-2026', category: 'geral', prompt: 'Mais ou menos quantos dias durou a missão Artemis II, que deu a volta na Lua em 2026?', answer: 10, unit: 'dias' },
   { id: 'c-grammy-edicao-2026', category: 'geral', prompt: 'Que número de edição foi o Grammy de 2026?', answer: 68, unit: 'ª edição' },
+  // Fora do futebol (rodada 10).
+  ...CHUTE_GERAIS,
 ];
 
 export function getChute(id: string): ChuteQuestion | undefined {

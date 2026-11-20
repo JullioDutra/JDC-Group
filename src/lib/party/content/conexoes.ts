@@ -370,6 +370,106 @@ export const CONEXOES: ConexoesPuzzle[] = [
       { label: 'Frutas da Amazônia', items: ['Açaí', 'Cupuaçu', 'Pupunha', 'Bacuri'] },
       { label: 'Castanhas e nozes', items: ['Amêndoa', 'Avelã', 'Noz', 'Pistache'] },
     ],
+  },  // ---------- Fora do futebol (rodada 10) ----------
+  {
+    id: 'cx-animacao',
+    category: 'geral',
+    groups: [
+      { label: 'Filmes da Pixar', items: ['Toy Story', 'Up', 'Ratatouille', 'Wall-E'] },
+      { label: 'Filmes da DreamWorks', items: ['Shrek', 'Madagascar', 'Kung Fu Panda', 'Como Treinar o Seu Dragão'] },
+      { label: 'Princesas da Disney', items: ['Ariel', 'Jasmine', 'Mulan', 'Rapunzel'] },
+      { label: 'Vilões da Disney', items: ['Úrsula', 'Jafar', 'Scar', 'Malévola'] },
+    ],
+  },
+  {
+    id: 'cx-paises-2',
+    category: 'geral',
+    groups: [
+      { label: 'Países nórdicos', items: ['Noruega', 'Suécia', 'Dinamarca', 'Islândia'] },
+      { label: 'Nações do Reino Unido', items: ['Inglaterra', 'Escócia', 'País de Gales', 'Irlanda do Norte'] },
+      { label: 'Países da América Central', items: ['Honduras', 'Guatemala', 'Nicarágua', 'Panamá'] },
+      { label: 'Países africanos de língua portuguesa', items: ['Angola', 'Moçambique', 'Cabo Verde', 'Guiné-Bissau'] },
+    ],
+  },
+  {
+    id: 'cx-bandas',
+    category: 'geral',
+    groups: [
+      { label: 'Integrantes do Queen', items: ['Freddie Mercury', 'Brian May', 'Roger Taylor', 'John Deacon'] },
+      { label: 'Integrantes dos Rolling Stones', items: ['Mick Jagger', 'Keith Richards', 'Charlie Watts', 'Ronnie Wood'] },
+      { label: 'Integrantes do U2', items: ['Bono', 'The Edge', 'Adam Clayton', 'Larry Mullen Jr.'] },
+      { label: 'Integrantes dos Titãs', items: ['Branco Mello', 'Paulo Miklos', 'Sérgio Britto', 'Tony Bellotto'] },
+    ],
+  },
+  {
+    id: 'cx-comidas-mundo',
+    category: 'geral',
+    groups: [
+      { label: 'Pratos italianos', items: ['Lasanha', 'Risoto', 'Nhoque', 'Tiramisù'] },
+      { label: 'Pratos japoneses', items: ['Sushi', 'Lámen', 'Tempurá', 'Missô'] },
+      { label: 'Pratos mexicanos', items: ['Taco', 'Burrito', 'Guacamole', 'Nachos'] },
+      { label: 'Pratos árabes', items: ['Quibe', 'Esfiha', 'Homus', 'Tabule'] },
+    ],
+  },
+  {
+    id: 'cx-instrumentos',
+    category: 'geral',
+    groups: [
+      { label: 'Instrumentos de corda', items: ['Violão', 'Violino', 'Harpa', 'Cavaquinho'] },
+      { label: 'Instrumentos de sopro', items: ['Flauta', 'Saxofone', 'Trompete', 'Clarinete'] },
+      { label: 'Instrumentos de percussão', items: ['Pandeiro', 'Bateria', 'Tamborim', 'Xilofone'] },
+      { label: 'Instrumentos de teclas', items: ['Piano', 'Órgão', 'Cravo', 'Sanfona'] },
+    ],
+  },
+  {
+    id: 'cx-historia-mundo',
+    category: 'historia',
+    groups: [
+      { label: 'Imperadores romanos', items: ['Augusto', 'Nero', 'Calígula', 'Trajano'] },
+      { label: 'Faraós do Egito', items: ['Tutancâmon', 'Ramsés II', 'Quéops', 'Akhenaton'] },
+      { label: 'Filósofos gregos', items: ['Sócrates', 'Platão', 'Aristóteles', 'Pitágoras'] },
+      { label: 'Reis da França', items: ['Luís XIV', 'Luís XVI', 'Francisco I', 'Henrique IV'] },
+    ],
+  },
+  {
+    id: 'cx-historia-br-2',
+    category: 'historia',
+    groups: [
+      { label: 'Movimentos do Brasil colônia', items: ['Inconfidência Mineira', 'Conjuração Baiana', 'Revolta de Beckman', 'Guerra dos Emboabas'] },
+      { label: 'Revoltas da Primeira República', items: ['Revolta da Vacina', 'Revolta da Chibata', 'Revolta da Armada', 'Revolta dos 18 do Forte'] },
+      { label: 'Ciclos econômicos do Brasil', items: ['Pau-brasil', 'Cana-de-açúcar', 'Ouro', 'Café'] },
+      { label: 'Família real que veio em 1808', items: ['Dom João VI', 'Carlota Joaquina', 'Dom Pedro I', 'Dona Maria I'] },
+    ],
+  },
+  {
+    id: 'cx-genios',
+    category: 'historia',
+    groups: [
+      { label: 'Físicos', items: ['Newton', 'Einstein', 'Galileu', 'Niels Bohr'] },
+      { label: 'Pintores', items: ['Leonardo da Vinci', 'Rembrandt', 'Monet', 'Velázquez'] },
+      { label: 'Compositores', items: ['Mozart', 'Bach', 'Beethoven', 'Chopin'] },
+      { label: 'Escritores', items: ['Shakespeare', 'Cervantes', 'Camões', 'Dante'] },
+    ],
+  },
+  {
+    id: 'cx-animes-2',
+    category: 'anime',
+    groups: [
+      { label: 'Death Note', items: ['Light', 'L', 'Misa', 'Ryuk'] },
+      { label: 'Demon Slayer', items: ['Tanjiro', 'Nezuko', 'Zenitsu', 'Inosuke'] },
+      { label: 'Attack on Titan', items: ['Eren', 'Mikasa', 'Armin', 'Levi'] },
+      { label: 'Pokémon (o anime)', items: ['Ash', 'Misty', 'Brock', 'Pikachu'] },
+    ],
+  },
+  {
+    id: 'cx-animes-3',
+    category: 'anime',
+    groups: [
+      { label: 'Filmes do Studio Ghibli', items: ['Totoro', 'Chihiro', 'Mononoke', 'Ponyo'] },
+      { label: 'Animes de robôs gigantes', items: ['Gundam', 'Evangelion', 'Voltron', 'Mazinger'] },
+      { label: 'Pokémon lendários', items: ['Mewtwo', 'Articuno', 'Zapdos', 'Moltres'] },
+      { label: 'Digimon', items: ['Agumon', 'Gabumon', 'Patamon', 'Gatomon'] },
+    ],
   },
 ];
 
