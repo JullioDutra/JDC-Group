@@ -362,3 +362,21 @@ test('Grupo só de Impostor: "ativar impostor" (admin), padrão geral, outros jo
   assert.match(asText(await say('Bia', 'ajuda')), /img:help/);
   assert.match(asText(await say('Bia', 'abrir top 10')), /img:partyLobby/);
 });
+
+test('Impostor: debate de 60s (30s no rápido) e o anfitrião ainda pode encurtar com "votar"', async () => {
+  for (const [theme, secs] of [['', 60], ['rapido', 30]] as const) {
+    const t = await table(4, 41, theme);
+    await t.tick();
+    let word = 0;
+    let out: Outgoing[] = [];
+    for (let guard = 0; guard < 20; guard++) {
+      const s = (await t.state())!;
+      if (s.phase !== 'clues') break;
+      out = await t.say(t.name(s.order[s.turn]), `pista${++word}`);
+    }
+    assert.equal((await t.state())!.phase, 'debate');
+    assert.match(groupText(out), new RegExp(`Debate!\\* ${secs}s para acusar[\\s\\S]*\\[timer:${secs + 1}s\\]`), theme || 'normal');
+    await t.say('Ana', 'votar');
+    assert.equal((await t.state())!.phase, 'voting');
+  }
+});

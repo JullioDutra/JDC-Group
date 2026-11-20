@@ -1176,3 +1176,12 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
   - 3 testes novos: quantidades por assunto, ids únicos, resposta do Quem é? fora das 3 primeiras dicas, intruso fora dos membros, emoji sem a resposta escrita e o comando do Intruso;
   - o teste da mistura foi para a Linha do Tempo, que segue sem anime;
   - **144 passando**; o build passa.
+
+## 24. Ajuste: debate do Impostor mais longo (20/11)
+
+- **Pedido:** "Aumente o tempo do debate no Impostor."
+- **Mudança:** o debate passa de 30 s para **60 s**, que era a proposta original da seção 18. A decisão 3 da 18.13 tinha reduzido para 30 s.
+- **Modo rápido** (`abrir impostor ... rápido`): o debate continua em 30 s, para combinar com as dicas de 25 s.
+- **Sem mudança:** o anfitrião ainda pode encurtar o debate com *votar*.
+- **Regras:** mostram os dois tempos.
+- **Teste:** um teste novo confere 60 s no modo normal, 30 s no rápido e o *votar*.

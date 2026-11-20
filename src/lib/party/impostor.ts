@@ -8,13 +8,15 @@ import { safeFirstName } from '../images/glyphs';
  * Impostor (blefe e dedução). Todos recebem no privado o mesmo segredo (um
  * craque, um filme, um lugar... conforme o tema), menos o impostor, que só
  * sabe o tema.
- * Duas voltas de dicas de 1 palavra no grupo, debate de 30 s e votação (só
+ * Duas voltas de dicas de 1 palavra no grupo, debate de 60 s e votação (só
  * quem joga; empate vai para o 2º turno). Se pegarem o impostor, ele ainda
  * tem 20 s para acertar o segredo no grupo e roubar a vitória.
  */
 export const IMPOSTOR_LAPS = 2;
 export const IMPOSTOR_CARDS_SECONDS = 15;
-export const IMPOSTOR_DEBATE_SECONDS = 30;
+export const IMPOSTOR_DEBATE_SECONDS = 60;
+/** No modo rápido o debate também encurta. */
+export const IMPOSTOR_FAST_DEBATE_SECONDS = 30;
 export const IMPOSTOR_VOTE_SECONDS = 45;
 export const IMPOSTOR_RUNOFF_SECONDS = 30;
 export const IMPOSTOR_GUESS_SECONDS = 20;
@@ -24,7 +26,7 @@ export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1 };
 export const IMPOSTOR_RULES = [
   'Todos recebem o segredo no privado (um craque, um filme, um lugar... conforme o tema), menos o impostor, que só sabe o tema.',
   `Na sua vez, mande *1 palavra* de dica no grupo (${PARTY_CONFIG.impostor.seconds}s). São ${IMPOSTOR_LAPS} voltas. Não vale o nome do segredo nem repetir dica.`,
-  `Depois: ${IMPOSTOR_DEBATE_SECONDS}s de debate e votação (só quem joga; empate vai para o 2º turno).`,
+  `Depois: ${IMPOSTOR_DEBATE_SECONDS}s de debate (${IMPOSTOR_FAST_DEBATE_SECONDS}s no rápido) e votação (só quem joga; empate vai para o 2º turno).`,
   `Pegaram o impostor? Ele tem ${IMPOSTOR_GUESS_SECONDS}s para acertar o segredo e roubar a vitória.`,
   `Pontos: impostor que escapa +${IMPOSTOR_POINTS.escaped} (rouba acertando: +${IMPOSTOR_POINTS.stole}); grupo vence: +${IMPOSTOR_POINTS.rightVote} para quem votou certo, +${IMPOSTOR_POINTS.team} para os outros.`,
   'Não recebeu a carta? Mande *carta* aqui ou *oi* para o bot no privado.',
@@ -66,6 +68,7 @@ const nameOf = (state: ImpostorParty, jid: string | undefined) => firstName(stat
 /** Na imagem: primeiro nome sem emoji (o resto da linha não some). */
 const boardName = (state: ImpostorParty, jid: string | undefined) => safeFirstName(state.players.find((p) => p.jid === jid)?.name ?? '?');
 const clueSeconds = (state: ImpostorParty) => (state.fast ? IMPOSTOR_FAST_SECONDS : PARTY_CONFIG.impostor.seconds);
+const debateSeconds = (state: ImpostorParty) => (state.fast ? IMPOSTOR_FAST_DEBATE_SECONDS : IMPOSTOR_DEBATE_SECONDS);
 const secretOf = (state: ImpostorParty) => getImpostorSecret(state.secretId)!;
 
 /** O que cada um recebe no privado. */
@@ -167,8 +170,8 @@ function openDebate(state: ImpostorParty, deps: PartyDeps): Outgoing[] {
   state.phase = 'debate';
   state.warned = [];
   return [
-    text(`💬 *Debate!* ${IMPOSTOR_DEBATE_SECONDS}s para acusar e se defender. Anfitrião: *votar* abre a votação antes.`),
-    schedule(state, IMPOSTOR_DEBATE_SECONDS, deps.now.getTime(), 'imp'),
+    text(`💬 *Debate!* ${debateSeconds(state)}s para acusar e se defender. Anfitrião: *votar* abre a votação antes.`),
+    schedule(state, debateSeconds(state), deps.now.getTime(), 'imp'),
   ];
 }
 
