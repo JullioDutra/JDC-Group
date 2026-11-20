@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import type { RankingRow } from '../game/types';
 import { C, DISPLAY, box, brand, fit, pill, stage, txt } from './theme';
+import { aproveitamentoText } from '../game/season';
 
 /**
  * Imagem da virada de temporada: pódio dos 3 primeiros, a tabela até o 10º,
@@ -52,7 +53,7 @@ function step(r: RankingRow | undefined, place: number, height: number): ReactEl
         width: 300, height, marginTop: 10, borderRadius: '22px 22px 0 0', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 16,
         backgroundImage: `linear-gradient(180deg, ${color} 0%, rgba(12,32,22,0.95) 100%)`,
       },
-      txt(r ? `${r.wins}V · ${r.draws}E · ${r.losses}D` : '', { fontSize: 24, fontWeight: 700, color: C.ink }),
+      txt(r ? `${r.wins}V · ${r.draws}E · ${r.losses}D · ${aproveitamentoText(r)}` : '', { fontSize: 22, fontWeight: 700, color: C.ink }),
     ),
   );
 }
@@ -99,7 +100,8 @@ export function seasonImage(spec: SeasonSpec): ReactElement {
           { alignItems: 'center', height: 40, padding: '0 22px', borderRadius: 12, backgroundColor: C.panel, border: `2px solid ${C.panelLine}`, flexShrink: 0 },
           txt(`${i + 4}`, { width: 56, fontFamily: DISPLAY, fontSize: 26, color: C.muted }),
           txt(upper(fit(r.name, 22)), { flexGrow: 1, fontFamily: DISPLAY, fontSize: 26, letterSpacing: 1 }),
-          txt(`${r.wins}V ${r.draws}E ${r.losses}D`, { width: 200, fontSize: 24, fontWeight: 600, color: C.muted, justifyContent: 'flex-end' }),
+          txt(`${r.wins}V ${r.draws}E ${r.losses}D`, { width: 180, fontSize: 24, fontWeight: 600, color: C.muted, justifyContent: 'flex-end' }),
+          txt(aproveitamentoText(r), { width: 90, fontSize: 24, fontWeight: 700, color: C.white, justifyContent: 'flex-end' }),
           txt(`${points(r)}`, { width: 90, fontFamily: DISPLAY, fontSize: 30, color: C.lime, justifyContent: 'flex-end' }),
         ),
       ),

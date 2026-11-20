@@ -216,3 +216,20 @@ test('Escalação em Grupo e 1x1: a imagem só mostra o time das rodadas que já
   assert.match(pitch, /CORINTHIANS/, '1x1: a rodada 3, que terminou, aparece');
   assert.doesNotMatch(pitch, /ATLÉTICO|SANTOS|GRÊMIO/, '1x1: a rodada 4 (a da vez) e as próximas não aparecem no campo');
 });
+
+test('Ranking: coluna de aproveitamento (pontos ganhos sobre os possíveis) na imagem e no texto reserva', async () => {
+  const { buildImage } = await import('../src/lib/images/templates');
+  const { imageAsText } = await import('../src/lib/images/fallback');
+  const { aproveitamentoText } = await import('../src/lib/game/season');
+  const rows = [
+    { jid: 'a', name: 'Ana', games: 3, wins: 2, draws: 0, losses: 1 }, // 6 de 9
+    { jid: 'b', name: 'Bia', games: 4, wins: 1, draws: 1, losses: 2 }, // 4 de 12
+    { jid: 'c', name: 'Caio', games: 0, wins: 0, draws: 0, losses: 0 },
+  ];
+  assert.deepEqual(rows.map(aproveitamentoText), ['67%', '33%', '—']);
+  const spec = { kind: 'ranking' as const, groupName: 'Grupo', rows };
+  const img = textOfElement(buildImage(spec));
+  assert.match(img, /APROV\./);
+  assert.match(img, /ANA[\s\S]*67%[\s\S]*BIA[\s\S]*33%/);
+  assert.match(imageAsText(spec)!, /1º Ana · 6 pts · 2V 0E 1D · 67% de aproveitamento/);
+});

@@ -6,6 +6,7 @@ import { getConexoes } from '../party/content/conexoes';
 import { helpText } from '../game/commands';
 import { getTop100 } from '../party/content/top100';
 import { criterionLabel, parseCriterion } from '../party/gridCriteria';
+import { aproveitamentoText } from '../game/season';
 
 const GAME_NAME_FOR_TEXT = 'Duelo de Craques';
 
@@ -30,7 +31,7 @@ export function imageAsText(spec: ImageSpec): string | null {
       ].join('\n');
     case 'ranking':
       return spec.rows.length
-        ? spec.rows.map((r, i) => `${i + 1}º ${r.name} · ${r.wins}V ${r.draws}E ${r.losses}D`).join('\n')
+        ? spec.rows.map((r, i) => `${i + 1}º ${r.name} · ${r.wins * 3 + r.draws} pts · ${r.wins}V ${r.draws}E ${r.losses}D · ${aproveitamentoText(r)} de aproveitamento`).join('\n')
         : null;
     case 'kickoff':
     case 'pitch': {

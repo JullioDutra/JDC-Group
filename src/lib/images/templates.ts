@@ -7,6 +7,7 @@ import { ImageSpec, MatchState, Pick, Position, RankingRow, SLOTS, Side } from '
 import { conexoesBoard, flagQuiz, gradeBoard, textBoard, top100Board } from './party2';
 import { helpMenu } from './help';
 import { seasonImage } from './season';
+import { aproveitamentoText } from '../game/season';
 import { draftBoard, intrusoBoard, lineupQuiz, partyLobby, partyScore, partyTable, top10Board } from './party';
 import { BODY, C, DISPLAY, H, SIDE_COLOR, W, ball, box, brand, fit, formationStrip, pill, stage, txt } from './theme';
 
@@ -293,7 +294,12 @@ function ranking(groupName: string, rows: RankingRow[], season?: number, since?:
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(upper(fit(groupName, 20)), C.panel, C.lime, 24)),
     txt('RANKING', { fontFamily: DISPLAY, fontSize: many ? 112 : 150, lineHeight: 1, marginTop: many ? 22 : 36, flexShrink: 0 }),
     txt(`${season ? `Temporada ${season}${since ? ` · desde ${since}` : ''} · ` : ''}Vitória 3 pts · empate 1 pt`, { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: many ? 16 : 26, flexShrink: 0 }),
-    box({ padding: '0 24px', marginBottom: 8 }, txt('', { width: 70 }), txt('', { flexGrow: 1 }), head('J', 90), head('V', 90), head('E', 90), head('D', 90), head('PTS', 110)),
+    // Colunas: J, V, E, D, PTS e aproveitamento (pontos ganhos sobre os possíveis).
+    box(
+      { padding: '0 24px', marginBottom: 8 },
+      txt('', { width: 70 }), txt('', { flexGrow: 1 }),
+      head('J', 76), head('V', 76), head('E', 76), head('D', 76), head('PTS', 100), head('APROV.', 116),
+    ),
     box(
       { flexDirection: 'column', gap: many ? 8 : 10, flexGrow: 1 },
       ...rows.map((r, i) =>
@@ -304,8 +310,9 @@ function ranking(groupName: string, rows: RankingRow[], season?: number, since?:
             border: `2px solid ${i === 0 ? C.lime : C.panelLine}`,
           },
           txt(i + 1, { width: 70, fontFamily: DISPLAY, fontSize: 40, color: i === 0 ? C.lime : C.muted }),
-          txt(upper(fit(r.name, 18)), { flexGrow: 1, fontFamily: DISPLAY, fontSize: 36, letterSpacing: 1 }),
-          cell(r.games, 90), cell(r.wins, 90), cell(r.draws, 90), cell(r.losses, 90), cell(r.wins * 3 + r.draws, 110, true),
+          txt(upper(fit(r.name, 16)), { flexGrow: 1, fontFamily: DISPLAY, fontSize: 36, letterSpacing: 1 }),
+          cell(r.games, 76), cell(r.wins, 76), cell(r.draws, 76), cell(r.losses, 76), cell(r.wins * 3 + r.draws, 100, true),
+          txt(aproveitamentoText(r), { width: 116, justifyContent: 'center', fontSize: 32, fontWeight: 700, color: C.white }),
         ),
       ),
     ),

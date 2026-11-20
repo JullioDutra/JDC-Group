@@ -1195,3 +1195,13 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
 - **Prazo:** o agendamento é refeito (token novo), então o prazo antigo não fecha o debate antes da hora.
 - **Onde aparece:** na mensagem do debate, nas regras e na ajuda do grupo só de Impostor.
 - **Teste:** 60 → 90 → 120 s, o terceiro pedido é recusado com um aviso só, e o *votar* continua abrindo a votação.
+
+## 25. Ranking com aproveitamento (20/11)
+
+- **Pedido:** "Tem que colocar uma coluna de aproveitamento também no ranking."
+- **Cálculo:** pontos ganhos sobre os possíveis, ou seja, PTS ÷ (J × 3), em % inteiro. Sem jogos, "—". É o mesmo cálculo do destaque "Melhor aproveitamento" da virada de temporada; agora os dois usam a mesma função.
+- **Imagem do ranking:** nova coluna "APROV." depois de PTS. As outras colunas ficaram um pouco mais estreitas e o nome corta em 16 letras. Conferida com 7 e 10 linhas.
+- **Texto reserva** (quando a imagem não sai): "1º Ana · 6 pts · 2V 0E 1D · 67% de aproveitamento".
+- **Virada de temporada:** o pódio e as linhas do 4º ao 10º também mostram o aproveitamento.
+- **A ordem não muda:** pontos, como antes.
+- **Teste:** cálculo (67%, 33%, —), coluna na imagem e texto reserva.

@@ -10,6 +10,14 @@ import type { Outgoing, PartyGame, RankingRow } from './types';
 const text = (t: string): Outgoing => ({ type: 'text', text: t });
 const points = (r: RankingRow) => r.wins * 3 + r.draws;
 
+/** Aproveitamento: pontos ganhos sobre os possíveis (3 por jogo). Sem jogos: null. */
+export const aproveitamento = (r: RankingRow): number | null => (r.games ? points(r) / (3 * r.games) : null);
+/** "67%" (ou "—" sem jogos). */
+export function aproveitamentoText(r: RankingRow): string {
+  const a = aproveitamento(r);
+  return a === null ? '—' : `${Math.round(a * 100)}%`;
+}
+
 /** Data no horário de Brasília (dd/mm). */
 export function shortDay(iso: string): string {
   const d = new Date(new Date(iso).getTime() - 3 * 3600_000);
@@ -35,9 +43,9 @@ export function seasonHighlights(rows: RankingRow[], counts: Record<string, numb
   const min = Math.max(3, Math.ceil(games.games / 4));
   const eligible = rows.filter((r) => r.games >= min);
   if (eligible.length) {
-    const pct = (r: RankingRow) => points(r) / (3 * r.games);
+    const pct = (r: RankingRow) => aproveitamento(r) ?? 0;
     const best = [...eligible].sort((a, b) => pct(b) - pct(a) || b.games - a.games)[0];
-    out.push({ label: 'Melhor aproveitamento', name: best.name, value: `${Math.round(pct(best) * 100)}%` });
+    out.push({ label: 'Melhor aproveitamento', name: best.name, value: aproveitamentoText(best) });
   }
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
   if (top) out.push({ label: 'Jogo mais jogado', name: gameName(top[0]), value: `${top[1]} partida${top[1] === 1 ? '' : 's'}` });
