@@ -647,7 +647,8 @@ export type ImageSpec =
   | { kind: 'help' }
   | { kind: 'kickoff'; state: MatchState }
   | { kind: 'pitch'; state: MatchState }
-  | { kind: 'ranking'; groupName: string; rows: RankingRow[]; season?: number; since?: string }
+  /** start: posição do primeiro da lista (11 no "ranking B"); more: há gente depois do 10º. */
+  | { kind: 'ranking'; groupName: string; rows: RankingRow[]; season?: number; since?: string; start?: number; more?: boolean }
   | {
       kind: 'season';
       groupName: string;

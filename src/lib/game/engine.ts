@@ -464,10 +464,17 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
   if (/^temas (do |de )?impostor$/.test(norm)) return [text(impostorThemesText('', onlyImpostor))];
-  if (norm === 'ranking') {
-    const [rows, season] = await Promise.all([store.getRanking(msg.groupJid, 10), store.getSeason(msg.groupJid)]);
-    if (rows.length === 0) return [text(`Ainda não há partidas finalizadas na *Temporada ${season.season}*.`)];
-    return [{ type: 'image', image: { kind: 'ranking', groupName: msg.groupName ?? 'Grupo', rows, season: season.season, since: shortDay(season.startedAt) } }];
+  // "ranking": do 1º ao 10º. "ranking b": do 11º ao 20º.
+  const rankingB = /^ranking (b|2|parte 2|(do |de )?11 a(o)? 20)$/.test(norm);
+  if (norm === 'ranking' || rankingB) {
+    const [all, season] = await Promise.all([store.getRanking(msg.groupJid, 20), store.getSeason(msg.groupJid)]);
+    if (all.length === 0) return [text(`Ainda não há partidas finalizadas na *Temporada ${season.season}*.`)];
+    const base = { kind: 'ranking' as const, groupName: msg.groupName ?? 'Grupo', season: season.season, since: shortDay(season.startedAt) };
+    if (!rankingB) return [{ type: 'image', image: { ...base, rows: all.slice(0, 10), more: all.length > 10 } }];
+    if (all.length <= 10) {
+      return [text(`O *ranking B* mostra do 11º ao 20º, e a *Temporada ${season.season}* tem ${all.length} jogador${all.length === 1 ? '' : 'es'} no ranking. Mande *ranking* para ver a tabela.`)];
+    }
+    return [{ type: 'image', image: { ...base, rows: all.slice(10, 20), start: 11 } }];
   }
   if (/^(campeoes|temporadas|hall da fama|historico de campeoes)$/.test(norm)) return [text(await championsText(store, msg.groupJid))];
   if (SIM_COMMAND.test(norm)) return [text(simulatorText(await (deps.brasileirao ?? (async () => SNAPSHOT_2026))(), siteUrl()))];

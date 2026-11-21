@@ -31,5 +31,5 @@ export const IMPOSTOR_GROUP_HELP = [
   '*entrar*: entra na sala · *começar*: o anfitrião começa (4 a 10 pessoas).',
   '*carta*: o bot manda o seu segredo de novo no privado.',
   '*mais tempo*: +30s no debate (até 2 vezes) · *votar*: o anfitrião pula o debate · *encerrar*: o anfitrião encerra.',
-  '*regras*, *ranking*, *campeoes*.',
+  '*regras*, *ranking* (top 10), *ranking b* (11º ao 20º), *campeoes*.',
 ].join('\n');

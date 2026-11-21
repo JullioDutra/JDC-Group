@@ -31,7 +31,7 @@ export function imageAsText(spec: ImageSpec): string | null {
       ].join('\n');
     case 'ranking':
       return spec.rows.length
-        ? spec.rows.map((r, i) => `${i + 1}º ${r.name} · ${r.wins * 3 + r.draws} pts · ${r.wins}V ${r.draws}E ${r.losses}D · ${aproveitamentoText(r)} de aproveitamento`).join('\n')
+        ? spec.rows.map((r, i) => `${i + (spec.start ?? 1)}º ${r.name} · ${r.wins * 3 + r.draws} pts · ${r.wins}V ${r.draws}E ${r.losses}D · ${aproveitamentoText(r)} de aproveitamento`).join('\n')
         : null;
     case 'kickoff':
     case 'pitch': {

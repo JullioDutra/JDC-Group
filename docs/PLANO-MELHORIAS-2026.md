@@ -1205,3 +1205,15 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
 - **Virada de temporada:** o pódio e as linhas do 4º ao 10º também mostram o aproveitamento.
 - **A ordem não muda:** pontos, como antes.
 - **Teste:** cálculo (67%, 33%, —), coluna na imagem e texto reserva.
+
+## 26. Ranking B: do 11º ao 20º (21/11)
+
+- **Pedido:** "Hoje o 'ranking' mostra os 10 primeiros. Vamos adicionar o 'ranking B', que mostra do 11 ao 20."
+- **Comando:** *ranking b*; também valem *ranking 2* e *ranking 11 a 20*.
+  - Mostra a mesma imagem com o título "RANKING B", "11º ao 20º" no subtítulo e as posições numeradas de 11 a 20.
+  - Ninguém aparece destacado como líder.
+- **Ranking normal:** com mais de 10 jogadores, o rodapé passa a dizer "Mande RANKING B para ver do 11º ao 20º". O rodapé do ranking B diz "Mande RANKING para ver do 1º ao 10º".
+- **Com 10 jogadores ou menos:** o *ranking b* explica em texto que ainda não há 11º colocado.
+- **Texto reserva:** usa a posição certa (11º, 12º...).
+- **Onde aparece:** na ajuda (texto e imagem), na ajuda do grupo só de Impostor e na página inicial.
+- **Teste:** 13 jogadores (ranking com aviso; ranking B com 11º a 13º pelos 4 jeitos de pedir) e grupo pequeno.

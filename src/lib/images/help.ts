@@ -53,7 +53,7 @@ export function helpMenu(): ReactElement {
       { flexDirection: 'column', gap: 6, marginTop: 'auto', paddingTop: 14 },
       txt(CATEGORIES_LINE, { fontSize: 21, color: C.muted, fontWeight: 600, lineHeight: 1.2 }),
       txt(NAMES_LINE, { fontSize: 21, color: C.lime, fontWeight: 700, lineHeight: 1.2 }),
-      txt('Também: REGRAS · MODOS · RANKING · FICHA <JOGADOR> · SIMULADOR (quem cai no Brasileirão)', { fontSize: 21, color: C.white, fontWeight: 700 }),
+      txt('Também: REGRAS · MODOS · RANKING · RANKING B (11º ao 20º) · FICHA <JOGADOR> · SIMULADOR', { fontSize: 21, color: C.white, fontWeight: 700 }),
     ),
   );
 }

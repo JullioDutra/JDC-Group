@@ -233,3 +233,42 @@ test('Ranking: coluna de aproveitamento (pontos ganhos sobre os possíveis) na i
   assert.match(img, /ANA[\s\S]*67%[\s\S]*BIA[\s\S]*33%/);
   assert.match(imageAsText(spec)!, /1º Ana · 6 pts · 2V 0E 1D · 67% de aproveitamento/);
 });
+
+test('Ranking B: do 11º ao 20º; o ranking normal avisa quando há mais de 10', async () => {
+  const { buildImage } = await import('../src/lib/images/templates');
+  const store = new MemoryStore();
+  let id = 0;
+  const deps = { store, lookup: createLookup(store, async () => null), now: () => new Date('2026-11-21T12:00:00Z'), rng: lcg(9) };
+  const G = 'rk@g.us';
+  const say = (text: string): Promise<Outgoing[]> => handleMessage({ id: `rk${++id}`, groupJid: G, senderJid: 'ana@s', senderName: 'Ana', text }, deps);
+  await say('ativar jogos');
+  // 13 jogadores: o J13 com 13 vitórias, ..., o J01 com 1.
+  for (let n = 1; n <= 13; n++) {
+    const player = { jid: `j${n}@s`, name: `J${String(n).padStart(2, '0')}` };
+    for (let w = 0; w < n; w++) await store.recordResults(G, [{ player, result: 'win' }]);
+  }
+  const img = (out: Outgoing[]) => {
+    const o = out.find((x) => x.type === 'image');
+    assert.ok(o && o.type === 'image' && o.image.kind === 'ranking');
+    return o.image;
+  };
+  const top = img(await say('ranking'));
+  assert.equal(top.kind === 'ranking' && top.rows.length, 10);
+  assert.ok(top.kind === 'ranking' && top.more && !top.start);
+  assert.match(textOfElement(buildImage(top)), /^ *DUELO[\s\S]*RANKING [\s\S]*J13[\s\S]*Mande RANKING B para ver do 11º ao 20º/);
+  for (const cmd of ['ranking b', 'Ranking B', 'ranking 2', 'ranking 11 a 20']) {
+    const b = img(await say(cmd));
+    assert.ok(b.kind === 'ranking' && b.start === 11, cmd);
+    assert.deepEqual(b.kind === 'ranking' && b.rows.map((r) => r.name), ['J03', 'J02', 'J01']);
+    const text = textOfElement(buildImage(b));
+    assert.match(text, /RANKING B[\s\S]*11º ao 13º[\s\S]*11 J03[\s\S]*12 J02[\s\S]*13 J01[\s\S]*Mande RANKING para ver do 1º ao 10º/, cmd);
+  }
+  // Grupo com 10 ou menos: o ranking B explica.
+  const small = 'pequeno@g.us';
+  await handleMessage({ id: 'p0', groupJid: small, senderJid: 'ana@s', senderName: 'Ana', text: 'ativar jogos' }, deps);
+  await store.recordResults(small, [{ player: { jid: 'a@s', name: 'Ana' }, result: 'win' }]);
+  const out = await handleMessage({ id: 'p1', groupJid: small, senderJid: 'ana@s', senderName: 'Ana', text: 'ranking b' }, deps);
+  assert.match(asText(out), /ranking B\* mostra do 11º ao 20º[\s\S]*tem 1 jogador no ranking/);
+  const plain = img(await handleMessage({ id: 'p2', groupJid: small, senderJid: 'ana@s', senderName: 'Ana', text: 'ranking' }, deps));
+  assert.match(textOfElement(buildImage(plain)), /Mande INICIAR JOGO para subir na tabela/);
+});

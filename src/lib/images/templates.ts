@@ -283,17 +283,19 @@ function pitch(state: MatchState): ReactElement {
 
 // ---------- 5. Ranking do grupo ----------
 
-function ranking(groupName: string, rows: RankingRow[], season?: number, since?: string): ReactElement {
+function ranking(groupName: string, rows: RankingRow[], season?: number, since?: string, start = 1, more = false): ReactElement {
   const cell = (v: string | number, width: number, strong = false) =>
     txt(v, { width, justifyContent: 'center', fontSize: 34, fontWeight: strong ? 700 : 500, color: strong ? C.lime : C.white });
   const head = (v: string, width: number) => txt(v, { width, justifyContent: 'center', fontSize: 22, fontWeight: 700, color: C.muted, letterSpacing: 2 });
   // Até 7 linhas no tamanho grande; com 8 a 10 (o ranking mostra o top 10) tudo encolhe para caber.
   const many = rows.length > 7;
+  // Destaque só para o líder (o 1º); no ranking B ninguém é líder.
+  const leader = (i: number) => start === 1 && i === 0;
   const rowH = many ? 66 : 84;
   return stage(
     box({ justifyContent: 'space-between', alignItems: 'center' }, brand(), pill(upper(fit(groupName, 20)), C.panel, C.lime, 24)),
-    txt('RANKING', { fontFamily: DISPLAY, fontSize: many ? 112 : 150, lineHeight: 1, marginTop: many ? 22 : 36, flexShrink: 0 }),
-    txt(`${season ? `Temporada ${season}${since ? ` · desde ${since}` : ''} · ` : ''}Vitória 3 pts · empate 1 pt`, { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: many ? 16 : 26, flexShrink: 0 }),
+    txt(start > 1 ? 'RANKING B' : 'RANKING', { fontFamily: DISPLAY, fontSize: many ? 112 : 150, lineHeight: 1, marginTop: many ? 22 : 36, flexShrink: 0 }),
+    txt(`${season ? `Temporada ${season}${since ? ` · desde ${since}` : ''} · ` : ''}${start > 1 ? `${start}º ao ${start + rows.length - 1}º · ` : ''}Vitória 3 pts · empate 1 pt`, { fontSize: 30, color: C.muted, fontWeight: 500, marginBottom: many ? 16 : 26, flexShrink: 0 }),
     // Colunas: J, V, E, D, PTS e aproveitamento (pontos ganhos sobre os possíveis).
     box(
       { padding: '0 24px', marginBottom: 8 },
@@ -306,17 +308,19 @@ function ranking(groupName: string, rows: RankingRow[], season?: number, since?:
         box(
           {
             alignItems: 'center', height: rowH, padding: '0 24px', borderRadius: 18, flexShrink: 0,
-            backgroundColor: i === 0 ? 'rgba(200,255,62,0.14)' : C.panel,
-            border: `2px solid ${i === 0 ? C.lime : C.panelLine}`,
+            backgroundColor: leader(i) ? 'rgba(200,255,62,0.14)' : C.panel,
+            border: `2px solid ${leader(i) ? C.lime : C.panelLine}`,
           },
-          txt(i + 1, { width: 70, fontFamily: DISPLAY, fontSize: 40, color: i === 0 ? C.lime : C.muted }),
+          txt(i + start, { width: 70, fontFamily: DISPLAY, fontSize: 40, color: leader(i) ? C.lime : C.muted }),
           txt(upper(fit(r.name, 16)), { flexGrow: 1, fontFamily: DISPLAY, fontSize: 36, letterSpacing: 1 }),
           cell(r.games, 76), cell(r.wins, 76), cell(r.draws, 76), cell(r.losses, 76), cell(r.wins * 3 + r.draws, 100, true),
           txt(aproveitamentoText(r), { width: 116, justifyContent: 'center', fontSize: 32, fontWeight: 700, color: C.white }),
         ),
       ),
     ),
-    txt('Mande INICIAR JOGO para subir na tabela', { fontSize: 30, fontWeight: 700, color: C.lime, justifyContent: 'center' }),
+    txt(start > 1 ? 'Mande RANKING para ver do 1º ao 10º' : more ? 'Mande RANKING B para ver do 11º ao 20º' : 'Mande INICIAR JOGO para subir na tabela', {
+      fontSize: 30, fontWeight: 700, color: C.lime, justifyContent: 'center',
+    }),
   );
 }
 
@@ -333,7 +337,7 @@ export function buildImage(spec: ImageSpec): ReactElement {
     case 'pitch':
       return pitch(spec.state);
     case 'ranking':
-      return ranking(spec.groupName, spec.rows, spec.season, spec.since);
+      return ranking(spec.groupName, spec.rows, spec.season, spec.since, spec.start, spec.more);
     case 'season':
       return seasonImage(spec);
     case 'partyLobby':
