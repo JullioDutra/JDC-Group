@@ -27,7 +27,8 @@ export type MetricKey =
   | 'worldCupsPlayed'
   | 'debutYear'
   | 'clubsCount'
-  | 'marketValueEurM';
+  | 'marketValueEurM'
+  | 'careerCards';
 
 /** Ficha de um jogador de futebol, devolvida pela IA e guardada em cache. */
 export interface PlayerProfile {
@@ -59,6 +60,8 @@ export interface PlayerProfile {
   debutYear: number | null;
   /** Valor de mercado atual (mi €); 0 para quem parou de jogar. */
   marketValueEurM?: number | null;
+  /** Cartões na carreira (amarelos + vermelhos). Opcional: fichas antigas em cache não têm. */
+  careerCards?: number | null;
   /** Data da conferência dos números corrigidos à mão (AAAA-MM-DD), se houver. */
   manualAt?: string;
 }
@@ -98,6 +101,8 @@ export interface MatchOptions {
   autoRandom?: boolean;
   /** "difícil": sorteio com clubes/seleções de nível 2. */
   hard?: boolean;
+  /** Só clubes de uma liga ("1 brasileirão"): br, eng, esp, ita, ger, fra, arg. */
+  league?: 'br' | 'eng' | 'esp' | 'ita' | 'ger' | 'fra' | 'arg';
 }
 
 export interface MatchState {
@@ -382,6 +387,8 @@ export interface StopParty extends PartyBase {
   arrival: string[];
   /** Alguém já mandou a ficha: o prazo encurtou. */
   stopped: boolean;
+  /** "abrir stop futebol" / "abrir stop geral"; sem filtro: a mistura de sempre. */
+  category?: 'futebol' | 'geral' | null;
 }
 
 /** Draft da Resenha: até 8 pessoas, ordem em serpente, a IA valida, o grupo vota. */

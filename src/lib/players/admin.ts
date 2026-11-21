@@ -33,6 +33,9 @@ export const STAT_WORDS: Array<[string, StatKey]> = [
   ['gols libertadores', 'libertadoresGoals'],
   ['gols no brasileirao', 'brasileiraoGoals'],
   ['gols brasileirao', 'brasileiraoGoals'],
+  ['cartoes amarelos e vermelhos', 'careerCards'],
+  ['cartoes', 'careerCards'],
+  ['cartao', 'careerCards'],
   ['valor atual', 'marketValueEurM'],
   ['valor maximo', 'peakValueEurM'],
   ['maior valor', 'peakValueEurM'],
@@ -64,6 +67,7 @@ export const STAT_LABEL: Record<StatKey, string> = {
   heightCm: 'altura (cm)',
   debutYear: 'ano de estreia',
   marketValueEurM: 'valor atual (mi €)',
+  careerCards: 'cartões (amarelos + vermelhos)',
 };
 
 /** "180", "1.234", "60,5" → número. */

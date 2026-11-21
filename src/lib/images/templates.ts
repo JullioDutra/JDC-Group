@@ -51,14 +51,19 @@ function challenge(host: string): ReactElement {
 // ---------- 2. Menu de temas ----------
 
 const RESTRICTION_TAG = { none: 'LIVRE', club: 'CLUBE', country: 'SELEÇÃO' } as const;
+/** Etiqueta curta da liga no início da partida. */
+const LEAGUE_TAG = { br: 'Brasileirão', eng: 'Premier', esp: 'La Liga', ita: 'Série A', ger: 'Bundesliga', fra: 'Ligue 1', arg: 'Argentino' } as const;
 
 function modesMenu(): ReactElement {
   const half = Math.ceil(MODES.length / 2);
+  // 10 cards por coluna (19 temas) cabem com 88 px; até 9, 100 px.
+  const cardH = half > 9 ? 88 : 100;
+  const compact = half > 9;
   const card = (m: (typeof MODES)[number]) =>
     box(
       {
         alignItems: 'center', gap: 14, backgroundColor: C.panel, border: `2px solid ${C.panelLine}`,
-        borderRadius: 16, padding: '0 14px', height: 100, flexShrink: 0,
+        borderRadius: 16, padding: '0 14px', height: cardH, flexShrink: 0,
       },
       txt(m.number, {
         width: 52, height: 52, borderRadius: 12, backgroundColor: C.lime, color: C.ink, flexShrink: 0,
@@ -66,10 +71,10 @@ function modesMenu(): ReactElement {
       }),
       box(
         { flexDirection: 'column', flexGrow: 1, width: 360 },
-        txt(upper(fit(m.name, 20)), { fontFamily: DISPLAY, fontSize: 30, lineHeight: 1.1, letterSpacing: 0.5 }),
-        txt(m.tagline.split(' · ')[0], { fontSize: 22, color: C.muted, fontWeight: 500, lineHeight: 1.15 }),
+        txt(upper(fit(m.name, 20)), { fontFamily: DISPLAY, fontSize: compact ? 28 : 30, lineHeight: 1.1, letterSpacing: 0.5 }),
+        txt(m.tagline.split(' · ')[0], { fontSize: compact ? 20 : 22, color: C.muted, fontWeight: 500, lineHeight: 1.15 }),
         box(
-          { gap: 8, marginTop: 4 },
+          { gap: 8, marginTop: compact ? 3 : 4 },
           txt(RESTRICTION_TAG[m.restriction], { fontSize: 16, fontWeight: 700, letterSpacing: 1.5, color: C.white, backgroundColor: 'rgba(255,255,255,0.10)', padding: '1px 8px', borderRadius: 6 }),
           txt(m.direction === 'high' ? 'MAIOR VENCE' : 'MENOR VENCE', {
             fontSize: 16, fontWeight: 700, letterSpacing: 1.5, color: C.ink, padding: '1px 8px', borderRadius: 6,
@@ -86,7 +91,8 @@ function modesMenu(): ReactElement {
     box(
       { flexDirection: 'column', alignItems: 'center', marginTop: 8 },
       txt('Mande o número do tema ou ALEATÓRIO', { fontSize: 30, fontWeight: 700, color: C.lime }),
-      txt('Extras: some CEGO (números secretos) ou RELÂMPAGO (45s) · ex.: 3 cego', { fontSize: 24, fontWeight: 500, color: C.muted }),
+      txt('Extras: CEGO · RELÂMPAGO · DIFÍCIL · ex.: 3 cego', { fontSize: 22, fontWeight: 500, color: C.muted }),
+      txt('Só uma liga: BRASILEIRÃO, PREMIER, LA LIGA, SÉRIE A, BUNDESLIGA, LIGUE 1, ARGENTINO · ex.: 1 brasileirão', { fontSize: 20, fontWeight: 500, color: C.muted }),
     ),
   );
 }
@@ -109,6 +115,7 @@ function kickoff(state: MatchState): ReactElement {
         { gap: 10 },
         ...(state.options?.blind ? [pill('ÀS CEGAS', C.guest, C.ink, 24)] : []),
         ...(turnSeconds(state) !== TURN_SECONDS ? [pill('RELÂMPAGO', C.host, C.ink, 24)] : []),
+        ...(state.options?.league ? [pill(upper(LEAGUE_TAG[state.options.league]), C.panel, C.lime, 24)] : []),
         pill(`TEMA ${mode.number}`, C.lime, C.ink, 24),
       ),
     ),

@@ -4,6 +4,7 @@
  */
 import type { ContentCategory } from '../../game/types';
 import { INTRUSO_GERAIS } from './intruso-gerais';
+import { INTRUSO_R11 } from './rodada11';
 
 export interface IntrusoSet {
   id: string;
@@ -469,6 +470,7 @@ export const INTRUSO_SETS: IntrusoSet[] = [
   },
   // Fora do futebol (rodada 10).
   ...INTRUSO_GERAIS,
+  ...INTRUSO_R11,
 ];
 
 export function getIntrusoSet(id: string): IntrusoSet | undefined {

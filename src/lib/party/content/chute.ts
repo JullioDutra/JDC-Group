@@ -1,5 +1,6 @@
 import type { ContentCategory } from '../../game/types';
 import { CHUTE_GERAIS } from './chute-gerais';
+import { CHUTE_R11 } from './rodada11';
 
 /** Chute Certo: perguntas com resposta numérica exata e estável. */
 export interface ChuteQuestion {
@@ -132,6 +133,7 @@ export const CHUTE_QUESTIONS: ChuteQuestion[] = [
   { id: 'c-grammy-edicao-2026', category: 'geral', prompt: 'Que número de edição foi o Grammy de 2026?', answer: 68, unit: 'ª edição' },
   // Fora do futebol (rodada 10).
   ...CHUTE_GERAIS,
+  ...CHUTE_R11,
 ];
 
 export function getChute(id: string): ChuteQuestion | undefined {

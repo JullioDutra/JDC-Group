@@ -1,6 +1,6 @@
 import { normalize } from './text';
 import type { MetricKey, PlayerProfile, RestrictionKind } from './types';
-import type { ClubRegion } from './teams';
+import { LEAGUES, leagueFitsRegion, type ClubRegion, type LeagueId } from './teams';
 
 export interface GameMode {
   id: string;
@@ -133,6 +133,11 @@ export const MODES: GameMode[] = [
     metric: 'marketValueEurM', unit: 'mi €', direction: 'high', restriction: 'club',
     what: 'Escale quem vale mais HOJE no mercado (aposentado vale zero).',
   }),
+  mode({
+    id: 'casca-grossa', number: 19, name: 'Casca-Grossa', tagline: 'Cartões na carreira · clube sorteado',
+    metric: 'careerCards', unit: 'cartões', direction: 'high', restriction: 'club',
+    what: 'Escale os mais faltosos: conta amarelos + vermelhos na carreira.',
+  }),
 ];
 
 export function getMode(id: string | null): GameMode | undefined {
@@ -172,6 +177,7 @@ const RANGES: Record<MetricKey, [number, number]> = {
   debutYear: [1900, 2100],
   clubsCount: [1, 40],
   marketValueEurM: [0, 250],
+  careerCards: [0, 400],
 };
 
 function raw(profile: PlayerProfile, metric: MetricKey, now: Date): number | null {
@@ -196,6 +202,39 @@ export interface Twists {
   fast: boolean;
   /** "difícil": clubes/seleções menos óbvios no sorteio. */
   hard: boolean;
+  /** Só clubes desta liga ("1 brasileirão", "3 premier"). */
+  league?: LeagueId;
+}
+
+/** Como o grupo pede cada liga (sem acento). As frases mais longas primeiro. */
+const LEAGUE_WORDS: Array<[string, LeagueId]> = (
+  [
+    ['campeonato brasileiro', 'br'], ['brasileirao', 'br'], ['brasileiro', 'br'], ['brasil', 'br'], ['br', 'br'],
+    ['premier league', 'eng'], ['campeonato ingles', 'eng'], ['liga inglesa', 'eng'], ['premier', 'eng'], ['ingles', 'eng'], ['inglaterra', 'eng'],
+    ['campeonato espanhol', 'esp'], ['liga espanhola', 'esp'], ['la liga', 'esp'], ['laliga', 'esp'], ['espanhol', 'esp'], ['espanha', 'esp'],
+    ['campeonato italiano', 'ita'], ['liga italiana', 'ita'], ['serie a', 'ita'], ['serie', 'ita'], ['calcio', 'ita'], ['italiano', 'ita'], ['italia', 'ita'],
+    ['campeonato alemao', 'ger'], ['liga alema', 'ger'], ['bundesliga', 'ger'], ['alemao', 'ger'], ['alemanha', 'ger'],
+    ['campeonato frances', 'fra'], ['liga francesa', 'fra'], ['ligue 1', 'fra'], ['frances', 'fra'], ['franca', 'fra'],
+    ['campeonato argentino', 'arg'], ['liga argentina', 'arg'], ['argentino', 'arg'], ['argentina', 'arg'],
+  ] as Array<[string, LeagueId]>
+).sort((a, b) => b[0].length - a[0].length);
+
+export function leagueLabel(league: LeagueId | undefined): string {
+  return league ? LEAGUES[league].label : '';
+}
+
+/** O filtro de liga vale para o tema? Só temas de clube; os de região fixa, só com liga da região. */
+export function leagueFits(mode: GameMode, league: LeagueId): boolean {
+  return mode.restriction === 'club' && leagueFitsRegion(mode.region, league);
+}
+
+/** Tira a liga do texto: "1 brasileirao" → { rest: "1", league: "br" }. */
+function extractLeague(text: string): { rest: string; league?: LeagueId } {
+  for (const [phrase, league] of LEAGUE_WORDS) {
+    const re = new RegExp(`(^| )${phrase}( |$)`);
+    if (re.test(text)) return { rest: text.replace(re, ' ').replace(/\s+/g, ' ').trim(), league };
+  }
+  return { rest: text };
 }
 
 const RANDOM_WORDS = ['aleatorio', 'aleatoria', 'sortear', 'sorteio', 'sorteia', 'surpresa', 'tanto faz', '0'];
@@ -204,21 +243,25 @@ export function isRandomWord(word: string): boolean {
   return RANDOM_WORDS.includes(word);
 }
 
-export function randomMode(rng: () => number): GameMode {
-  return MODES[Math.floor(rng() * MODES.length)];
+/** Tema sorteado; com liga, só entre os temas em que ela vale. */
+export function randomMode(rng: () => number, league?: LeagueId): GameMode {
+  const pool = league ? MODES.filter((m) => leagueFits(m, league)) : MODES;
+  return pool[Math.floor(rng() * pool.length)];
 }
 
 export const FAST_TURN_SECONDS = 45;
 
 /**
  * Lê a escolha do anfitrião: "3", "milionarios", "aleatorio", com extras
- * opcionais "cego" (números escondidos) e "relampago" (45 s por jogada).
- * Ex.: "3 cego", "aleatorio relampago", "12 cego relampago".
+ * opcionais "cego" (números escondidos), "relampago" (45 s por jogada),
+ * "dificil" e uma liga ("brasileirao", "premier", "la liga"...).
+ * Ex.: "3 cego", "aleatorio relampago", "1 brasileirao dificil".
+ * `ignoredLeague`: a liga pedida não vale para o tema (seleção, ou região que não combina).
  */
 export function parseModeChoice(
   norm: string,
   rng: () => number,
-): { mode: GameMode; twists: Twists; random: boolean } | undefined {
+): { mode: GameMode; twists: Twists; random: boolean; ignoredLeague?: LeagueId } | undefined {
   const words = norm.split(' ').filter(Boolean);
   const twists: Twists = { blind: false, fast: false, hard: false };
   const rest: string[] = [];
@@ -228,16 +271,36 @@ export function parseModeChoice(
     else if (['dificil', 'hard', 'raiz', 'hardcore'].includes(w) && words.length > 1) twists.hard = true;
     else if (!['as', 'a', 'modo', 'tema'].includes(w)) rest.push(w);
   }
-  const choice = rest.join(' ');
+  const full = rest.join(' ');
+  if (!full) return undefined;
+  const byName = (x: string) => MODES.find((m) => normalize(m.name) === x || m.id === x);
+  // "brasileirao" sozinho (ou "rei do brasileirao") é o tema 14, não a liga.
+  const { rest: choice, league } = byName(full) ? { rest: full, league: undefined } : extractLeague(full);
   if (!choice) return undefined;
   let mode: GameMode | undefined;
   const random = isRandomWord(choice);
   if (random) {
-    mode = randomMode(rng);
+    mode = randomMode(rng, league);
   } else if (/^\d+$/.test(choice)) {
     mode = MODES.find((m) => m.number === Number(choice));
   } else {
-    mode = MODES.find((m) => normalize(m.name) === choice || m.id === choice);
+    mode = byName(choice);
   }
-  return mode ? { mode, twists, random } : undefined;
+  if (!mode) return undefined;
+  if (league && !leagueFits(mode, league)) return { mode, twists, random, ignoredLeague: league };
+  return { mode, twists: league ? { ...twists, league } : twists, random };
+}
+
+/** A liga pedida não vale para o tema escolhido: avisa e segue sem ela. */
+export function ignoredLeagueNote(parsed: { mode: GameMode; ignoredLeague?: LeagueId }): string {
+  if (!parsed.ignoredLeague) return '';
+  const why =
+    parsed.mode.restriction === 'country'
+      ? 'esse tema sorteia seleções'
+      : parsed.mode.region === 'br'
+        ? 'esse tema só tem clubes brasileiros'
+        : parsed.mode.region === 'sa'
+          ? 'esse tema só aceita Brasileirão ou Argentino'
+          : 'esse tema só aceita ligas europeias';
+  return `A liga (${leagueLabel(parsed.ignoredLeague)}) ficou de fora: ${why}.\n`;
 }

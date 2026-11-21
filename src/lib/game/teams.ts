@@ -46,7 +46,7 @@ export const CLUBS: Team[] = [
   club('cruzeiro', 'Cruzeiro', ['#003DA5', '#FFFFFF']),
   club('vasco', 'Vasco', ['#111111', '#FFFFFF'], ['vasco da gama']),
   club('fluminense', 'Fluminense', ['#7A1F3D', '#00693E']),
-  club('botafogo', 'Botafogo', ['#111111', '#FFFFFF'], [], ['botafogo sp', 'botafogo pb']),
+  club('botafogo', 'Botafogo', ['#111111', '#FFFFFF'], [], ['botafogo sp', 'botafogo pb', 'ribeirao', 'futebol clube sp', 'futebol clube pb', 'paraiba']),
   // Europa
   club('real-madrid', 'Real Madrid', ['#FFFFFF', '#FEBE10'], [], ['castilla']),
   club('barcelona', 'Barcelona', ['#A50044', '#004D98'], ['fc barcelona'], ['guayaquil', 'barcelona sc', 'barcelona b']),
@@ -63,7 +63,7 @@ export const CLUBS: Team[] = [
   club('milan', 'Milan', ['#FB090B', '#111111'], ['ac milan'], ['inter']),
   club('inter', 'Inter de Milão', ['#0068A8', '#111111'], ['inter milan', 'internazionale', 'inter de milao', 'inter'], ['miami', 'limeira']),
   club('psg', 'PSG', ['#004170', '#DA291C'], ['paris saint germain', 'paris sg']),
-  club('porto', 'Porto', ['#00428C', '#FFFFFF'], ['fc porto']),
+  club('porto', 'Porto', ['#00428C', '#FFFFFF'], ['fc porto'], ['alegrense', 'alegre']),
   club('benfica', 'Benfica', ['#E83030', '#FFFFFF']),
   club('ajax', 'Ajax', ['#D2122E', '#FFFFFF']),
   // Américas
@@ -104,7 +104,7 @@ CLUBS.push(
   c('goias', 'Goiás', 2, ['goias ec']),
   c('coritiba', 'Coritiba', 2, ['coxa']),
   c('bragantino', 'Red Bull Bragantino', 2, ['bragantino', 'rb bragantino']),
-  c('america-mg', 'América-MG', 2, ['america mineiro', 'america mg'], ['cali', 'mexico', 'rn', 'rj']),
+  c('america-mg', 'América-MG', 2, ['america mineiro', 'america mg', 'america futebol clube mg'], ['cali', 'mexico', 'rn', 'rj', 'natal', 'rio de janeiro']),
   c('atletico-go', 'Atlético-GO', 3, ['atletico goianiense', 'atletico go']),
   c('juventude', 'Juventude', 3, ['ec juventude']),
   c('chapecoense', 'Chapecoense', 3, ['chape']),
@@ -120,6 +120,31 @@ CLUBS.push(
   c('figueirense', 'Figueirense', 3),
   c('cuiaba', 'Cuiabá', 3),
   c('mirassol', 'Mirassol', 3),
+  // Rodada 11: mais clubes do Brasil para o filtro "brasileirão" (nível 3 = raiz).
+  c('crb', 'CRB', 3, ['clube de regatas brasil']),
+  c('csa', 'CSA', 3, ['centro sportivo alagoano']),
+  c('abc', 'ABC', 3, ['abc futebol clube', 'abc fc']),
+  c('america-rn', 'América-RN', 3, ['america rn', 'america de natal', 'america natal', 'america futebol clube rn']),
+  c('sampaio-correa', 'Sampaio Corrêa', 3, ['sampaio correa']),
+  c('confianca', 'Confiança', 3, ['ad confianca', 'associacao desportiva confianca']),
+  c('treze', 'Treze', 3, ['treze fc', 'treze futebol clube']),
+  c('campinense', 'Campinense', 3, ['campinense clube']),
+  c('parana', 'Paraná Clube', 3, ['parana clube']),
+  c('londrina', 'Londrina', 3, ['londrina ec', 'londrina esporte clube']),
+  c('operario-pr', 'Operário-PR', 3, ['operario ferroviario', 'operario pr'], ['mt', 'ms', 'varzea grande']),
+  c('joinville', 'Joinville', 3, ['joinville ec', 'joinville esporte clube']),
+  c('brusque', 'Brusque', 3, ['brusque fc']),
+  c('brasil-pelotas', 'Brasil de Pelotas', 3, ['gremio esportivo brasil', 'brasil pelotas']),
+  c('ituano', 'Ituano', 3, ['ituano fc']),
+  c('novorizontino', 'Novorizontino', 3, ['gremio novorizontino']),
+  c('sao-caetano', 'São Caetano', 3, ['ad sao caetano']),
+  c('santo-andre', 'Santo André', 3, ['ec santo andre']),
+  c('botafogo-sp', 'Botafogo-SP', 3, ['botafogo sp', 'botafogo de ribeirao preto', 'botafogo ribeirao preto', 'botafogo futebol clube sp', 'botafogo futebol clube ribeirao preto']),
+  c('bangu', 'Bangu', 3, ['bangu ac', 'bangu atletico clube']),
+  c('america-rj', 'America-RJ', 3, ['america rj', 'america fc rj', 'america do rio', 'america football club', 'america fc rio de janeiro']),
+  c('volta-redonda', 'Volta Redonda', 3, ['volta redonda fc']),
+  c('vila-nova', 'Vila Nova', 3, ['vila nova fc'], ['famalicao', 'portugal']),
+  c('ferroviaria', 'Ferroviária', 3, ['associacao ferroviaria', 'ferroviaria araraquara'], ['operario']),
   // Argentina, Uruguai e América do Sul
   c('independiente', 'Independiente', 2, ['ca independiente'], ['del valle', 'medellin', 'santa fe', 'rivadavia', 'petrolero']),
   c('racing', 'Racing', 2, ['racing club', 'racing avellaneda'], ['strasbourg', 'santander', 'genk', 'montevideo', 'ferrol', 'lens', 'paris', 'cordoba']),
@@ -129,6 +154,13 @@ CLUBS.push(
   c('newells', "Newell's Old Boys", 2, ['newells', 'newell s old boys']),
   c('rosario-central', 'Rosario Central', 3),
   c('lanus', 'Lanús', 3),
+  c('talleres', 'Talleres', 3, ['talleres de cordoba', 'ca talleres'], ['escalada', 'remedios']),
+  c('huracan', 'Huracán', 3, ['ca huracan'], ['tres arroyos', 'corrientes', 'comodoro', 'las heras']),
+  c('argentinos', 'Argentinos Juniors', 3, ['argentinos jrs']),
+  c('banfield', 'Banfield', 3, ['ca banfield']),
+  c('gimnasia', 'Gimnasia La Plata', 3, ['gimnasia y esgrima la plata', 'gimnasia lp', 'gimnasia de la plata']),
+  c('belgrano', 'Belgrano', 3, ['ca belgrano', 'belgrano de cordoba'], ['general belgrano']),
+  c('godoy-cruz', 'Godoy Cruz', 3, ['godoy cruz antonio tomba']),
   c('penarol', 'Peñarol', 2),
   c('nacional-uru', 'Nacional', 2, ['club nacional', 'nacional de montevideo', 'nacional montevideu'], ['atletico nacional', 'nacional sp', 'madeira', 'nacional am', 'asuncion', 'potosi', 'patos']),
   c('atletico-nacional', 'Atlético Nacional', 2, ['atletico nacional medellin']),
@@ -177,6 +209,8 @@ CLUBS.push(
   c('deportivo', 'Deportivo La Coruña', 3, ['deportivo la coruna', 'deportivo'], ['cali', 'tachira', 'alaves', 'quito', 'saprissa', 'toluca', 'municipal']),
   c('espanyol', 'Espanyol', 3),
   c('malaga', 'Málaga', 3),
+  c('getafe', 'Getafe', 3, ['getafe cf']),
+  c('osasuna', 'Osasuna', 3, ['ca osasuna']),
   // Itália
   c('lazio', 'Lazio', 2),
   c('fiorentina', 'Fiorentina', 2),
@@ -186,6 +220,7 @@ CLUBS.push(
   c('sampdoria', 'Sampdoria', 3),
   c('udinese', 'Udinese', 3),
   c('bologna', 'Bologna', 3),
+  c('genoa', 'Genoa', 3, ['genoa cfc']),
   // Alemanha
   c('leverkusen', 'Bayer Leverkusen', 2, ['leverkusen']),
   c('schalke', 'Schalke 04', 2, ['schalke']),
@@ -202,6 +237,8 @@ CLUBS.push(
   c('rennes', 'Rennes', 3),
   c('bordeaux', 'Bordeaux', 3, ['girondins de bordeaux']),
   c('saint-etienne', 'Saint-Étienne', 3, ['saint etienne', 'st etienne']),
+  c('lens', 'Lens', 3, ['rc lens', 'racing club de lens', 'racing lens']),
+  c('nantes', 'Nantes', 3, ['fc nantes']),
   c('braga', 'Braga', 3, ['sc braga', 'sporting braga']),
   // Holanda, Escócia, Turquia, Leste Europeu, Bélgica, Áustria, Suíça
   c('psv', 'PSV', 2, ['psv eindhoven']),
@@ -347,13 +384,112 @@ export function findTeamByName(raw: string): Team | undefined {
 }
 
 /** Regiões para temas que só fazem sentido com certos clubes (Brasileirão, Libertadores, Champions). */
-const BR_IDS = 'flamengo palmeiras corinthians sao-paulo santos gremio internacional atletico-mg cruzeiro vasco fluminense botafogo athletico-pr bahia vitoria sport ceara fortaleza goias coritiba bragantino america-mg atletico-go juventude chapecoense ponte-preta guarani portuguesa nautico santa-cruz paysandu remo criciuma avai figueirense cuiaba mirassol'.split(' ');
-const SA_IDS = [...BR_IDS, ...'boca river independiente racing san-lorenzo estudiantes velez newells rosario-central lanus penarol nacional-uru atletico-nacional millonarios america-cali colo-colo universidad-chile olimpia cerro-porteno ldu barcelona-sc independiente-valle alianza-lima universitario'.split(' ')];
-const EU_IDS = 'real-madrid barcelona atletico-madrid manchester-united manchester-city liverpool chelsea arsenal tottenham bayern dortmund juventus milan inter psg porto benfica ajax fenerbahce galatasaray napoli roma sevilla valencia marseille lyon monaco sporting celtic newcastle aston-villa west-ham everton leeds nottingham leicester southampton fulham wolves crystal-palace brighton athletic real-sociedad villarreal betis celta deportivo espanyol malaga lazio fiorentina atalanta torino parma sampdoria udinese bologna leverkusen schalke wolfsburg hamburgo werder stuttgart eintracht leipzig gladbach lille nice rennes bordeaux saint-etienne braga psv feyenoord rangers besiktas trabzonspor zenit cska spartak shakhtar dynamo-kiev olympiacos panathinaikos anderlecht brugge salzburg basel'.split(' ');
+const BR_IDS = 'flamengo palmeiras corinthians sao-paulo santos gremio internacional atletico-mg cruzeiro vasco fluminense botafogo athletico-pr bahia vitoria sport ceara fortaleza goias coritiba bragantino america-mg atletico-go juventude chapecoense ponte-preta guarani portuguesa nautico santa-cruz paysandu remo criciuma avai figueirense cuiaba mirassol crb csa abc america-rn sampaio-correa confianca treze campinense parana londrina operario-pr joinville brusque brasil-pelotas ituano novorizontino sao-caetano santo-andre botafogo-sp bangu america-rj volta-redonda vila-nova ferroviaria'.split(' ');
+const SA_IDS = [...BR_IDS, ...'boca river independiente racing san-lorenzo estudiantes velez newells rosario-central lanus talleres huracan argentinos banfield gimnasia belgrano godoy-cruz penarol nacional-uru atletico-nacional millonarios america-cali colo-colo universidad-chile olimpia cerro-porteno ldu barcelona-sc independiente-valle alianza-lima universitario'.split(' ')];
+const EU_IDS = 'real-madrid barcelona atletico-madrid manchester-united manchester-city liverpool chelsea arsenal tottenham bayern dortmund juventus milan inter psg porto benfica ajax fenerbahce galatasaray napoli roma sevilla valencia marseille lyon monaco sporting celtic newcastle aston-villa west-ham everton leeds nottingham leicester southampton fulham wolves crystal-palace brighton athletic real-sociedad villarreal betis celta deportivo espanyol malaga getafe osasuna lazio fiorentina atalanta torino parma sampdoria udinese bologna genoa leverkusen schalke wolfsburg hamburgo werder stuttgart eintracht leipzig gladbach lille nice rennes bordeaux saint-etienne lens nantes braga psv feyenoord rangers besiktas trabzonspor zenit cska spartak shakhtar dynamo-kiev olympiacos panathinaikos anderlecht brugge salzburg basel'.split(' ');
 
 export type ClubRegion = 'br' | 'sa' | 'eu';
 const REGIONS: Record<ClubRegion, Set<string>> = { br: new Set(BR_IDS), sa: new Set(SA_IDS), eu: new Set(EU_IDS) };
 
 export function clubsIn(region: ClubRegion | undefined): Team[] {
   return region ? CLUBS.filter((t) => REGIONS[region].has(t.id)) : CLUBS;
+}
+
+/**
+ * Filtro de liga nos temas de clube ("1 brasileirão", "3 premier"). Cada liga
+ * tem os seus gigantes, médios e raiz: o sorteio mistura os três, então às
+ * vezes cai o Flamengo e às vezes o Ituano.
+ */
+export type LeagueId = 'br' | 'eng' | 'esp' | 'ita' | 'ger' | 'fra' | 'arg';
+
+interface LeagueDef {
+  label: string;
+  /** Nível dentro da liga: 1 = gigante, 2 = médio, 3 = raiz. */
+  tiers: [string[], string[], string[]];
+}
+
+const ids = (s: string) => s.split(' ').filter(Boolean);
+
+export const LEAGUES: Record<LeagueId, LeagueDef> = {
+  br: {
+    label: 'Brasileirão',
+    tiers: [
+      ids('flamengo palmeiras corinthians sao-paulo santos gremio internacional atletico-mg cruzeiro vasco fluminense botafogo'),
+      ids('athletico-pr bahia vitoria sport ceara fortaleza goias coritiba bragantino america-mg'),
+      BR_IDS.filter((id) => (getTeam(id)?.tier ?? 1) === 3),
+    ],
+  },
+  eng: {
+    label: 'Premier League',
+    tiers: [
+      ids('manchester-united manchester-city liverpool chelsea arsenal tottenham'),
+      ids('newcastle aston-villa west-ham everton leeds leicester'),
+      ids('nottingham southampton fulham wolves crystal-palace brighton'),
+    ],
+  },
+  esp: {
+    label: 'La Liga',
+    tiers: [
+      ids('real-madrid barcelona atletico-madrid'),
+      ids('sevilla valencia athletic real-sociedad villarreal betis'),
+      ids('celta deportivo espanyol malaga getafe osasuna'),
+    ],
+  },
+  ita: {
+    label: 'Série A italiana',
+    tiers: [ids('juventus milan inter'), ids('napoli roma lazio fiorentina atalanta'), ids('torino parma sampdoria udinese bologna genoa')],
+  },
+  ger: {
+    label: 'Bundesliga',
+    tiers: [ids('bayern dortmund'), ids('leverkusen schalke leipzig'), ids('wolfsburg hamburgo werder stuttgart eintracht gladbach')],
+  },
+  fra: {
+    label: 'Ligue 1',
+    tiers: [ids('psg'), ids('marseille lyon monaco'), ids('lille nice rennes bordeaux saint-etienne lens nantes')],
+  },
+  arg: {
+    label: 'Campeonato Argentino',
+    tiers: [
+      ids('boca river'),
+      ids('independiente racing san-lorenzo estudiantes velez newells'),
+      ids('rosario-central lanus talleres huracan argentinos banfield gimnasia belgrano godoy-cruz'),
+    ],
+  },
+};
+
+/** Ligas que o tema com região fixa aceita (Rei do Brasileirão, Libertadores, Champions). */
+const REGION_LEAGUES: Record<ClubRegion, LeagueId[]> = {
+  br: ['br'],
+  sa: ['br', 'arg'],
+  eu: ['eng', 'esp', 'ita', 'ger', 'fra'],
+};
+
+export function leagueFitsRegion(region: ClubRegion | undefined, league: LeagueId): boolean {
+  return !region || REGION_LEAGUES[region].includes(league);
+}
+
+export function clubsInLeague(league: LeagueId): Team[] {
+  return LEAGUES[league].tiers.flat().map((id) => getTeam(id)).filter((t): t is Team => !!t);
+}
+
+/** Chance de cada nível por rodada: normal = mais gigantes; difícil = mais raiz. */
+const LEAGUE_ODDS: Record<'normal' | 'hard', number[]> = { normal: [0.55, 0.3, 0.15], hard: [0.2, 0.4, 0.4] };
+
+/**
+ * Sorteia `count` clubes distintos da liga: a cada rodada escolhe o nível
+ * (pelas chances acima, entre os níveis que ainda têm clube) e um clube dele.
+ */
+export function drawLeagueTeams(league: LeagueId, count: number, rng: () => number, hard = false): Team[] {
+  const left = LEAGUES[league].tiers.map((tier) => tier.map((id) => getTeam(id)).filter((t): t is Team => !!t));
+  const odds = hard ? LEAGUE_ODDS.hard : LEAGUE_ODDS.normal;
+  const out: Team[] = [];
+  while (out.length < count && left.some((t) => t.length)) {
+    const weights = left.map((t, i) => (t.length ? odds[i] : 0));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let roll = rng() * total;
+    let tier = weights.findIndex((w) => (roll -= w) < 0);
+    if (tier < 0) tier = weights.map((w, i) => (w ? i : -1)).filter((i) => i >= 0).at(-1)!;
+    out.push(left[tier].splice(Math.floor(rng() * left[tier].length), 1)[0]);
+  }
+  return out;
 }

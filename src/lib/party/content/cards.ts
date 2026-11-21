@@ -1,5 +1,6 @@
 import type { ContentCategory } from '../../game/types';
 import { EMOJI_GERAIS, RELAMPAGO_GERAIS } from './cards-gerais';
+import { EMOJI_R11, RELAMPAGO_R11 } from './rodada11';
 
 /**
  * Cartas de pergunta-e-resposta curta: Emoji (adivinhe pelo emoji) e Quiz
@@ -140,6 +141,7 @@ export const EMOJI_CARDS: Card[] = [
   { id: 'e-caneta', category: 'futebol', prompt: '🖊️ ⚽ 🦵🦵 (drible)', answer: 'Caneta', aliases: ['canetinha'] },
   // Fora do futebol (rodada 10).
   ...EMOJI_GERAIS,
+  ...EMOJI_R11,
 ];
 
 export const RELAMPAGO_CARDS: Card[] = [
@@ -319,6 +321,7 @@ export const RELAMPAGO_CARDS: Card[] = [
   { id: 'r-optogenetica-2026', category: 'geral', prompt: 'O Nobel de Medicina de 2026 premiou a técnica que controla neurônios com luz. Qual é o nome dela?', answer: 'Optogenética', aliases: ['optogenetica'] },
   // Fora do futebol (rodada 10).
   ...RELAMPAGO_GERAIS,
+  ...RELAMPAGO_R11,
 ];
 
 export const CARDS = { emoji: EMOJI_CARDS, relampago: RELAMPAGO_CARDS };

@@ -11,6 +11,10 @@ export interface StopCategory {
   /** Como validar: lista curada (+ IA), clube/seleção, jogador (IA de jogadores) ou nome próprio (qualquer nome). */
   kind: 'list' | 'team' | 'player' | 'name';
   words?: string[];
+  /** Categoria de futebol: entra no "abrir stop futebol" e fica fora do "abrir stop geral". */
+  futebol?: boolean;
+  /** Só no "abrir stop futebol" (fora da mistura de sempre, que já tem time e jogador). */
+  onlyFutebol?: boolean;
 }
 
 const split = (s: string) => s.split(',').map((w) => w.trim()).filter(Boolean);
@@ -116,6 +120,40 @@ ravióli, risoto, rabada, rocambole, salada, salame, salpicão, sanduíche, sara
 torta, torresmo, tutu, vatapá, virado à paulista, waffle, xinxim, yakisoba, zabaione
 `);
 
+const TECNICOS_EXTRA = split(`
+Abel Ferreira, Adenor Bachi, Ancelotti, Arsène Wenger, Abel Braga, Bielsa, Cuca, Carlos Alberto Parreira, Dorival Júnior, Diniz, Del Bosque, Dunga, Émerson Leão,
+Ferguson, Felipão, Filipe Luís, Fábio Carille, Guardiola, Gallardo, Klopp, Luxemburgo, Levir Culpi, Lisca, Muricy Ramalho, Mano Menezes, Mourinho, Marcelo Bielsa,
+Mancini, Nuno Espírito Santo, Oswaldo de Oliveira, Paulo Autuori, Renato Gaúcho, Rogério Ceni, Simeone, Sampaoli, Scolari, Telê Santana, Tite, Tuchel, Vadão,
+Vanderlei Luxemburgo, Vojvoda, Valverde, Zagallo, Zidane, Zico
+`);
+const ESTADIOS_EXTRA = split(`
+Allianz Parque, Arena da Baixada, Arena Corinthians, Arena do Grêmio, Arena Pernambuco, Arena MRV, Anfield, Azteca, Beira-Rio, Bernabéu, Barradão, Bombonera,
+Camp Nou, Castelão, Centenário, Couto Pereira, Defensores del Chaco, Engenhão, Etihad, Fonte Nova, Fonte Luminosa, Giuseppe Meazza, Ilha do Retiro, Itaquerão, Lusail,
+Maracanã, Mineirão, Monumental, Morumbi, Mané Garrincha, Nilton Santos, Neo Química Arena, Old Trafford, Pacaembu, Parque dos Príncipes, Rose Bowl,
+São Januário, Signal Iduna Park, San Siro, Serra Dourada, Stamford Bridge, Vila Belmiro, Vila Capanema, Vivaldão, Wembley
+`);
+const GOLEIROS_EXTRA = split(`
+Alisson, Ederson, Buffon, Casillas, Cássio, Ceni, Rogério Ceni, Dida, Donnarumma, Diego Alves, Fábio, Fernando Prass, Gilmar, Gatito, Hugo Souza, Jefferson,
+Julio Cesar, Kahn, Lev Yashin, Marcos, Martín Silva, Neuer, Navas, Oblak, Petr Cech, Rossi, Raya, Santos, Sidão, Taffarel, Ter Stegen, Victor, Weverton, Zetti
+`);
+const NARRADORES_EXTRA = split(`
+Galvão Bueno, Cléber Machado, Luis Roberto, Milton Leite, Silvio Luiz, Osmar Santos, José Silvério, Gustavo Villani, Everaldo Marques, Paulo Andrade,
+Rogério Vaughan, Nivaldo Prieto, Teo José, Fiori Gigliotti, Walter Casagrande, Casagrande, Caio Ribeiro, Júnior, Arnaldo Cezar Coelho, Renata Silveira,
+Neto, Muricy, Roger Flores, Ana Thaís Matos, Paulo Vinícius Coelho, PVC, Mauro Cezar, André Rizek, Benjamin Back, Tiago Leifert, Raul Plassmann
+`);
+const HISTORICOS_EXTRA = split(`
+Alexandre o Grande, Aristóteles, Átila, Abraham Lincoln, Anita Garibaldi, Bonaparte, Buda, Benjamin Franklin, Cabral, Cleópatra, César, Colombo, Churchill,
+Carlos Magno, Darwin, Dom Pedro, Dante, Einstein, Elizabeth, Gandhi, Galileu, Gengis Khan, Getúlio Vargas, Hammurabi, Isabel, Joana dArc,
+JK, Juscelino, Lenin, Luís XIV, Leonardo da Vinci, Lampião, Mandela, Marco Polo, Martin Luther King, Maria Antonieta, Mao, Napoleão, Nero,
+Nelson Mandela, Newton, Platão, Pedro Álvares Cabral, Princesa Isabel, Ramsés, Rui Barbosa, Sócrates, Stalin, Santos Dumont, Tiradentes, Tutancâmon,
+Vasco da Gama, Vargas, Washington, Zumbi
+`);
+const ANIME_EXTRA = split(`
+Ash, Bulma, Boruto, Buu, Chopper, Cell, Doraemon, Deku, Eren, Edward Elric, Frieza, Freeza, Gohan, Goku, Gon, Gaara, Hinata, Hyoga, Ikki, Itachi, Inuyasha,
+Kakashi, Kuririn, Killua, Levi, Luffy, L, Light, Mikasa, Misty, Naruto, Nami, Nezuko, Picollo, Piccolo, Pikachu, Rock Lee, Ryuk, Sasuke, Sakura, Sanji,
+Seiya, Shiryu, Shun, Saori, Tanjiro, Totoro, Trunks, Usopp, Vegeta, Zoro, Zenitsu
+`);
+
 export const STOP_CATEGORIES: StopCategory[] = [
   { id: 'nome', label: 'Nome', kind: 'name' },
   { id: 'pais', label: 'País', kind: 'list', words: PAISES },
@@ -125,8 +163,8 @@ export const STOP_CATEGORIES: StopCategory[] = [
   { id: 'profissao', label: 'Profissão', kind: 'list', words: PROFISSOES },
   { id: 'cor', label: 'Cor', kind: 'list', words: CORES },
   { id: 'comida', label: 'Comida', kind: 'list', words: COMIDAS },
-  { id: 'time', label: 'Time de futebol', kind: 'team' },
-  { id: 'jogador', label: 'Jogador de futebol', kind: 'player' },
+  { id: 'time', label: 'Time de futebol', kind: 'team', futebol: true },
+  { id: 'jogador', label: 'Jogador de futebol', kind: 'player', futebol: true },
   // Rodada 9: listas a partir dos temas do Impostor (o que faltar vai para a IA, como nas outras).
   { id: 'marca', label: 'Marca', kind: 'list', words: [...fromImpostor('marca', 'carro'), ...CARROS_EXTRA] },
   { id: 'objeto', label: 'Objeto', kind: 'list', words: [...fromImpostor('objeto da casa', 'instrumento musical'), ...OBJETOS_EXTRA] },
@@ -140,6 +178,23 @@ export const STOP_CATEGORIES: StopCategory[] = [
     words: fromImpostor('artista brasileiro', 'cantor internacional', 'banda brasileira', 'banda internacional'),
   },
 ];
+
+// Rodada 11: categorias do "abrir stop futebol" e mais duas gerais (história e anime).
+STOP_CATEGORIES.push(
+  { id: 'tecnico', label: 'Técnico de futebol', kind: 'list', futebol: true, onlyFutebol: true, words: [...fromImpostor('técnico'), ...TECNICOS_EXTRA] },
+  { id: 'estadio', label: 'Estádio', kind: 'list', futebol: true, onlyFutebol: true, words: [...fromImpostor('estádio'), ...ESTADIOS_EXTRA] },
+  { id: 'goleiro', label: 'Goleiro', kind: 'list', futebol: true, onlyFutebol: true, words: [...fromImpostor('goleiro'), ...GOLEIROS_EXTRA] },
+  { id: 'narrador', label: 'Narrador ou comentarista', kind: 'list', futebol: true, onlyFutebol: true, words: [...fromImpostor('narrador e comentarista'), ...NARRADORES_EXTRA] },
+  { id: 'historico', label: 'Personagem histórico', kind: 'list', words: [...fromImpostor('personagem histórico'), ...HISTORICOS_EXTRA] },
+  { id: 'anime', label: 'Personagem de anime', kind: 'list', words: [...fromImpostor('personagem de anime'), ...ANIME_EXTRA] },
+);
+
+/** Categorias de cada Stop: só futebol, só as outras ou a mistura de sempre. */
+export function stopPool(category: 'futebol' | 'geral' | null): StopCategory[] {
+  if (category === 'futebol') return STOP_CATEGORIES.filter((c) => c.futebol);
+  if (category === 'geral') return STOP_CATEGORIES.filter((c) => !c.futebol);
+  return STOP_CATEGORIES.filter((c) => !c.onlyFutebol);
+}
 
 export function getStopCategory(id: string): StopCategory | undefined {
   return STOP_CATEGORIES.find((c) => c.id === id);

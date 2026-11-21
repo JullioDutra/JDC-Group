@@ -1,5 +1,5 @@
 import { ConflictError } from '../game/conflict';
-import { FAST_TURN_SECONDS, GameMode, MODES, getMode, parseModeChoice, randomMode } from '../game/modes';
+import { FAST_TURN_SECONDS, GameMode, MODES, getMode, ignoredLeagueNote, leagueFits, leagueLabel, parseModeChoice, randomMode } from '../game/modes';
 import { firstName, formatNumber, isChatter as isChatterText, looksLikePlayerName, normalize } from '../game/text';
 import {
   EscalacaoParty,
@@ -85,7 +85,7 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   const top = norm.match(/^(abrir )?top ?10( (.*))?$/);
   if (top) {
     const rest = top[3] ?? '';
-    const ok = !rest || ['futebol', 'geral', 'conhecimentos gerais', 'politica', 'aleatorio', 'aleatoria', 'surpresa'].includes(rest);
+    const ok = !rest || ['futebol', 'geral', 'conhecimentos gerais', 'politica', 'historia', 'anime', 'aleatorio', 'aleatoria', 'surpresa'].includes(rest);
     return ok ? { game: 'top10', rest } : null;
   }
   // Quiz: exige "abrir"/"jogar" na frente, porque "que time é esse?" e "quem é?" aparecem na conversa.
@@ -107,7 +107,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   if (sv) return { game: 'sobrevivente', rest: sv[4] ?? '' };
   const cx = norm.match(new RegExp(`^(abrir|jogar) (o )?(conexoes|jogo das conexoes)( ${cats})?$`));
   if (cx) return { game: 'conexoes', rest: cx[5] ?? '' };
-  if (/^(abrir|jogar) (o )?(stop|adedonha|adedanha)$/.test(norm)) return { game: 'stop', rest: '' };
+  const st = norm.match(/^(abrir|jogar) (o )?(stop|adedonha|adedanha)( (futebol|geral|conhecimentos gerais))?$/);
+  if (st) return { game: 'stop', rest: st[5] ?? '' };
   if (/^(abrir|jogar) (o )?draft( da resenha)?$/.test(norm)) return { game: 'draft', rest: '' };
   const lt = norm.match(new RegExp(`^(abrir|jogar) (a )?linha do tempo( ${cats})?$`));
   if (lt) return { game: 'linha', rest: lt[4] ?? '' };
@@ -171,7 +172,12 @@ export async function createParty(
       game: 'escalacao',
       modeId: choice?.mode.id ?? null,
       randomMode: choice?.random ?? false,
-      options: { blind: choice?.twists.blind ?? false, turnSeconds: choice?.twists.fast ? 40 : PARTY_CONFIG.escalacao.seconds, hard: choice?.twists.hard ?? false },
+      options: {
+        blind: choice?.twists.blind ?? false,
+        turnSeconds: choice?.twists.fast ? 40 : PARTY_CONFIG.escalacao.seconds,
+        hard: choice?.twists.hard ?? false,
+        ...(choice?.twists.league ? { league: choice.twists.league } : {}),
+      },
       restrictions: [],
       round: -1,
       picks: {},
@@ -222,7 +228,8 @@ export async function createParty(
   } else if (start.game === 'conexoes') {
     state = { ...base('conexoes', host, nowMs), ...newConexoes(contentCategory(start.rest, CONEXOES, 1)) };
   } else if (start.game === 'stop') {
-    state = { ...base('stop', host, nowMs), ...newStop() };
+    // "abrir stop futebol": só categorias de futebol; "abrir stop geral": só as outras.
+    state = { ...base('stop', host, nowMs), ...newStop(start.rest === 'futebol' ? 'futebol' : start.rest ? 'geral' : null) };
   } else if (start.game === 'draft') {
     state = { ...base('draft', host, nowMs), ...newDraft() };
   } else if (start.game === 'linha') {
@@ -250,7 +257,8 @@ export async function createParty(
   }
   const created = await deps.store.createMatch(msg.groupJid, state);
   if (!created) return [];
-  return [{ type: 'image', image: { kind: 'partyLobby', state }, caption: lobbyCaption(state) }];
+  const note = start.game === 'escalacao' && start.rest ? ignoredLeagueNote(parseModeChoice(start.rest, () => 0) ?? { mode: MODES[0] }) : '';
+  return [{ type: 'image', image: { kind: 'partyLobby', state }, caption: `${note}${lobbyCaption(state)}` }];
 }
 
 function lobbyCaption(state: PartyState): string {
@@ -272,12 +280,12 @@ function lobbyCaption(state: PartyState): string {
     const mode = getMode(state.modeId);
     lines.push(
       mode
-        ? `Tema: *${mode.name}*. ${state.host.name}, mande *começar* quando todos entrarem.`
-        : `${state.host.name}, escolha o tema (número de 1 a ${MODES.length} ou *aleatório*) e mande *começar*.`,
+        ? `Tema: *${mode.name}*${state.options.league ? ` (só ${leagueLabel(state.options.league)})` : ''}. ${state.host.name}, mande *começar* quando todos entrarem.`
+        : `${state.host.name}, escolha o tema (número de 1 a ${MODES.length} ou *aleatório*; com liga: *1 brasileirão*, *3 premier*...) e mande *começar*.`,
     );
   } else if (state.game === 'top10') {
     lines.push(
-      `${state.host.name}, escolha a categoria (*futebol*, *geral*, *política* ou *aleatório*) e mande *começar*.`,
+      `${state.host.name}, escolha a categoria (*futebol*, *geral*, *história*, *anime*, *política* ou *aleatório*) e mande *começar*.`,
     );
   } else if (state.game === 'impostor') {
     lines.push(
@@ -312,6 +320,8 @@ function contentCategory(rest: string, pool: ReadonlyArray<{ category?: ContentC
 function parseCategory(rest: string): Top10List['category'] | 'aleatorio' {
   if (rest.startsWith('fut')) return 'futebol';
   if (rest.startsWith('polit')) return 'politica';
+  if (rest.startsWith('hist')) return 'historia';
+  if (rest.startsWith('anime')) return 'anime';
   if (rest.startsWith('ger') || rest.startsWith('conhec')) return 'geral';
   return 'aleatorio';
 }
@@ -414,8 +424,14 @@ export async function handlePartyMessage(
       if (choice) {
         state.modeId = choice.mode.id;
         state.randomMode = choice.random;
-        state.options = { blind: choice.twists.blind, turnSeconds: choice.twists.fast ? 40 : cfg.seconds, hard: choice.twists.hard };
-        return save([react(msg, '✅')]);
+        state.options = {
+          blind: choice.twists.blind,
+          turnSeconds: choice.twists.fast ? 40 : cfg.seconds,
+          hard: choice.twists.hard,
+          ...(choice.twists.league ? { league: choice.twists.league } : {}),
+        };
+        const note = ignoredLeagueNote(choice);
+        return save(note ? [react(msg, '✅'), text(note.trim())] : [react(msg, '✅')]);
       }
     } else if (state.game === 'leilao' && leilaoModeOf(norm)) {
       state.mode = leilaoModeOf(norm)!;
@@ -423,7 +439,7 @@ export async function handlePartyMessage(
     } else if (state.game === 'melhortime' && ['ia', 'votacao', 'votacao do grupo', 'grupo'].includes(norm)) {
       state.judge = norm === 'ia' ? 'ia' : 'votacao';
       return save([react(msg, '✅')]);
-    } else if (state.game === 'top10' && ['futebol', 'geral', 'politica', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
+    } else if (state.game === 'top10' && ['futebol', 'geral', 'politica', 'historia', 'anime', 'aleatorio', 'conhecimentos gerais'].includes(norm)) {
       const cat = parseCategory(norm);
       state.category = cat === 'aleatorio' ? null : cat;
       return save([react(msg, '✅')]);
@@ -734,17 +750,25 @@ function startEscalacao(state: EscalacaoParty, deps: PartyDeps): Outgoing[] {
   // Tema sorteado (ou nenhum): sorteia na hora, priorizando o que o grupo não jogou.
   if (!mode || state.randomMode) {
     // Tema que o grupo ainda não jogou primeiro.
-    mode = (deps.seen?.length ? freshPick(MODES, (m) => `modo:${m.id}`, 1, deps.rng, deps.seen)[0] : undefined) ?? randomMode(deps.rng);
+    // Com liga ("aleatório brasileirão"), só os temas de clube em que ela vale.
+    const league = state.options.league;
+    const pool = league ? MODES.filter((m) => leagueFits(m, league)) : MODES;
+    mode = (deps.seen?.length ? freshPick(pool, (m) => `modo:${m.id}`, 1, deps.rng, deps.seen)[0] : undefined) ?? randomMode(deps.rng, league);
     state.modeId = mode.id;
     state.randomMode = true;
   }
-  state.restrictions = drawRestrictions(mode, deps.rng, state.options.hard);
+  state.restrictions = drawRestrictions(mode, deps.rng, state.options.hard, state.options.league);
   state.status = 'PLAYING';
   state.round = 0;
   state.warned = [];
   for (const p of state.players) state.picks[p.jid] = SLOTS.map(() => null);
   const label = state.randomMode ? `🎲 Tema sorteado: *${mode.name}*` : `Tema: *${mode.name}*`;
-  const extras = [state.options.blind ? 'às cegas' : '', state.options.turnSeconds !== PARTY_CONFIG.escalacao.seconds ? 'relâmpago' : '']
+  const extras = [
+    state.options.blind ? 'às cegas' : '',
+    state.options.turnSeconds !== PARTY_CONFIG.escalacao.seconds ? 'relâmpago' : '',
+    state.options.hard ? 'difícil' : '',
+    state.options.league ? `só ${leagueLabel(state.options.league)}` : '',
+  ]
     .filter(Boolean)
     .join(', ');
   return [

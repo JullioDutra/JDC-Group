@@ -81,6 +81,7 @@ export function toProfile(r: PlayerRecord): PlayerProfile {
     worldCupsPlayed: n('worldCupsPlayed'),
     debutYear: manualDebut ?? r.debutYear ?? n('debutYear'),
     marketValueEurM: n('marketValueEurM'),
+    careerCards: n('careerCards'),
     manualAt: manualDate(r),
   };
 }

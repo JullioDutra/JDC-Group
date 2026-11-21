@@ -3,7 +3,7 @@ import type { Store } from '../store/types';
 import type { FactCheck, TeamJudge, WordCheck } from '../party/common';
 import { freshPick } from '../party/common';
 import { ConflictError } from './conflict';
-import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, metricValue, parseModeChoice, randomMode } from './modes';
+import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, ignoredLeagueNote, leagueFits, leagueLabel, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
 import { drawRestrictions, playContext } from './validate';
 import { helpText } from './commands';
@@ -96,7 +96,7 @@ const RULES = [
   `*Como se joga ${GAME_NAME}*`,
   '',
   '1. Alguém manda *iniciar jogo*. O primeiro que responder *aceitar* é o adversário.',
-  '2. O anfitrião escolhe o tema (ou manda *aleatório* para sortear; com *iniciar aleatório* o sorteio é automático). Temas: gols, assistências, valor de mercado, idade... Extras: some *cego* (números escondidos até o fim) ou *relâmpago* (45s por jogada). Ex.: *3 cego*.',
+  '2. O anfitrião escolhe o tema (ou manda *aleatório* para sortear; com *iniciar aleatório* o sorteio é automático). Temas: gols, assistências, valor de mercado, idade... Extras: some *cego* (números escondidos até o fim), *relâmpago* (45s por jogada), *difícil* (clubes menos óbvios) ou uma liga (*brasileirão*, *premier*, *la liga*, *série a*, *bundesliga*, *ligue 1*, *argentino*: só clubes dela, misturando grandes e pequenos). Ex.: *3 cego*, *1 brasileirão*.',
   '3. São 6 rodadas, uma por posição: goleiro, 2 defensores, 2 meias e 1 atacante.',
   '4. Um de cada vez: só depois que os dois escolhem o goleiro a rodada dos defensores é liberada, e assim por diante. Na sua vez, mande só o *nome do jogador*. A IA confere se ele existe, se joga na posição e informa o número dele no tema.',
   '5. Jogador inválido não passa a vez: você tenta de novo. Ninguém pode repetir um jogador já escalado.',
@@ -216,6 +216,7 @@ function twistLabel(state: MatchState): string {
   if (state.options?.blind) parts.push('às cegas');
   if (turnSeconds(state) !== TURN_SECONDS) parts.push(`relâmpago, ${turnSeconds(state)}s`);
   if (state.options?.hard) parts.push('difícil');
+  if (state.options?.league) parts.push(`só ${leagueLabel(state.options.league)}`);
   return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
@@ -635,23 +636,26 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
 
   /** Tema sorteado no 1x1: prioriza o que o grupo ainda não jogou (e grava no histórico). */
-  const freshMode = async (): Promise<GameMode> => {
+  const freshMode = async (league?: Twists['league']): Promise<GameMode> => {
     const seen = await store.getSeen(msg.groupJid, '1x1-tema').catch(() => [] as string[]);
-    const mode = (seen.length ? freshPick(MODES, (m) => `modo:${m.id}`, 1, rng, seen)[0] : undefined) ?? randomMode(rng);
+    // Com liga ("aleatório brasileirão"), só os temas de clube em que ela vale.
+    const pool = league ? MODES.filter((m) => leagueFits(m, league)) : MODES;
+    const mode = (seen.length ? freshPick(pool, (m) => `modo:${m.id}`, 1, rng, seen)[0] : undefined) ?? randomMode(rng, league);
     await store.markSeen(msg.groupJid, '1x1-tema', [`modo:${mode.id}`]).catch(() => undefined);
     return mode;
   };
 
   /** Sorteia restrições, liga os extras e manda a imagem de abertura. */
   const kickoff = async (chosen: GameMode, twists: Twists, random: boolean, lead = ''): Promise<Outgoing[]> => {
-    if (random) chosen = await freshMode();
+    if (random) chosen = await freshMode(twists.league);
     state.modeId = chosen.id;
     state.options = {
       blind: twists.blind,
       turnSeconds: twists.fast ? FAST_TURN_SECONDS : TURN_SECONDS,
       hard: twists.hard,
+      ...(twists.league ? { league: twists.league } : {}),
     };
-    state.restrictions = drawRestrictions(chosen, rng, twists.hard);
+    state.restrictions = drawRestrictions(chosen, rng, twists.hard, twists.league);
     state.status = 'PLAYING';
     state.round = 0;
     state.turn = roundStarter(0);
@@ -680,7 +684,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
       {
         type: 'image',
         image: { kind: 'modes' },
-        caption: `*${sender.name}* aceitou.\n*${state.players[0].name}*, escolha o tema: mande o *número* (1 a ${MODES.length}) ou *aleatório*. Extras: *3 cego*, *5 relâmpago*.`,
+        caption: `*${sender.name}* aceitou.\n*${state.players[0].name}*, escolha o tema: mande o *número* (1 a ${MODES.length}) ou *aleatório*. Extras: *3 cego*, *5 relâmpago*, *1 brasileirão* (só clubes de uma liga: também *premier*, *la liga*, *série a*, *bundesliga*, *ligue 1*, *argentino*).`,
       },
     ]);
   }
@@ -689,7 +693,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     if (side !== 0) return [];
     const parsed = parseModeChoice(norm, rng);
     if (!parsed) return [];
-    return kickoff(parsed.mode, parsed.twists, parsed.random);
+    return kickoff(parsed.mode, parsed.twists, parsed.random, ignoredLeagueNote(parsed));
   }
 
   if (state.status !== 'PLAYING' || !mode) return [];

@@ -131,5 +131,5 @@ test('utilitários', () => {
 test('nenhum tema é "livre": todos sorteiam clube ou seleção', async () => {
   const src = (await import('node:fs')).readFileSync('src/lib/game/modes.ts', 'utf8');
   assert.equal((src.match(/restriction: 'none'/g) ?? []).length, 0);
-  assert.equal((src.match(/restriction: '(club|country)'/g) ?? []).length, 18);
+  assert.equal((src.match(/restriction: '(club|country)'/g) ?? []).length, 19);
 });

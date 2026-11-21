@@ -1,4 +1,5 @@
 import type { ContentCategory } from '../../game/types';
+import { SURVIVOR_R11 } from './rodada11';
 
 /**
  * Sobrevivente: categorias FECHADAS e completas. Como errar tira vida, a lista
@@ -440,6 +441,8 @@ export const SURVIVOR_LISTS: SurvivorList[] = [
     id: 's-time-7', category: 'anime', level: 1, title: 'o Time 7 original de Naruto (com o professor)',
     items: [['Naruto'], ['Sasuke'], ['Sakura'], ['Kakashi']],
   },
+  // História e anime (rodada 11).
+  ...SURVIVOR_R11,
 ];
 
 /** Listas com menos itens que isso ficam fora do sorteio. */

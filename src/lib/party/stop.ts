@@ -2,7 +2,7 @@ import { findTeamByName } from '../game/teams';
 import { firstName, normalize } from '../game/text';
 import type { IncomingMessage, Outgoing, PartyPlayer, StopParty } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, activePlayers, answerMatches, award, finishByScore, freshPick, react, schedule, shuffle, text, warnOnce, pauseBeforeNext } from './common';
-import { STOP_CATEGORIES, STOP_LETTERS, getStopCategory } from './content/stop';
+import { STOP_LETTERS, getStopCategory, stopPool } from './content/stop';
 import { safeName } from '../images/glyphs';
 
 /**
@@ -14,8 +14,10 @@ export const STOP_CATS_PER_ROUND = 5;
 export const STOP_POINTS = 10;
 export const STOP_RUSH_SECONDS = 30;
 
-export function newStop(): Pick<StopParty, 'game' | 'round' | 'totalRounds' | 'letters' | 'cats' | 'sheets' | 'arrival' | 'stopped'> {
-  return { game: 'stop', round: -1, totalRounds: PARTY_CONFIG.stop.rounds!, letters: [], cats: [], sheets: {}, arrival: [], stopped: false };
+export function newStop(
+  category: StopParty['category'] = null,
+): Pick<StopParty, 'game' | 'round' | 'totalRounds' | 'letters' | 'cats' | 'sheets' | 'arrival' | 'stopped' | 'category'> {
+  return { game: 'stop', round: -1, totalRounds: PARTY_CONFIG.stop.rounds!, letters: [], cats: [], sheets: {}, arrival: [], stopped: false, category };
 }
 
 export const STOP_RULES = [
@@ -27,10 +29,12 @@ export const STOP_RULES = [
 export function startStop(state: StopParty, deps: PartyDeps): Outgoing[] {
   // Letras que o grupo ainda não jogou primeiro.
   state.letters = freshPick(STOP_LETTERS, (l) => `letra:${l}`, state.totalRounds, deps.rng, deps.seen);
-  state.cats = state.letters.map(() => shuffle(STOP_CATEGORIES.map((c) => c.id), deps.rng).slice(0, STOP_CATS_PER_ROUND));
+  const pool = stopPool(state.category ?? null).map((c) => c.id);
+  state.cats = state.letters.map(() => shuffle(pool, deps.rng).slice(0, STOP_CATS_PER_ROUND));
   state.status = 'PLAYING';
   state.round = -1;
-  return [text(`*Stop* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.`), ...openStopRound(state, deps)];
+  const tema = state.category === 'futebol' ? ' Só futebol.' : state.category === 'geral' ? ' Sem futebol.' : '';
+  return [text(`*Stop* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.${tema}`), ...openStopRound(state, deps)];
 }
 
 export function openStopRound(state: StopParty, deps: PartyDeps): Outgoing[] {

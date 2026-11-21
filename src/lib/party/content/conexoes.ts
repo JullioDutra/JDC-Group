@@ -1,4 +1,5 @@
 import type { ContentCategory } from '../../game/types';
+import { CONEXOES_R11 } from './rodada11';
 
 /**
  * Conexões: 16 nomes em 4 grupos de 4, do mais fácil ao mais difícil.
@@ -471,6 +472,8 @@ export const CONEXOES: ConexoesPuzzle[] = [
       { label: 'Digimon', items: ['Agumon', 'Gabumon', 'Patamon', 'Gatomon'] },
     ],
   },
+  // História e anime (rodada 11).
+  ...CONEXOES_R11,
 ];
 
 export function getConexoes(id: string): ConexoesPuzzle | undefined {

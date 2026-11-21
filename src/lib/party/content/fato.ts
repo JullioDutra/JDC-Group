@@ -1,5 +1,6 @@
 import type { ContentCategory } from '../../game/types';
 import { FACTS_GERAIS } from './fato-gerais';
+import { FACTS_R11 } from './rodada11';
 
 /**
  * Fato ou Fake: afirmações curtas, verdadeiras ou falsas, com a explicação que
@@ -137,6 +138,7 @@ export const FACTS: FactCard[] = [
   f('ff-eurovision-2026', 'geral', true, 'A Bulgária ganhou o Eurovision pela primeira vez em 2026.', 'Com Dara e a música "Bangaranga", na final em Viena.'),
   // Fora do futebol (rodada 10).
   ...FACTS_GERAIS,
+  ...FACTS_R11,
 ];
 
 export function getFact(id: string): FactCard | undefined {

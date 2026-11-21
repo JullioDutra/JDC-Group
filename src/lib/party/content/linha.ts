@@ -1,4 +1,5 @@
 import type { ContentCategory } from '../../game/types';
+import { TIMELINE_R11 } from './rodada11';
 
 /**
  * Linha do Tempo: eventos com ano. A cada rodada saem 4 eventos de anos
@@ -259,6 +260,8 @@ export const TIMELINE: TimelineEvent[] = [
   e('t-h-india', 'historia', 1947, 'A Índia se torna independente'),
   e('t-h-mlk', 'historia', 1963, 'Martin Luther King faz o discurso "Eu tenho um sonho"'),
   e('t-h-mandela-livre', 'historia', 1990, 'Nelson Mandela é libertado depois de 27 anos preso'),
+  // Anime (rodada 11).
+  ...TIMELINE_R11,
 ];
 
 export function getEvent(id: string): TimelineEvent | undefined {

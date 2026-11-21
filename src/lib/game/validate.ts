@@ -1,5 +1,5 @@
 import { GameMode, metricValue } from './modes';
-import { CLUBS, NATIONS, clubsIn, drawTeams, getTeam, isFromNation, playedForClub } from './teams';
+import { NATIONS, clubsIn, drawLeagueTeams, drawTeams, getTeam, isFromNation, playedForClub, type LeagueId } from './teams';
 import { MetricKey, PlayerProfile, POSITION_LABEL, Position, Restriction, SLOTS } from './types';
 import type { LookupContext } from '../players/types';
 
@@ -34,11 +34,16 @@ export function checkPick(
   return { ok: true, value };
 }
 
-/** `hard` (extra "difícil") inclui clubes/seleções de nível 2 no sorteio. */
-export function drawRestrictions(mode: GameMode, rng: () => number, hard = false): Restriction[] {
+/**
+ * `hard` (extra "difícil") inclui clubes/seleções de nível 2 no sorteio.
+ * `league` (extra "brasileirão", "premier"...): só clubes da liga, misturando
+ * gigantes, médios e raiz (o "difícil" puxa mais para a raiz).
+ */
+export function drawRestrictions(mode: GameMode, rng: () => number, hard = false, league?: LeagueId): Restriction[] {
   // Nenhum tema do jogo usa "livre" (teste garante); 'none' fica só para os testes do motor.
   if (mode.restriction === 'none') return SLOTS.map(() => ({ kind: 'none' }));
   const kind = mode.restriction;
+  if (league && kind === 'club') return drawLeagueTeams(league, SLOTS.length, rng, hard).map((t) => ({ kind, teamId: t.id }));
   const pool = kind === 'club' ? clubsIn(mode.region) : NATIONS;
   return drawTeams(pool, SLOTS.length, rng, hard ? 2 : 1).map((t) => ({ kind, teamId: t.id }));
 }

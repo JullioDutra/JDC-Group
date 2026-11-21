@@ -134,12 +134,18 @@ test('Chute Certo: número único, o mais perto ganha, cravou leva bônus', asyn
 });
 
 test('categoria sem conteúdo cai na mistura (sem política)', async () => {
-  // Linha do Tempo não tem anime: cai na mistura, sem política.
+  // Emoji não tem política: cai na mistura, sem política.
   const { say, session } = setup();
-  await open(say, 'abrir linha do tempo anime');
-  const s = (await session()).state as RodadaParty;
+  await open(say, 'abrir emoji politica');
+  const s = (await session()).state as QuizParty;
   assert.equal(s.category, null);
-  assert.ok(s.order.flatMap((ids) => ids.split(',')).every((id) => getEvent(id)!.category !== 'politica'));
+  assert.ok(s.order.every((id) => getCard(id)!.category !== 'politica'));
+  // Linha do Tempo agora tem anime (rodada 11): a categoria vale.
+  const l = setup();
+  await open(l.say, 'abrir linha do tempo anime');
+  const ls = (await l.session()).state as RodadaParty;
+  assert.equal(ls.category, 'anime');
+  assert.ok(ls.order.flatMap((ids) => ids.split(',')).every((id) => getEvent(id)!.category === 'anime'));
   // Chute Certo agora tem anime (rodada 10): a categoria vale.
   const c = setup();
   await open(c.say, 'abrir chute certo anime');

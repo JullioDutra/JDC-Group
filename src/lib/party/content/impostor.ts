@@ -1,6 +1,6 @@
 import type { ContentCategory } from '../../game/types';
 import { normalize } from '../../game/text';
-import { ANAGRAM_THEMES } from './anagramas';
+import { ANAGRAM_ONLY, ANAGRAM_THEMES } from './anagramas';
 import { ANAGRAM_LABELS, EXTRA_NAMES, NEW_THEMES, type ImpostorThemeDef } from './impostor-temas';
 
 /**
@@ -121,7 +121,7 @@ const withExtra = (t: ImpostorThemeDef): ImpostorThemeDef => {
 
 /** Temas do Impostor e como o grupo pede cada um ("coisa do futebol" fica de fora: genérico demais para blefar). */
 export const IMPOSTOR_THEMES: ImpostorThemeDef[] = [
-  ...ANAGRAM_THEMES.filter((t) => t.theme !== 'coisa do futebol').map((t) => ({ ...t, label: ANAGRAM_LABELS[t.theme] })),
+  ...ANAGRAM_THEMES.filter((t) => t.theme !== 'coisa do futebol' && !ANAGRAM_ONLY.includes(t.theme)).map((t) => ({ ...t, label: ANAGRAM_LABELS[t.theme] })),
   ...OWN_THEMES,
   ...NEW_THEMES,
 ]

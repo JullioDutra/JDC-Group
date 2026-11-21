@@ -115,7 +115,19 @@ export const ANAGRAM_THEMES: AnagramTheme[] = [
     theme: 'filme', category: 'geral', keys: ['filmes', 'filme', 'cinema'],
     list: 'Titanic, Avatar, Matrix, Shrek, Frozen, Toy Story, Rocky, Tubarão, Gladiador, Coringa, Barbie, Oppenheimer, Cidade de Deus, Tropa de Elite, Central do Brasil, Harry Potter, Star Wars, Jurassic Park, Procurando Nemo, Ainda Estou Aqui',
   },
+  // Rodada 11: história e anime (o Impostor já tem os seus temas desses assuntos, com mais nomes).
+  {
+    theme: 'figura histórica', category: 'historia', keys: ['historia', 'historicos', 'figuras historicas', 'figura historica', 'personagens historicos'],
+    list: 'Tiradentes, Napoleão, Cleópatra, Gandhi, Mandela, Lincoln, Einstein, Colombo, Cabral, Galileu, Newton, Darwin, Churchill, Zumbi, Getúlio Vargas, Princesa Isabel, Santos Dumont, Júlio César, Tutancâmon, Marco Polo, Vasco da Gama, Juscelino, Lampião, Maria Antonieta, Aristóteles, Platão, Michelangelo, Beethoven',
+  },
+  {
+    theme: 'personagem de anime', category: 'anime', keys: ['anime', 'animes', 'personagens de anime', 'personagem de anime', 'otaku'],
+    list: 'Goku, Naruto, Luffy, Pikachu, Vegeta, Sasuke, Ichigo, Seiya, Tanjiro, Nezuko, Zoro, Kakashi, Itachi, Gohan, Saitama, Mikasa, Eren, Sanji, Hinata, Sakura, Piccolo, Freeza, Doraemon, Totoro, Bulma, Kuririn, Shiryu, Hyoga',
+  },
 ];
+
+/** Temas do Anagrama que o Impostor não herda (ele já tem os seus, com outros nomes). */
+export const ANAGRAM_ONLY = ['figura histórica', 'personagem de anime'];
 
 export const ANAGRAMS: AnagramWord[] = ANAGRAM_THEMES.flatMap((t) => words(t.category, t.theme, t.list));
 

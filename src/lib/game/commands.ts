@@ -3,7 +3,7 @@
  * quando a imagem não sai). Mudou um comando? Muda aqui.
  */
 export const GROUP_GAMES: Array<[command: string, what: string]> = [
-  ['abrir sala', 'Escalação em Grupo'],
+  ['abrir sala', 'Escalação em Grupo · ex.: 1 brasileirão'],
   ['top 10', 'acertem o ranking'],
   ['abrir que time é esse', 'time e ano pela escalação'],
   ['abrir quem é', 'o craque pelas dicas'],
@@ -15,7 +15,7 @@ export const GROUP_GAMES: Array<[command: string, what: string]> = [
   ['abrir bandeiraço', 'de que país é?'],
   ['abrir sobrevivente', 'errou, perde vida'],
   ['abrir conexões', '4 grupos escondidos'],
-  ['abrir stop', 'a Adedonha do grupo'],
+  ['abrir stop', 'a Adedonha (+ futebol ou geral)'],
   ['abrir draft', 'draft e o grupo vota'],
   ['abrir linha do tempo', 'ponha em ordem'],
   ['abrir fato ou fake', 'verdade ou mito?'],

@@ -1,5 +1,6 @@
 import type { Top10List } from '../game/types';
 import { TOP10_EXTRA } from './content/top10-extra';
+import { TOP10_R11 } from './content/rodada11';
 
 /**
  * Listas do Top 10. Regra de curadoria: só entra lista com fonte e data de
@@ -523,7 +524,7 @@ const BASE_LISTS: Top10List[] = [
 
 /** Categorias sorteadas no "aleatório". Política só entra quando pedida. */
 /** Listas antigas + as de 18/11/2026 (com os dados de 2026). */
-export const TOP10_LISTS: Top10List[] = [...BASE_LISTS, ...TOP10_EXTRA];
+export const TOP10_LISTS: Top10List[] = [...BASE_LISTS, ...TOP10_EXTRA, ...TOP10_R11];
 
 /**
  * Listas diferentes com o mesmo assunto: o sorteio trata como um tema só e
@@ -547,7 +548,11 @@ const THEME_GROUPS: Record<string, string[]> = {
   'cidades-brasil': ['capitais-populosas-2022', 'nordeste-capitais-2022', 'municipios-populosos-2025'],
   espaco: ['planetas', 'maiores-luas', 'planetas-anoes', 'estrelas-brilhantes'],
   natureza: ['oceanos', 'lagos', 'ilhas', 'desertos', 'montanhas', 'continentes-area'],
-  olimpiadas: ['paris-2024-ouros', 'medalhistas-olimpicos-br'],
+  olimpiadas: ['paris-2024-ouros', 'medalhistas-olimpicos-br', 'inverno-2026-quadro', 'sedes-olimpiadas-1988-2024', 'sedes-olimpiadas-1948-1984'],
+  'artilheiros-ligas-2026': ['artilheiros-premier-2026', 'artilheiros-laliga-2026', 'artilheiros-italiano-2026', 'artilheiros-bundesliga-2026', 'artilheiros-ligue1-2026', 'artilheiros-ucl-2026'],
+  'presidentes-historia': ['presidentes-brasil-1-10', 'presidentes-eua-1-10'],
+  monarquias: ['monarcas-britanicos-vitoria', 'esposas-henrique-viii'],
+  pokemon: ['pokedex-1-10', 'regioes-pokemon', 'iniciais-johto'],
   'outros-esportes': ['tenis-grand-slams-2025', 'f1-titulos-2024', 'nba-titulos-2025'],
   ciencia: ['crosta', 'elementos-1-10', 'ossos-longos'],
   presidentes: ['presidentes-nova-republica', 'presidentes-militares', 'presidentes-eleitos-diretos'],
@@ -561,7 +566,8 @@ export function top10Theme(id: string): string {
   return THEME_OF.get(id) ?? id;
 }
 
-export const TOP10_CATEGORIES = ['futebol', 'geral'] as const;
+/** Categorias do sorteio "aleatório" (política só quando pedida). */
+export const TOP10_CATEGORIES = ['futebol', 'geral', 'historia', 'anime'] as const;
 
 export function getTop10List(id: string | null): Top10List | undefined {
   return TOP10_LISTS.find((l) => l.id === id);

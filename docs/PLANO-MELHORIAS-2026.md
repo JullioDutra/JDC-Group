@@ -1217,3 +1217,151 @@ Partidas que cada modo aguenta sem repetir, contando só futebol, que é o padr�
 - **Texto reserva:** usa a posição certa (11º, 12º...).
 - **Onde aparece:** na ajuda (texto e imagem), na ajuda do grupo só de Impostor e na página inicial.
 - **Teste:** 13 jogadores (ranking com aviso; ranking B com 11º a 13º pelos 4 jeitos de pedir) e grupo pequeno.
+
+## 27. Tema de cartões, filtro de liga, todos os temas nos jogos mistos e conteúdo 2025/26 (21/11)
+
+> Pedido: "Vamos adicionar mais esse tema no abrir sala: jogadores com mais cartão amarelo e vermelho. E nos modos que já existem poderia colocar um modo de selecionar apenas Brasileirão ou liga específica e ter muitos times do BR para ser divertido, e difícil e fácil às vezes. Saindo um pouco do futebol: para os modos que não são exclusivos de futebol, tem que permitir todos selecionar outros tipos de temas. Faça um novo planejamento e traga o máximo de conteúdo atualizado que conseguir, preenchendo todos os modos."
+
+### 27.1 Tema novo: Casca-Grossa (modo 19)
+
+- **O que conta:** cartões na carreira, amarelos + vermelhos somados (clubes + seleção). Clube sorteado, maior soma vence.
+- **Dado:** igual aos outros temas. A IA responde um número só para o jogador já identificado; o resultado fica guardado na ficha.
+- **Correção do admin:** *corrigir <jogador> cartoes <n> fonte <fonte>*, com o número conferido à mão (Transfermarkt só por cadastro manual).
+- **Faixa plausível:** de 0 a 400 cartões. Fora disso, vale "sem dado confiável", como nos outros temas.
+- **Menu de temas:** passa a ter 19 cards (a imagem foi ajustada para caber).
+
+### 27.2 Filtro de liga nos temas de clube
+
+- **Como pedir:** a liga entra junto do tema, como os outros extras. Vale no 1 x 1 e na sala:
+  - *abrir sala 1 brasileirão*;
+  - *3 premier*, *aleatório la liga*, *12 série a difícil*;
+  - *5 bundesliga*, *2 ligue 1*, *1 argentino*.
+- **Ligas:** Brasileirão (cerca de 60 clubes), Premier League, La Liga, Série A italiana, Bundesliga, Ligue 1 e Argentino.
+- **Fácil e difícil às vezes:** cada rodada sorteia um clube da liga escolhida, misturando os níveis.
+  - Normal: 55% gigante, 30% médio, 15% raiz.
+  - Difícil: 20% gigante, 40% médio, 40% raiz.
+- **Onde não se aplica:**
+  - Temas de seleção (Convocados, Matadores, Reis da Copa, Mundialistas): a liga é ignorada, com aviso.
+  - Temas com região fixa: a liga só vale se combinar. Rei do Brasileirão aceita só o Brasileirão. Libertadores aceita Brasileirão ou Argentino. Noites de Champions aceita as ligas europeias.
+- **"brasileirão" sozinho** continua sendo o tema 14 (Rei do Brasileirão).
+- **Aleatório com liga:** o sorteio fica só entre os temas de clube.
+- **Mais clubes do Brasil:** cerca de 23 novos.
+  - Nordeste: CRB, CSA, ABC, América-RN, Sampaio Corrêa, Confiança, Treze, Campinense.
+  - Sul: Paraná Clube, Londrina, Operário-PR, Joinville, Brusque, Brasil de Pelotas.
+  - Sudeste: Ituano, Novorizontino, São Caetano, Santo André, Botafogo-SP, Bangu, America-RJ, Volta Redonda.
+  - Centro-Oeste: Vila Nova.
+  - Os apelidos são escritos com cuidado para não confundir clubes de mesmo nome (América-MG x América-RN x América-RJ, Botafogo x Botafogo-SP, Grêmio x Novorizontino).
+- **Mais clubes de fora,** para cada liga ter pelo menos 10:
+  - Argentina: Talleres, Huracán, Argentinos Juniors, Banfield, Gimnasia, Belgrano e Godoy Cruz.
+  - França: Lens e Nantes.
+  - Espanha: Getafe e Osasuna.
+  - Itália: Genoa.
+
+### 27.3 Todos os temas nos jogos mistos: inventário (antes)
+
+| Jogo | Futebol | Gerais | História | Anime | Política |
+|---|---|---|---|---|---|
+| Quem é? | 49 | 36 | 30 | 16 | — |
+| Emoji | 67 | 81 | **—** | 22 | — |
+| Quiz Relâmpago | 66 | 113 | 41 | 17 | 12 |
+| Fato ou Fake | 42 | 81 | 32 | 12 | 13 |
+| Chute Certo | 47 | 57 | 30 | 9 | 14 |
+| Linha do Tempo | 71 | 71 | 71 | **—** | 16 |
+| Intruso | 38 | 46 | 14 | 8 | 9 |
+| Conexões | 15 | 22 | 4 | 3 | 1 |
+| Sobrevivente | 28 | 41 | 3 | 5 | 3 |
+| Top 10 | 34 | 40 | **—** | **—** | 7 |
+| Anagrama | 189 | 224 | **—** | **—** | — |
+| Stop | 2 categorias | 16 categorias | — | — | — |
+
+**Lacunas:**
+- O Top 10 só aceita *futebol*, *geral* e *política*.
+- O Stop não deixa escolher o tema.
+- Emoji, Linha do Tempo, Top 10 e Anagrama não têm algum dos assuntos.
+
+### 27.4 Metas
+
+- **Regra:** todo jogo que não é só de futebol aceita *futebol*, *geral*, *história* e *anime* no comando. *Política* fica nos jogos que já têm.
+  - Quando o assunto tem pouco conteúdo, o jogo cai na mistura, como hoje.
+- **Top 10:** aceita *história* e *anime* no comando e no saguão. O *aleatório* passa a sortear também entre história e anime.
+- **Stop:** *abrir stop futebol* traz só categorias de futebol; *abrir stop geral*, só as outras.
+  - Novas categorias de futebol: Seleção, Técnico e Estádio.
+  - Novas categorias gerais: Personagem histórico e Personagem de anime.
+
+| Jogo | Meta |
+|---|---|
+| Emoji | +20 história |
+| Linha do Tempo | +24 anime |
+| Top 10 | +8 história, +6 anime, +4 futebol (artilheiros 2025/26), +2 gerais (2025/26) |
+| Anagrama | +2 temas: figura histórica (~25) e personagem de anime (~25) |
+| Intruso | +8 história, +8 anime |
+| Conexões | +3 história, +3 anime |
+| Sobrevivente | +5 história, +4 anime |
+| Chute Certo | +10 anime, +6 do ano (2025/26) |
+| Fato ou Fake | +12 do ano (2025/26) |
+| Quiz Relâmpago | +12 do ano (2025/26) |
+| Stop | +3 categorias de futebol, +2 gerais e o filtro |
+
+### 27.5 Conteúdo do ano: fontes
+
+Tudo vem das páginas da Wikipédia em inglês, conferidas em 21/11/2026. Cada página cita a fonte oficial, que vai no campo "fonte" de cada item.
+
+- **Copa do Mundo de 2026 (FIFA):**
+  - Espanha 1 x 0 Argentina na prorrogação; a Espanha levou só 1 gol na Copa toda.
+  - 3º Inglaterra, 4º França.
+  - Prêmios: Bola de Ouro Rodri, Luva de Ouro Unai Simón, melhor jovem Pau Cubarsí, Fair Play Holanda.
+  - Chuteira de Ouro: Mbappé, com 10 gols; ele chegou a 22 gols em Copas.
+- **Champions 2025/26 (UEFA):** artilheiros Mbappé 15, Kane 14; Gordon, Kvaratskhelia e Julián Alvarez 10.
+- **Ligas 2025/26:**
+  - Premier League: Arsenal campeão; Haaland artilheiro com 27, Igor Thiago 22.
+  - La Liga: Barcelona campeão; Mbappé artilheiro com 25, Muriqi 23.
+  - Série A: Inter campeã; Lautaro artilheiro com 17.
+  - Bundesliga: Bayern campeão; Kane artilheiro com 36, Undav 19.
+  - Ligue 1: PSG campeão; Lepaul artilheiro com 21, Greenwood e Panichelli 16.
+- **Milão-Cortina 2026 (COI):** quadro de medalhas com Noruega 18 ouros, EUA 12, Holanda 10, Itália 10...
+- **Bilheterias de 2025 (Box Office Mojo / The Numbers):** Ne Zha 2, Zootopia 2, Avatar: Fogo e Cinzas, Lilo & Stitch, Um Filme Minecraft...
+
+### 27.6 O que fica de fora
+
+- Copa do Brasil 2026 (final em 6/12) e Libertadores 2026 (final por jogar): resultado só depois de confirmado.
+- Brasileirão 2026 em andamento: só no simulador, não vira pergunta.
+- Cartões: nenhum número fixo no jogo. Vem da IA ou da correção manual do admin, porque cada fonte conta de um jeito.
+- Liga Portuguesa: não entra no filtro por ter só 4 clubes na base (precisa de 6 por partida).
+
+### 27.7 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Tema 19 (cartões) | Casca-Grossa: amarelos + vermelhos na carreira | Feito. Dado novo `careerCards` (IA + *corrigir … cartoes N*), faixa 0–400; menu com 19 cards |
+| Filtro de liga | 7 ligas no 1 x 1 e na sala, sorteio misturando níveis | Feito. Avisa quando a liga não vale para o tema; etiqueta da liga na imagem de início |
+| Clubes do Brasil | ~23 novos | 24 novos (61 no Brasileirão do filtro) |
+| Clubes de fora | Argentina +7, França +2, Espanha +2, Itália +1 | Feito (todas as ligas com 11 clubes ou mais) |
+| Top 10 | +8 história, +6 anime, +4 futebol, +2 gerais | +8 história, +6 anime, +6 futebol (artilheiros 2025/26 de 5 ligas e da Champions), +3 gerais (Milão-Cortina, bilheterias 2025, sedes olímpicas). Aceita *história* e *anime* |
+| Stop | filtro + 3 de futebol + 2 gerais | Filtro *futebol* / *geral*; +4 de futebol (técnico, estádio, goleiro, narrador), +2 gerais (personagem histórico, personagem de anime) |
+| Emoji | +20 história | +22 |
+| Linha do Tempo | +24 anime | +29 |
+| Anagrama | +2 temas | +2 temas (figura histórica, personagem de anime, 28 nomes cada) |
+| Intruso | +8 história, +8 anime | +8 e +8 |
+| Conexões | +3 história, +3 anime | +3 e +3 |
+| Sobrevivente | +5 história, +4 anime | +5 e +4 |
+| Chute Certo | +10 anime, +6 do ano | +10 anime, +8 do ano |
+| Fato ou Fake | +12 do ano | +15 |
+| Quiz Relâmpago | +12 do ano | +15 |
+
+**Correções que apareceram no caminho** (bugs antigos de apelido de clube):
+- "Grêmio Foot-Ball Porto Alegrense" contava como passagem pelo Porto.
+- "Botafogo Futebol Clube (SP)" contava como Botafogo do Rio.
+- "América Futebol Clube (MG)" não era reconhecido como América-MG.
+- Um teste agora garante que nenhum clube casa com o nome de outro.
+
+**Testes:** `tests/rodada11.test.ts` cobre:
+- o tema 19 e a correção do admin;
+- a leitura da liga e o tema 14;
+- a mistura de níveis no sorteio;
+- os homônimos;
+- o fluxo no 1 x 1 e na sala;
+- os mínimos por assunto;
+- o Top 10 de história;
+- o Stop só de futebol.
+
+Total: 155 testes passando e build ok.

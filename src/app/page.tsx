@@ -3,7 +3,7 @@ import { MODES } from '@/lib/game/modes';
 
 const STEPS = [
   { img: 'desafio', title: '1. Desafio', text: 'Alguém manda "iniciar jogo". O primeiro que responder "aceitar" entra.' },
-  { img: 'temas', title: '2. Tema', text: `O anfitrião escolhe entre ${MODES.length} temas — ou deixa a sorte decidir. Extras: cego e relâmpago.` },
+  { img: 'temas', title: '2. Tema', text: `O anfitrião escolhe entre ${MODES.length} temas — ou deixa a sorte decidir. Extras: cego, relâmpago, difícil e só uma liga (Brasileirão, Premier, La Liga...).` },
   { img: 'inicio', title: '3. Regras na tela', text: 'Antes da bola rolar, uma imagem resume o tema e como vencer.' },
   { img: 'campinho', title: '4. Campinho', text: 'A cada rodada o campo é atualizado com os escalados e seus números.' },
 ];
@@ -14,7 +14,7 @@ const COMMANDS: Array<[string, string]> = [
   ['iniciar aleatório', 'desafio com tema sorteado'],
   ['iniciar melhor time', 'clubes sorteados; IA ou grupo julga'],
   ['aceitar', 'entra como adversário'],
-  ['abrir sala', 'Escalação em Grupo (até 10)'],
+  ['abrir sala', 'Escalação em Grupo (até 10) · ex.: abrir sala 1 brasileirão'],
   ['top 10', 'acertem as posições de um ranking'],
   ['abrir que time é esse', 'time e ano pela escalação'],
   ['abrir quem é', 'o craque pelas dicas'],
@@ -26,7 +26,7 @@ const COMMANDS: Array<[string, string]> = [
   ['abrir bandeiraço', 'de que país é a bandeira'],
   ['abrir sobrevivente', 'um item por vez; errou, perde vida'],
   ['abrir conexões', '16 nomes, 4 grupos escondidos'],
-  ['abrir stop', 'a Adedonha do grupo'],
+  ['abrir stop', 'a Adedonha do grupo (+ futebol ou geral)'],
   ['abrir draft', 'draft em serpente; o grupo vota'],
   ['abrir linha do tempo', 'ponha 4 acontecimentos em ordem'],
   ['abrir fato ou fake', 'verdade ou mito?'],

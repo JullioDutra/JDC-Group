@@ -15,12 +15,13 @@ export const ANAGRAMA_TRIES = 3;
 /** Lista de temas para o grupo escolher ("abrir anagrama capitais"). */
 export function anagramThemesText(head = ''): string {
   const fut = ANAGRAM_THEMES.filter((t) => t.category === 'futebol').map((t) => t.keys[0]);
-  const ger = ANAGRAM_THEMES.filter((t) => t.category !== 'futebol').map((t) => t.keys[0]);
+  const ger = ANAGRAM_THEMES.filter((t) => t.category === 'geral').map((t) => t.keys[0]);
   return [
     head,
     '🔤 *Temas do Anagrama* (mande *abrir anagrama* + tema):',
     `⚽ ${fut.join(', ')}`,
     `🌎 ${ger.join(', ')}`,
+    '📜 historia · 🍥 anime',
     'Sem tema: mistura tudo. *abrir anagrama futebol* ou *abrir anagrama geral* juntam os temas de cada lado.',
   ]
     .filter(Boolean)
