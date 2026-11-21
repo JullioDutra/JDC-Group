@@ -36,7 +36,7 @@ test('Rosto Borrado: comandos e acerto pelo nome, apelido ou erro de digitação
     assert.deepEqual(parsePartyStart(cmd), { game: 'rosto', rest: '' }, cmd);
   }
   assert.equal(parsePartyStart('rosto borrado'), null, 'sem "abrir" é conversa');
-  const messi = getRosto('Q615')!;
+  const messi = { id: 'Q615', name: 'Messi', aliases: ['lionel messi', 'leo messi'], url: '', faces: [], author: '', license: '' };
   for (const guess of ['Messi', 'messi', 'Lionel Messi', 'Leo Messi', 'Messsi']) assert.ok(rostoHit(messi, guess), guess);
   for (const guess of ['Ronaldo', 'Neymar', 'Me']) assert.ok(!rostoHit(messi, guess), guess);
 });
