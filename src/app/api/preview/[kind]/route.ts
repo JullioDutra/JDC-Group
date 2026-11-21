@@ -1,5 +1,7 @@
 import { SLOTS, type ImageSpec, type MatchState } from '@/lib/game/types';
 import { renderImage } from '@/lib/images/render';
+import { imageMime } from '@/lib/whatsapp';
+import { ROSTOS } from '@/lib/party/content/rostos';
 
 export const runtime = 'nodejs';
 
@@ -21,13 +23,15 @@ const SPECS: Record<string, ImageSpec> = {
   temas: { kind: 'modes' },
   inicio: { kind: 'kickoff', state: base },
   campinho: { kind: 'pitch', state: base },
+  // Rosto Borrado: a primeira foto, com o borrão forte (baixa do Commons na hora).
+  rosto: { kind: 'faceQuiz', photoId: ROSTOS[0]?.id ?? '', level: 0, round: 1, total: 8 },
 };
 
 export async function GET(_request: Request, { params }: { params: Promise<{ kind: string }> }) {
   const spec = SPECS[(await params).kind];
   if (!spec) return new Response('not found', { status: 404 });
-  const png = await renderImage(spec);
-  return new Response(new Uint8Array(png), {
-    headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=3600, s-maxage=86400' },
+  const img = await renderImage(spec);
+  return new Response(new Uint8Array(img), {
+    headers: { 'content-type': imageMime(img).mimetype, 'cache-control': 'public, max-age=3600, s-maxage=86400' },
   });
 }
