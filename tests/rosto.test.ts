@@ -5,7 +5,7 @@ import { createLookup } from '../src/lib/ai';
 import { lookupDemo } from '../src/lib/ai/demo';
 import { handleMessage, handleTick } from '../src/lib/game/engine';
 import type { Outgoing, RostoParty } from '../src/lib/game/types';
-import { blurredFace, portraitCrop, setPhotoFetcher } from '../src/lib/images/facePhoto';
+import { blurredFaces, setPhotoFetcher, type Face } from '../src/lib/images/facePhoto';
 import { renderImage } from '../src/lib/images/render';
 import { ROSTOS, getRosto, rostoCredit } from '../src/lib/party/content/rostos';
 import { parsePartyStart } from '../src/lib/party/engine';
@@ -25,8 +25,8 @@ test('Rosto Borrado: fotos com licença livre, crédito e rosto dentro da foto',
     assert.match(r.license, LICENSE, `${r.id}: licença ${r.license}`);
     assert.ok(r.author.trim(), `${r.id}: sem autor`);
     assert.ok(r.name.trim(), r.id);
-    const [x, y, w, h] = r.face;
-    assert.ok(x >= 0 && y >= 0 && w > 0.05 && h > 0.03 && x + w <= 1.001 && y + h <= 1.001, `${r.id}: rosto fora da foto`);
+    assert.ok(r.faces.length >= 1, `${r.id}: sem rosto`);
+    for (const [x, y, w, h] of r.faces) assert.ok(x >= -0.01 && y >= -0.01 && w > 0.005 && h > 0.005 && x + w <= 1.01 && y + h <= 1.01, `${r.id}: rosto fora da foto`);
     assert.match(rostoCredit(r), /Wikimedia Commons \(rosto borrado pelo bot\)$/);
   }
 });
@@ -41,36 +41,28 @@ test('Rosto Borrado: comandos e acerto pelo nome, apelido ou erro de digitação
   for (const guess of ['Ronaldo', 'Neymar', 'Me']) assert.ok(!rostoHit(messi, guess), guess);
 });
 
-test('Rosto Borrado: recorte em retrato e borrão só no rosto', async () => {
-  // Retrato 4:5 em volta do rosto, sem sair da foto.
-  const crop = portraitCrop(960, 1440, { face: [0.3, 0.1, 0.35, 0.25] });
-  assert.ok(crop.left >= 0 && crop.top >= 0 && crop.left + crop.width <= 960 && crop.top + crop.height <= 1440);
-  assert.ok(Math.abs(crop.width / crop.height - 0.8) < 0.01);
-  // Foto de teste: metade de cima branca, de baixo preta, com um "rosto" listrado no meio.
-  const W = 600;
-  const H = 800;
-  const stripes = Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#3a6"/>` +
-      Array.from({ length: 7 }, (_, i) => `<rect x="${220 + i * 24}" y="160" width="12" height="180" fill="${i % 2 ? '#000' : '#fff'}"/>`).join('') +
-      `</svg>`,
-  );
-  const src = await sharp(stripes).jpeg().toBuffer();
-  const box = { face: [220 / W, 160 / H, 160 / W, 180 / H] as [number, number, number, number] };
-  const clear = await blurredFace(src, box, 3, 320, 400);
-  const blurred = await blurredFace(src, box, 0, 320, 400);
-  assert.equal(imageMime(blurred).mimetype, 'image/jpeg');
-  const meta = await sharp(blurred).metadata();
-  assert.equal(meta.width, 320);
-  assert.equal(meta.height, 400);
-  // As listras do rosto somem (variação cai muito); o canto, longe do rosto, fica igual.
-  const crop2 = portraitCrop(W, H, box);
-  const fx = Math.round(((220 + 80 - crop2.left) / crop2.width) * 320);
-  const fy = Math.round(((160 + 90 - crop2.top) / crop2.height) * 400);
-  const region = async (img: Buffer, left: number, top: number) =>
-    (await sharp(img).extract({ left, top, width: 30, height: 30 }).greyscale().stats()).channels[0].stdev;
-  assert.ok((await region(blurred, fx - 15, fy - 15)) < (await region(clear, fx - 15, fy - 15)) / 2, 'o rosto foi borrado');
+test('Rosto Borrado: foto inteira, todos os rostos borrados e o resto nítido', async () => {
+  // Foto de teste em paisagem com dois "rostos" listrados.
+  const W = 900;
+  const H = 600;
+  const stripes = (x0: number) =>
+    Array.from({ length: 6 }, (_, i) => `<rect x="${x0 + i * 20}" y="150" width="10" height="140" fill="${i % 2 ? '#000' : '#fff'}"/>`).join('');
+  const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#3a6"/>${stripes(150)}${stripes(600)}</svg>`);
+  const src = await sharp(svg).jpeg().toBuffer();
+  const faces: Face[] = [[150 / W, 150 / H, 120 / W, 140 / H], [600 / W, 150 / H, 120 / W, 140 / H]];
+  const clear = await blurredFaces(src, faces, 3, 600, 600);
+  const blurred = await blurredFaces(src, faces, 0, 600, 600);
+  // Cabe sem cortar: paisagem 3:2 vira 600 x 400.
+  assert.deepEqual([blurred.width, blurred.height], [600, 400]);
+  assert.equal(imageMime(blurred.jpg).mimetype, 'image/jpeg');
+  const s = 600 / W;
+  const region = async (img: Buffer, cx: number, cy: number) =>
+    (await sharp(img).extract({ left: Math.round(cx * s) - 15, top: Math.round(cy * s) - 15, width: 30, height: 30 }).greyscale().stats()).channels[0].stdev;
+  for (const cx of [210, 660]) {
+    assert.ok((await region(blurred.jpg, cx, 220)) < (await region(clear.jpg, cx, 220)) / 2, `rosto em x=${cx} borrado`);
+  }
   const corner = async (img: Buffer) => (await sharp(img).extract({ left: 0, top: 370, width: 20, height: 20 }).stats()).channels[1].mean;
-  assert.ok(Math.abs((await corner(blurred)) - (await corner(clear))) < 3, 'fora do rosto não muda');
+  assert.ok(Math.abs((await corner(blurred.jpg)) - (await corner(clear.jpg))) < 3, 'fora dos rostos não muda');
 });
 
 test('Rosto Borrado: imagem em JPEG; sem foto, o cartão avisa', async () => {

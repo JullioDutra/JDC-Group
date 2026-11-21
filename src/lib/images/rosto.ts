@@ -3,9 +3,9 @@ import type { ImageSpec } from '../game/types';
 import { getRosto, rostoCredit } from '../party/content/rostos';
 import { C, DISPLAY, box, brand, fit, pill, stage, txt } from './theme';
 
-/** Tamanho da foto no cartão (retrato 4:5). */
-export const PHOTO_W = 736;
-export const PHOTO_H = 920;
+/** Espaço da foto no cartão: a foto (retrato ou paisagem) cabe aqui sem cortar. */
+export const PHOTO_MAX_W = 968;
+export const PHOTO_MAX_H = 900;
 
 const STAGES = [
   { label: 'BORRÃO FORTE', points: 100 },
@@ -21,9 +21,9 @@ export function faceQuiz(spec: Extract<ImageSpec, { kind: 'faceQuiz' }>): ReactE
   const reveal = spec.level >= STAGES.length;
   const stageInfo = STAGES[Math.min(spec.level, STAGES.length - 1)];
   const frame = spec.photo
-    ? createElement('img', { src: spec.photo, width: PHOTO_W, height: PHOTO_H, style: { borderRadius: 28 } })
+    ? createElement('img', { src: spec.photo, width: spec.photoW ?? PHOTO_MAX_W, height: spec.photoH ?? PHOTO_MAX_H, style: { borderRadius: 24 } })
     : box(
-        { width: PHOTO_W, height: PHOTO_H, borderRadius: 28, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 },
+        { width: 736, height: 900, borderRadius: 24, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 },
         txt('A FOTO NÃO CARREGOU', { fontFamily: DISPLAY, fontSize: 56, color: C.muted }),
         txt('O anfitrião pode mandar PULAR.', { fontSize: 30, color: C.muted }),
       );
@@ -34,11 +34,11 @@ export function faceQuiz(spec: Extract<ImageSpec, { kind: 'faceQuiz' }>): ReactE
       box({ gap: 12 }, pill('ROSTO BORRADO', C.lime, C.ink, 24), pill(`FOTO ${spec.round}/${spec.total}`, C.panel, C.white, 24)),
     ),
     box(
-      { marginTop: 22, justifyContent: 'center' },
-      box({ padding: 6, borderRadius: 34, backgroundColor: reveal ? C.lime : C.panelLine }, frame),
+      { marginTop: 18, height: PHOTO_MAX_H + 12, justifyContent: 'center', alignItems: 'center' },
+      box({ padding: 6, borderRadius: 30, backgroundColor: reveal ? C.lime : C.panelLine }, frame),
     ),
     box(
-      { marginTop: 20, justifyContent: 'center', alignItems: 'center', gap: 18 },
+      { marginTop: 14, justifyContent: 'center', alignItems: 'center', gap: 18 },
       reveal
         ? txt(upper(fit(spec.answer ?? photo?.name ?? '', 22)), { fontFamily: DISPLAY, fontSize: 64, color: C.lime, lineHeight: 1.05 })
         : box(

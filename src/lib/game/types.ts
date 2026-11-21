@@ -699,7 +699,7 @@ export type ImageSpec =
   | { kind: 'top100Board'; state: Top100Party; final: boolean }
   | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> }
   /** Rosto Borrado: level 0 a 2 = borrão (forte a leve), 3 = foto limpa (revelação, com o nome em `answer`). */
-  | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Preenchido na hora de renderizar (data URI). */ photo?: string };
+  | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Preenchidos na hora de renderizar: a foto (data URI) e o tamanho dela. */ photo?: string; photoW?: number; photoH?: number };
 
 /** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */
 export interface FlagSpec {

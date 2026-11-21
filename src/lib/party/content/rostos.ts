@@ -1,10 +1,13 @@
+import type { Face } from '../../images/facePhoto';
 import { ROSTOS_DATA } from './rostos-data';
 
 /**
- * Rosto Borrado: fotos livres de craques (Wikimedia Commons, via Wikidata).
- * O rosto de cada foto foi achado antes, por um detector, e conferido a olho
- * (rodada 12). Só entra foto com licença livre (CC BY, CC BY-SA, CC0 ou
- * domínio público) e o crédito vai na legenda de cada imagem.
+ * Rosto Borrado: fotos livres de craques EM JOGO (Wikimedia Commons; arquivos
+ * marcados como "retrata" o jogador no Wikidata/Commons). Foto de pose ou de
+ * card fica de fora: entrega demais. Os rostos de cada foto foram achados
+ * antes, por um detector, e a foto foi conferida a olho (rodada 12). Só entra
+ * licença livre (CC BY, CC BY-SA, CC0 ou domínio público) e o crédito vai na
+ * legenda de cada imagem.
  */
 export interface RostoPhoto {
   /** Id no Wikidata ("Q615"). */
@@ -15,19 +18,19 @@ export interface RostoPhoto {
   aliases: string[];
   /** Miniatura no Commons (960 px de largura). */
   url: string;
-  /** Rosto na foto: x, y, largura, altura (relativos, 0 a 1). */
-  face: [number, number, number, number];
+  /** Todos os rostos da foto: x, y, largura, altura (relativos, 0 a 1). Todos são borrados. */
+  faces: Face[];
   /** Autor da foto e licença, como o Commons informa. */
   author: string;
   license: string;
 }
 
-export const ROSTOS: RostoPhoto[] = ROSTOS_DATA.map(([id, name, aliases, url, face, author, license]) => ({
+export const ROSTOS: RostoPhoto[] = ROSTOS_DATA.map(([id, name, aliases, url, faces, author, license]) => ({
   id,
   name,
   aliases,
   url,
-  face,
+  faces,
   author,
   license,
 }));

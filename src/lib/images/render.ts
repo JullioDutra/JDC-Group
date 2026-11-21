@@ -6,8 +6,8 @@ import type { ImageSpec } from '../game/types';
 import { glyphSafe } from './glyphs';
 import { buildImage } from './templates';
 import sharp from 'sharp';
-import { blurredFace, loadPhoto } from './facePhoto';
-import { PHOTO_W, PHOTO_H } from './rosto';
+import { blurredFaces, loadPhoto } from './facePhoto';
+import { PHOTO_MAX_H, PHOTO_MAX_W } from './rosto';
 import { getRosto } from '../party/content/rostos';
 import { BODY, DISPLAY, H, W } from './theme';
 
@@ -63,7 +63,7 @@ export function glyphSafeTree(node: ReactNode): ReactNode {
 export async function renderImage(spec: ImageSpec): Promise<Buffer> {
   let safe = glyphSafeSpec(spec);
   // Rosto Borrado: a foto entra pronta (borrada) depois do filtro de glifos.
-  if (safe.kind === 'faceQuiz') safe = { ...safe, photo: await facePhotoUri(safe.photoId, safe.level) };
+  if (safe.kind === 'faceQuiz') safe = { ...safe, ...(await facePhoto(safe.photoId, safe.level)) };
   const element = glyphSafeTree(buildImage(safe)) as ReactElement;
   const response = new ImageResponse(element, { width: W, height: H, fonts: await loadFonts() });
   const png = Buffer.from(await response.arrayBuffer());
@@ -71,15 +71,15 @@ export async function renderImage(spec: ImageSpec): Promise<Buffer> {
   return safe.kind === 'faceQuiz' ? sharp(png).jpeg({ quality: 84 }).toBuffer() : png;
 }
 
-/** Foto do Rosto Borrado como data URI, ou undefined se não der para baixar (o cartão avisa). */
-async function facePhotoUri(photoId: string, level: number): Promise<string | undefined> {
+/** Foto do Rosto Borrado (data URI e tamanho), ou nada se não der para baixar (o cartão avisa). */
+async function facePhoto(photoId: string, level: number): Promise<{ photo?: string; photoW?: number; photoH?: number }> {
   const photo = getRosto(photoId);
-  if (!photo) return undefined;
+  if (!photo) return {};
   try {
-    const jpg = await blurredFace(await loadPhoto(photo.url), photo, level, PHOTO_W, PHOTO_H);
-    return `data:image/jpeg;base64,${jpg.toString('base64')}`;
+    const ready = await blurredFaces(await loadPhoto(photo.url), photo.faces, level, PHOTO_MAX_W, PHOTO_MAX_H);
+    return { photo: `data:image/jpeg;base64,${ready.jpg.toString('base64')}`, photoW: ready.width, photoH: ready.height };
   } catch (error) {
     console.error('foto do rosto borrado falhou', photoId, error);
-    return undefined;
+    return {};
   }
 }
