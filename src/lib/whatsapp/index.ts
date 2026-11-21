@@ -21,6 +21,11 @@ export function getProvider(): WhatsAppProvider {
   return process.env.WHATSAPP_PROVIDER === 'zapi' ? zapi : evolution;
 }
 
+/** Tipo da imagem pelos primeiros bytes: as imagens do jogo são PNG; as fotos do Rosto Borrado, JPEG. */
+export function imageMime(buf: Buffer): { mimetype: 'image/png' | 'image/jpeg'; ext: 'png' | 'jpg' } {
+  return buf[0] === 0xff && buf[1] === 0xd8 ? { mimetype: 'image/jpeg', ext: 'jpg' } : { mimetype: 'image/png', ext: 'png' };
+}
+
 export async function postJson(url: string, headers: Record<string, string>, body: unknown): Promise<void> {
   const response = await fetch(url, {
     method: 'POST',

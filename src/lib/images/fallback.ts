@@ -109,6 +109,8 @@ export function imageAsText(spec: ImageSpec): string | null {
       });
       return [head, ...rows].join('\n');
     }
+    case 'faceQuiz':
+      return spec.answer ? `📸 Era *${spec.answer}*.` : '📸 A foto não chegou. O anfitrião pode mandar *pular*.';
     case 'textBoard':
       return [`*${spec.title}*`, ...spec.rows.map((r) => [`*${r.head}*`, ...r.lines].join('\n'))].join('\n\n');
     default:

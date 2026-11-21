@@ -1,5 +1,5 @@
 import type { IncomingMessage } from '../game/types';
-import { postJson, type WhatsAppProvider } from './index';
+import { imageMime, postJson, type WhatsAppProvider } from './index';
 import { getStore, hasDatabase } from '../store';
 
 /**
@@ -127,11 +127,12 @@ export const evolution: WhatsAppProvider = {
 
   async sendImage(groupJid, png, caption) {
     const { url, instance, headers } = evolutionConfig();
+    const { mimetype, ext } = imageMime(png);
     await postJson(`${url}/message/sendMedia/${encodeURIComponent(instance)}`, headers, {
       number: groupJid,
       mediatype: 'image',
-      mimetype: 'image/png',
-      fileName: 'duelo-de-craques.png',
+      mimetype,
+      fileName: `duelo-de-craques.${ext}`,
       caption: caption ?? '',
       media: png.toString('base64'),
     });

@@ -54,6 +54,8 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   top100: { name: 'Top 100 do Dia', maxPlayers: 20, minPlayers: 1, joinUntil: 0, seconds: 480 },
   // Impostor: 40 s por dica (25 no rápido); ninguém entra depois de começar (as cartas já foram).
   impostor: { name: 'Impostor', maxPlayers: 10, minPlayers: 4, joinUntil: 0, seconds: 40 },
+  // Rosto Borrado: 15 s por etapa (3 etapas de borrão), 8 fotos.
+  rosto: { name: 'Rosto Borrado', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 15, rounds: 8 },
 };
 
 /** Jogos 1 x 1: quem aceitar entra e a partida começa sozinha. */

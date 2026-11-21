@@ -5,6 +5,10 @@ import { ImageResponse } from 'next/og';
 import type { ImageSpec } from '../game/types';
 import { glyphSafe } from './glyphs';
 import { buildImage } from './templates';
+import sharp from 'sharp';
+import { blurredFace, loadPhoto } from './facePhoto';
+import { PHOTO_W, PHOTO_H } from './rosto';
+import { getRosto } from '../party/content/rostos';
 import { BODY, DISPLAY, H, W } from './theme';
 
 type Font = { name: string; data: Buffer; weight: 400 | 500 | 700; style: 'normal' };
@@ -57,7 +61,25 @@ export function glyphSafeTree(node: ReactNode): ReactNode {
  * nada de baixar fonte ou emoji da internet na hora (ver glyphs.ts).
  */
 export async function renderImage(spec: ImageSpec): Promise<Buffer> {
-  const element = glyphSafeTree(buildImage(glyphSafeSpec(spec))) as ReactElement;
+  let safe = glyphSafeSpec(spec);
+  // Rosto Borrado: a foto entra pronta (borrada) depois do filtro de glifos.
+  if (safe.kind === 'faceQuiz') safe = { ...safe, photo: await facePhotoUri(safe.photoId, safe.level) };
+  const element = glyphSafeTree(buildImage(safe)) as ReactElement;
   const response = new ImageResponse(element, { width: W, height: H, fonts: await loadFonts() });
-  return Buffer.from(await response.arrayBuffer());
+  const png = Buffer.from(await response.arrayBuffer());
+  // Foto vai em JPEG: o PNG de uma foto fica pesado demais para o WhatsApp.
+  return safe.kind === 'faceQuiz' ? sharp(png).jpeg({ quality: 84 }).toBuffer() : png;
+}
+
+/** Foto do Rosto Borrado como data URI, ou undefined se não der para baixar (o cartão avisa). */
+async function facePhotoUri(photoId: string, level: number): Promise<string | undefined> {
+  const photo = getRosto(photoId);
+  if (!photo) return undefined;
+  try {
+    const jpg = await blurredFace(await loadPhoto(photo.url), photo, level, PHOTO_W, PHOTO_H);
+    return `data:image/jpeg;base64,${jpg.toString('base64')}`;
+  } catch (error) {
+    console.error('foto do rosto borrado falhou', photoId, error);
+    return undefined;
+  }
 }

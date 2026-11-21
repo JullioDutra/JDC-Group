@@ -166,7 +166,8 @@ export type PartyGame =
   | 'leilao'
   | 'anagrama'
   | 'top100'
-  | 'impostor';
+  | 'impostor'
+  | 'rosto';
 
 export interface PartyPlayer {
   jid: string;
@@ -549,6 +550,23 @@ export interface AnagramaParty extends PartyBase {
   solved: boolean;
 }
 
+/**
+ * Rosto Borrado: foto de um craque com SÓ o rosto borrado. O borrão diminui
+ * em 3 etapas; o primeiro que acertar o nome leva mais pontos quanto mais cedo.
+ */
+export interface RostoParty extends PartyBase {
+  game: 'rosto';
+  round: number;
+  totalRounds: number;
+  /** Ids das fotos (Wikidata "Q...") na ordem das rodadas. */
+  order: string[];
+  /** Etapa do borrão nesta rodada: 0 = forte, 1 = médio, 2 = leve. */
+  level: number;
+  /** Tentativas de cada um nesta rodada. */
+  tries: Record<string, number>;
+  solved: boolean;
+}
+
 /** Leilão de Craques: orçamento, lances no chat, overall escondido até o fim. */
 export interface LeilaoParty extends PartyBase {
   game: 'leilao';
@@ -589,7 +607,8 @@ export type PartyState =
   | LeilaoParty
   | AnagramaParty
   | Top100Party
-  | ImpostorParty;
+  | ImpostorParty
+  | RostoParty;
 
 export type SessionState = MatchState | PartyState;
 
@@ -678,7 +697,9 @@ export type ImageSpec =
   | { kind: 'conexoesBoard'; state: ConexoesParty; reveal: boolean }
   | { kind: 'gradeBoard'; state: GradeParty; final: boolean }
   | { kind: 'top100Board'; state: Top100Party; final: boolean }
-  | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> };
+  | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> }
+  /** Rosto Borrado: level 0 a 2 = borrão (forte a leve), 3 = foto limpa (revelação, com o nome em `answer`). */
+  | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Preenchido na hora de renderizar (data URI). */ photo?: string };
 
 /** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */
 export interface FlagSpec {

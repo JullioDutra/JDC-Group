@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { faceQuiz } from './rosto';
 import { TURN_SECONDS, isBlind, totals, turnSeconds } from '../game/engine';
 import { MODES, getMode } from '../game/modes';
 import { getTeam } from '../game/teams';
@@ -371,5 +372,7 @@ export function buildImage(spec: ImageSpec): ReactElement {
       return gradeBoard(spec.state, spec.final);
     case 'textBoard':
       return textBoard(spec.game, spec.title, spec.subtitle, spec.rows);
+    case 'faceQuiz':
+      return faceQuiz(spec);
   }
 }

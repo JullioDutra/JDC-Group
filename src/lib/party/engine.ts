@@ -123,6 +123,7 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   const imp = norm.match(/^(abrir|jogar) (o )?impostor( do futebol)?(?: (?:de |do |da |dos |das )?(.+))?$/);
   // "abrir impostor do futebol" sem outro tema = tema futebol.
   if (imp) return { game: 'impostor', rest: imp[4] ?? (imp[3] ? 'futebol' : '') };
+  if (/^(abrir|jogar) (o |a )?(rostos? borrados?|fotos? borradas?|caras? borradas?)$/.test(norm)) return { game: 'rosto', rest: '' };
   const ana = norm.match(/^(abrir|jogar) (o )?anagramas?(?: (?:de |do |da |dos |das )?(.+))?$/);
   if (ana) return { game: 'anagrama', rest: ana[3] ?? '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };

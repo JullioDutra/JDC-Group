@@ -1,5 +1,5 @@
 import type { IncomingMessage } from '../game/types';
-import { postJson, type WhatsAppProvider } from './index';
+import { imageMime, postJson, type WhatsAppProvider } from './index';
 
 /** Z-API (gateway brasileiro hospedado). */
 
@@ -48,7 +48,7 @@ export const zapi: WhatsAppProvider = {
     const { url, headers } = config();
     await postJson(`${url}/send-image`, headers, {
       phone: groupJid,
-      image: `data:image/png;base64,${png.toString('base64')}`,
+      image: `data:${imageMime(png).mimetype};base64,${png.toString('base64')}`,
       caption: caption ?? '',
     });
   },

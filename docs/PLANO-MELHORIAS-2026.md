@@ -1365,3 +1365,46 @@ Tudo vem das páginas da Wikipédia em inglês, conferidas em 21/11/2026. Cada p
 - o Stop só de futebol.
 
 Total: 155 testes passando e build ok.
+
+## 28. Jogo novo: Rosto Borrado (21/11)
+
+> Pedido: "O pessoal queria foto de jogador com a cara borrada, tem como? Para ver quem acerta primeiro." Depois: "Sim, pode construir. Mas teria como ser só o rosto borrado?"
+
+### 28.1 Como funciona
+
+- **Comando:** *abrir rosto borrado* (também *abrir foto borrada*). Quem quer jogar manda *entrar*; o anfitrião manda *começar*. São 2 a 15 jogadores e 8 fotos.
+- **Rodada:** a foto de um craque com SÓ o rosto borrado. Cabelo, camisa e fundo ficam nítidos.
+- **A cada 15 s o borrão diminui** (forte, médio, leve). O primeiro que mandar o nome leva:
+  - 100 pontos no borrão forte;
+  - 70 no médio;
+  - 40 no leve.
+- **Palpites:**
+  - 3 tentativas por foto;
+  - vale o nome famoso, o completo ou o apelido;
+  - erro de digitação em nome longo é tolerado, como nos outros quizzes.
+- **Fim da rodada:** a foto sem borrão, com o nome.
+- **Placar:** a cada 4 fotos e no fim. Vale para o ranking como os outros jogos.
+- **Sem repetição:** fotos que o grupo ainda não viu saem primeiro.
+
+### 28.2 Fotos e rostos
+
+- **Fonte:** a foto principal de cada jogador no Wikidata (propriedade P18), hospedada no Wikimedia Commons.
+- **Licença:**
+  - só entram fotos com licença livre: CC BY, CC BY-SA, CC0 ou domínio público;
+  - o crédito vai em toda imagem e legenda: autor · licença · Wikimedia Commons, com "rosto borrado pelo bot" quando editada;
+  - nada de Google nem Transfermarkt.
+- **Jogadores:** curadoria à mão a partir dos jogadores mais conhecidos do Wikidata (por número de Wikipédias) e dos brasileiros conhecidos.
+  - Ficam fora quem não é jogador (filósofos, políticos, atores que jogaram na juventude) e quem é conhecido só como técnico.
+  - Também ficam fora os nomes que o grupo não reconheceria.
+- **Rosto:** detectado antes, nesta preparação, com o OpenCV (dois detectores que precisam concordar).
+  - Cada foto aprovada foi conferida a olho: rosto certo, uma pessoa só em destaque, rosto grande o bastante.
+  - O jogo guarda só a posição do rosto (relativa) e o endereço da miniatura de 960 px.
+- **Na hora do jogo:** o servidor baixa a miniatura (com cache) e recorta em retrato em volta do rosto. Depois borra uma elipse só no rosto, com a borda suave (biblioteca `sharp`).
+  - A imagem vai em JPEG, cerca de 150 KB.
+  - Se a foto não baixar, o cartão avisa e o anfitrião pode *pular*.
+
+### 28.3 O que fica de fora
+
+- Foto de jogador sem foto livre no Commons. Exemplos: muitos jogadores atuais do Brasileirão e fotos de agência.
+- Detecção de rosto na hora do jogo: fica tudo pronto antes, para não pesar no servidor.
+- Borrar o número ou o nome da camisa: o pedido foi só o rosto. Por isso algumas fotos ficam fáceis, e a mistura de fácil e difícil faz parte da graça.

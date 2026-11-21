@@ -26,6 +26,10 @@ function colorOf(state: PartyState, jid: string): string {
 // ---------- Sala aberta ----------
 
 const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: string[] }>> = {
+  rosto: {
+    subtitle: `${PARTY_CONFIG.rosto.rounds} fotos · só o rosto borrado`,
+    rules: ['Foto de um craque com só o rosto borrado. Mande o nome.', `A cada ${PARTY_CONFIG.rosto.seconds}s o borrão diminui: 100, 70 e 40 pontos.`, '3 tentativas por foto. Vence quem somar mais.'],
+  },
   bandeira: {
     subtitle: `${PARTY_CONFIG.bandeira.rounds} bandeiras · América do Sul, Europa e mundo`,
     rules: ['O bot desenha uma bandeira (sem brasões nem estrelas).', '1 palpite por pessoa em cada rodada. Repetido não vale.', 'O primeiro que acertar o país leva 100 pontos.'],
