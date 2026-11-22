@@ -71,7 +71,7 @@ const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: s
     rules: ['O bot mostra as letras embaralhadas e o tema.', 'Desembaralhe: o primeiro que acertar leva 100 (60 depois da dica).', 'Tema: abrir anagrama capitais, clubes, filmes... (temas do anagrama).'],
   },
   impostor: {
-    subtitle: '4 a 10 pessoas · 1 impostor · 2 voltas de dicas',
+    subtitle: '4 a 10 pessoas · 1 impostor (2 com 7+) · 2 voltas de dicas',
     rules: [
       'Todos recebem o segredo no privado, menos o impostor (só o tema).',
       'Na sua vez, 1 palavra de dica. 2 voltas. Depois debate e votação.',
@@ -139,9 +139,10 @@ export function partyLobby(state: PartyState): ReactElement {
     const info = NEW_LOBBY[state.game]!;
     const catLabel: Record<string, string> = { futebol: 'futebol', geral: 'conhecimentos gerais', historia: 'história', politica: 'política', anime: 'animes' };
     const cat = 'category' in state && state.category ? ` · ${catLabel[state.category] ?? state.category}` : '';
+    const impSub = state.game === 'impostor' && state.twoImpostors ? info.subtitle.replace('1 impostor (2 com 7+)', '2 impostores (com 7+)') : info.subtitle;
     subtitle =
-      state.game === 'impostor' && state.theme
-        ? `${info.subtitle} · tema: ${impostorThemeLabel(state.theme)}`
+      state.game === 'impostor'
+        ? `${impSub}${state.theme ? ` · tema: ${impostorThemeLabel(state.theme)}` : ''}`
         : state.game === 'anagrama' && state.theme
         ? `${PARTY_CONFIG.anagrama.rounds} palavras · tema: ${state.theme}`
         : state.game === 'leilao'

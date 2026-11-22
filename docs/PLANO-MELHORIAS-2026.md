@@ -1412,3 +1412,35 @@ Total: 155 testes passando e build ok.
 - Jogador sem foto de jogo livre no Commons. Exemplos: muitos jogadores atuais do Brasileirão e fotos de agência.
 - Detecção de rosto na hora do jogo: fica tudo pronto antes, para não pesar no servidor.
 - Borrar número ou nome da camisa: o pedido foi só o rosto. A foto de jogo já deixa mais difícil, e a mistura de fácil e difícil faz parte da graça.
+
+## 29. Impostor: 2º impostor com 7 ou mais na mesa (22/11)
+
+> Pedido: "Acima de 6 jogadores no impostor pode se ativar o segundo impostor no jogo."
+
+- **Como ligar:** a partir de 7 jogadores, o anfitrião manda *2 impostores* no saguão, ou abre com *abrir impostor filmes 2 impostores*.
+  - Também valem *dois impostores*, *segundo impostor* e *impostor duplo*.
+  - *1 impostor* desliga.
+  - Com menos de 7 na hora de começar, o bot avisa e joga com 1.
+- **Lembrete:** com 7 ou mais sem pedir, a mensagem de início lembra que a opção existe. O saguão (texto e imagem) também mostra.
+- **Cartas:** cada impostor recebe "você é UM DOS 2 IMPOSTORES" e só o tema, sem saber quem é o outro. Os demais recebem o segredo e o aviso de que são 2. Nenhum impostor abre a 1ª volta de dicas.
+- **Votação em sequência:**
+  - O mais votado é um impostor? Ele tem os 20 s de sempre para chutar o segredo.
+  - Acertou: os impostores roubam a vitória.
+  - Errou ou não chutou: sai da cédula e não vota mais, e abre nova votação para achar o outro.
+  - Pegaram o 2º e ele também errou: vitória do grupo.
+  - A votação acusou um inocente (ou empatou duas vezes): os impostores vencem.
+- **Pontos:**
+  - Impostor que escapou sem ser pego: +5.
+  - Impostor que roubou acertando: +4.
+  - O parceiro (pego, ou de quem roubou): +2.
+  - Grupo vence: +2 para quem votou num impostor em alguma votação, +1 para os outros.
+- **Ranking:** os dois impostores ganham ou perdem juntos.
+- **Com 1 impostor nada muda:** as regras, os pontos e os 11 testes antigos seguem iguais.
+- **Onde aparece:** regras, *temas do impostor*, ajuda do grupo só de Impostor, saguão e imagem do saguão.
+- **Testes** (`tests/impostor2.test.ts`):
+  - pedido no comando e no saguão;
+  - mínimo de 7;
+  - cartas;
+  - caça aos dois com vitória do grupo;
+  - inocente acusado na 2ª votação;
+  - roubo com pontos do parceiro.

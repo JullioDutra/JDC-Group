@@ -31,5 +31,6 @@ export const IMPOSTOR_GROUP_HELP = [
   '*entrar*: entra na sala · *começar*: o anfitrião começa (4 a 10 pessoas).',
   '*carta*: o bot manda o seu segredo de novo no privado.',
   '*mais tempo*: +30s no debate (até 2 vezes) · *votar*: o anfitrião pula o debate · *encerrar*: o anfitrião encerra.',
+  '*2 impostores*: com 7 ou mais na mesa, o anfitrião liga o 2º impostor (um não sabe do outro; o grupo só vence pegando os dois).',
   '*regras*, *ranking* (top 10), *ranking b* (11º ao 20º), *campeoes*.',
 ].join('\n');

@@ -11,6 +11,10 @@ import { safeFirstName } from '../images/glyphs';
  * Duas voltas de dicas de 1 palavra no grupo, debate de 60 s e votação (só
  * quem joga; empate vai para o 2º turno). Se pegarem o impostor, ele ainda
  * tem 20 s para acertar o segredo no grupo e roubar a vitória.
+ *
+ * Com 7 ou mais na mesa, o anfitrião pode ligar *2 impostores*: um não sabe
+ * do outro. Pegaram um (e ele errou o segredo)? Nova votação para achar o
+ * outro. O grupo só vence pegando os dois.
  */
 export const IMPOSTOR_LAPS = 2;
 export const IMPOSTOR_CARDS_SECONDS = 15;
@@ -27,7 +31,12 @@ export const IMPOSTOR_VOTE_SECONDS = 45;
 export const IMPOSTOR_RUNOFF_SECONDS = 30;
 export const IMPOSTOR_GUESS_SECONDS = 20;
 export const IMPOSTOR_FAST_SECONDS = 25;
-export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1 };
+export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1, partner: 2 };
+/** Mínimo de jogadores para valer o 2º impostor. */
+export const IMPOSTOR_TWO_MIN = 7;
+/** "2 impostores", "dois impostores", "segundo impostor", "impostor duplo" (e "1 impostor" desliga). */
+export const TWO_IMPOSTORS = /^((2|dois) impostores|segundo impostor|impostor duplo|com 2 impostores)$/;
+export const ONE_IMPOSTOR = /^((1|um|so um|so 1) impostor)$/;
 
 export const IMPOSTOR_RULES = [
   'Todos recebem o segredo no privado (um craque, um filme, um lugar... conforme o tema), menos o impostor, que só sabe o tema.',
@@ -35,6 +44,7 @@ export const IMPOSTOR_RULES = [
   `Depois: ${IMPOSTOR_DEBATE_SECONDS}s de debate (${IMPOSTOR_FAST_DEBATE_SECONDS}s no rápido) e votação (só quem joga; empate vai para o 2º turno). No debate, *mais tempo* dá +${IMPOSTOR_EXTRA_SECONDS}s (até ${IMPOSTOR_MAX_EXTRAS} vezes).`,
   `Pegaram o impostor? Ele tem ${IMPOSTOR_GUESS_SECONDS}s para acertar o segredo e roubar a vitória.`,
   `Pontos: impostor que escapa +${IMPOSTOR_POINTS.escaped} (rouba acertando: +${IMPOSTOR_POINTS.stole}); grupo vence: +${IMPOSTOR_POINTS.rightVote} para quem votou certo, +${IMPOSTOR_POINTS.team} para os outros.`,
+  `Com ${IMPOSTOR_TWO_MIN} ou mais na mesa, o anfitrião pode mandar *2 impostores*: um não sabe do outro, e o grupo só vence pegando os dois (o impostor que vence com o parceiro pego leva +${IMPOSTOR_POINTS.partner}).`,
   'Não recebeu a carta? Mande *carta* aqui ou *oi* para o bot no privado.',
 ];
 
@@ -53,6 +63,7 @@ export function impostorThemesText(head = '', onlyImpostor = false): string {
     'Misturas: *futebol* (todos os de futebol), *geral* (todos os outros) e *tudo*.',
     onlyImpostor ? 'Sem tema, neste grupo: *geral*.' : 'Sem tema: *futebol*.',
     '*rápido* no fim: 25s por dica (ex.: *abrir impostor séries rápido*).',
+    `Com ${IMPOSTOR_TWO_MIN} ou mais: *2 impostores* no fim (ex.: *abrir impostor filmes 2 impostores*).`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -61,15 +72,26 @@ export function impostorThemesText(head = '', onlyImpostor = false): string {
 export function newImpostor(
   theme: string | null = null,
   fast = false,
-): Pick<ImpostorParty, 'game' | 'theme' | 'secretId' | 'impostor' | 'order' | 'lap' | 'turn' | 'phase' | 'clues' | 'votes' | 'runoffVotes' | 'runoff' | 'ballot' | 'fast' | 'round' | 'totalRounds'> {
+  twoImpostors = false,
+): Pick<ImpostorParty, 'game' | 'theme' | 'secretId' | 'impostor' | 'order' | 'lap' | 'turn' | 'phase' | 'clues' | 'votes' | 'runoffVotes' | 'runoff' | 'ballot' | 'fast' | 'round' | 'totalRounds' | 'twoImpostors'> {
   return {
     game: 'impostor', theme, secretId: '', impostor: '', order: [], lap: 0, turn: 0, phase: 'cards', clues: [],
-    votes: {}, runoffVotes: {}, runoff: [], ballot: [], fast, round: 0, totalRounds: IMPOSTOR_LAPS,
+    votes: {}, runoffVotes: {}, runoff: [], ballot: [], fast, round: 0, totalRounds: IMPOSTOR_LAPS, twoImpostors,
   };
 }
 
+/** Todos os impostores (partidas antigas só têm o `impostor`). */
+export const impostorsOf = (state: ImpostorParty): string[] => (state.impostors?.length ? state.impostors : [state.impostor]);
+const isImpostor = (state: ImpostorParty, jid: string) => impostorsOf(state).includes(jid);
+
 const inGame = (state: ImpostorParty, jid: string) => state.players.some((p) => p.jid === jid && p.missed < 99);
 const alive = (state: ImpostorParty) => state.order.filter((jid) => inGame(state, jid));
+/** Quem ainda está na disputa: na mesa e não pego (impostor pego sai da votação seguinte). */
+const active = (state: ImpostorParty) => alive(state).filter((jid) => !(state.caught ?? []).includes(jid));
+/** Impostores ainda soltos (na mesa e não pegos). */
+const loose = (state: ImpostorParty) => impostorsOf(state).filter((jid) => inGame(state, jid) && !(state.caught ?? []).includes(jid));
+const two = (state: ImpostorParty) => impostorsOf(state).length > 1;
+const namesOf = (state: ImpostorParty, jids: string[]) => jids.map((j) => `*${nameOf(state, j)}*`).join(' e ');
 const nameOf = (state: ImpostorParty, jid: string | undefined) => firstName(state.players.find((p) => p.jid === jid)?.name ?? '?');
 /** Na imagem: primeiro nome sem emoji (o resto da linha não some). */
 const boardName = (state: ImpostorParty, jid: string | undefined) => safeFirstName(state.players.find((p) => p.jid === jid)?.name ?? '?');
@@ -80,7 +102,13 @@ const secretOf = (state: ImpostorParty) => getImpostorSecret(state.secretId)!;
 /** O que cada um recebe no privado. */
 export function cardText(state: ImpostorParty, jid: string): string {
   const secret = secretOf(state);
-  if (jid === state.impostor) {
+  if (isImpostor(state, jid)) {
+    if (two(state)) {
+      return (
+        `🎭 *Impostor*: você é *UM DOS 2 IMPOSTORES*!\nTema: *${secret.theme}*.\n\n` +
+        'Você não sabe quem é o outro. Ouça as dicas, finja que sabe e tente descobrir o segredo. Se te pegarem, ainda dá para roubar a vitória acertando o segredo.'
+      );
+    }
     return (
       `🎭 *Impostor*: você é o *IMPOSTOR*!\nTema: *${secret.theme}*.\n\n` +
       'Ouça as dicas, finja que sabe e tente descobrir o segredo. Se te pegarem, ainda dá para roubar a vitória acertando o segredo.'
@@ -88,7 +116,8 @@ export function cardText(state: ImpostorParty, jid: string): string {
   }
   return (
     `🤫 *Impostor*: o segredo é *${secret.name}* (tema: ${secret.theme}).\n\n` +
-    'Não fale o nome! Dê dicas que mostrem que você sabe, sem entregar para o impostor.'
+    'Não fale o nome! Dê dicas que mostrem que você sabe, sem entregar para o impostor.' +
+    (two(state) ? '\n\n⚠️ Nesta partida são *2 impostores*: o grupo só vence pegando os dois.' : '')
   );
 }
 
@@ -99,16 +128,32 @@ export function startImpostor(state: ImpostorParty, deps: PartyDeps): Outgoing[]
   state.secretId = freshFirst(impostorPool(state.theme).map((s) => s.id), deps.rng, deps.seen)[0];
   const jids = state.players.map((p) => p.jid);
   state.impostor = jids[Math.floor(deps.rng() * jids.length)];
-  // Ordem sorteada; o impostor nunca abre a 1ª volta (seria difícil demais para ele).
+  // 2º impostor: só se o anfitrião pediu e a mesa tem 7 ou mais.
+  const wantsTwo = Boolean(state.twoImpostors);
+  const withTwo = wantsTwo && jids.length >= IMPOSTOR_TWO_MIN;
+  const others = jids.filter((j) => j !== state.impostor);
+  state.impostors = withTwo ? [state.impostor, others[Math.floor(deps.rng() * others.length)]] : [state.impostor];
+  // Ordem sorteada; impostor nunca abre a 1ª volta (seria difícil demais para ele).
   const order = shuffle(jids, deps.rng);
-  if (order[0] === state.impostor && order.length > 1) [order[0], order[1]] = [order[1], order[0]];
-  Object.assign(state, { order, lap: 0, turn: 0, phase: 'cards', clues: [], votes: {}, runoffVotes: {}, runoff: [], ballot: [], round: 0 });
+  if (isImpostor(state, order[0])) {
+    const first = order.findIndex((j) => !isImpostor(state, j));
+    if (first > 0) [order[0], order[first]] = [order[first], order[0]];
+  }
+  Object.assign(state, { order, lap: 0, turn: 0, phase: 'cards', clues: [], votes: {}, runoffVotes: {}, runoff: [], ballot: [], round: 0, caught: [], rightVoters: [] });
+  state.guessing = undefined;
   state.status = 'PLAYING';
   const secret = secretOf(state);
   const mesa = order.map((jid, i) => `${i + 1}. ${nameOf(state, jid)}`).join('\n');
+  const note = withTwo
+    ? '\n🎭🎭 São *2 impostores*: um não sabe do outro. O grupo só vence pegando os dois.'
+    : wantsTwo
+      ? `\n(2 impostores só com ${IMPOSTOR_TWO_MIN} ou mais na mesa: hoje vai 1.)`
+      : jids.length >= IMPOSTOR_TWO_MIN
+        ? `\nDica: com ${IMPOSTOR_TWO_MIN} ou mais dá para jogar com *2 impostores* (o anfitrião manda no saguão).`
+        : '';
   return [
     text(
-      `🕵️ *Impostor* valendo! ${jids.length} jogadores, 1 impostor. Tema: *${secret.theme}*.\n` +
+      `🕵️ *Impostor* valendo! ${jids.length} jogadores, ${withTwo ? '2 impostores' : '1 impostor'}. Tema: *${secret.theme}*.${note}\n` +
         '🃏 Mandei a carta no privado de cada um. Não recebeu? Mande *carta* aqui ou *oi* para o bot no privado.\n\n' +
         `Ordem da mesa:\n${mesa}\n\nA 1ª volta de dicas começa em ${IMPOSTOR_CARDS_SECONDS}s.`,
     ),
@@ -121,7 +166,7 @@ export function startImpostor(state: ImpostorParty, deps: PartyDeps): Outgoing[]
 function nextTurn(state: ImpostorParty, deps: PartyDeps, lead: Outgoing[] = []): Outgoing[] {
   const out = [...lead];
   for (;;) {
-    if (!inGame(state, state.impostor)) return [...out, ...fled(state, deps)];
+    if (!loose(state).length) return [...out, ...fled(state, deps)];
     if (alive(state).length < 3) return [...out, ...finishImpostor(state, 'cancelled', 'Ficaram menos de 3 jogadores.', deps.now.getTime())];
     if (state.turn >= state.order.length) {
       out.push(impostorBoard(state, false, `Fim da volta ${state.lap + 1}`));
@@ -192,11 +237,14 @@ function openVoting(state: ImpostorParty, deps: PartyDeps): Outgoing[] {
   state.phase = 'voting';
   state.votes = {};
   state.warned = [];
-  state.ballot = alive(state);
+  state.runoffVotes = {};
+  state.runoff = [];
+  state.ballot = active(state);
   const lines = state.ballot.map((jid, i) => `${i + 1}. ${nameOf(state, jid)} — ${cluesOf(state, jid)}`).join('\n');
+  const which = (state.caught ?? []).length ? 'Quem é o outro impostor?' : two(state) ? 'Quem é um dos impostores?' : 'Quem é o impostor?';
   return [
     text(
-      `🗳️ *Votação!* Quem é o impostor? Mande o número (1 a ${state.ballot.length}). Só quem joga vota; não vale votar em si mesmo. ${IMPOSTOR_VOTE_SECONDS}s.\n\n${lines}`,
+      `🗳️ *Votação!* ${which} Mande o número (1 a ${state.ballot.length}). Só quem joga vota; não vale votar em si mesmo. ${IMPOSTOR_VOTE_SECONDS}s.\n\n${lines}`,
     ),
     schedule(state, IMPOSTOR_VOTE_SECONDS, deps.now.getTime(), 'imp'),
   ];
@@ -207,7 +255,7 @@ function openRunoff(state: ImpostorParty, tied: string[], deps: PartyDeps): Outg
   state.runoff = tied;
   state.runoffVotes = {};
   state.warned = [];
-  if (!alive(state).some((jid) => !tied.includes(jid))) return escaped(state, 'Empate e ninguém de fora para desempatar: o impostor escapa.', deps);
+  if (!active(state).some((jid) => !tied.includes(jid))) return escaped(state, `Empate e ninguém de fora para desempatar: ${two(state) ? 'os impostores escapam' : 'o impostor escapa'}.`, deps);
   const lines = tied.map((jid, i) => `${i + 1}. ${nameOf(state, jid)} — ${cluesOf(state, jid)}`).join('\n');
   return [
     text(`⚖️ *Empate!* 2º turno (${IMPOSTOR_RUNOFF_SECONDS}s) só entre:\n${lines}\n\nMande o número. Os empatados não votam.`),
@@ -216,11 +264,13 @@ function openRunoff(state: ImpostorParty, tied: string[], deps: PartyDeps): Outg
 }
 
 /** Quem ainda pode votar nesta fase. */
-const voters = (state: ImpostorParty) => alive(state).filter((jid) => state.phase !== 'runoff' || !state.runoff.includes(jid));
+const voters = (state: ImpostorParty) => active(state).filter((jid) => state.phase !== 'runoff' || !state.runoff.includes(jid));
 
 function voteAnswer(state: ImpostorParty, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
   const n = Number(msg.text.trim());
   const ballot = state.phase === 'runoff' ? state.runoff : state.ballot;
+  // Impostor já pego não vota mais.
+  if ((state.caught ?? []).includes(player.jid)) return [];
   if (!Number.isInteger(n) || n < 1 || n > ballot.length) return [];
   const who = firstName(player.name);
   if (state.phase === 'runoff' && state.runoff.includes(player.jid)) return warnOnce(state, player.jid, `*${who}*, quem está no 2º turno não vota.`, save);
@@ -236,46 +286,90 @@ function voteAnswer(state: ImpostorParty, player: PartyPlayer, msg: IncomingMess
 
 /** Apura a votação (ou o 2º turno). */
 function tally(state: ImpostorParty, deps: PartyDeps): Outgoing[] {
-  if (!inGame(state, state.impostor)) return fled(state, deps);
+  if (!loose(state).length) return fled(state, deps);
   const box = state.phase === 'runoff' ? state.runoffVotes : state.votes;
   const counts = new Map<string, number>();
   for (const target of Object.values(box)) counts.set(target, (counts.get(target) ?? 0) + 1);
   const max = Math.max(0, ...counts.values());
-  if (max === 0) return escaped(state, 'Ninguém votou: o impostor escapa.', deps);
+  const escapes = two(state) ? 'os impostores escapam' : 'o impostor escapa';
+  if (max === 0) return escaped(state, `Ninguém votou: ${escapes}.`, deps);
   const top = [...counts.entries()].filter(([, n]) => n === max).map(([jid]) => jid);
   if (top.length > 1) {
     if (state.phase === 'voting') return openRunoff(state, state.ballot.filter((jid) => top.includes(jid)), deps);
-    return escaped(state, 'Empate de novo no 2º turno: o impostor escapa.', deps);
+    return escaped(state, `Empate de novo no 2º turno: ${escapes}.`, deps);
   }
+  closeVote(state);
   const voted = top[0];
-  if (voted !== state.impostor) return escaped(state, `😱 *${nameOf(state, voted)}* era INOCENTE (${max} voto${max === 1 ? '' : 's'})!`, deps);
+  if (!isImpostor(state, voted)) return escaped(state, `😱 *${nameOf(state, voted)}* era INOCENTE (${max} voto${max === 1 ? '' : 's'})!`, deps);
   state.phase = 'guess';
+  state.guessing = voted;
   state.warned = [];
+  const left = loose(state).filter((jid) => jid !== voted).length;
   return [
     text(
-      `🎯 Pegaram o impostor: *${nameOf(state, voted)}* (${max} voto${max === 1 ? '' : 's'})!\n` +
-        `Última chance, ${nameOf(state, voted)}: mande o segredo aqui no grupo em ${IMPOSTOR_GUESS_SECONDS}s. Acertou, rouba a vitória.`,
+      `🎯 Pegaram ${two(state) ? 'um impostor' : 'o impostor'}: *${nameOf(state, voted)}* (${max} voto${max === 1 ? '' : 's'})!\n` +
+        `Última chance, ${nameOf(state, voted)}: mande o segredo aqui no grupo em ${IMPOSTOR_GUESS_SECONDS}s. Acertou, rouba a vitória.` +
+        (left ? `\nSe errar, a caça continua: ainda tem *${left} impostor* na mesa.` : ''),
     ),
     schedule(state, IMPOSTOR_GUESS_SECONDS, deps.now.getTime(), 'imp'),
   ];
 }
 
+/** Votação apurada: guarda quem votou num impostor (pontos no fim) e zera a urna. */
+function closeVote(state: ImpostorParty): void {
+  const right = new Set(state.rightVoters ?? []);
+  for (const jid of new Set([...Object.keys(state.votes), ...Object.keys(state.runoffVotes)])) {
+    const vote = state.runoffVotes[jid] ?? state.votes[jid];
+    if (vote && isImpostor(state, vote)) right.add(jid);
+  }
+  state.rightVoters = [...right];
+}
+
+/** O impostor pego errou (ou não chutou): sai da mesa; sobrou outro, nova votação; senão, vitória do grupo. */
+function missedGuess(state: ImpostorParty, deps: PartyDeps, lead: string): Outgoing[] {
+  const jid = state.guessing ?? state.impostor;
+  state.caught = [...new Set([...(state.caught ?? []), jid])];
+  state.guessing = undefined;
+  if (loose(state).length) {
+    return [text(`${lead}\n🔎 Ainda tem *1 impostor* na mesa! Nova votação (${nameOf(state, jid)} não vota mais).`), ...openVoting(state, deps)];
+  }
+  return finishImpostor(state, 'caught', `${lead} ✅ *Vitória do grupo!*`, deps.now.getTime());
+}
+
 function guessAnswer(state: ImpostorParty, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
-  if (player.jid !== state.impostor) return [];
+  const guesser = state.guessing ?? state.impostor;
+  if (player.jid !== guesser) return [];
   const raw = msg.text.trim();
   if (!normalize(raw) || /[?\n]/.test(raw)) return [];
   const secret = secretOf(state);
   const hit = answerMatches([secret.name, ...secret.aliases], normalizeAnswer(raw));
   const now = deps.now.getTime();
-  if (hit) return save(finishImpostor(state, 'stole', `🎭 *${nameOf(state, state.impostor)}* acertou *${secret.name}* e rouba a vitória!`, now));
-  return save(finishImpostor(state, 'caught', `❌ "${raw.slice(0, 40)}" não é o segredo. ✅ *Vitória do grupo!*`, now));
+  if (hit) {
+    const crew = two(state) ? ' para os impostores' : '';
+    return save(finishImpostor(state, 'stole', `🎭 *${nameOf(state, guesser)}* acertou *${secret.name}* e rouba a vitória${crew}!`, now));
+  }
+  return save(missedGuess(state, deps, `❌ "${raw.slice(0, 40)}" não é o segredo.`));
 }
 
 const escaped = (state: ImpostorParty, reason: string, deps: PartyDeps) =>
-  finishImpostor(state, 'escaped', `${reason}\n🎭 O impostor era *${nameOf(state, state.impostor)}*: ele vence a rodada!`, deps.now.getTime());
+  finishImpostor(
+    state,
+    'escaped',
+    two(state)
+      ? `${reason}\n🎭 Os impostores eram ${namesOf(state, impostorsOf(state))}: eles vencem a rodada!`
+      : `${reason}\n🎭 O impostor era *${nameOf(state, state.impostor)}*: ele vence a rodada!`,
+    deps.now.getTime(),
+  );
 
 const fled = (state: ImpostorParty, deps: PartyDeps) =>
-  finishImpostor(state, 'fled', `🏃 O impostor fugiu! Era *${nameOf(state, state.impostor)}*. ✅ Vitória do grupo.`, deps.now.getTime());
+  finishImpostor(
+    state,
+    'fled',
+    two(state)
+      ? `🏃 Os impostores saíram! Eram ${namesOf(state, impostorsOf(state))}. ✅ Vitória do grupo.`
+      : `🏃 O impostor fugiu! Era *${nameOf(state, state.impostor)}*. ✅ Vitória do grupo.`,
+    deps.now.getTime(),
+  );
 
 export function impostorAnswer(state: ImpostorParty, player: PartyPlayer, msg: IncomingMessage, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
   const norm = normalize(msg.text);
@@ -331,7 +425,7 @@ export function impostorTimeout(state: ImpostorParty, deps: PartyDeps): Outgoing
     case 'runoff':
       return tally(state, deps);
     case 'guess':
-      return finishImpostor(state, 'caught', `⏱️ O impostor não chutou a tempo. ✅ *Vitória do grupo!*`, deps.now.getTime());
+      return missedGuess(state, deps, '⏱️ O impostor não chutou a tempo.');
   }
 }
 
@@ -348,15 +442,25 @@ export function finishImpostor(state: ImpostorParty, outcome: Outcome, reason: s
   state.timerToken = null;
   const secret = secretOf(state);
   const impostorWins = outcome === 'escaped' || outcome === 'stole';
+  const caught = new Set(state.caught ?? []);
+  const right = new Set(state.rightVoters ?? []);
   for (const p of state.players) {
     p.score = 0;
     if (outcome === 'cancelled') continue;
-    if (p.jid === state.impostor) {
-      if (outcome === 'escaped') award(p, IMPOSTOR_POINTS.escaped, nowMs);
-      if (outcome === 'stole') award(p, IMPOSTOR_POINTS.stole, nowMs);
+    if (isImpostor(state, p.jid)) {
+      if (!impostorWins) continue;
+      // Quem roubou: +4; quem escapou sem ser pego: +5; o parceiro (pego, ou de quem roubou): +2.
+      const points =
+        outcome === 'stole'
+          ? p.jid === state.guessing
+            ? IMPOSTOR_POINTS.stole
+            : IMPOSTOR_POINTS.partner
+          : caught.has(p.jid)
+            ? IMPOSTOR_POINTS.partner
+            : IMPOSTOR_POINTS.escaped;
+      award(p, points, nowMs);
     } else if (!impostorWins) {
-      const vote = state.runoffVotes[p.jid] ?? state.votes[p.jid];
-      award(p, vote === state.impostor ? IMPOSTOR_POINTS.rightVote : IMPOSTOR_POINTS.team, nowMs);
+      award(p, right.has(p.jid) ? IMPOSTOR_POINTS.rightVote : IMPOSTOR_POINTS.team, nowMs);
     }
   }
   if (outcome !== 'cancelled') {
@@ -364,7 +468,7 @@ export function finishImpostor(state: ImpostorParty, outcome: Outcome, reason: s
       state,
       state.players.map((p) => ({
         player: { jid: p.jid, name: p.name },
-        result: (p.jid === state.impostor) === impostorWins ? ('win' as const) : ('loss' as const),
+        result: isImpostor(state, p.jid) === impostorWins ? ('win' as const) : ('loss' as const),
       })),
     );
   }
@@ -383,7 +487,11 @@ export function finishImpostor(state: ImpostorParty, outcome: Outcome, reason: s
 /** "encerrar" do anfitrião: revela tudo, sem vencedor. */
 export function endImpostor(state: ImpostorParty, reason: string): Outgoing[] {
   if (state.status !== 'PLAYING') return finishImpostor(state, 'cancelled', reason);
-  return finishImpostor(state, 'cancelled', `${reason} O impostor era *${nameOf(state, state.impostor)}*.`);
+  return finishImpostor(
+    state,
+    'cancelled',
+    two(state) ? `${reason} Os impostores eram ${namesOf(state, impostorsOf(state))}.` : `${reason} O impostor era *${nameOf(state, state.impostor)}*.`,
+  );
 }
 
 /** Imagem da mesa (dicas de cada um) ou do resultado (com impostor, votos e pontos). */
@@ -398,11 +506,11 @@ export function impostorBoard(state: ImpostorParty, final: boolean, subtitle?: s
       const score = state.players.find((p) => p.jid === jid)?.score ?? 0;
       if (score) lines.push(`+${score} pontos`);
     }
-    const isImpostor = final && jid === state.impostor;
+    const showImpostor = final && isImpostor(state, jid);
     return {
-      head: `${i + 1}. ${boardName(state, jid)}${isImpostor ? ' · IMPOSTOR' : ''}${inGame(state, jid) ? '' : ' (saiu)'}`,
+      head: `${i + 1}. ${boardName(state, jid)}${showImpostor ? ' · IMPOSTOR' : ''}${inGame(state, jid) ? '' : ' (saiu)'}`,
       lines,
-      highlight: isImpostor,
+      highlight: showImpostor,
     };
   });
   return {

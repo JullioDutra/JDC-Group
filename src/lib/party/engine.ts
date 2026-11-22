@@ -59,7 +59,7 @@ import { MODULES, isBaseGame, moduleBoard, moduleOf } from './modules';
 import { anagramThemesText, newAnagrama } from './anagrama';
 import { isNextBlocked } from '../game/blocks';
 import { closeLeilaoVoting, leilaoModeOf, leilaoVote, newLeilao } from './leilao';
-import { impostorThemesText, newImpostor } from './impostor';
+import { IMPOSTOR_TWO_MIN, ONE_IMPOSTOR, TWO_IMPOSTORS, impostorThemesText, newImpostor } from './impostor';
 import { IMPOSTOR_GERAL, findImpostorTheme, impostorThemeLabel } from './content/impostor';
 import { isImpostorOnly } from '../game/groupMode';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
@@ -203,7 +203,9 @@ export async function createParty(
     state = { ...base('top100', host, nowMs), ...newTop100(deps.now, extra) } as PartyState;
   } else if (start.game === 'impostor') {
     // "abrir impostor clubes rápido": tema opcional e 25 s por dica.
-    const words = start.rest.split(' ').filter(Boolean);
+    // "... 2 impostores" no fim: o anfitrião já pede o 2º impostor (vale com 7 ou mais na mesa).
+    const twoImp = /(^| )((2|dois) impostores|impostor duplo)( |$)/.test(start.rest);
+    const words = start.rest.replace(/(^| )((2|dois) impostores|impostor duplo)( |$)/, ' ').split(' ').filter(Boolean);
     const fast = words.some((w) => ['rapido', 'turbo', 'relampago'].includes(w));
     const rest = words.filter((w) => !['rapido', 'turbo', 'relampago'].includes(w)).join(' ');
     // Tema na frente do comando, ou uma mistura (futebol, geral, tudo). Sem tema:
@@ -211,7 +213,7 @@ export async function createParty(
     const onlyImpostor = await isImpostorOnly(deps.store, msg.groupJid);
     const theme = rest ? findImpostorTheme(rest) : onlyImpostor ? IMPOSTOR_GERAL : undefined;
     if (rest && !theme) return [text(impostorThemesText(`Não achei o tema "${rest}".`, onlyImpostor))];
-    state = { ...base('impostor', host, nowMs), ...newImpostor(theme ?? null, fast) } as PartyState;
+    state = { ...base('impostor', host, nowMs), ...newImpostor(theme ?? null, fast, twoImp) } as PartyState;
   } else if (start.game === 'leilao') {
     state = { ...base('leilao', host, nowMs), ...newLeilao(leilaoModeOf(start.rest) ?? 'overall') } as PartyState;
   } else if (start.game === 'anagrama') {
@@ -293,6 +295,9 @@ function lobbyCaption(state: PartyState): string {
       state.theme
         ? `Tema: *${impostorThemeLabel(state.theme)}*.`
         : 'Tema: futebol, misturado. Para outro tema: *abrir impostor filmes*, *séries*, *lugares*... (*temas do impostor*).',
+      state.twoImpostors
+        ? `🎭🎭 *2 impostores* (vale com ${IMPOSTOR_TWO_MIN} ou mais na mesa).`
+        : `Com ${IMPOSTOR_TWO_MIN} ou mais na mesa, o anfitrião pode mandar *2 impostores*.`,
       `${state.host.name}, mande *começar* quando todos entrarem (mínimo ${cfg.minPlayers}).`,
     );
   } else {
@@ -434,6 +439,16 @@ export async function handlePartyMessage(
         const note = ignoredLeagueNote(choice);
         return save(note ? [react(msg, '✅'), text(note.trim())] : [react(msg, '✅')]);
       }
+    } else if (state.game === 'impostor' && (TWO_IMPOSTORS.test(norm) || ONE_IMPOSTOR.test(norm))) {
+      // Anfitrião liga ou desliga o 2º impostor (só vale com 7 ou mais na mesa).
+      state.twoImpostors = TWO_IMPOSTORS.test(norm);
+      const n = state.players.length;
+      const msgText = !state.twoImpostors
+        ? 'Combinado: *1 impostor*.'
+        : n >= IMPOSTOR_TWO_MIN
+          ? `Combinado: *2 impostores* (${n} na mesa).`
+          : `Combinado: *2 impostores*, se tiver ${IMPOSTOR_TWO_MIN} ou mais na mesa na hora de começar (agora são ${n}).`;
+      return save([react(msg, '✅'), text(msgText)]);
     } else if (state.game === 'leilao' && leilaoModeOf(norm)) {
       state.mode = leilaoModeOf(norm)!;
       return save([react(msg, '✅')]);

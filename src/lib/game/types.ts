@@ -515,6 +515,16 @@ export interface ImpostorParty extends PartyBase {
   fast: boolean;
   round: number;
   totalRounds: number;
+  /** "2 impostores" (pedido do anfitrião; só vale com 7 ou mais na mesa). */
+  twoImpostors?: boolean;
+  /** Todos os impostores da partida (o 1º é o `impostor`). Partidas antigas: só o `impostor`. */
+  impostors?: string[];
+  /** Impostores já pegos (saem da votação seguinte). */
+  caught?: string[];
+  /** Impostor que está chutando o segredo agora. */
+  guessing?: string;
+  /** Quem votou num impostor numa votação apurada (ganha mais pontos se o grupo vencer). */
+  rightVoters?: string[];
 }
 
 /** Top 100 do dia: uma lista de 100 por dia; cada acerto vale a posição. */
