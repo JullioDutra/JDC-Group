@@ -1,3 +1,4 @@
+import type { Nomination, NominationInput, NominationResult } from '../awards/types';
 import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { SCHEMA_STATEMENTS } from './schema';
@@ -20,6 +21,45 @@ export class NeonStore implements Store {
 
   async migrate(): Promise<void> {
     for (const statement of SCHEMA_STATEMENTS) await this.sql.query(statement);
+  }
+
+  async isAwardsActive(groupJid: string) {
+    const rows = await this.sql`SELECT active FROM awards_groups WHERE group_jid = ${groupJid}`;
+    return rows[0]?.active === true;
+  }
+
+  async setAwardsActive(groupJid: string, active: boolean, by: string) {
+    await this.sql`INSERT INTO awards_groups (group_jid, active, updated_by)
+      VALUES (${groupJid}, ${active}, ${by})
+      ON CONFLICT (group_jid) DO UPDATE SET active = EXCLUDED.active,
+        updated_by = EXCLUDED.updated_by, updated_at = now()`;
+  }
+
+  async addNomination(input: NominationInput): Promise<NominationResult> {
+    // Trava compartilhada coordena a inserção com o encerramento da coleta.
+    // UNIQUE evita perda/duplicação em webhooks simultâneos e múltiplas instâncias.
+    const rows = await this.sql`WITH enabled AS (
+        SELECT group_jid FROM awards_groups WHERE group_jid = ${input.groupJid} AND active FOR SHARE
+      ), inserted AS (
+        INSERT INTO awards_nominations (group_jid, category, fingerprint, command_message_id, payload)
+        SELECT group_jid, ${input.category}, ${input.fingerprint}, ${input.commandMessageId}, ${JSON.stringify(input)}::jsonb
+        FROM enabled ON CONFLICT DO NOTHING RETURNING id
+      ) SELECT CASE WHEN EXISTS (SELECT 1 FROM inserted) THEN 'saved'
+        WHEN EXISTS (SELECT 1 FROM enabled) THEN 'duplicate' ELSE 'inactive' END AS result`;
+    return rows[0].result as NominationResult;
+  }
+
+  async listNominations(groupJid: string, limit: number, offset: number): Promise<Nomination[]> {
+    const rows = await this.sql`SELECT id::text, category, payload FROM awards_nominations
+      WHERE group_jid = ${groupJid} ORDER BY id LIMIT ${limit} OFFSET ${offset}`;
+    return rows.map(r => ({ ...(r.payload as NominationInput), id: r.id as string, category: r.category as number | null }));
+  }
+
+  async classifyNomination(groupJid: string, id: string, category: number): Promise<boolean> {
+    if (!/^\d+$/.test(id) || !Number.isInteger(category) || category < 1 || category > 22) return false;
+    const rows = await this.sql`UPDATE awards_nominations SET category = ${category}
+      WHERE group_jid = ${groupJid} AND id::text = ${id} RETURNING id`;
+    return rows.length > 0;
   }
 
   async isGroupActive(groupJid: string) {
@@ -382,3 +422,4 @@ export class NeonStore implements Store {
     return rows as RankingRow[];
   }
 }
+

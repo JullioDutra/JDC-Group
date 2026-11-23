@@ -1,3 +1,4 @@
+import { handleAwards } from '../awards/commands';
 import type { PlayerLookup } from '../ai';
 import type { Store } from '../store/types';
 import type { FactCheck, TeamJudge, WordCheck } from '../party/common';
@@ -402,6 +403,11 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   const ids = [msg.senderJid, ...(msg.senderAliases ?? [])];
   const manager = deps.canManageGroup ? ids.some((id) => deps.canManageGroup!(id)) : true;
 
+  // Coleta independente: não abre jogos, não altera partidas nem aparece nas imagens.
+  // Permissão explícita e fechada por padrão, inclusive fora do webhook de produção.
+  const awards = await handleAwards(msg, store, Boolean(deps.canManageGroup && manager), now);
+  if (awards !== null) return awards;
+
   // O bot só "enxerga" grupos ativados; em qualquer outro, tudo é ignorado.
   // "ativar grupo" é do Finanças G&J (bot pessoal no número do admin): o jogo usa outro nome.
   // "ativar impostor": grupo que não é de futebol, só com o Impostor (sem tema, temas gerais).
@@ -797,3 +803,4 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
 }
 
 export type { Match };
+

@@ -1,3 +1,4 @@
+import type { Nomination, NominationInput, NominationResult } from '../awards/types';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
 import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
@@ -7,6 +8,28 @@ const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CAN
 
 /** Store em memória: usado nos testes e no desenvolvimento local sem banco. */
 export class MemoryStore implements Store {
+  private awardsActive = new Map<string, boolean>();
+  private nominations: Nomination[] = [];
+
+  async isAwardsActive(groupJid: string) { return this.awardsActive.get(groupJid) === true; }
+  async setAwardsActive(groupJid: string, active: boolean, _by: string) { this.awardsActive.set(groupJid, active); }
+  async addNomination(input: NominationInput): Promise<NominationResult> {
+    if (this.awardsActive.get(input.groupJid) !== true) return 'inactive';
+    if (this.nominations.some(n => n.groupJid === input.groupJid &&
+      (n.fingerprint === input.fingerprint || n.commandMessageId === input.commandMessageId))) return 'duplicate';
+    this.nominations.push({ ...structuredClone(input), id: String(this.nominations.length + 1) });
+    return 'saved';
+  }
+  async listNominations(groupJid: string, limit: number, offset: number): Promise<Nomination[]> {
+    return structuredClone(this.nominations.filter(n => n.groupJid === groupJid).slice(offset, offset + limit));
+  }
+  async classifyNomination(groupJid: string, id: string, category: number): Promise<boolean> {
+    const row = this.nominations.find(n => n.groupJid === groupJid && n.id === id);
+    if (!row || !Number.isInteger(category) || category < 1 || category > 22) return false;
+    row.category = category;
+    return true;
+  }
+
   private groups = new Map<string, boolean>();
   private matches = new Map<string, Session>(); // por grupo, só as abertas
   private processed = new Set<string>();
@@ -257,3 +280,4 @@ export class MemoryStore implements Store {
       .slice(0, limit);
   }
 }
+
