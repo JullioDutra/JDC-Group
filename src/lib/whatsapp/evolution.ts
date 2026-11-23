@@ -10,7 +10,7 @@ import { getStore, hasDatabase } from '../store';
 interface TextContent {
   conversation?: string;
   /** contextInfo: quem foi marcado (@) e de quem é a mensagem respondida. */
-  extendedTextMessage?: { text?: string; contextInfo?: { mentionedJid?: string[]; participant?: string } };
+  extendedTextMessage?: { text?: string; contextInfo?: { mentionedJid?: string[]; participant?: string; stanzaId?: string; quotedMessage?: TextContent } };
   /** Grupos com mensagens temporárias embrulham o conteúdo aqui. */
   ephemeralMessage?: { message?: TextContent };
 }
@@ -56,10 +56,10 @@ function textOf(message: TextContent | undefined, depth = 0): string | undefined
 }
 
 /** Marcações (@) e o autor da mensagem respondida, se houver. */
-function contextOf(message: TextContent | undefined, depth = 0): { mentions: string[]; quoted?: string } {
+function contextOf(message: TextContent | undefined, depth = 0): { mentions: string[]; quoted?: string; quotedId?: string; quotedText?: string } {
   if (!message || depth > 2) return { mentions: [] };
   const ctx = message.extendedTextMessage?.contextInfo;
-  if (ctx) return { mentions: (ctx.mentionedJid ?? []).filter(Boolean), quoted: ctx.participant || undefined };
+  if (ctx) return { mentions: (ctx.mentionedJid ?? []).filter(Boolean), quoted: ctx.participant || undefined, quotedId: ctx.stanzaId, quotedText: textOf(ctx.quotedMessage) };
   return contextOf(message.ephemeralMessage?.message, depth + 1);
 }
 
@@ -117,6 +117,8 @@ export const evolution: WhatsAppProvider = {
     const ctx = contextOf(payload.data?.message);
     if (ctx.mentions.length) message.mentions = ctx.mentions;
     if (ctx.quoted) message.quotedParticipant = ctx.quoted;
+    if (ctx.quotedId) message.quotedMessageId = ctx.quotedId;
+    if (ctx.quotedText) message.quotedText = ctx.quotedText;
     return message;
   },
 
@@ -234,3 +236,4 @@ export async function evolutionSetupInstance(webhookUrl: string): Promise<{ grou
   }
   return { groupsIgnoreWasOn };
 }
+

@@ -1,3 +1,4 @@
+import type { Nomination, NominationInput, NominationResult } from '../awards/types';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
 
@@ -26,6 +27,13 @@ export interface MatchStats {
 }
 
 export interface Store {
+  isAwardsActive(groupJid: string): Promise<boolean>;
+  setAwardsActive(groupJid: string, active: boolean, by: string): Promise<void>;
+  /** Insere atomicamente apenas com coleta aberta; deduplica prova e webhook. */
+  addNomination(input: NominationInput): Promise<NominationResult>;
+  listNominations(groupJid: string, limit: number, offset: number): Promise<Nomination[]>;
+  classifyNomination(groupJid: string, id: string, category: number): Promise<boolean>;
+
   isGroupActive(groupJid: string): Promise<boolean>;
   setGroupActive(groupJid: string, name: string | undefined, active: boolean, by: string): Promise<void>;
 
@@ -91,3 +99,4 @@ export interface Store {
   /** Só contagens (sem grupo nem pessoa): partidas por situação e por jogo. */
   matchStats(): Promise<MatchStats>;
 }
+

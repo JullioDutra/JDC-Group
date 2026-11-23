@@ -1,5 +1,22 @@
 /** Migração idempotente: pode rodar quantas vezes for preciso. */
 export const SCHEMA_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS awards_groups (
+    group_jid text PRIMARY KEY,
+    active boolean NOT NULL DEFAULT false,
+    updated_by text NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS awards_nominations (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    group_jid text NOT NULL REFERENCES awards_groups(group_jid),
+    category integer CHECK (category BETWEEN 1 AND 22),
+    fingerprint text NOT NULL,
+    command_message_id text NOT NULL,
+    payload jsonb NOT NULL,
+    UNIQUE (group_jid, fingerprint),
+    UNIQUE (group_jid, command_message_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS awards_nominations_group_id ON awards_nominations (group_jid, id)`,
   `CREATE TABLE IF NOT EXISTS wa_groups (
     jid          text PRIMARY KEY,
     name         text,
@@ -99,3 +116,4 @@ export const SCHEMA_STATEMENTS: string[] = [
     PRIMARY KEY (group_jid, season)
   )`,
 ];
+
