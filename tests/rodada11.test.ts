@@ -148,7 +148,7 @@ test('Rodada 11: liga no 1x1 e na sala', async () => {
   assert.match(out, /ficou de fora: esse tema sorteia seleções/);
   const sala2 = (await store.getActiveMatch('c@g.us'))!.state as EscalacaoParty;
   assert.equal(sala2.options.league, undefined);
-  assert.equal(MODES.length, 19);
+  assert.equal(MODES.length, 22);
 });
 
 test('Rodada 11: todos os temas nos jogos que não são só de futebol', async () => {

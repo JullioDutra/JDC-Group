@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   if (!(await store.markProcessed(message.id))) return NextResponse.json({ ok: true, duplicate: true });
 
   try {
-    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck(), judge: defaultJudge(), checkWords: defaultWordCheck(), checkFact: defaultFactCheck(), brasileirao: () => loadBrasileirao() });
+    const outgoing = await handleMessage(message, { store, lookup: createLookup(store), canManageGroup: ownerCheck(), judge: defaultJudge(), checkWords: defaultWordCheck(), checkFact: defaultFactCheck(), brasileirao: () => loadBrasileirao(), announce: true });
     await dispatch(provider, message.groupJid, outgoing, publicOrigin(request));
     return NextResponse.json({ ok: true, sent: outgoing.length });
   } catch (error) {

@@ -146,6 +146,7 @@ export function textBoard(
   title: string,
   subtitle: string,
   rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }>,
+  pillLabel?: string,
 ): ReactElement {
   const two = rows.length > 3;
   const totalLines = rows.reduce((a, r) => a + r.lines.length + 1, 0) / (two ? 2 : 1);
@@ -168,7 +169,7 @@ export function textBoard(
       ...r.lines.map((l) => txt(fit(l, room(font)), { fontSize: font, fontWeight: 500, lineHeight: 1.25 })),
     );
   return stage(
-    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(upper(PARTY_CONFIG[game].name), C.panel, C.lime, 24)),
+    box({ justifyContent: 'space-between', alignItems: 'center' }, brand(0.75), pill(upper(pillLabel ?? PARTY_CONFIG[game].name), C.panel, C.lime, 24)),
     txt(upper(title), { fontFamily: DISPLAY, fontSize: 76, lineHeight: 1.1, marginTop: 16 }),
     txt(subtitle, { fontSize: 28, color: C.muted, fontWeight: 500, marginBottom: 18 }),
     box({ flexWrap: 'wrap', gap: 14, alignContent: 'flex-start' }, ...rows.map(card)),

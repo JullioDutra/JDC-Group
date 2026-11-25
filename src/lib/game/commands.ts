@@ -60,7 +60,7 @@ export function helpText(gameName: string): string {
     NAMES_LINE,
     '',
     '*Jogadores:* *ficha <nome>* mostra a ficha e os números · admin: *corrigir <nome> <dado> <valor>*, *nome famoso <apelido> = <nome>*',
-    '*Geral:* *regras* · *modos* · *ranking* (da temporada, top 10) · *ranking b* (11º ao 20º) · *campeões* (campeão de cada temporada) · *temas do anagrama* · *simulador* (Brasileirão 2026: quem cai)',
+    '*Geral:* *regras* · *modos* · *ranking* (da temporada, top 10) · *ranking b* (11º ao 20º) · *campeões* (campeão de cada temporada) · *temas do anagrama* · *simulador* (Brasileirão 2026: quem cai) · *ligas* (ligas dos temas de clube) · *novidades* (o que mudou na última atualização)',
     '*Admin:* *virada de temporada* (imagem com os melhores e ranking zerado) · *resetar top 100* (libera mais um Top 100 hoje) · *bloquear próxima @pessoa* / *liberar próxima @pessoa* / *bloqueados* · *ativar impostor* (grupo só com o Impostor, para grupo que não é de futebol) · *desativar jogos*',
   ].join('\n');
 }

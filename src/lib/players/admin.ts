@@ -21,6 +21,10 @@ import { STAT_KEYS, type ManualEntry, type PlayerRecord, type StatKey } from './
 
 /** Nome do dado no comando → chave. As mais longas primeiro ("gols selecao" antes de "gols"). */
 export const STAT_WORDS: Array<[string, StatKey]> = [
+  ['gols de falta', 'freeKickGoals'],
+  ['gols em finais', 'finalGoals'],
+  ['gols em final', 'finalGoals'],
+  ['gols de penalti', 'penaltyGoals'],
   ['gols na selecao', 'intlGoals'],
   ['gols selecao', 'intlGoals'],
   ['jogos na selecao', 'intlCaps'],
@@ -68,6 +72,9 @@ export const STAT_LABEL: Record<StatKey, string> = {
   debutYear: 'ano de estreia',
   marketValueEurM: 'valor atual (mi €)',
   careerCards: 'cartões (amarelos + vermelhos)',
+  freeKickGoals: 'gols de falta',
+  finalGoals: 'gols em finais',
+  penaltyGoals: 'gols de pênalti',
 };
 
 /** "180", "1.234", "60,5" → número. */

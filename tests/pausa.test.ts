@@ -93,7 +93,7 @@ test('admin reconhecido pelo @lid quando a Evolution manda os dois ids', async (
   assert.match(asText(out), /ativado neste grupo/);
 });
 
-test('contexto da jogada vai para a IA; temas regionais sorteiam clubes da região', async () => {
+test('a IA só recebe a posição (nunca o clube ou a seleção da rodada); temas regionais sorteiam clubes da região', async () => {
   assert.equal(describeContext({ position: 'GOL', kind: 'club', teamId: 'atletico-mg' }), 'goleiro que jogou no Atlético-MG');
   assert.equal(describeContext({ position: 'ATA', kind: 'country', teamId: 'argentina' }), 'atacante da seleção de Argentina');
   const seen: Array<string | undefined> = [];
@@ -101,7 +101,8 @@ test('contexto da jogada vai para a IA; temas regionais sorteiam clubes da regi�
   const lookup = createLookup(store, async (q, hint) => (seen.push(hint), null));
   await lookup('Victor', { position: 'GOL', kind: 'club', teamId: 'atletico-mg' });
   await lookup('Victor');
-  assert.deepEqual(seen, ['goleiro que jogou no Atlético-MG', undefined], 'com e sem contexto são consultas separadas');
+  // Rodada 13: com "que jogou no Atlético-MG" a IA tendia a concordar e inventar a passagem (Otamendi no Boca).
+  assert.deepEqual(seen, ['goleiro', undefined], 'com e sem contexto são consultas separadas, e o clube não vai para a IA');
   const br = new Set(clubsIn('br').map((t) => t.id));
   const brasileirao = MODES.find((m) => m.id === 'brasileirao')!;
   for (let i = 0; i < 10; i++) {

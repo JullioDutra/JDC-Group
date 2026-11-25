@@ -5,4 +5,5 @@
 - Dado de 2026 só entra com fonte; o que ainda pode mudar (campeonato em andamento, final por jogar) fica de fora até ser confirmado.
 - Nunca mexer no bot pessoal de finanças (instância `financas` da Evolution), nem reiniciar o container da Evolution ou os containers do Cadrius.
 - Dados do Transfermarkt só por cadastro manual do admin (sem scraping).
+- **Novidades com imagem:** toda atualização com mudança que o grupo percebe ganha uma entrada nova no topo de `NEWS` em `src/lib/game/novidades.ts` (id = data da versão; linhas com até 48 letras; `games: ['impostor']` no que for do Impostor). O bot manda a imagem sozinho, uma vez por grupo; o comando *novidades* mostra de novo.
 - Testes: `npm test`; build: `npx next build`.

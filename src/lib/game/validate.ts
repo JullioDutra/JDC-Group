@@ -7,7 +7,17 @@ import type { LookupContext } from '../players/types';
  * Regras de escalação compartilhadas pelo 1 x 1 e pela Escalação em Grupo:
  * posição, clube/seleção sorteados e dado confiável no tema.
  */
-export type Verdict = { ok: true; value: number } | { ok: false; reason: string };
+/** `kind`: o que deu errado; 'data' (falta o número do tema) não é culpa de quem jogou e não gasta tentativa. */
+export type Verdict = { ok: true; value: number } | { ok: false; reason: string; kind: 'position' | 'club' | 'country' | 'data' };
+
+/** Tentativas por vez: nome inexistente, repetido, posição ou clube/seleção errados gastam uma. */
+export const PICK_TRIES = 3;
+
+/** "Clubes: Vélez, Porto, Valencia..." para a recusa: todo mundo vê por onde o jogador passou. */
+export function clubsNote(clubs: string[], max = 7): string {
+  if (!clubs.length) return '';
+  return ` Clubes: ${clubs.slice(0, max).join(', ')}${clubs.length > max ? '…' : ''}.`;
+}
 
 export function checkPick(
   profile: PlayerProfile,
@@ -18,18 +28,18 @@ export function checkPick(
 ): Verdict {
   if (!profile.positions.includes(slot)) {
     const actual = profile.positions.map((p) => POSITION_LABEL[p]).join('/');
-    return { ok: false, reason: `*${profile.name}* é ${actual}, e esta rodada pede um ${POSITION_LABEL[slot]}.` };
+    return { ok: false, kind: 'position', reason: `*${profile.name}* é ${actual}, e esta rodada pede um ${POSITION_LABEL[slot]}.` };
   }
   const team = getTeam(restriction?.teamId);
   if (team && restriction?.kind === 'club' && !playedForClub(team, profile.clubs)) {
-    return { ok: false, reason: `*${profile.name}* não tem passagem pelo *${team.name}*.` };
+    return { ok: false, kind: 'club', reason: `*${profile.name}* não tem passagem pelo *${team.name}*.${clubsNote(profile.clubs)}` };
   }
   if (team && restriction?.kind === 'country' && !isFromNation(team, profile.nationality)) {
-    return { ok: false, reason: `*${profile.name}* não é da seleção *${team.name}*.` };
+    return { ok: false, kind: 'country', reason: `*${profile.name}* não é da seleção *${team.name}*${profile.nationality ? ` (é de ${profile.nationality})` : ''}.` };
   }
   const value = metricValue(profile, mode.metric, now);
   if (value === null) {
-    return { ok: false, reason: `Não tenho um dado confiável de ${mode.tagline.split(' · ')[0].toLowerCase()} para *${profile.name}*.` };
+    return { ok: false, kind: 'data', reason: `Não tenho um dado confiável de ${mode.tagline.split(' · ')[0].toLowerCase()} para *${profile.name}*.` };
   }
   return { ok: true, value };
 }

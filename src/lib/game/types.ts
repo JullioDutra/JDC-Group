@@ -28,7 +28,10 @@ export type MetricKey =
   | 'debutYear'
   | 'clubsCount'
   | 'marketValueEurM'
-  | 'careerCards';
+  | 'careerCards'
+  | 'freeKickGoals'
+  | 'finalGoals'
+  | 'penaltyGoals';
 
 /** Ficha de um jogador de futebol, devolvida pela IA e guardada em cache. */
 export interface PlayerProfile {
@@ -62,6 +65,10 @@ export interface PlayerProfile {
   marketValueEurM?: number | null;
   /** Cartões na carreira (amarelos + vermelhos). Opcional: fichas antigas em cache não têm. */
   careerCards?: number | null;
+  /** Gols de falta, gols em finais e gols de pênalti (temas 20 a 22). */
+  freeKickGoals?: number | null;
+  finalGoals?: number | null;
+  penaltyGoals?: number | null;
   /** Data da conferência dos números corrigidos à mão (AAAA-MM-DD), se houver. */
   manualAt?: string;
 }
@@ -124,6 +131,8 @@ export interface MatchState {
   winner: Side | 'draw' | null;
   /** turnStartedAt da vez em que já avisamos "não é sua vez" (1 aviso por vez). */
   nudgedAt?: number;
+  /** Tentativas erradas na vez atual (key = "rodada:lado"; cada lado tem uma vez por rodada). */
+  tries?: { key: string; n: number };
   /** Prazo automático da vez (QStash): fim da vez e o token do agendamento. */
   deadline?: number | null;
   timerToken?: string | null;
@@ -208,6 +217,8 @@ export interface EscalacaoParty extends PartyBase {
   picks: Record<string, Array<Pick | null>>;
   /** Chaves normalizadas de tudo que já foi escalado na partida (respostas únicas). */
   used: string[];
+  /** Tentativas erradas por pessoa em cada rodada ("rodada:jid"). */
+  tries?: Record<string, number>;
 }
 
 export interface Top10Item {
@@ -499,7 +510,7 @@ export interface ImpostorParty extends PartyBase {
   /** Volta das dicas (0 ou 1) e posição na ordem. */
   lap: number;
   turn: number;
-  phase: 'cards' | 'clues' | 'debate' | 'voting' | 'runoff' | 'guess';
+  phase: 'cards' | 'clues' | 'debate' | 'voting' | 'runoff' | 'minerva' | 'guess';
   /** Dicas dadas (word null = passou o tempo). */
   clues: Array<{ jid: string; lap: number; word: string | null }>;
   /** Votos da votação (quem votou -> em quem) e do 2º turno. */
@@ -525,6 +536,13 @@ export interface ImpostorParty extends PartyBase {
   guessing?: string;
   /** Quem votou num impostor numa votação apurada (ganha mais pontos se o grupo vencer). */
   rightVoters?: string[];
+  /** Detetive (só com 2 impostores): inocente com 1 voto de minerva na partida. */
+  detective?: string;
+  /** O detetive já usou o voto de minerva (e se acertou um impostor). */
+  minervaUsed?: boolean;
+  minervaHit?: boolean;
+  /** Resultado da votação esperando a janela do detetive: mais votados, votos e de que fase veio. */
+  pending?: { top: string[]; max: number; from: 'voting' | 'runoff' };
 }
 
 /** Top 100 do dia: uma lista de 100 por dia; cada acerto vale a posição. */
@@ -707,7 +725,7 @@ export type ImageSpec =
   | { kind: 'conexoesBoard'; state: ConexoesParty; reveal: boolean }
   | { kind: 'gradeBoard'; state: GradeParty; final: boolean }
   | { kind: 'top100Board'; state: Top100Party; final: boolean }
-  | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }> }
+  | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }>; /** Etiqueta do canto (padrão: nome do jogo). */ pill?: string }
   /** Rosto Borrado: level 0 a 2 = borrão (forte a leve), 3 = foto limpa (revelação, com o nome em `answer`). */
   | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Preenchidos na hora de renderizar: a foto (data URI) e o tamanho dela. */ photo?: string; photoW?: number; photoH?: number };
 

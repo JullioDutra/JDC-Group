@@ -115,7 +115,7 @@ test('quem não está na base: a IA pesquisa, entra na base e a próxima busca n
   });
   const ctx = { position: 'ATA' as const, kind: 'club' as const, teamId: 'flamengo' };
   assert.equal((await lookup('Pedro', ctx))?.name, 'Pedro');
-  assert.deepEqual(asked, ['atacante que jogou no Flamengo']);
+  assert.deepEqual(asked, ['atacante'], 'a IA só recebe a posição, nunca o clube da rodada');
   assert.equal((await lookup('Pedro Guilherme', ctx))?.name, 'Pedro');
   assert.equal(asked.length, 1, 'segunda vez veio da base');
   assert.equal(await store.countPlayers(), 2);

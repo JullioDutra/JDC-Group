@@ -5,7 +5,7 @@ import { freshPick } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, ignoredLeagueNote, leagueFits, leagueLabel, metricValue, parseModeChoice, randomMode } from './modes';
 import { getTeam, isFromNation, playedForClub } from './teams';
-import { drawRestrictions, playContext } from './validate';
+import { PICK_TRIES, clubsNote, drawRestrictions, playContext } from './validate';
 import { helpText } from './commands';
 import { applyCorrection, applyFamousName, findRecords, formatCard, parseCorrection, parseFamousName } from '../players/admin';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
@@ -19,6 +19,8 @@ import { IMPOSTOR_RULES, cardText, impostorThemesText } from '../party/impostor'
 import { ACTIVATE_IMPOSTOR, IMPOSTOR_GROUP_HELP, isImpostorOnly, setImpostorOnly } from './groupMode';
 import type { SimData } from '../sim/brasileirao';
 import { SIM_COMMAND, simulatorText } from '../sim/text';
+import { NEWS, NEWS_COMMAND, NEWS_SEEN_KIND, newsOutgoing } from './novidades';
+import { LIGAS_COMMAND, ligasOutgoing } from './ligas';
 import { SNAPSHOT_2026 } from '../sim/snapshot-2026';
 import { siteUrl } from '../sim/data';
 import {
@@ -56,6 +58,8 @@ export interface EngineDeps {
   checkWords?: WordCheck;
   /** Grade: títulos fora das listas curadas (IA). */
   checkFact?: FactCheck;
+  /** Produção: anuncia as novidades da versão (1 vez por grupo). Testes: desligado. */
+  announce?: boolean;
   /** Simulador do Brasileirão: dados ao vivo (sem a função, a versão guardada). */
   brasileirao?: () => Promise<SimData>;
 }
@@ -99,7 +103,7 @@ const RULES = [
   '2. O anfitrião escolhe o tema (ou manda *aleatório* para sortear; com *iniciar aleatório* o sorteio é automático). Temas: gols, assistências, valor de mercado, idade... Extras: some *cego* (números escondidos até o fim), *relâmpago* (45s por jogada), *difícil* (clubes menos óbvios) ou uma liga (*brasileirão*, *premier*, *la liga*, *série a*, *bundesliga*, *ligue 1*, *argentino*: só clubes dela, misturando grandes e pequenos). Ex.: *3 cego*, *1 brasileirão*.',
   '3. São 6 rodadas, uma por posição: goleiro, 2 defensores, 2 meias e 1 atacante.',
   '4. Um de cada vez: só depois que os dois escolhem o goleiro a rodada dos defensores é liberada, e assim por diante. Na sua vez, mande só o *nome do jogador*. A IA confere se ele existe, se joga na posição e informa o número dele no tema.',
-  '5. Jogador inválido não passa a vez: você tenta de novo. Ninguém pode repetir um jogador já escalado.',
+  '5. Jogador inválido não passa a vez: você tenta de novo, até 3 tentativas (nome inventado, repetido, posição ou clube errado gastam uma). Errou 3: fica com o pior valor do tema. O clube é conferido no Wikidata. Ninguém pode repetir um jogador já escalado.',
   '6. Só os dois jogadores da partida podem escalar; mensagens de quem está de fora são ignoradas até o fim do jogo.',
   '7. No fim, somam-se os números dos 6 escalados. Dependendo do tema, vence a maior ou a menor soma.',
   `8. Cada vez tem prazo (${TURN_SECONDS}s; 45s no relâmpago). Estourou: a vez passa com o pior valor do tema. ${'3'} vezes seguidas sem jogar: derrota por W.O.`,
@@ -307,12 +311,35 @@ function applyPick(state: MatchState, side: Side, pick: { name: string; key: str
 export async function handleMessage(msg: IncomingMessage, deps: EngineDeps): Promise<Outgoing[]> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      return await handleOnce(msg, deps);
+      const out = await handleOnce(msg, deps);
+      return deps.announce ? await withNews(msg, deps, out) : out;
     } catch (error) {
       if (!(error instanceof ConflictError)) throw error;
     }
   }
   return [];
+}
+
+/**
+ * Novidades da versão: na primeira resposta do bot num grupo ativo depois de
+ * uma atualização, fora de partida (não atrapalha jogo em andamento), a
+ * imagem vai junto. Uma vez por versão em cada grupo.
+ */
+async function withNews(msg: IncomingMessage, deps: EngineDeps, out: Outgoing[]): Promise<Outgoing[]> {
+  const news = NEWS[0];
+  if (!news || !out.length || !msg.groupJid.endsWith('@g.us')) return out;
+  try {
+    if (!(await deps.store.isGroupActive(msg.groupJid))) return out;
+    if (await deps.store.getActiveMatch(msg.groupJid)) return out;
+    const seen = await deps.store.getSeen(msg.groupJid, NEWS_SEEN_KIND);
+    if (seen.includes(news.id)) return out;
+    await deps.store.markSeen(msg.groupJid, NEWS_SEEN_KIND, [news.id]);
+    const card = newsOutgoing(news, await isImpostorOnly(deps.store, msg.groupJid));
+    return card ? [...out, card] : out;
+  } catch (error) {
+    console.error('novidades falharam', error);
+    return out;
+  }
 }
 
 /**
@@ -366,6 +393,7 @@ const HELP_WORDS = ['ajuda', 'menu', 'comandos', 'jogos', 'ajuda jogos'];
 async function impostorOnlyFor(store: EngineDeps['store'], groupJid: string, norm: string): Promise<boolean> {
   const relevant =
     HELP_WORDS.includes(norm) || ['ajuda texto', 'modos', 'temas', 'regras'].includes(norm) || /^temas (do |de )?impostor$/.test(norm) ||
+    NEWS_COMMAND.test(norm) || LIGAS_COMMAND.test(norm) ||
     Boolean(parsePartyStart(norm)) || Boolean(parseStart(norm));
   return relevant ? isImpostorOnly(store, groupJid) : false;
 }
@@ -449,6 +477,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (onlyImpostor) {
     if (HELP_WORDS.includes(norm) || norm === 'ajuda texto') return [text(IMPOSTOR_GROUP_HELP)];
     if (norm === 'modos' || norm === 'temas') return [text(impostorThemesText('', true))];
+    if (LIGAS_COMMAND.test(norm)) return [text('Neste grupo só o *Impostor* está ativo; as ligas são dos temas de futebol. O admin libera os outros jogos com *ativar jogos*.')];
     const other = parsePartyStart(norm);
     if ((other && other.game !== 'impostor') || parseStart(norm)) {
       return [text('Neste grupo só o *Impostor* está ativo. Mande *abrir impostor* (ou *ajuda*). O admin libera os outros jogos com *ativar jogos*.')];
@@ -462,7 +491,12 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return [{ type: 'image', image: { kind: 'help' }, caption: 'Mande o comando do jogo. Dúvida sobre um jogo? Abra a sala e mande *regras*.' }];
   }
   if (norm === 'ajuda texto') return [text(HELP)];
+  if (NEWS_COMMAND.test(norm)) {
+    const card = NEWS[0] ? newsOutgoing(NEWS[0], onlyImpostor) : null;
+    return card ? [card] : [text('Sem novidades por enquanto.')];
+  }
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
+  if (LIGAS_COMMAND.test(norm)) return [ligasOutgoing()];
   if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
   if (/^temas (do |de )?impostor$/.test(norm)) return [text(impostorThemesText('', onlyImpostor))];
   // "ranking": do 1º ao 10º. "ranking b": do 11º ao 20º.
@@ -750,8 +784,23 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     return [text('A consulta falhou por um instante. Mande o nome de novo.')];
   }
   const retry = `A vez continua com *${sender.name}*.`;
+  /**
+   * Escolha errada gasta 1 das 3 tentativas da vez (contra "mandar nome
+   * aleatório até passar"). Na 3ª, a vez acaba com o pior valor do tema.
+   */
+  const wrong = async (reason: string): Promise<Outgoing[]> => {
+    const key = `${state.round}:${side}`;
+    const n = state.tries?.key === key ? state.tries.n + 1 : 1;
+    state.tries = { key, n };
+    if (n < PICK_TRIES) return save([text(`❌ ${reason} Tentativa ${n}/${PICK_TRIES}. ${retry}`)]);
+    const step = applyPick(state, side, { name: 'Sem acerto', key: `erros-${state.round}-${side}`, value: mode.penalty }, nowMs);
+    return advance(
+      `❌ ${reason}\n🚫 *${sender.name}* errou ${PICK_TRIES} vezes e ficou com o pior valor do tema nesta posição (*${formatNumber(mode.penalty)} ${mode.unit}*).`,
+      step,
+    );
+  };
   if (!profile) {
-    return [text(`❌ Não encontrei nenhum jogador chamado "${msg.text.trim()}". ${retry}`)];
+    return wrong(`Não encontrei nenhum jogador chamado "${msg.text.trim()}".`);
   }
   // Cada jogador real só pode ser usado UMA vez na partida, por qualquer um dos dois,
   // em qualquer rodada e por qualquer clube (ex.: Alexis no Arsenal bloqueia Alexis no United).
@@ -760,19 +809,19 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   const used = findUsed(state, [key, typed]);
   if (used) {
     const by = used.side === side ? 'por você' : `por *${state.players[used.side]!.name}*`;
-    return [text(`❌ *${profile.name}* já foi escalado nesta partida (${by}). Respostas repetidas não valem, nem por outro time. ${retry}`)];
+    return wrong(`*${profile.name}* já foi escalado nesta partida (${by}). Respostas repetidas não valem, nem por outro time.`);
   }
   if (!profile.positions.includes(slot)) {
     const actual = profile.positions.map((p) => POSITION_LABEL[p]).join('/');
-    return [text(`❌ *${profile.name}* é ${actual}, e esta rodada pede um ${POSITION_LABEL[slot]}. ${retry}`)];
+    return wrong(`*${profile.name}* é ${actual}, e esta rodada pede um ${POSITION_LABEL[slot]}.`);
   }
   const restriction = state.restrictions[state.round];
   const team = getTeam(restriction.teamId);
   if (team && restriction.kind === 'club' && !playedForClub(team, profile.clubs)) {
-    return [text(`❌ *${profile.name}* não tem passagem pelo *${team.name}*. ${retry}`)];
+    return wrong(`*${profile.name}* não tem passagem pelo *${team.name}*.${clubsNote(profile.clubs)}`);
   }
   if (team && restriction.kind === 'country' && !isFromNation(team, profile.nationality)) {
-    return [text(`❌ *${profile.name}* não é da seleção *${team.name}*. ${retry}`)];
+    return wrong(`*${profile.name}* não é da seleção *${team.name}*${profile.nationality ? ` (é de ${profile.nationality})` : ''}.`);
   }
   const value = metricValue(profile, mode.metric, now);
   if (value === null) {

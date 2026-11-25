@@ -32,8 +32,12 @@ async function table(n: number, open = 'abrir impostor', lobby?: string, seed = 
     for (let i = 0; i < 40 && (await state()).phase !== phase; i++) await tick();
     assert.equal((await state()).phase, phase);
   };
-  /** Todo mundo que pode votar vota no alvo (o alvo vota no primeiro outro da cédula). */
-  const voteAll = async (target: string) => {
+  /**
+   * Todo mundo que pode votar vota no alvo (o alvo vota no primeiro outro da
+   * cédula). Com detetive, a apuração abre a janela da minerva: `pass` deixa o
+   * prazo correr (vale a votação).
+   */
+  const voteAll = async (target: string, pass = true) => {
     const s = await state();
     const no = String(s.ballot.indexOf(target) + 1);
     const out: Outgoing[] = [];
@@ -43,6 +47,7 @@ async function table(n: number, open = 'abrir impostor', lobby?: string, seed = 
         out.push(...(await say(name(jid), String(s.ballot.indexOf(other) + 1))));
       } else out.push(...(await say(name(jid), no)));
     }
+    if (pass && (await state())?.phase === 'minerva') out.push(...(await tick()));
     return out;
   };
   return { say, tick, state, start, lobbyOut, name, until, voteAll };
@@ -141,4 +146,36 @@ test('2 impostores: o pego acerta o segredo e rouba para os dois (+4 e +2 o parc
   assert.match(end, /rouba a vitória para os impostores/);
   assert.match(end, new RegExp(`\\+${IMPOSTOR_POINTS.stole} ${t.name(b)}\\b`));
   assert.match(end, new RegExp(`\\+${IMPOSTOR_POINTS.partner} ${t.name(a)}\\b`));
+});
+
+test('Detetive: com 2 impostores, um inocente decide a votação 1 vez com o voto de minerva (+3)', async () => {
+  const t = await table(8, 'abrir impostor', '2 impostores', 41);
+  let s = await t.state();
+  const det = s.detective!;
+  const [a, b] = impostorsOf(s);
+  assert.ok(det && det !== a && det !== b, 'o detetive é inocente');
+  const dms = t.start.filter((o): o is Extract<Outgoing, { type: 'dm' }> => o.type === 'dm');
+  assert.match(dms.find((d) => d.to === det)!.text, /DETETIVE[\s\S]*minerva/);
+  assert.doesNotMatch(dms.find((d) => d.to === a)!.text, /DETETIVE/);
+  await t.until('voting');
+  s = await t.state();
+  // A votação aponta um inocente (nem impostor, nem o detetive).
+  const innocent = s.ballot.find((j) => j !== a && j !== b && j !== det)!;
+  const win = asText(await t.voteAll(innocent, false));
+  assert.match(win, new RegExp(`A votação apontou \\*${t.name(innocent)}\\*[\\s\\S]*Detetive[\\s\\S]*minerva`));
+  assert.equal((await t.state()).phase, 'minerva');
+  // Só o detetive usa a minerva.
+  const noA = String((await t.state()).ballot.indexOf(a) + 1);
+  const other = s.ballot.find((j) => j !== det && j !== a && j !== b)!;
+  assert.equal(asText(await t.say(t.name(other), `minerva ${noA}`)), '');
+  const used = asText(await t.say(t.name(det), `minerva ${noA}`));
+  assert.match(used, new RegExp(`${t.name(det)}\\* era o \\*detetive\\*[\\s\\S]*Pegaram um impostor: \\*${t.name(a)}\\*`));
+  // A erra; na nova votação não há mais janela (a minerva só vale 1 vez).
+  await t.say(t.name(a), 'Batman');
+  const second = asText(await t.voteAll(b, false));
+  assert.match(second, /Pegaram um impostor/);
+  assert.doesNotMatch(second, /Detetive, se discordar/);
+  const end = asText(await t.tick());
+  assert.match(end, /Vitória do grupo/);
+  assert.match(end, new RegExp(`\\+${IMPOSTOR_POINTS.detective} ${t.name(det)}\\b`));
 });

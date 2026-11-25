@@ -9,12 +9,23 @@ import { STAT_KEYS, type LookupContext, type PlayerRecord, type StatKey } from '
 /** Fonte de pesquisa quando o jogador não está na base (a IA). */
 export type IdentifySource = (query: string, hint?: string) => Promise<PlayerProfile | null>;
 export type StatSource = (player: PlayerRecord, stat: StatKey) => Promise<number | null>;
+/** Clubes verdadeiros de um jogador do Wikidata (null = não deu para saber). */
+export type ClubSource = (id: string) => Promise<string[] | null>;
 export type PlayerLookup = (query: string, ctx?: LookupContext) => Promise<PlayerProfile | null>;
 
 /** Troque quando mudar o formato das chaves de "não achei". */
 const NEG_VERSION = 'v3';
 
 /** "goleiro que jogou no Atlético-MG": contexto em texto para a IA. */
+/**
+ * O que a IA recebe sobre a jogada: SÓ a posição. Clube e seleção da rodada
+ * ficam de fora: com "que jogou no Boca", a IA tendia a concordar e devolver o
+ * Boca na lista de clubes (foi assim que o Otamendi passou no Boca).
+ */
+export function aiContext(ctx: LookupContext | undefined): string | undefined {
+  return ctx?.position ? POSITION_LABEL[ctx.position] : undefined;
+}
+
 export function describeContext(ctx: LookupContext | undefined): string | undefined {
   if (!ctx) return undefined;
   const pos = ctx.position ? POSITION_LABEL[ctx.position] : 'jogador';
@@ -82,6 +93,9 @@ export function toProfile(r: PlayerRecord): PlayerProfile {
     debutYear: manualDebut ?? r.debutYear ?? n('debutYear'),
     marketValueEurM: n('marketValueEurM'),
     careerCards: n('careerCards'),
+    freeKickGoals: n('freeKickGoals'),
+    finalGoals: n('finalGoals'),
+    penaltyGoals: n('penaltyGoals'),
     manualAt: manualDate(r),
   };
 }
@@ -163,8 +177,9 @@ async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRe
   const fromAi = statsFrom(profile);
   let record: PlayerRecord;
   if (same) {
-    const clubs = [...same.clubs];
-    for (const c of profile.clubs) if (!clubs.some((x) => normalize(x) === normalize(c))) clubs.push(c);
+    // Clubes da IA nunca se somam a uma ficha que já tem clubes (eram a porta
+    // dos "clubes aleatórios" do Puskás): só preenchem ficha vazia.
+    const clubs = same.clubs.length ? [...same.clubs] : [...profile.clubs];
     record = {
       ...same,
       positions: same.positions.length ? same.positions : profile.positions,
@@ -248,7 +263,34 @@ export function anchorEstimate(record: PlayerRecord, stat: StatKey): number | nu
  *    se o nome devolvido bater com o digitado; aí entra na base.
  * 3. Falta o número do tema: pergunta focada só nele, que fica gravada.
  */
-export function createPlayerLookup(store: Store, identify: IdentifySource, stats?: StatSource): PlayerLookup {
+/**
+ * Rodada de clube: os clubes de um jogador do Wikidata vêm da fonte (cache de
+ * 30 dias). Se a ficha gravada tiver clube a mais (contaminada por respostas
+ * antigas da IA), ela é regravada só com os verdadeiros.
+ */
+async function verifiedClubs(store: Store, record: PlayerRecord, clubs: ClubSource): Promise<PlayerRecord> {
+  if (!/^Q\d+$/.test(record.id)) return record;
+  const key = `wdclubs:v1:${record.id}`;
+  let list: string[] | null = null;
+  const cached = await store.getCachedProfile(key).catch(() => undefined);
+  if (cached) list = cached.clubs;
+  else {
+    try {
+      list = await clubs(record.id);
+    } catch (error) {
+      console.error('clubes do Wikidata falharam', record.id, error);
+    }
+    if (list) await store.putCachedProfile(key, { exists: true, name: record.name, clubs: list } as unknown as PlayerProfile).catch(() => undefined);
+  }
+  if (!list) return record;
+  const same = list.length === record.clubs.length && list.every((c, i) => c === record.clubs[i]);
+  if (same) return record;
+  const fixed = { ...record, clubs: list };
+  await store.upsertPlayers([fixed]).catch((error) => console.error('regravar clubes falhou', error));
+  return fixed;
+}
+
+export function createPlayerLookup(store: Store, identify: IdentifySource, stats?: StatSource, clubs?: ClubSource): PlayerLookup {
   return async (query, ctx) => {
     const started = Date.now();
     const q = normalize(query);
@@ -272,7 +314,7 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       const negKey = `${NEG_VERSION}:neg:${q}#${contextKey(ctx)}`;
       const negative = await store.getCachedProfile(negKey);
       if (negative === undefined) {
-        const profile = await identify(query, desc);
+        const profile = await identify(query, aiContext(ctx));
         if (profile && nameMatchesQuery(query, acceptedNames(profile))) {
           record = await saveFromAi(store, profile, candidates);
           outcome = 'ia';
@@ -297,7 +339,7 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
     // Ficha do Wikidata sem posição: a IA completa (uma vez só).
     if (record.positions.length === 0) {
       try {
-        const extra = await identify(record.name, record.birthDate ? `nascido em ${record.birthDate}` : desc);
+        const extra = await identify(record.name, record.birthDate ? `nascido em ${record.birthDate}` : aiContext(ctx));
         if (extra && nameMatchesQuery(record.name, acceptedNames(extra)) && extra.positions.length) {
           record = { ...record, positions: extra.positions };
           await store.upsertPlayers([record]);
@@ -313,6 +355,9 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
     } catch (error) {
       console.error('juntar duplicadas falhou', error);
     }
+
+    // Rodada de clube: confere os clubes na fonte antes de o jogo validar.
+    if (clubs && ctx?.kind === 'club') record = await verifiedClubs(store, record, clubs);
 
     const stat = isStatKey(ctx?.metric) ? ctx!.metric as StatKey : null;
     if (stat && stats && needsStat(record, stat)) {

@@ -17,12 +17,15 @@ export type StatKey =
   | 'heightCm'
   | 'debutYear'
   | 'marketValueEurM'
-  | 'careerCards';
+  | 'careerCards'
+  | 'freeKickGoals'
+  | 'finalGoals'
+  | 'penaltyGoals';
 
 export const STAT_KEYS: StatKey[] = [
   'careerGoals', 'careerAssists', 'peakValueEurM', 'intlCaps', 'intlGoals', 'worldCupGoals', 'uclGoals',
   'titles', 'careerApps', 'brasileiraoGoals', 'libertadoresGoals', 'worldCupsPlayed', 'heightCm', 'debutYear',
-  'marketValueEurM', 'careerCards',
+  'marketValueEurM', 'careerCards', 'freeKickGoals', 'finalGoals', 'penaltyGoals',
 ];
 
 /** Ficha guardada na base de jogadores (tabela players). */

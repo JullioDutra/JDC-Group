@@ -1444,3 +1444,95 @@ Total: 155 testes passando e build ok.
   - caça aos dois com vitória do grupo;
   - inocente acusado na 2ª votação;
   - roubo com pontos do parceiro.
+
+## 30. Precisão na escalação, ligas visíveis, novidades com imagem, detetive no Impostor e 3 temas novos (25/11)
+
+> Pedido: "O jogo está aceitando muitos jogadores que não passaram por aqueles clubes. Exemplo: Otamendi no Boca, Puskás em clubes aleatórios. E falta uma parte de ver quais ligas tem disponíveis. Sempre que tiver novidades, após uma atualização ter uma imagem do que foi mudado. Vamos fazer validação, correções e um planejamento detalhado. Vamos pensar em dinâmicas para tirar isso de pessoas mandar nomes aleatórios e dar certo, precisamos ser mais precisos. Adicione as ideias da imagem."
+> Ideias do print: no Impostor com 2 impostores, um *acusador/detetive*: jogador normal que vota e, uma vez por partida, se não concordar com a votação, decide sozinho ("voto de minerva"). Temas novos: jogadores com mais *gols de falta*, mais *gols em finais* e mais *gols de pênalti*.
+
+### 30.1 Diagnóstico: por que o Otamendi passava no Boca
+
+1. A ficha do Otamendi (Wikidata) não tem o Boca, então nenhuma ficha "cumpre" a rodada.
+2. O bot pergunta à IA com o contexto "defensor **que jogou no Boca Juniors**".
+3. A IA tende a concordar e devolve o Boca na lista de clubes.
+4. O nome bate, e a ficha da IA é **somada à ficha do Wikidata** (os clubes novos entram para sempre).
+5. Resultado: a jogada passa, e a ficha fica contaminada para as próximas partidas.
+
+O Puskás é o mesmo caso repetido: cada rodada com um clube diferente acrescentou um clube à ficha dele ("clubes aleatórios").
+
+### 30.2 Correções de validação
+
+- **Clube conferido na fonte.** Em rodada de clube, os clubes de um jogador do Wikidata vêm da própria consulta ao Wikidata (passagens P54, sem base nem time B).
+  - Cache de 30 dias por jogador.
+  - A ficha contaminada é regravada só com os clubes verdadeiros: a limpeza acontece sozinha, jogador por jogador, conforme aparecem nas partidas.
+  - Se o Wikidata não responder, vale a ficha gravada (como hoje).
+- **A IA não recebe mais o clube nem a seleção da rodada,** só a posição. Ela não tem mais o que "confirmar".
+- **A IA nunca mais soma clubes a uma ficha que já tem clubes.** Só preenche ficha vazia.
+- **Recusa explicada:** "❌ Otamendi não tem passagem pelo Boca. Clubes: Vélez, Porto, Valencia, Manchester City, Benfica". Todo mundo vê e confere.
+
+### 30.3 Dinâmicas contra "mandar nome aleatório até passar"
+
+- **3 tentativas por vez.** Nome inexistente, repetido, posição errada ou clube/seleção errados gastam tentativa.
+  - Na 3ª errada, a vez acaba com o pior valor do tema (1 x 1); na sala, a pessoa fica sem jogador naquela rodada.
+  - Falha da consulta ou falta de número do tema não contam.
+  - O bot mostra "tentativa 2/3".
+- **Validação mais dura** (30.2): o chute só passa se o jogador passou de fato pelo clube.
+- **Próximas ideias (não entram agora):**
+  - *duvido*: o adversário contesta uma escolha, o bot confere com regra mais dura, e quem errou perde pontos;
+  - exigir nome completo quando houver homônimos;
+  - mostrar os anos no clube.
+
+### 30.4 Ligas disponíveis
+
+- **Comando *ligas*:** imagem com as 7 ligas do filtro (Brasileirão, Premier League, La Liga, Série A, Bundesliga, Ligue 1 e Argentino). Mostra quantos clubes cada uma tem, exemplos de grandes, médios e raiz, e como pedir (*abrir sala 1 brasileirão*).
+- **Onde aparece:** na ajuda e no rodapé do menu de temas.
+
+### 30.5 Novidades com imagem
+
+- **Lista de novidades no código:** data e itens, cada item marcado com os jogos que afeta.
+- **Anúncio automático:** na primeira vez que o bot responde num grupo depois de uma atualização, ele manda junto a imagem "NOVIDADES", uma vez por versão e por grupo.
+  - O grupo só de Impostor recebe só as novidades do Impostor.
+- **Comando *novidades*:** mostra a imagem de novo.
+- **Regra fixa no CLAUDE.md:** toda atualização com mudança visível ganha uma entrada nas novidades.
+
+### 30.6 Impostor: detetive (voto de minerva)
+
+- **Quando existe:** só na partida com 2 impostores (7 ou mais na mesa).
+- **Quem é:** um inocente sorteado recebe no privado "você é o DETETIVE": sabe o segredo e vota normal.
+- **Quando age:**
+  - Ao fim de cada votação (com resultado ou empate), se o poder não foi usado, o bot mostra o resultado e abre 15 s.
+  - Nesses 15 s o detetive pode mandar *minerva* + número no grupo. A escolha dele vale sozinha, mais que todos os votos, e ele se revela.
+  - Só 1 vez por partida.
+  - Se não usar, segue o resultado normal (empate vai para o 2º turno).
+- **Pontos:** o detetive que acerta um impostor com a minerva leva +3 se o grupo vencer. Se errar, o impostor escapa como numa votação errada.
+
+### 30.7 Três temas novos na Escalação
+
+- **20. Rei da Falta:** gols de falta na carreira (clube sorteado, maior soma).
+- **21. Decisivo:** gols em finais (jogos finais de copas e campeonatos, clubes + seleção).
+- **22. Dono da Marca:** gols de pênalti na carreira (sem disputa de pênaltis).
+- **Dados:** a IA responde um número por jogador, como nos outros temas, e o admin corrige à mão (*corrigir X gols de falta N*).
+  - Faixas plausíveis: falta de 0 a 100, finais de 0 a 60, pênalti de 0 a 250.
+- **Menu:** passa a ter 22 cards (11 por coluna).
+
+### 30.8 O que fica de fora
+
+- Rosto Borrado: pausado a pedido. A 2ª leva de fotos está guardada.
+- Repasse da limpeza de fichas em toda a base de uma vez: a limpeza acontece conforme os jogadores aparecem (30.2).
+- *duvido* e anos no clube (30.3): próxima rodada, se o grupo quiser.
+
+### 30.9 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Clube conferido no Wikidata | Na hora, com cache e conserto da ficha | Feito. Rodada de clube consulta as passagens (P54); ficha contaminada é regravada; fora do ar, vale a ficha |
+| IA sem clube/seleção da rodada | Só a posição | Feito (teste com o caso Otamendi/Boca) |
+| IA não soma clubes | Só preenche ficha vazia | Feito (teste com o caso Puskás) |
+| Recusa com os clubes | "Clubes: ..." | Feito no 1 x 1 e na sala; na seleção, mostra o país do jogador |
+| 3 tentativas por vez | 1 x 1 e sala | Feito. Falha da consulta e falta de número não contam; regras e saguão atualizados |
+| Comando *ligas* | Imagem com as 7 ligas | Feito (clubes por liga, exemplos por nível e como pedir); no menu, na ajuda e no texto |
+| Novidades com imagem | Lista, anúncio 1x por grupo, comando | Feito. Fora de partida, uma vez por versão; grupo só de Impostor vê só o do Impostor; regra no CLAUDE.md |
+| Detetive no Impostor | Minerva 1x, janela de 15 s | Feito. Vale também em empate (decide sem 2º turno); +3 se acertar e o grupo vencer |
+| Temas 20 a 22 | Falta, finais, pênalti | Feito: Rei da Falta, Decisivo, Dono da Marca; *corrigir* aceita os 3 dados; menu com 22 cards |
+
+**Testes:** `tests/rodada13.test.ts` (7) e o detetive em `tests/impostor2.test.ts`. Total: 172 testes passando e build ok.

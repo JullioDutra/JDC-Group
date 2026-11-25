@@ -232,6 +232,20 @@ export function buildRecords(
   return out;
 }
 
+/**
+ * Clubes de um jogador direto do Wikidata (passagens P54, sem base, time B nem
+ * seleção), na ordem da carreira. null = não deu para saber (sem resposta, ou
+ * o Wikidata não tem nenhuma passagem): aí vale a ficha gravada.
+ */
+export async function fetchClubs(id: string, fetcher: Fetcher = fetch, timeoutMs = 8_000): Promise<string[] | null> {
+  if (!/^Q\d+$/.test(id)) return null;
+  const teams = await sparql(teamsQuery([id]), fetcher, timeoutMs);
+  if (!teams.length) return null;
+  const identity: Binding[] = [{ p: { type: 'uri', value: `http://www.wikidata.org/entity/${id}` }, pt: { type: 'literal', value: id } }];
+  const [record] = buildRecords([{ id, sitelinks: 0, birth: null }], identity, [], teams);
+  return record ? record.clubs : null;
+}
+
 // ---------- Passo da importação ----------
 
 /**

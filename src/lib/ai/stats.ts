@@ -25,6 +25,9 @@ export const STAT_QUESTION: Record<StatKey, string> = {
   debutYear: 'ano da estreia como profissional',
   marketValueEurM: 'valor de mercado ATUAL, em milhões de euros (referência Transfermarkt); 0 se já parou de jogar',
   careerCards: 'cartões recebidos na carreira profissional, amarelos + vermelhos somados, em jogos oficiais de clubes e da seleção principal',
+  freeKickGoals: 'gols de falta (cobrança direta) em jogos oficiais na carreira profissional, clubes + seleção principal; 0 se nunca fez',
+  finalGoals: 'gols marcados em finais (o jogo que decide o título, ou os jogos da final) de campeonatos e copas oficiais, por clubes e seleção principal; disputa de pênaltis não conta; 0 se nunca fez',
+  penaltyGoals: 'gols de pênalti em jogos oficiais na carreira profissional, clubes + seleção principal (disputa de pênaltis não conta); 0 se nunca fez',
 };
 
 const SYSTEM = `Você é um estatístico de futebol. Recebe um jogador já identificado e UM dado pedido.

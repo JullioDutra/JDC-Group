@@ -138,6 +138,22 @@ export const MODES: GameMode[] = [
     metric: 'careerCards', unit: 'cartões', direction: 'high', restriction: 'club',
     what: 'Escale os mais faltosos: conta amarelos + vermelhos na carreira.',
   }),
+  // Rodada 13 (ideias do grupo).
+  mode({
+    id: 'rei-da-falta', number: 20, name: 'Rei da Falta', tagline: 'Gols de falta · clube sorteado',
+    metric: 'freeKickGoals', unit: 'gols', direction: 'high', restriction: 'club',
+    what: 'Escale quem mais fez gol de falta (cobrança direta) na carreira.',
+  }),
+  mode({
+    id: 'decisivo', number: 21, name: 'Decisivo', tagline: 'Gols em finais · clube sorteado',
+    metric: 'finalGoals', unit: 'gols', direction: 'high', restriction: 'club',
+    what: 'Escale quem mais marcou em finais de campeonato e de copa.',
+  }),
+  mode({
+    id: 'dono-da-marca', number: 22, name: 'Dono da Marca', tagline: 'Gols de pênalti · clube sorteado',
+    metric: 'penaltyGoals', unit: 'gols', direction: 'high', restriction: 'club',
+    what: 'Escale quem mais converteu pênalti em jogo (disputa não conta).',
+  }),
 ];
 
 export function getMode(id: string | null): GameMode | undefined {
@@ -178,6 +194,9 @@ const RANGES: Record<MetricKey, [number, number]> = {
   clubsCount: [1, 40],
   marketValueEurM: [0, 250],
   careerCards: [0, 400],
+  freeKickGoals: [0, 100],
+  finalGoals: [0, 60],
+  penaltyGoals: [0, 250],
 };
 
 function raw(profile: PlayerProfile, metric: MetricKey, now: Date): number | null {

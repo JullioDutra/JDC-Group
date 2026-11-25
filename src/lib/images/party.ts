@@ -111,7 +111,7 @@ export function partyLobby(state: PartyState): ReactElement {
     rules = [
       'Todos escalam a mesma posição ao mesmo tempo: GOL, 2 DEF, 2 MEI, 1 ATA.',
       '1 jogador por pessoa em cada rodada. Nome já usado não vale.',
-      'Vence a melhor soma no tema.',
+      '3 tentativas por rodada: errou 3, fica com o pior valor. Vence a melhor soma.',
     ];
   } else if (state.game === 'top10') {
     const labels: Record<string, string> = { futebol: 'Futebol', geral: 'Conhecimentos gerais', politica: 'Política', historia: 'História', anime: 'Animes' };

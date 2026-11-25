@@ -31,7 +31,10 @@ export const IMPOSTOR_VOTE_SECONDS = 45;
 export const IMPOSTOR_RUNOFF_SECONDS = 30;
 export const IMPOSTOR_GUESS_SECONDS = 20;
 export const IMPOSTOR_FAST_SECONDS = 25;
-export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1, partner: 2 };
+export const IMPOSTOR_POINTS = { escaped: 5, stole: 4, rightVote: 2, team: 1, partner: 2, detective: 3 };
+/** Janela do detetive depois de cada apuração (voto de minerva). */
+export const IMPOSTOR_MINERVA_SECONDS = 15;
+const MINERVA = /^minerva (\d{1,2})$/;
 /** Mínimo de jogadores para valer o 2º impostor. */
 export const IMPOSTOR_TWO_MIN = 7;
 /** "2 impostores", "dois impostores", "segundo impostor", "impostor duplo" (e "1 impostor" desliga). */
@@ -45,6 +48,7 @@ export const IMPOSTOR_RULES = [
   `Pegaram o impostor? Ele tem ${IMPOSTOR_GUESS_SECONDS}s para acertar o segredo e roubar a vitória.`,
   `Pontos: impostor que escapa +${IMPOSTOR_POINTS.escaped} (rouba acertando: +${IMPOSTOR_POINTS.stole}); grupo vence: +${IMPOSTOR_POINTS.rightVote} para quem votou certo, +${IMPOSTOR_POINTS.team} para os outros.`,
   `Com ${IMPOSTOR_TWO_MIN} ou mais na mesa, o anfitrião pode mandar *2 impostores*: um não sabe do outro, e o grupo só vence pegando os dois (o impostor que vence com o parceiro pego leva +${IMPOSTOR_POINTS.partner}).`,
+  `Com 2 impostores, um inocente é o *detetive* (só ele sabe). Depois de cada votação o bot dá ${IMPOSTOR_MINERVA_SECONDS}s: se discordar, ele manda *minerva* + número e a escolha dele decide sozinha. Só 1 vez na partida; acertando, +${IMPOSTOR_POINTS.detective} se o grupo vencer.`,
   'Não recebeu a carta? Mande *carta* aqui ou *oi* para o bot no privado.',
 ];
 
@@ -114,10 +118,17 @@ export function cardText(state: ImpostorParty, jid: string): string {
       'Ouça as dicas, finja que sabe e tente descobrir o segredo. Se te pegarem, ainda dá para roubar a vitória acertando o segredo.'
     );
   }
+  if (jid === state.detective) {
+    return (
+      `🕵️ *Impostor*: o segredo é *${secret.name}* (tema: ${secret.theme}).\n\n` +
+      'Você é o *DETETIVE*: inocente, dá dica e vota normal. Nesta partida são *2 impostores*.\n' +
+      `Uma vez na partida, depois de uma votação, o bot dá ${IMPOSTOR_MINERVA_SECONDS}s: se você discordar, mande *minerva* + número no grupo e a sua escolha decide sozinha (voto de minerva).`
+    );
+  }
   return (
     `🤫 *Impostor*: o segredo é *${secret.name}* (tema: ${secret.theme}).\n\n` +
     'Não fale o nome! Dê dicas que mostrem que você sabe, sem entregar para o impostor.' +
-    (two(state) ? '\n\n⚠️ Nesta partida são *2 impostores*: o grupo só vence pegando os dois.' : '')
+    (two(state) ? '\n\n⚠️ Nesta partida são *2 impostores*, e um inocente é o *detetive* (com 1 voto de minerva). O grupo só vence pegando os dois.' : '')
   );
 }
 
@@ -133,6 +144,12 @@ export function startImpostor(state: ImpostorParty, deps: PartyDeps): Outgoing[]
   const withTwo = wantsTwo && jids.length >= IMPOSTOR_TWO_MIN;
   const others = jids.filter((j) => j !== state.impostor);
   state.impostors = withTwo ? [state.impostor, others[Math.floor(deps.rng() * others.length)]] : [state.impostor];
+  // Detetive: um inocente sorteado, só na partida com 2 impostores.
+  const innocents = jids.filter((j) => !state.impostors!.includes(j));
+  state.detective = withTwo ? innocents[Math.floor(deps.rng() * innocents.length)] : undefined;
+  state.minervaUsed = false;
+  state.minervaHit = false;
+  state.pending = undefined;
   // Ordem sorteada; impostor nunca abre a 1ª volta (seria difícil demais para ele).
   const order = shuffle(jids, deps.rng);
   if (isImpostor(state, order[0])) {
@@ -145,7 +162,7 @@ export function startImpostor(state: ImpostorParty, deps: PartyDeps): Outgoing[]
   const secret = secretOf(state);
   const mesa = order.map((jid, i) => `${i + 1}. ${nameOf(state, jid)}`).join('\n');
   const note = withTwo
-    ? '\n🎭🎭 São *2 impostores*: um não sabe do outro. O grupo só vence pegando os dois.'
+    ? '\n🎭🎭 São *2 impostores*: um não sabe do outro. Um inocente é o *detetive*, com 1 voto de minerva. O grupo só vence pegando os dois.'
     : wantsTwo
       ? `\n(2 impostores só com ${IMPOSTOR_TWO_MIN} ou mais na mesa: hoje vai 1.)`
       : jids.length >= IMPOSTOR_TWO_MIN
@@ -291,28 +308,84 @@ function tally(state: ImpostorParty, deps: PartyDeps): Outgoing[] {
   const counts = new Map<string, number>();
   for (const target of Object.values(box)) counts.set(target, (counts.get(target) ?? 0) + 1);
   const max = Math.max(0, ...counts.values());
+  const top = max === 0 ? [] : [...counts.entries()].filter(([, n]) => n === max).map(([jid]) => jid);
+  const from = state.phase === 'runoff' ? 'runoff' : 'voting';
+  // Detetive com o voto de minerva guardado: 15 s para discordar antes de valer.
+  if (detectiveReady(state)) return openMinerva(state, { top, max, from }, deps);
+  return applyResult(state, { top, max, from }, deps);
+}
+
+/** O detetive ainda pode usar o voto de minerva? */
+const detectiveReady = (state: ImpostorParty) =>
+  Boolean(state.detective && !state.minervaUsed && inGame(state, state.detective) && active(state).includes(state.detective));
+
+function openMinerva(state: ImpostorParty, pending: NonNullable<ImpostorParty['pending']>, deps: PartyDeps): Outgoing[] {
+  state.phase = 'minerva';
+  state.pending = pending;
+  state.warned = [];
+  const { top, max } = pending;
+  const result =
+    top.length === 0
+      ? 'Ninguém votou.'
+      : top.length > 1
+        ? `Empate entre ${namesOf(state, top)} (${max} voto${max === 1 ? '' : 's'} cada).`
+        : `A votação apontou *${nameOf(state, top[0])}* (${max} voto${max === 1 ? '' : 's'}).`;
+  const lines = state.ballot.map((jid, i) => `${i + 1}. ${nameOf(state, jid)}`).join('\n');
+  return [
+    text(
+      `🗳️ ${result}\n🕵️ *Detetive*, se discordar, mande *minerva* + número em ${IMPOSTOR_MINERVA_SECONDS}s: a sua escolha decide sozinha (só 1 vez na partida). Senão, vale a votação.\n\n${lines}`,
+    ),
+    schedule(state, IMPOSTOR_MINERVA_SECONDS, deps.now.getTime(), 'imp'),
+  ];
+}
+
+/** Vale o resultado da votação (sem minerva): empate vai para o 2º turno; mais votado é revelado. */
+function applyResult(state: ImpostorParty, pending: NonNullable<ImpostorParty['pending']>, deps: PartyDeps): Outgoing[] {
+  state.pending = undefined;
+  const { top, max, from } = pending;
   const escapes = two(state) ? 'os impostores escapam' : 'o impostor escapa';
-  if (max === 0) return escaped(state, `Ninguém votou: ${escapes}.`, deps);
-  const top = [...counts.entries()].filter(([, n]) => n === max).map(([jid]) => jid);
+  if (top.length === 0) return escaped(state, `Ninguém votou: ${escapes}.`, deps);
   if (top.length > 1) {
-    if (state.phase === 'voting') return openRunoff(state, state.ballot.filter((jid) => top.includes(jid)), deps);
+    if (from === 'voting') return openRunoff(state, state.ballot.filter((jid) => top.includes(jid)), deps);
     return escaped(state, `Empate de novo no 2º turno: ${escapes}.`, deps);
   }
   closeVote(state);
-  const voted = top[0];
-  if (!isImpostor(state, voted)) return escaped(state, `😱 *${nameOf(state, voted)}* era INOCENTE (${max} voto${max === 1 ? '' : 's'})!`, deps);
+  return reveal(state, top[0], `(${max} voto${max === 1 ? '' : 's'})`, deps);
+}
+
+/** O escolhido é impostor? Pego: chance de roubar. Inocente: impostores vencem. */
+function reveal(state: ImpostorParty, voted: string, why: string, deps: PartyDeps, lead = ''): Outgoing[] {
+  if (!isImpostor(state, voted)) return escaped(state, `${lead}😱 *${nameOf(state, voted)}* era INOCENTE ${why}!`, deps);
   state.phase = 'guess';
   state.guessing = voted;
   state.warned = [];
   const left = loose(state).filter((jid) => jid !== voted).length;
   return [
     text(
-      `🎯 Pegaram ${two(state) ? 'um impostor' : 'o impostor'}: *${nameOf(state, voted)}* (${max} voto${max === 1 ? '' : 's'})!\n` +
+      `${lead}🎯 Pegaram ${two(state) ? 'um impostor' : 'o impostor'}: *${nameOf(state, voted)}* ${why}!\n` +
         `Última chance, ${nameOf(state, voted)}: mande o segredo aqui no grupo em ${IMPOSTOR_GUESS_SECONDS}s. Acertou, rouba a vitória.` +
         (left ? `\nSe errar, a caça continua: ainda tem *${left} impostor* na mesa.` : ''),
     ),
     schedule(state, IMPOSTOR_GUESS_SECONDS, deps.now.getTime(), 'imp'),
   ];
+}
+
+/** "minerva N" do detetive na janela: a escolha dele decide sozinha (1 vez na partida). */
+function minervaAnswer(state: ImpostorParty, player: PartyPlayer, n: number, deps: PartyDeps, save: Save): Promise<Outgoing[]> | Outgoing[] {
+  if (player.jid !== state.detective || state.minervaUsed) return [];
+  const chosen = state.ballot[n - 1];
+  if (!chosen) return [];
+  const who = firstName(player.name);
+  if (chosen === player.jid) return warnOnce(state, player.jid, `*${who}*, o detetive não pode escolher a si mesmo.`, save);
+  state.minervaUsed = true;
+  state.pending = undefined;
+  closeVote(state);
+  if (isImpostor(state, chosen)) {
+    state.minervaHit = true;
+    state.rightVoters = [...new Set([...(state.rightVoters ?? []), player.jid])];
+  }
+  const lead = `🕵️ *${who}* era o *detetive* e usou o voto de minerva: decide sozinho em *${nameOf(state, chosen)}*.\n`;
+  return save(reveal(state, chosen, '(voto de minerva)', deps, lead));
 }
 
 /** Votação apurada: guarda quem votou num impostor (pontos no fim) e zera a urna. */
@@ -382,6 +455,10 @@ export function impostorAnswer(state: ImpostorParty, player: PartyPlayer, msg: I
     return [];
   }
   if (state.phase === 'voting' || state.phase === 'runoff') return voteAnswer(state, player, msg, deps, save);
+  if (state.phase === 'minerva') {
+    const m = norm.match(MINERVA);
+    return m ? minervaAnswer(state, player, Number(m[1]), deps, save) : [];
+  }
   if (state.phase === 'guess') return guessAnswer(state, player, msg, deps, save);
   return [];
 }
@@ -424,6 +501,9 @@ export function impostorTimeout(state: ImpostorParty, deps: PartyDeps): Outgoing
     case 'voting':
     case 'runoff':
       return tally(state, deps);
+    case 'minerva':
+      // O detetive não usou: vale a votação.
+      return applyResult(state, state.pending ?? { top: [], max: 0, from: 'voting' }, deps);
     case 'guess':
       return missedGuess(state, deps, '⏱️ O impostor não chutou a tempo.');
   }
@@ -460,7 +540,13 @@ export function finishImpostor(state: ImpostorParty, outcome: Outcome, reason: s
             : IMPOSTOR_POINTS.escaped;
       award(p, points, nowMs);
     } else if (!impostorWins) {
-      award(p, right.has(p.jid) ? IMPOSTOR_POINTS.rightVote : IMPOSTOR_POINTS.team, nowMs);
+      const points =
+        p.jid === state.detective && state.minervaHit
+          ? IMPOSTOR_POINTS.detective
+          : right.has(p.jid)
+            ? IMPOSTOR_POINTS.rightVote
+            : IMPOSTOR_POINTS.team;
+      award(p, points, nowMs);
     }
   }
   if (outcome !== 'cancelled') {
@@ -507,8 +593,9 @@ export function impostorBoard(state: ImpostorParty, final: boolean, subtitle?: s
       if (score) lines.push(`+${score} pontos`);
     }
     const showImpostor = final && isImpostor(state, jid);
+    const showDetective = final && jid === state.detective;
     return {
-      head: `${i + 1}. ${boardName(state, jid)}${showImpostor ? ' · IMPOSTOR' : ''}${inGame(state, jid) ? '' : ' (saiu)'}`,
+      head: `${i + 1}. ${boardName(state, jid)}${showImpostor ? ' · IMPOSTOR' : ''}${showDetective ? ' · DETETIVE' : ''}${inGame(state, jid) ? '' : ' (saiu)'}`,
       lines,
       highlight: showImpostor,
     };

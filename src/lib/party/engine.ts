@@ -19,7 +19,7 @@ import {
   Top10List,
   Top10Party,
 } from '../game/types';
-import { checkPick, drawRestrictions, playContext, restrictionLine } from '../game/validate';
+import { PICK_TRIES, checkPick, drawRestrictions, playContext, restrictionLine } from '../game/validate';
 import type { Store } from '../store/types';
 import {
   LEADING_ARTICLE,
@@ -830,16 +830,35 @@ async function escalacaoAnswer(
     console.error('lookup failed', error);
     return [text(`*${who}*, a consulta falhou. Manda o nome de novo.`)];
   }
-  if (!profile) return [text(`❌ *${who}*: não achei "${msg.text.trim()}". Manda outro.`)];
+  /**
+   * Escolha errada gasta 1 das 3 tentativas da rodada (contra "mandar nome
+   * aleatório até passar"). Na 3ª, a pessoa fica com o pior valor do tema.
+   */
+  const wrong = async (reason: string): Promise<Outgoing[]> => {
+    const k = `${state.round}:${player.jid}`;
+    const tries = (state.tries ??= {});
+    tries[k] = (tries[k] ?? 0) + 1;
+    if (tries[k] < PICK_TRIES) return save([text(`❌ *${who}*: ${reason} Tentativa ${tries[k]}/${PICK_TRIES}. Manda outro.`)]);
+    picks[state.round] = { name: 'Sem acerto', key: `erros-${player.jid}-${state.round}`, value: mode.penalty };
+    player.missed = 0;
+    const out: Outgoing[] = [text(`❌ *${who}*: ${reason}\n🚫 *${who}* errou ${PICK_TRIES} vezes e fica com o pior valor do tema nesta rodada.`)];
+    const waiting = activePlayers(state).filter((p) => state.picks[p.jid][state.round] === null);
+    return save(waiting.length ? out : [...out, ...closeRound(state, deps, 'Todos responderam.')]);
+  };
+  if (!profile) return wrong(`não achei "${msg.text.trim()}".`);
 
   const key = normalize(profile.name);
   const typed = normalize(msg.text);
   if (state.used.includes(key) || state.used.includes(typed)) {
     const owner = state.players.find((p) => state.picks[p.jid]?.some((x) => x && (x.key === key || x.aliases?.includes(typed))));
-    return [text(`❌ *${who}*: ${profile.name} já foi escalado${owner ? ` por ${firstName(owner.name)}` : ''}. Manda outro.`)];
+    return wrong(`${profile.name} já foi escalado${owner ? ` por ${firstName(owner.name)}` : ''}.`);
   }
   const verdict = checkPick(profile, SLOTS[state.round], state.restrictions[state.round], mode, deps.now);
-  if (!verdict.ok) return [text(`❌ *${who}*: ${verdict.reason} Manda outro.`)];
+  if (!verdict.ok) {
+    // Falta do número do tema não é culpa de quem jogou: não gasta tentativa.
+    if (verdict.kind === 'data') return [text(`❌ *${who}*: ${verdict.reason} Manda outro.`)];
+    return wrong(verdict.reason);
+  }
 
   picks[state.round] = { name: profile.name, key, value: verdict.value, ...(typed !== key ? { aliases: [typed] } : {}) };
   state.used.push(key);
