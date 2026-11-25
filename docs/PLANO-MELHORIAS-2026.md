@@ -1445,6 +1445,16 @@ Total: 155 testes passando e build ok.
   - inocente acusado na 2ª votação;
   - roubo com pontos do parceiro.
 
+## Módulo Melhores do Ano — reta final 2026
+
+Planejado: coleta independente das partidas, desligada por padrão, administrada por ADMIN_NUMBERS; indicação por resposta ou texto/autor; categoria opcional, classificação e consulta paginada; persistência Neon e testes.
+Fonte: Melhores_do_Ano_2026_Dossie.pdf enviado pelo responsável (22 categorias, modalidades pessoa, lance/frase e nome do grupo).
+Fora do escopo: importar indicados/odds históricos, apostas, votação, pontuação, imagens dos jogos, fechamento automático por data e integração com outro site. A janela é controlada pelo admin.
+
+Entregue: módulo isolado com as 22 categorias, ajuda exclusiva em texto, ativação e encerramento por admin, coleta por resposta Evolution ou declaração manual, categoria opcional/classificação, histórico paginado, migração idempotente Neon e deduplicação atômica.
+Validação: 173 testes passaram (9 novos); TypeScript e build Next.js passaram. O CLI `npm test` encontrou bloqueio de socket IPC no ambiente, então a mesma suíte foi executada com `node --import tsx --test tests/*.test.ts`. SQL das novas operações conferido em PostgreSQL via PGlite, sem conexão com produção.
+Planejado x entregue: todos os itens planejados concluídos; não foram alteradas as imagens ou a ajuda principal.
+
 ## 30. Precisão na escalação, ligas visíveis, novidades com imagem, detetive no Impostor e 3 temas novos (25/11)
 
 > Pedido: "O jogo está aceitando muitos jogadores que não passaram por aqueles clubes. Exemplo: Otamendi no Boca, Puskás em clubes aleatórios. E falta uma parte de ver quais ligas tem disponíveis. Sempre que tiver novidades, após uma atualização ter uma imagem do que foi mudado. Vamos fazer validação, correções e um planejamento detalhado. Vamos pensar em dinâmicas para tirar isso de pessoas mandar nomes aleatórios e dar certo, precisamos ser mais precisos. Adicione as ideias da imagem."

@@ -680,6 +680,9 @@ export interface IncomingMessage {
   mentions?: string[];
   /** Autor da mensagem respondida (quando a mensagem é uma resposta). */
   quotedParticipant?: string;
+  quotedMessageId?: string;
+  quotedText?: string;
+  quotedAuthorName?: string;
   /** Mensagem no privado do bot (groupJid = a conversa com a pessoa). Só o Impostor usa. */
   private?: boolean;
 }
@@ -748,3 +751,4 @@ export interface FlagSpec {
   /** Losango central (Brasil). */
   diamond?: { color: string };
 }
+
