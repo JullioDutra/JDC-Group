@@ -21,15 +21,18 @@ base gerada (`src/lib/transfermarkt/dados.ts`), que vai junto no deploy.
 
 ## Passos
 
+Use sempre `npm run tm -- ...`: ele liga `NODE_USE_ENV_PROXY=1`, sem o qual o Node não passa pelo proxy da sessão.
+
+
 1. Rede: `curl -s -o /dev/null -w "%{http_code}" https://www.transfermarkt.com/robots.txt`.
    Se o proxy recusar, o host `www.transfermarkt.com` precisa estar liberado no
    ambiente (configuração de rede do ambiente da sessão).
-2. Alvos (uma vez, ou para ampliar): `npx tsx scripts/tm-sync.ts alvos --min-fama 30 --max 5000`
+2. Alvos (uma vez, ou para ampliar): `npm run tm -- alvos --min-fama 30 --max 5000`
    (Wikidata; espera sozinho se o serviço limitar). Para ir mais fundo, rode de
    novo com `--min-fama` menor.
-3. Leitura em lotes, em segundo plano: `npx tsx scripts/tm-sync.ts rodar --limite 300`
+3. Leitura em lotes, em segundo plano: `npm run tm -- rodar --limite 300`
    (300 jogadores ≈ 1 hora). Retoma de onde parou; salva a cada 10.
-4. Conferir: `npx tsx scripts/tm-sync.ts status`; olhar no relatório os "sem
+4. Conferir: `npm run tm -- status`; olhar no relatório os "sem
    leitura" (formato da página mudou? então ajustar `src/lib/transfermarkt/parse.ts`
    com uma página real como fixture de teste antes de seguir).
 5. `npm test` e `npx next build`; commit de `src/lib/transfermarkt/dados.ts` e

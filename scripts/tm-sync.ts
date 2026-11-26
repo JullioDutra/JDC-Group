@@ -3,18 +3,20 @@
  * (na sessão do Claude ou na máquina do admin) e grava a base versionada em
  * src/lib/transfermarkt/dados.ts, que vai junto no deploy.
  *
- *   npx tsx scripts/tm-sync.ts alvos [--min-fama 30] [--max 5000]
+ * Use "npm run tm -- <comando>" (liga NODE_USE_ENV_PROXY=1 para o Node usar o proxy).
+ *
+ *   npm run tm -- alvos [--min-fama 30] [--max 5000]
  *       Monta data/transfermarkt-alvos.json pelo Wikidata: futebolistas com
  *       código do Transfermarkt (P2446), dos mais famosos para os menos.
- *   npx tsx scripts/tm-sync.ts rodar [--limite 100] [--intervalo 4000] [--refazer-dias 30]
+ *   npm run tm -- rodar [--limite 100] [--intervalo 4000] [--refazer-dias 30]
  *       Lê no Transfermarkt os alvos ainda sem dado (ou com dado velho).
  *       Salva a cada 10 jogadores; para sozinho se o site bloquear.
- *   npx tsx scripts/tm-sync.ts status
+ *   npm run tm -- status
  *
  * Boa vizinhança (no TmClient): 1 pedido a cada 4 s (mínimo 2 s), robots.txt,
  * User-Agent do bot e parada no bloqueio, sem contornar.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { TmBlocked, TmClient } from '../src/lib/transfermarkt/client';
 import { TM_DADOS } from '../src/lib/transfermarkt/dados';
 import { readTmPlayer } from '../src/lib/transfermarkt/sync';
@@ -41,6 +43,36 @@ function saveDados(players: TmPlayer[]) {
   );
 }
 
+/** CSV simples (aspas duplas, vírgula, quebra de linha dentro de aspas). */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+    } else cell += ch;
+  }
+  if (cell || row.length) rows.push([...row, cell]);
+  return rows.filter((r) => r.some((c) => c));
+}
+
 async function alvos() {
   const minFama = arg('min-fama', 30);
   const max = arg('max', 5000);
@@ -53,20 +85,23 @@ async function alvos() {
   for (let attempt = 1; attempt <= 6; attempt++) {
     const res = await fetch('https://query.wikidata.org/sparql', {
       method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/sparql-results+json', 'user-agent': USER_AGENT },
+      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'text/csv', 'user-agent': USER_AGENT },
       body: new URLSearchParams({ query }).toString(),
     });
     const text = await res.text();
-    if (res.ok && text.trim().startsWith('{')) {
-      const rows = (JSON.parse(text) as { results: { bindings: Array<Record<string, { value: string }>> } }).results.bindings;
+    // CSV (bem menor que o JSON, que vinha cortado): p,tm,sl,pt,en
+    if (res.ok && text.startsWith('p,tm,sl')) {
+      const rows = parseCsv(text).slice(1);
       const seen = new Set<string>();
       const out: TmTarget[] = [];
-      for (const b of rows) {
-        const qid = b.p.value.split('/').pop()!;
-        if (seen.has(qid) || !/^\d+$/.test(b.tm.value)) continue;
+      for (const [p, tm, sl, pt, en] of rows) {
+        const qid = (p ?? '').split('/').pop() ?? '';
+        if (!/^Q\d+$/.test(qid) || seen.has(qid) || !/^\d+$/.test(tm ?? '')) continue;
         seen.add(qid);
-        out.push({ qid, tmId: b.tm.value, name: b.pt?.value ?? b.en?.value ?? qid, sitelinks: Number(b.sl.value) });
+        out.push({ qid, tmId: tm, name: pt || en || qid, sitelinks: Number(sl) });
       }
+      if (out.length < rows.length * 0.5) throw new Error('lista do Wikidata incompleta');
+      mkdirSync('data', { recursive: true });
       writeFileSync(ALVOS, JSON.stringify(out, null, 0).replace(/},{/g, '},\n{') + '\n');
       console.log(`${out.length} alvos (fama >= ${minFama}) em ${ALVOS}`);
       return;
