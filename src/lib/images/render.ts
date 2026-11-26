@@ -6,9 +6,8 @@ import type { ImageSpec } from '../game/types';
 import { glyphSafe } from './glyphs';
 import { buildImage } from './templates';
 import sharp from 'sharp';
-import { blurredFaces, loadPhoto } from './facePhoto';
+import { blurredFaces, rostoSource, type Face } from './facePhoto';
 import { PHOTO_MAX_H, PHOTO_MAX_W } from './rosto';
-import { getRosto } from '../party/content/rostos';
 import { BODY, DISPLAY, H, W } from './theme';
 
 type Font = { name: string; data: Buffer; weight: 400 | 500 | 700; style: 'normal' };
@@ -63,7 +62,7 @@ export function glyphSafeTree(node: ReactNode): ReactNode {
 export async function renderImage(spec: ImageSpec): Promise<Buffer> {
   let safe = glyphSafeSpec(spec);
   // Rosto Borrado: a foto entra pronta (borrada) depois do filtro de glifos.
-  if (safe.kind === 'faceQuiz') safe = { ...safe, ...(await facePhoto(safe.photoId, safe.level)) };
+  if (safe.kind === 'faceQuiz') safe = { ...safe, ...(await facePhoto(safe.photoId, safe.level, safe.faces)) };
   const element = glyphSafeTree(buildImage(safe)) as ReactElement;
   const response = new ImageResponse(element, { width: W, height: H, fonts: await loadFonts() });
   const png = Buffer.from(await response.arrayBuffer());
@@ -72,11 +71,11 @@ export async function renderImage(spec: ImageSpec): Promise<Buffer> {
 }
 
 /** Foto do Rosto Borrado (data URI e tamanho), ou nada se não der para baixar (o cartão avisa). */
-async function facePhoto(photoId: string, level: number): Promise<{ photo?: string; photoW?: number; photoH?: number }> {
-  const photo = getRosto(photoId);
-  if (!photo) return {};
+async function facePhoto(photoId: string, level: number, faces?: Face[]): Promise<{ photo?: string; photoW?: number; photoH?: number }> {
   try {
-    const ready = await blurredFaces(await loadPhoto(photo.url), photo.faces, level, PHOTO_MAX_W, PHOTO_MAX_H);
+    const src = await rostoSource(photoId);
+    if (!src) return {};
+    const ready = await blurredFaces(src.jpg, faces?.length ? faces : src.faces, level, PHOTO_MAX_W, PHOTO_MAX_H);
     return { photo: `data:image/jpeg;base64,${ready.jpg.toString('base64')}`, photoW: ready.width, photoH: ready.height };
   } catch (error) {
     console.error('foto do rosto borrado falhou', photoId, error);

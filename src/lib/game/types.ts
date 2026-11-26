@@ -598,6 +598,12 @@ export interface RostoParty extends PartyBase {
   /** Tentativas de cada um nesta rodada. */
   tries: Record<string, number>;
   solved: boolean;
+  /**
+   * As fotos sorteadas, guardadas na partida (nome, apelidos, rostos,
+   * crédito): a foto enviada pelo admin não está no código, e a partida não
+   * muda se ele editar no meio.
+   */
+  photos?: Array<{ id: string; name: string; aliases: string[]; faces: Array<[number, number, number, number]>; credit: string; upload?: boolean }>;
 }
 
 /** Leilão de Craques: orçamento, lances no chat, overall escondido até o fim. */
@@ -735,7 +741,7 @@ export type ImageSpec =
   | { kind: 'top100Board'; state: Top100Party; final: boolean }
   | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }>; /** Etiqueta do canto (padrão: nome do jogo). */ pill?: string }
   /** Rosto Borrado: level 0 a 2 = borrão (forte a leve), 3 = foto limpa (revelação, com o nome em `answer`). */
-  | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Preenchidos na hora de renderizar: a foto (data URI) e o tamanho dela. */ photo?: string; photoW?: number; photoH?: number };
+  | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Rostos e crédito da foto sorteada (fotos do admin não estão no código). */ faces?: Array<[number, number, number, number]>; credit?: string; /** Preenchidos na hora de renderizar: a foto (data URI) e o tamanho dela. */ photo?: string; photoW?: number; photoH?: number };
 
 /** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */
 export interface FlagSpec {

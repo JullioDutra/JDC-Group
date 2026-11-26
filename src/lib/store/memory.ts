@@ -2,7 +2,7 @@ import type { Nomination, NominationInput, NominationResult } from '../awards/ty
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
 import type { ManualClub, ManualEntry, ManualPosition, PlayerRecord, StatKey } from '../players/types';
-import type { MatchStats, Season, Store } from './types';
+import type { MatchStats, RostoUpload, Season, Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
 
@@ -40,6 +40,7 @@ export class MemoryStore implements Store {
   private importStates = new Map<string, unknown>();
   private seen = new Map<string, string[]>();
   private seasons = new Map<string, Season[]>();
+  private rostos = new Map<string, { photo: RostoUpload; jpg: Buffer | null }>();
   /** Partidas terminadas (grupo, jogo, quando), para o resumo da temporada. */
   private finished: Array<{ groupJid: string; game: string; at: string }> = [];
   readonly lookups: Array<{ query: string; context?: string; outcome: string; playerId?: string | null }> = [];
@@ -305,5 +306,22 @@ export class MemoryStore implements Store {
       .sort((a, b) => b.wins * 3 + b.draws - (a.wins * 3 + a.draws) || b.wins - a.wins || a.games - b.games)
       .slice(0, limit);
   }
-}
 
+  async listRostoPhotos(): Promise<RostoUpload[]> {
+    return [...this.rostos.values()].map((r) => structuredClone(r.photo)).reverse();
+  }
+
+  async getRostoJpg(id: string): Promise<Buffer | null> {
+    return this.rostos.get(id)?.jpg ?? null;
+  }
+
+  async saveRostoPhoto(photo: RostoUpload, jpg: Buffer | null): Promise<void> {
+    const old = this.rostos.get(photo.id);
+    this.rostos.delete(photo.id);
+    this.rostos.set(photo.id, { photo: structuredClone(photo), jpg: jpg ?? old?.jpg ?? null });
+  }
+
+  async deleteRostoPhoto(id: string): Promise<void> {
+    this.rostos.delete(id);
+  }
+}

@@ -2,7 +2,7 @@ import { findTeamByName } from '../game/teams';
 import { tmPlayerFor, withTransfermarkt } from '../transfermarkt';
 import { wikiStatsFor, withWikiStats } from './wikistats';
 import { formatNumber, normalize } from '../game/text';
-import { POSITION_LABEL } from '../game/types';
+import { POSITION_LABEL, type Position } from '../game/types';
 import type { Store } from '../store/types';
 import { queryKeys, queryTokens } from './keys';
 import { mergeDuplicates, statOf } from './lookup';
@@ -264,6 +264,71 @@ export function formatCard(card: PlayerRecord): string {
   if (wiki) lines.push(`📊 Jogos e gols da carreira pela Wikipédia (clubes + seleção)${wiki.asOf ? `, atualizados até ${brDate(wiki.asOf)}` : ''}.`);
   lines.push(`_id ${r.id.startsWith('ai:') ? 'pesquisado pela IA' : r.id}_`);
   return lines.join('\n');
+}
+
+/** Um número da ficha, com a fonte que vale hoje (para a página do admin). */
+export interface CardField {
+  stat: StatKey;
+  label: string;
+  value: number | null;
+  /** Quem deu o número: "admin", "transfermarkt", "wikipedia", "base" (Wikidata ou IA) ou "nenhuma". */
+  origin: 'admin' | 'transfermarkt' | 'wikipedia' | 'base' | 'nenhuma';
+  /** Texto da fonte: "Transfermarkt · 18/11/2026", "Wikipédia · até 21/11/2026"... */
+  source: string;
+}
+
+export interface CardView {
+  id: string;
+  name: string;
+  aliases: string[];
+  birthDate: string | null;
+  nationality: string | null;
+  positions: string[];
+  clubs: Array<{ name: string; source?: string }>;
+  fame: number;
+  fields: CardField[];
+}
+
+const WIKI_KEYS: StatKey[] = ['careerApps', 'careerGoals', 'intlCaps', 'intlGoals'];
+
+/** Ficha em dados (a página do admin mostra cada número com a fonte e deixa corrigir na linha). */
+export function cardView(card: PlayerRecord): CardView {
+  const r = withTransfermarkt(withWikiStats(card));
+  const tm = tmPlayerFor(r.id);
+  const wiki = wikiStatsFor(r.id);
+  const confirmed = new Map((r.manual?.clubs ?? []).map((c) => [c.name, c.source]));
+  const fields = STAT_KEYS.map((k): CardField => {
+    const manual = r.manual?.stats?.[k];
+    const value = k === 'heightCm' ? (manual?.value ?? r.heightCm ?? statOf(r, k)) : k === 'debutYear' ? (manual?.value ?? r.debutYear ?? statOf(r, k)) : statOf(r, k);
+    const base = { stat: k, label: STAT_LABEL[k], value: value ?? null };
+    if (manual) return { ...base, origin: 'admin', source: `${manual.source} · ${brDate(manual.at)}` };
+    if (value === null || value === undefined) return { ...base, origin: 'nenhuma', source: 'sem número' };
+    if (tm && typeof (tm.stats as Partial<Record<StatKey, number>>)[k] === 'number') return { ...base, origin: 'transfermarkt', source: `Transfermarkt · ${brDate(tm.at)}` };
+    if (wiki && WIKI_KEYS.includes(k) && (k === 'careerApps' || k === 'careerGoals' || wiki.intlCaps !== undefined)) {
+      return { ...base, origin: 'wikipedia', source: `Wikipédia · ${wiki.asOf ? `até ${brDate(wiki.asOf)}` : `lida em ${brDate(wiki.read)}`}` };
+    }
+    return { ...base, origin: 'base', source: r.id.startsWith('ai:') ? 'IA' : 'Wikidata ou IA' };
+  });
+  return {
+    id: r.id,
+    name: r.name,
+    aliases: r.aliases.slice(0, 6),
+    birthDate: r.birthDate,
+    nationality: r.nationality,
+    positions: r.positions.map((p) => POSITION_LABEL[p]),
+    clubs: r.clubs.filter((c) => !isNationalTeamLabel(c)).map((c) => (confirmed.has(c) ? { name: c, source: confirmed.get(c) } : { name: c })),
+    fame: r.sitelinks,
+    fields,
+  };
+}
+
+/** Posição que falta na ficha (o admin confirma; vale em todos os grupos). */
+export async function applyPositionCorrection(store: Store, cmd: { player: string; position: Position; source: string }, today: string): Promise<string> {
+  const [record] = await findRecords(store, cmd.player, 1);
+  if (!record) return `Não achei "${cmd.player}" na base.`;
+  if (record.positions.includes(cmd.position)) return `${record.name} já joga de ${POSITION_LABEL[cmd.position]} na ficha.`;
+  await store.addManualPosition(record.id, { position: cmd.position, source: cmd.source, at: today });
+  return `✅ ${record.name}: agora vale também como ${POSITION_LABEL[cmd.position]} (${cmd.source}, ${brDate(today)}).`;
 }
 
 export async function applyCorrection(store: Store, cmd: CorrectionCommand, today: string): Promise<string> {

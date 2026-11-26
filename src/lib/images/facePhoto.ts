@@ -1,4 +1,6 @@
 import sharp from 'sharp';
+import { getRosto, isUploadId } from '../party/content/rostos';
+import { getStore } from '../store';
 
 /**
  * Rosto Borrado: foto de jogo (o craque em campo) com TODOS os rostos
@@ -99,4 +101,33 @@ export async function loadPhoto(url: string): Promise<Buffer> {
   if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value as string);
   cache.set(url, buf);
   return buf;
+}
+
+// ---------- De onde vem a foto ----------
+
+/**
+ * Foto e rostos de uma rodada: a fixa vem do Commons; a enviada pelo admin
+ * ("up:...") vem do banco. Fica no mesmo cache em memória.
+ */
+export async function rostoSource(photoId: string): Promise<{ jpg: Buffer; faces: Face[] } | null> {
+  if (isUploadId(photoId)) {
+    const store = getStore();
+    const meta = (await store.listRostoPhotos()).find((r) => r.id === photoId);
+    const key = `upload:${photoId}`;
+    let jpg = cache.get(key) ?? null;
+    if (!jpg) {
+      jpg = await store.getRostoJpg(photoId);
+      if (!jpg) return null;
+      if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value as string);
+      cache.set(key, jpg);
+    }
+    return { jpg, faces: meta?.faces ?? [] };
+  }
+  const photo = getRosto(photoId);
+  return photo ? { jpg: await loadPhoto(photo.url), faces: photo.faces } : null;
+}
+
+/** O admin trocou ou apagou a foto: a próxima rodada baixa de novo. */
+export function forgetUpload(photoId: string): void {
+  cache.delete(`upload:${photoId}`);
 }

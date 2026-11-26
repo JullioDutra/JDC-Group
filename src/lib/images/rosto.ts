@@ -49,7 +49,7 @@ export function faceQuiz(spec: Extract<ImageSpec, { kind: 'faceQuiz' }>): ReactE
     ),
     box(
       { marginTop: 'auto', justifyContent: 'center' },
-      txt(fit(photo ? rostoCredit(photo, !reveal) : 'Foto: Wikimedia Commons', 96), { fontSize: 18, color: C.muted }),
+      txt(fit(spec.credit ?? (photo ? rostoCredit(photo, !reveal) : 'Foto: Wikimedia Commons'), 96), { fontSize: 18, color: C.muted }),
     ),
   );
 }

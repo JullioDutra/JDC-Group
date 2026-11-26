@@ -34,7 +34,8 @@ const SYSTEM = `Você é um estatístico de futebol. Recebe um jogador já ident
 Responda SOMENTE com JSON: {"valor": número ou null}.
 Dê o número real; se não souber o exato, dê a sua melhor estimativa (é um jogo entre amigos, uma estimativa boa vale mais que nada).
 Use null só se você não tiver nenhuma noção sobre esse jogador. Zero só quando o real for zero.
-Goleiros também marcam gols (pênaltis e faltas): conte esses gols quando o dado for de gols.`;
+Goleiros também marcam gols (pênaltis e faltas): conte esses gols quando o dado for de gols.
+Goleiro quase nunca dá assistência (a maioria tem de 0 a 10 na carreira): para goleiro, se não lembrar de nenhuma, responda 0, não null.`;
 
 export function describePlayer(p: PlayerRecord): string {
   const lines = [

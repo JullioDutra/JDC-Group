@@ -267,13 +267,29 @@ async function fetchStat(
   return { value: estimate, stored: false, estimate: estimate !== null };
 }
 
-/** Estimativa pelo Wikidata (somas por clube + seleção), só para gols e jogos na carreira. */
+/** Gols e assistências que goleiro quase nunca tem: sem dado, a jogada conta 0. */
+const KEEPER_ZERO: StatKey[] = [
+  'careerAssists', 'freeKickGoals', 'penaltyGoals', 'finalGoals', 'uclGoals', 'worldCupGoals', 'brasileiraoGoals', 'libertadoresGoals',
+];
+const keeperOnly = (r: PlayerRecord) => r.positions.length > 0 && r.positions.every((p) => p === 'GOL');
+
+/**
+ * Estimativa da jogada quando a IA não sabe (não fica gravada):
+ * - gols e jogos na carreira: somas do Wikidata por clube + seleção;
+ * - goleiro: gols e assistências contam 0 (só os gols pela seleção, se houver).
+ *   Sem isso a rodada do goleiro travava em Garçons e Artilheiros, porque a
+ *   IA costuma responder "não sei" para assistência de goleiro.
+ */
 export function anchorEstimate(record: PlayerRecord, stat: StatKey): number | null {
   const intl = (k: StatKey) => (typeof record.stats[k] === 'number' ? (record.stats[k] as number) : 0);
   if (stat === 'careerGoals' && record.anchors?.clubGoals != null && (record.anchors.clubApps ?? 0) > 0) {
     return record.anchors.clubGoals + intl('intlGoals');
   }
   if (stat === 'careerApps' && record.anchors?.clubApps) return record.anchors.clubApps + intl('intlCaps');
+  if (keeperOnly(record)) {
+    if (stat === 'careerGoals') return intl('intlGoals');
+    if (KEEPER_ZERO.includes(stat)) return 0;
+  }
   return null;
 }
 

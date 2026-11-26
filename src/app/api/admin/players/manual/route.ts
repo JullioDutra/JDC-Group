@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { secretMatches } from '@/lib/auth';
-import { STAT_WORDS, applyBatch, applyCorrection, applyFamousName, findRecords, formatCard } from '@/lib/players/admin';
-import type { StatKey } from '@/lib/players/types';
+import { STAT_WORDS, applyBatch, applyClubCorrection, applyCorrection, applyFamousName, applyPositionCorrection, cardView, findRecords, formatCard } from '@/lib/players/admin';
+import { STAT_KEYS, type StatKey } from '@/lib/players/types';
+import type { Position } from '@/lib/game/types';
 import { getStore } from '@/lib/store';
 
 export const runtime = 'nodejs';
@@ -18,13 +19,15 @@ const authorized = (request: Request) =>
  * POST {"player": "Rogério Ceni", "stat": "gols", "value": 131, "source": "Transfermarkt"}   um número
  * POST {"player": "...", "stat": "gols", "value": null}   apaga a correção
  * POST {"alias": "Gabigol", "player": "Gabriel Barbosa"}   nome famoso aceito
+ * POST {"player": "Q123", "club": "Fluminense", "source": "ge"}   passagem que falta
+ * POST {"player": "Q123", "position": "ATA", "source": "admin"}   posição que falta
  */
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const q = new URL(request.url).searchParams.get('q') ?? '';
   if (!q.trim()) return NextResponse.json({ error: 'mande ?q=nome' }, { status: 400 });
-  const records = await findRecords(getStore(), q, 5);
-  return NextResponse.json({ records, text: records.map((r) => formatCard(r)) });
+  const records = await findRecords(getStore(), q, 8);
+  return NextResponse.json({ records, text: records.map((r) => formatCard(r)), views: records.map((r) => cardView(r)) });
 }
 
 export async function POST(request: Request) {
@@ -36,6 +39,8 @@ export async function POST(request: Request) {
     value?: number | string | null;
     source?: string;
     alias?: string;
+    club?: string;
+    position?: string;
   };
   const store = getStore();
   const today = new Date().toISOString().slice(0, 10);
@@ -46,9 +51,18 @@ export async function POST(request: Request) {
   if (body.alias && body.player) {
     return NextResponse.json({ ok: true, result: await applyFamousName(store, { alias: body.alias, player: body.player }) });
   }
+  if (body.player && body.club) {
+    return NextResponse.json({ ok: true, result: await applyClubCorrection(store, { player: body.player, club: body.club, source: (body.source || 'admin').slice(0, 40) }, today) });
+  }
+  if (body.player && body.position) {
+    const position = body.position.toUpperCase() as Position;
+    if (!['GOL', 'DEF', 'MEI', 'ATA'].includes(position)) return NextResponse.json({ error: 'posição: GOL, DEF, MEI ou ATA' }, { status: 400 });
+    return NextResponse.json({ ok: true, result: await applyPositionCorrection(store, { player: body.player, position, source: (body.source || 'admin').slice(0, 40) }, today) });
+  }
   if (body.player && body.stat) {
-    const word = body.stat.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    const stat = (STAT_WORDS.find(([w]) => w === word)?.[1] ?? word) as StatKey;
+    const word = body.stat.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const stat = ((STAT_KEYS as string[]).includes(body.stat) ? body.stat : STAT_WORDS.find(([w]) => w === word)?.[1]) as StatKey | undefined;
+    if (!stat) return NextResponse.json({ error: `dado desconhecido: ${body.stat}` }, { status: 400 });
     const value = body.value === null || body.value === undefined || body.value === '' ? null : Number(String(body.value).replace(',', '.'));
     if (value !== null && !(Number.isFinite(value) && value >= 0)) return NextResponse.json({ error: 'valor inválido' }, { status: 400 });
     const result = await applyCorrection(store, { player: body.player, stat, value, source: body.source || 'Transfermarkt' }, today);

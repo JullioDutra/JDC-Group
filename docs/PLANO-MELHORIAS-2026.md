@@ -1916,3 +1916,45 @@ Num lote de teste de 20 páginas:
 
 - **Assistências, títulos e valor de mercado:** a Wikipédia não traz de forma padronizada. Continuam vindo do admin (*tm*, *corrigir*) ou da IA.
 - **Páginas com tabela própria** (Pelé e algumas lendas): sem número automático.
+
+## 36. Goleiros com número, página de correção e fotos do Rosto Borrado (26/11)
+
+> Pedidos:
+> - "Por que ainda não sai gols e assistência para goleiros?"
+> - "Você consegue criar uma página web para eu corrigir um valor quando precisar, realizando pesquisa por nome?"
+> - "Permita na página também que eu coloque fotos e exclua fotos do Rosto Borrado."
+
+### 36.1 Goleiros
+
+- **Causa:** a rodada do goleiro é a primeira de toda partida. Em Garçons, a IA respondia "não sei" para assistência de goleiro e não havia outra fonte; em Artilheiros, o mesmo acontecia com goleiro sem soma de gols no Wikidata. O jogador recebia "não tenho um dado confiável" e a rodada travava.
+- **Correção:**
+  - a pergunta à IA diz que goleiro quase nunca dá assistência e que, sem lembrar de nenhuma, a resposta é 0;
+  - se mesmo assim não houver número, goleiro (só goleiro) conta 0 em assistências e nos gols por competição, e os gols pela seleção nos gols da carreira;
+  - essa estimativa não fica gravada: a IA, a Wikipédia ou o admin trocam por um número de verdade.
+- **Gols de goleiro com fonte:** a base da Wikipédia (seção 35) já traz Buffon 0, Casillas 0, Neuer 0, Courtois 0, Alisson 1. Ceni e Chilavert entram na coleta.
+
+### 36.2 Página de correção (`/admin/jogadores`)
+
+- Busca enquanto digita (nome ou id Q).
+- Cada um dos 19 dados aparece com o número de hoje e a fonte: sua correção, Transfermarkt, Wikipédia (com a data), Wikidata ou IA, ou "sem número".
+- Correção na linha, com a fonte; ↩︎ apaga a correção e volta ao automático.
+- Também: passagem por clube que falta, posição que falta, nome famoso e lote colado.
+- A chave (ADMIN_KEY) fica só na aba do navegador.
+
+### 36.3 Fotos do Rosto Borrado (`/admin/rostos`)
+
+- **Enviar:** o admin escolhe a foto no celular, arrasta o dedo sobre cada rosto, vê o borrão forte e o leve e salva com nome, outros nomes aceitos e crédito.
+- **Guardar:** a foto é reduzida para até 1280 px, sem os metadados da câmera (local, aparelho), e fica no banco (tabela `rosto_photos`).
+- **Fotos fixas (Commons):** podem ser escondidas, mostradas de novo e ter os rostos remarcados; não são apagadas, porque estão no código.
+- **Excluir:** a foto enviada sai do banco na hora.
+- **No jogo:** o sorteio junta as fixas visíveis e as enviadas. A partida guarda as fotos sorteadas (nome, rostos, crédito), então editar no meio não muda a partida em andamento. Se tudo estiver escondido, valem as fixas.
+
+### 36.4 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Goleiro sem travar a rodada | Garçons e Artilheiros | ✅ e também nos temas de gols por competição (falta, pênalti, finais, Champions, Copa, Brasileirão, Libertadores) |
+| Página de correção | busca por nome e correção | ✅ com a fonte de cada número, clube, posição, nome famoso e lote |
+| Fotos do Rosto Borrado | pôr e tirar | ✅ com marcação do rosto, prévia do borrão, esconder e remarcar as fixas |
+| Testes | casos novos | ✅ `tests/goleiros.test.ts` (3) e `tests/admin-paginas.test.ts` (4); 224 no total |
+

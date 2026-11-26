@@ -6,7 +6,7 @@ import { nameKeys } from '../players/keys';
 import type { ManualClub, ManualData, ManualEntry, ManualPosition, PlayerRecord, StatKey } from '../players/types';
 import { normalize } from '../game/text';
 import type { Position } from '../game/types';
-import type { Store, MatchStats, Season } from './types';
+import type { Store, MatchStats, RostoUpload, Season } from './types';
 
 /** Fichas em cache valem 30 dias; "não achei" vale só 10 minutos (pode ter sido falha passageira). */
 const CACHE_TTL_DAYS = 30;
@@ -448,5 +448,37 @@ export class NeonStore implements Store {
       LIMIT ${limit}`;
     return rows as RankingRow[];
   }
-}
 
+  async listRostoPhotos(): Promise<RostoUpload[]> {
+    const rows = await this.sql`SELECT id, name, aliases, faces, credit, hidden, to_char(created_at, 'YYYY-MM-DD') AS at
+      FROM rosto_photos ORDER BY created_at DESC`;
+    return rows.map((r) => ({
+      id: r.id as string,
+      name: r.name as string,
+      aliases: (r.aliases as string[]) ?? [],
+      faces: (r.faces as RostoUpload['faces']) ?? [],
+      credit: (r.credit as string) ?? '',
+      hidden: r.hidden === true,
+      createdAt: r.at as string,
+    }));
+  }
+
+  async getRostoJpg(id: string): Promise<Buffer | null> {
+    const rows = await this.sql`SELECT jpg_b64 FROM rosto_photos WHERE id = ${id}`;
+    const b64 = rows[0]?.jpg_b64 as string | null | undefined;
+    return b64 ? Buffer.from(b64, 'base64') : null;
+  }
+
+  async saveRostoPhoto(photo: RostoUpload, jpg: Buffer | null): Promise<void> {
+    const b64 = jpg ? jpg.toString('base64') : null;
+    await this.sql`INSERT INTO rosto_photos (id, name, aliases, faces, credit, hidden, jpg_b64)
+      VALUES (${photo.id}, ${photo.name}, ${JSON.stringify(photo.aliases)}::jsonb, ${JSON.stringify(photo.faces)}::jsonb,
+        ${photo.credit}, ${photo.hidden}, ${b64})
+      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, aliases = EXCLUDED.aliases, faces = EXCLUDED.faces,
+        credit = EXCLUDED.credit, hidden = EXCLUDED.hidden, jpg_b64 = COALESCE(EXCLUDED.jpg_b64, rosto_photos.jpg_b64)`;
+  }
+
+  async deleteRostoPhoto(id: string): Promise<void> {
+    await this.sql`DELETE FROM rosto_photos WHERE id = ${id}`;
+  }
+}

@@ -78,6 +78,18 @@ export interface Store {
   /** Tira itens do histórico (ex.: o admin libera o Top 100 de hoje). */
   unmarkSeen(groupJid: string, kind: string, items: string[]): Promise<void>;
   countPlayers(): Promise<number>;
+
+  // ----- Rosto Borrado: fotos do admin -----
+  /**
+   * Fotos enviadas pelo admin (id "up:...") e ajustes das fotos fixas (id do
+   * Wikidata, sem foto própria: só esconder ou trocar os rostos). Sem a foto.
+   */
+  listRostoPhotos(): Promise<RostoUpload[]>;
+  /** A foto (JPEG) de um envio do admin. */
+  getRostoJpg(id: string): Promise<Buffer | null>;
+  /** Grava (ou atualiza) a ficha; jpg null mantém a foto que já está lá. */
+  saveRostoPhoto(photo: RostoUpload, jpg: Buffer | null): Promise<void>;
+  deleteRostoPhoto(id: string): Promise<void>;
   getImportState(id: string): Promise<unknown | null>;
   setImportState(id: string, state: unknown): Promise<void>;
   logLookup(row: { query: string; context?: string; outcome: string; playerId?: string | null; ms?: number }): Promise<void>;
@@ -104,3 +116,18 @@ export interface Store {
   matchStats(): Promise<MatchStats>;
 }
 
+/** Foto do Rosto Borrado guardada no banco (envio do admin ou ajuste de uma foto fixa). */
+export interface RostoUpload {
+  id: string;
+  /** A resposta: nome pelo qual o grupo conhece o jogador. */
+  name: string;
+  aliases: string[];
+  /** Rostos (x, y, largura, altura, de 0 a 1). Vazio numa foto fixa = mantém os dela. */
+  faces: Array<[number, number, number, number]>;
+  /** Crédito da foto (autor, de onde veio). */
+  credit: string;
+  /** Escondida: não entra no sorteio. */
+  hidden: boolean;
+  /** AAAA-MM-DD */
+  createdAt: string;
+}

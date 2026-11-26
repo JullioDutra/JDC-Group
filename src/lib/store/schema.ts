@@ -115,5 +115,16 @@ export const SCHEMA_STATEMENTS: string[] = [
     ranking    jsonb,
     PRIMARY KEY (group_jid, season)
   )`,
+  // Rosto Borrado: fotos que o admin envia pela página (foto em base64) e ajustes das fotos fixas.
+  `CREATE TABLE IF NOT EXISTS rosto_photos (
+    id         text PRIMARY KEY,
+    name       text NOT NULL,
+    aliases    jsonb NOT NULL DEFAULT '[]',
+    faces      jsonb NOT NULL DEFAULT '[]',
+    credit     text NOT NULL DEFAULT '',
+    hidden     boolean NOT NULL DEFAULT false,
+    jpg_b64    text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
 ];
 

@@ -18,9 +18,9 @@ export function wikiStatsFor(qid: string): WikiStatsEntry | undefined {
   return index.get(qid);
 }
 
-/** Só para testes: troca a base. */
-export function setWikiStats(entries: WikiStatsEntry[]) {
-  index = new Map(entries.map((e) => [e.qid, e]));
+/** Só para testes: troca a base (null volta para a base gerada). */
+export function setWikiStats(entries: WikiStatsEntry[] | null) {
+  index = entries ? new Map(entries.map((e) => [e.qid, e])) : null;
 }
 
 /**

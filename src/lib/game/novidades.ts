@@ -26,6 +26,18 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    // Repete os itens de 26/11d: com os jogos pausados, quase nenhum grupo viu.
+    id: '2026-11-26e',
+    date: '26/11',
+    items: [
+      { head: 'Goleiro com número', lines: ['Garçons e Artilheiros: goleiro sem dado', 'conta 0 em vez de travar a rodada.'] },
+      { head: 'Rosto Borrado: fotos novas', lines: ['O admin põe e tira fotos pela página;', 'as novas já entram no sorteio.'] },
+      { head: 'Números da carreira com fonte', lines: ['Jogos e gols pela Wikipédia (clubes +', 'seleção), atualizados até novembro de 2026.'] },
+      { head: 'O número não muda mais', lines: ['O mesmo jogador tem o mesmo número', 'em todas as partidas.'] },
+      { head: 'FICHA mostra a fonte', lines: ['Mande: ficha Messi', 'e veja de onde vem cada número.'] },
+    ],
+  },
+  {
     id: '2026-11-26d',
     date: '26/11',
     items: [

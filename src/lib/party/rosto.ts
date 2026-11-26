@@ -1,7 +1,7 @@
 import { firstName, isChatter, looksLikePlayerName, normalize } from '../game/text';
 import type { IncomingMessage, Outgoing, PartyPlayer, RostoParty } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, answerMatches, award, finishByScore, freshFirst, normalizeAnswer, pauseBeforeNext, react, schedule, scoreImage, text } from './common';
-import { ROSTOS, getRosto, rostoCredit, type RostoPhoto } from './content/rostos';
+import { ROSTOS, getRosto, rostoCredit, rostoPool, type RostoPhoto } from './content/rostos';
 
 /**
  * Rosto Borrado (em grupo, corrida): o bot manda a foto de um craque com SÓ o
@@ -23,9 +23,17 @@ export function newRosto(): Pick<RostoParty, 'game' | 'round' | 'totalRounds' | 
   return { game: 'rosto', round: -1, totalRounds: PARTY_CONFIG.rosto.rounds!, order: [], level: 0, tries: {}, solved: false };
 }
 
-export function startRosto(state: RostoParty, deps: PartyDeps): Outgoing[] {
-  // Fotos que o grupo ainda não viu primeiro.
-  state.order = freshFirst(ROSTOS.map((r) => r.id), deps.rng, deps.seen).slice(0, state.totalRounds);
+export async function startRosto(state: RostoParty, deps: PartyDeps): Promise<Outgoing[]> {
+  // Fixas + as que o admin enviou; as que o grupo ainda não viu primeiro.
+  // Se o admin escondeu tudo, valem as fixas (o jogo não abre vazio).
+  const found = await rostoPool(deps.store);
+  const pool = found.length ? found : ROSTOS;
+  const byId = new Map(pool.map((p) => [p.id, p]));
+  state.order = freshFirst(pool.map((r) => r.id), deps.rng, deps.seen).slice(0, state.totalRounds);
+  state.photos = state.order.map((id) => {
+    const p = byId.get(id)!;
+    return { id, name: p.name, aliases: p.aliases, faces: p.faces, credit: p.upload ? p.credit ?? '' : '', ...(p.upload ? { upload: true } : {}) };
+  });
   state.totalRounds = state.order.length;
   state.status = 'PLAYING';
   state.round = -1;
@@ -33,14 +41,24 @@ export function startRosto(state: RostoParty, deps: PartyDeps): Outgoing[] {
 }
 
 function photoOf(state: RostoParty): RostoPhoto {
-  return getRosto(state.order[state.round])!;
+  const id = state.order[state.round];
+  const fixed = getRosto(id);
+  const saved = state.photos?.find((p) => p.id === id);
+  if (!saved) return fixed!;
+  return fixed
+    ? { ...fixed, name: saved.name, aliases: saved.aliases, faces: saved.faces }
+    : { id, name: saved.name, aliases: saved.aliases, url: '', faces: saved.faces, author: '', license: '', upload: true, credit: saved.credit };
+}
+
+function faceSpec(photo: RostoPhoto, edited: boolean) {
+  return { faces: photo.faces, credit: rostoCredit(photo, edited) };
 }
 
 function stageImage(state: RostoParty, caption: string): Outgoing {
   const photo = photoOf(state);
   return {
     type: 'image',
-    image: { kind: 'faceQuiz', photoId: photo.id, level: state.level, round: state.round + 1, total: state.totalRounds },
+    image: { kind: 'faceQuiz', photoId: photo.id, level: state.level, round: state.round + 1, total: state.totalRounds, ...faceSpec(photo, true) },
     caption: `${caption}\n_${rostoCredit(photo)}_`,
   };
 }
@@ -98,7 +116,7 @@ function revealRosto(state: RostoParty, deps: PartyDeps, headline: string): Outg
   state.timerToken = null;
   const reveal: Outgoing = {
     type: 'image',
-    image: { kind: 'faceQuiz', photoId: photo.id, level: 3, round: state.round + 1, total: state.totalRounds, answer: photo.name },
+    image: { kind: 'faceQuiz', photoId: photo.id, level: 3, round: state.round + 1, total: state.totalRounds, answer: photo.name, ...faceSpec(photo, false) },
     caption: `${headline}\n_${rostoCredit(photo, false)}_`,
   };
   if (state.round >= state.totalRounds - 1) return [reveal, ...finishByScore(state, '', 'abrir rosto borrado')];
