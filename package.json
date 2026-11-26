@@ -10,7 +10,8 @@
     "test": "tsx --test tests/*.test.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "render:samples": "tsx scripts/render-samples.ts",
-    "render:stress": "tsx scripts/render-stress.ts"
+    "render:stress": "tsx scripts/render-stress.ts",
+    "inventario": "tsx scripts/inventario.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.1",

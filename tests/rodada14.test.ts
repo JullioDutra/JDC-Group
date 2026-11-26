@@ -289,10 +289,10 @@ test('Rodada 14: conteúdo de 2025/26 nos jogos (sem repetir id e sem item ambí
 
 test('Rodada 14: novidades de 26/11 (e o grupo só de Impostor ainda vê a última com Impostor)', async () => {
   const { NEWS, NEWS_LINE_MAX, latestNewsFor, newsOutgoing } = await import('../src/lib/game/novidades');
-  assert.equal(NEWS[0].id, '2026-11-26');
-  for (const i of NEWS[0].items) for (const l of i.lines) assert.ok(l.length <= NEWS_LINE_MAX, l);
-  assert.ok(NEWS[0].items.some((i) => /Fábio no Fluminense/.test(i.lines.join(' '))));
-  assert.equal(newsOutgoing(NEWS[0], true), null, 'nada desta versão é do Impostor');
+  const r14 = NEWS.find((n) => n.id === '2026-11-26')!;
+  for (const i of r14.items) for (const l of i.lines) assert.ok(l.length <= NEWS_LINE_MAX, l);
+  assert.ok(r14.items.some((i) => /Fábio no Fluminense/.test(i.lines.join(' '))));
+  assert.equal(newsOutgoing(r14, true), null, 'nada desta versão é do Impostor');
   assert.equal(latestNewsFor(true)?.id, '2026-11-25');
-  assert.equal(latestNewsFor(false)?.id, '2026-11-26');
+  assert.equal(latestNewsFor(false)?.id, NEWS[0].id);
 });

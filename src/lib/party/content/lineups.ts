@@ -218,7 +218,7 @@ export const LINEUPS: Lineup[] = [
   {
     id: 'manchester-city-2023', team: 'Manchester City', aliases: ['manchester city', 'city', 'man city'], year: 2023,
     match: 'final da Champions de 2023, 1 x 0 na Inter de Milão',
-    lines: [['Ederson'], ['Walker', 'Rúben Dias', 'Akanji'], ['Stones', 'Rodri'], ['Bernardo Silva', 'De Bruyne', 'Gündoğan', 'Grealish'], ['Haaland']],
+    lines: [['Ederson'], ['Akanji', 'Rúben Dias', 'Aké'], ['Stones', 'Rodri'], ['Bernardo Silva', 'De Bruyne', 'Gündoğan', 'Grealish'], ['Haaland']],
   },
   {
     id: 'psg-2025', team: 'PSG', aliases: ['psg', 'paris saint germain', 'paris'], year: 2025,
@@ -243,7 +243,7 @@ export const LINEUPS: Lineup[] = [
   {
     id: 'atletico-mg-2013', team: 'Atlético-MG', aliases: ['atletico mineiro', 'atletico mg', 'atletico', 'galo'], year: 2013,
     match: 'final da Libertadores de 2013, 2 x 0 no Olimpia (título nos pênaltis)',
-    lines: [['Victor'], ['Marcos Rocha', 'Réver', 'Leonardo Silva', 'Richarlyson'], ['Pierre', 'Josué'], ['Diego Tardelli', 'Ronaldinho', 'Bernard'], ['Jô']],
+    lines: [['Victor'], ['Michel', 'Réver', 'Leonardo Silva', 'Júnior César'], ['Pierre', 'Josué'], ['Diego Tardelli', 'Ronaldinho', 'Bernard'], ['Jô']],
   },
   {
     id: 'gremio-2017', team: 'Grêmio', aliases: ['gremio', 'tricolor gaucho'], year: 2017,
@@ -258,7 +258,63 @@ export const LINEUPS: Lineup[] = [
   {
     id: 'botafogo-2024', team: 'Botafogo', aliases: ['botafogo', 'fogao'], year: 2024,
     match: 'final da Libertadores de 2024, 3 x 1 no Atlético-MG',
-    lines: [['John'], ['Vitinho', 'Bastos', 'Barboza', 'Alex Telles'], ['Gregore', 'Marlon Freitas'], ['Luiz Henrique', 'Thiago Almada', 'Savarino'], ['Igor Jesus']],
+    lines: [['John'], ['Vitinho', 'Adryelson', 'Barboza', 'Alex Telles'], ['Gregore', 'Marlon Freitas'], ['Luiz Henrique', 'Thiago Almada', 'Savarino'], ['Igor Jesus']],
+  },
+  // Rodada 15: mais 11 finais, das súmulas na Wikipédia em inglês (páginas das finais), conferidas em 26/11/2026.
+  {
+    id: 'chelsea-2025', team: 'Chelsea', aliases: ['chelsea'], year: 2025,
+    match: 'final do Mundial de Clubes de 2025, 3 x 0 no PSG',
+    lines: [['Robert Sánchez'], ['Gusto', 'Chalobah', 'Colwill', 'Cucurella'], ['Reece James', 'Caicedo'], ['Palmer', 'Enzo Fernández', 'Pedro Neto'], ['João Pedro']],
+  },
+  {
+    id: 'real-madrid-2024', team: 'Real Madrid', aliases: ['real madrid', 'real'], year: 2024,
+    match: 'final da Champions de 2024, 2 x 0 no Borussia Dortmund',
+    lines: [['Courtois'], ['Carvajal', 'Rüdiger', 'Nacho', 'Mendy'], ['Camavinga', 'Valverde', 'Kroos'], ['Bellingham'], ['Rodrygo', 'Vinícius Júnior']],
+  },
+  {
+    id: 'real-madrid-2022', team: 'Real Madrid', aliases: ['real madrid', 'real'], year: 2022,
+    match: 'final da Champions de 2022, 1 x 0 no Liverpool',
+    lines: [['Courtois'], ['Carvajal', 'Militão', 'Alaba', 'Mendy'], ['Modrić', 'Casemiro', 'Kroos'], ['Valverde', 'Benzema', 'Vinícius Júnior']],
+  },
+  {
+    id: 'chelsea-2021', team: 'Chelsea', aliases: ['chelsea'], year: 2021,
+    match: 'final da Champions de 2021, 1 x 0 no Manchester City',
+    lines: [['Édouard Mendy'], ['Azpilicueta', 'Thiago Silva', 'Rüdiger'], ['Reece James', 'Jorginho', 'Kanté', 'Chilwell'], ['Havertz', 'Mount'], ['Werner']],
+  },
+  {
+    id: 'bayern-2013', team: 'Bayern de Munique', aliases: ['bayern', 'bayern de munique', 'bayern munique'], year: 2013,
+    match: 'final da Champions de 2013, 2 x 1 no Borussia Dortmund',
+    lines: [['Neuer'], ['Lahm', 'Boateng', 'Dante', 'Alaba'], ['Javi Martínez', 'Schweinsteiger'], ['Robben', 'Müller', 'Ribéry'], ['Mandžukić']],
+  },
+  {
+    id: 'palmeiras-2020', team: 'Palmeiras', aliases: ['palmeiras', 'verdao'], year: 2020,
+    match: 'final da Libertadores de 2020, 1 x 0 no Santos, no Maracanã',
+    lines: [['Weverton'], ['Marcos Rocha', 'Luan', 'Gustavo Gómez', 'Viña'], ['Danilo', 'Gabriel Menino', 'Zé Rafael'], ['Raphael Veiga'], ['Luiz Adriano', 'Rony']],
+  },
+  {
+    id: 'river-2018', team: 'River Plate', aliases: ['river plate', 'river'], year: 2018,
+    match: 'final da Libertadores de 2018, 3 x 1 no Boca Juniors, em Madri',
+    lines: [['Armani'], ['Montiel', 'Maidana', 'Pinola', 'Casco'], ['Enzo Pérez', 'Ponzio'], ['Nacho Fernández', 'Palacios', 'Pity Martínez'], ['Pratto']],
+  },
+  {
+    id: 'internacional-2010', team: 'Internacional', aliases: ['internacional', 'inter', 'colorado'], year: 2010,
+    match: 'final da Libertadores de 2010, 3 x 2 no Chivas, no Beira-Rio',
+    lines: [['Renan'], ['Nei', 'Bolívar', 'Índio', 'Kléber'], ['Sandro', 'Tinga', 'Guiñazú'], ["D'Alessandro", 'Rafael Sóbis', 'Taison']],
+  },
+  {
+    id: 'espanha-2024', team: 'Espanha', aliases: ['espanha'], year: 2024,
+    match: 'final da Eurocopa de 2024, 2 x 1 na Inglaterra',
+    lines: [['Unai Simón'], ['Carvajal', 'Le Normand', 'Laporte', 'Cucurella'], ['Rodri', 'Fabián Ruiz'], ['Lamine Yamal', 'Dani Olmo', 'Nico Williams'], ['Morata']],
+  },
+  {
+    id: 'portugal-2016', team: 'Portugal', aliases: ['portugal'], year: 2016,
+    match: 'final da Eurocopa de 2016, 1 x 0 na França, na prorrogação',
+    lines: [['Rui Patrício'], ['Cédric', 'Pepe', 'José Fonte', 'Raphaël Guerreiro'], ['William Carvalho'], ['Renato Sanches', 'Adrien Silva', 'João Mário'], ['Nani', 'Cristiano Ronaldo']],
+  },
+  {
+    id: 'argentina-2021', team: 'Argentina', aliases: ['argentina'], year: 2021,
+    match: 'final da Copa América de 2021, 1 x 0 no Brasil, no Maracanã',
+    lines: [['Emiliano Martínez'], ['Montiel', 'Romero', 'Otamendi', 'Acuña'], ['De Paul', 'Paredes', 'Lo Celso'], ['Messi', 'Lautaro Martínez', 'Di María']],
   },
   // Rodada 14: escalações das súmulas na Wikipédia em inglês (páginas das finais), conferidas em 26/11/2026.
   {

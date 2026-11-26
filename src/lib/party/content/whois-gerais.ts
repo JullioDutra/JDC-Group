@@ -137,7 +137,7 @@ export const WHOIS_GERAIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'chaplin', category: 'geral', answer: 'Charlie Chaplin', aliases: ['chaplin', 'charles chaplin', 'carlitos'],
+    id: 'chaplin', category: 'geral', answer: 'Charlie Chaplin', aliases: ['chaplin', 'charles chaplin'],
     clues: [
       'Nasceu em Londres, em 1889.',
       'Fez fama em Hollywood no tempo do cinema mudo.',
@@ -181,7 +181,7 @@ export const WHOIS_GERAIS: WhoIsCard[] = [
     clues: [
       'Nasceu na Pensilvânia, em 1989, e cresceu numa fazenda de árvores de Natal.',
       'Começou cantando música country em Nashville.',
-      'Regravou os próprios álbuns, com "(Taylor\'s Version)" no nome.',
+      'Regravou os próprios álbuns para ser dona das gravações.',
       'A sua turnê "The Eras Tour" foi a mais lucrativa da história.',
       'Os fãs se chamam "swifties".',
     ],
@@ -340,7 +340,7 @@ export const WHOIS_GERAIS: WhoIsCard[] = [
   {
     id: 'lampiao', category: 'historia', answer: 'Lampião', aliases: ['lampiao', 'virgulino ferreira da silva', 'virgulino'],
     clues: [
-      'Nasceu em Pernambuco, em 1898, com o nome de Virgulino.',
+      'Nasceu no sertão de Pernambuco, no fim do século 19.',
       'O apelido viria do clarão do tiro da sua arma.',
       'Andava com chapéu de couro em meia-lua.',
       'Foi morto com o seu bando em Angicos, Sergipe, em 1938.',
@@ -419,7 +419,7 @@ export const WHOIS_GERAIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'seiya', category: 'anime', answer: 'Seiya', aliases: ['seiya de pegaso', 'pegaso'],
+    id: 'seiya', category: 'anime', answer: 'Seiya', aliases: ['seiya de pegaso'],
     clues: [
       'Treinou na Grécia com a mestra Marin.',
       'Vive procurando a irmã desaparecida.',
@@ -454,7 +454,7 @@ export const WHOIS_GERAIS: WhoIsCard[] = [
       'É o melhor aluno do Japão e filho de um policial.',
       'Encontrou um caderno que caiu do mundo dos shinigamis.',
       'Anda acompanhado pelo shinigami Ryuk.',
-      'O mundo o chama de Kira.',
+      'Vira o justiceiro misterioso que a polícia do mundo inteiro tenta descobrir.',
       'O dono do Death Note, rival de L.',
     ],
   },
@@ -494,7 +494,7 @@ export const WHOIS_GERAIS: WhoIsCard[] = [
       'O irmão mais velho acabou com o clã inteiro.',
       'Tem o Sharingan nos olhos.',
       'Fugiu da vila atrás de poder e vingança.',
-      'É o último Uchiha da sua geração.',
+      'É o último sobrevivente do seu clã, além do irmão.',
       'Melhor amigo e rival de Naruto.',
     ],
   },

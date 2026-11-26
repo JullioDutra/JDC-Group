@@ -26,6 +26,18 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    id: '2026-11-26b',
+    date: '26/11',
+    items: [
+      { head: 'Jogador fora da base: Wikidata', lines: ['Quem a base não tem é buscado na hora.', 'Ex.: Leônidas da Silva já entra conferido.'] },
+      { head: 'Seleção pela Wikipédia', lines: ['Temas 7 e 8: jogos e gols pela seleção', 'vêm da Wikipédia, não mais da IA.'] },
+      { head: 'Posição conferida', lines: ['Se o Wikidata não tem a posição da rodada,', 'a Wikipédia confirma (ex.: Havertz no ataque).'] },
+      { head: 'Que Time: +11 e 3 correções', lines: ['Chelsea 2025, Real 2022 e 2024, Bayern 2013...', 'City 2023, Galo 2013 e Botafogo 2024 corrigidos.'] },
+      { head: 'Listas novas', lines: ['Top 10: mais jogos e mais gols por seleção.', 'Sobrevivente +6 e Conexões +4.'] },
+      { head: 'Quem é sem cola', lines: ['Dica que trazia a resposta foi reescrita;', 'apelido citado na dica não vale sozinho.'] },
+    ],
+  },
+  {
     id: '2026-11-26',
     date: '26/11',
     items: [

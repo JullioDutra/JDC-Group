@@ -27,7 +27,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'ronaldo', answer: 'Ronaldo', aliases: ['ronaldo fenomeno', 'ronaldo nazario', 'r9', 'fenomeno'],
+    id: 'ronaldo', answer: 'Ronaldo', aliases: ['ronaldo fenomeno', 'ronaldo nazario', 'r9'],
     clues: [
       'Nasceu no Rio de Janeiro, em 1976.',
       'Centroavante, revelado pelo Cruzeiro.',
@@ -47,7 +47,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'zico', answer: 'Zico', aliases: ['galinho', 'galinho de quintino', 'arthur antunes coimbra'],
+    id: 'zico', answer: 'Zico', aliases: ['arthur antunes coimbra'],
     clues: [
       'Nasceu em 1953, no Rio de Janeiro.',
       'Meia, camisa 10, mestre das cobranças de falta.',
@@ -57,7 +57,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'romario', answer: 'Romário', aliases: ['romario', 'baixinho'],
+    id: 'romario', answer: 'Romário', aliases: ['romario'],
     clues: [
       'Nasceu em 1966, no Rio de Janeiro.',
       'Atacante, mestre da finalização dentro da área.',
@@ -207,7 +207,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'adriano', answer: 'Adriano', aliases: ['adriano imperador', 'imperador'],
+    id: 'adriano', answer: 'Adriano', aliases: ['adriano imperador'],
     clues: [
       'Nasceu em 1982, no Rio de Janeiro.',
       'Centroavante canhoto de chute fortíssimo.',
@@ -223,7 +223,7 @@ export const WHOIS: WhoIsCard[] = [
       'Revelado pelo Santos.',
       'Passou pela Inter de Milão e pelo Benfica.',
       'Fez os dois gols da virada na final da Libertadores de 2019.',
-      'Ídolo do Flamengo, o Gabigol.',
+      'Ídolo do Flamengo, fez também o gol do título da Libertadores de 2022.',
     ],
   },
   {
@@ -248,7 +248,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'beckenbauer', answer: 'Franz Beckenbauer', aliases: ['beckenbauer', 'kaiser'],
+    id: 'beckenbauer', answer: 'Franz Beckenbauer', aliases: ['beckenbauer'],
     clues: [
       'Nasceu em Munique, em 1945.',
       'Zagueiro que saía jogando, o líbero mais famoso da história.',
@@ -268,7 +268,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'eusebio', answer: 'Eusébio', aliases: ['eusebio', 'pantera negra'],
+    id: 'eusebio', answer: 'Eusébio', aliases: ['eusebio'],
     clues: [
       'Nasceu em Moçambique, em 1942.',
       'Defendeu a seleção de Portugal.',
@@ -288,7 +288,7 @@ export const WHOIS: WhoIsCard[] = [
     ],
   },
   {
-    id: 'socrates', answer: 'Sócrates', aliases: ['socrates', 'doutor socrates', 'doutor'],
+    id: 'socrates', answer: 'Sócrates', aliases: ['socrates', 'doutor socrates'],
     clues: [
       'Nasceu em Belém do Pará, em 1954.',
       'Formado em medicina.',
@@ -385,7 +385,7 @@ export const WHOIS: WhoIsCard[] = [
       'Participou de uma conspiração contra a Coroa portuguesa.',
       'O movimento era a Inconfidência Mineira.',
       'Foi enforcado em 21 de abril de 1792.',
-      'Joaquim José da Silva Xavier.',
+      'O mártir da Inconfidência, herói nacional do Brasil.',
     ],
   },
   {

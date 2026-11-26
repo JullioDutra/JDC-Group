@@ -1,6 +1,7 @@
 import type { ContentCategory } from '../../game/types';
 import { CONEXOES_R11 } from './rodada11';
 import { CONEXOES_R14 } from './rodada14';
+import { CONEXOES_R15 } from './rodada15';
 
 /**
  * Conexões: 16 nomes em 4 grupos de 4, do mais fácil ao mais difícil.
@@ -476,6 +477,7 @@ export const CONEXOES: ConexoesPuzzle[] = [
   // História e anime (rodada 11).
   ...CONEXOES_R11,
   ...CONEXOES_R14,
+  ...CONEXOES_R15,
 ];
 
 export function getConexoes(id: string): ConexoesPuzzle | undefined {

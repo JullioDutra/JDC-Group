@@ -1666,24 +1666,26 @@ Total: 191 testes passando e build ok.
 
 A carga do Wikidata está na parte 9 de 30 (Alemanha). Quem ainda não entrou depende da IA para existir. Os jogos e gols pela seleção (temas 7 e 8) vêm da IA, porque a carga antiga perdia esses números (seção 31).
 
-**Conteúdo** (script de inventário, 26/11):
+**Conteúdo** (`npm run inventario`, antes desta rodada):
 
 | Jogo | Itens | Observação |
 |---|---|---|
-| Top 100 | 22 listas | só 1 de futebol (estádios do Brasil) |
+| Top 100 | 12 listas | só 1 de futebol (estádios do Brasil) |
 | Que Time | 52 escalações | nunca conferidas em lote contra as súmulas |
-| Conexões | 59 | o mais magro dos jogos mistos |
-| Sobrevivente | 98 listas | |
-| Top 10 | 71 listas | |
-| Quem é | 188 | |
-| Intruso | 193 | |
-| Fato ou Fake | 291 | |
-| Linha do Tempo | 294 | |
-| Emoji | 277 | |
-| Quiz Relâmpago | 377 | |
-| Chute Certo | 242 | |
+| Conexões | 53 | o mais magro dos jogos mistos |
+| Sobrevivente | 89 listas | |
+| Top 10 | 104 listas | |
+| Quem é | 135 | |
+| Intruso | 135 | |
+| Chute Certo | 175 | |
+| Emoji | 201 | |
+| Fato ou Fake | 205 | |
+| Linha do Tempo | 265 | |
+| Quiz Relâmpago | 276 | |
 | Anagrama | 469 | |
 | Impostor | 2.326 | |
+
+**Correção:** os totais da seção 31.3 (e a primeira versão desta tabela) vinham de um script de rascunho que contava duas vezes o conteúdo geral e o da rodada 11, porque eles já estão dentro das coleções dos jogos. Por exemplo, o Quem é tinha 135 itens, não 184. Os números acima são das coleções que os jogos usam.
 
 ### 32.2 Metas
 
@@ -1732,3 +1734,26 @@ A carga do Wikidata está na parte 9 de 30 (Alemanha). Quem ainda não entrou de
    - toda passagem e posição confirmadas fora do Wikidata ficam gravadas com a fonte.
 3. **Erros que o grupo achar:** cada caso vira teste com o dado real (como Fábio e Domingos da Guia na rodada 14).
 4. **Temporada:** quando uma competição termina (Libertadores, Copa do Brasil, Brasileirão, ligas europeias), o resultado entra na rodada seguinte, com fonte.
+5. **Próximas frentes, em ordem:**
+   1. Top 100 aceitar empate no corte (101 a 110 itens), para receber as listas de jogos por seleção e de artilheiros das Copas;
+   2. apelidos dos estádios do mundo, para a lista de 100;
+   3. Libertadores e Copa do Brasil 2026, quando as finais acabarem;
+   4. Brasileirão 2026, no fim do campeonato.
+
+### 32.6 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Busca sob demanda no Wikidata | Jogador fora da base entra na hora, conferido, antes da IA | Feito: 3 pedidos (busca, entidades, rótulos), ficha completa (posição, seleção, nascimento, altura, clubes). Ex.: Leônidas da Silva, de 1913 |
+| Seleção pela Wikipédia | Jogos e gols pela seleção principal nos temas 7 e 8 | Feito: caixa em inglês (2 formatos de campo), sem base nem olímpica; o admin continua valendo mais. Ex.: Mbappé 108 jogos e 67 gols |
+| Posição pela Wikipédia | Posição que falta no Wikidata | Feito: `manual.positions` (a carga não apaga). Ex.: Havertz no ataque |
+| Que Time: conferência | 52 escalações contra as súmulas | Feito: 3 erros corrigidos (City 2023: Aké, não Walker; Atlético-MG 2013: laterais do jogo do título; Botafogo 2024: Adryelson). Agora 60 de 63 batem; as 3 restantes são o mesmo jogador com outra grafia |
+| Que Time: novas | +10 | +11 (Chelsea 2025 e 2021, Real Madrid 2024 e 2022, Bayern 2013, Palmeiras 2020, River 2018, Internacional 2010, Espanha 2024, Portugal 2016, Argentina 2021) |
+| Top 100 | +2 listas de futebol | **Não entrou.** As listas da Wikipédia têm empates no corte (98 jogadores com 140 jogos ou mais e 103 com 139), e o jogo e a imagem são feitos para exatamente 100 posições. A lista de estádios do mundo também ficou de fora: os nomes não têm os apelidos que o grupo usa (Mineirão, Arruda, Morumbi), e isso pede revisão à mão. Em troca, entraram 2 listas no Top 10 |
+| Top 10 | (extra) | +2: mais jogos por seleção e mais gols por seleção, até 17/11/2026 |
+| Sobrevivente | +6 | +6: finalistas de Copa, campeões da Copa das Confederações e titulares de 4 finais (Espanha 2026, Argentina 2022, Flamengo 2019, Palmeiras 2021) |
+| Conexões | +6 | +4 (finais de 2026, recordes, campeões europeus, Libertadores). As outras 2 ideias foram descartadas porque havia jogador que cabia em dois grupos (ex.: Donnarumma campeão da Euro e da Champions) |
+| Testes de qualidade | Regras em todo o conteúdo | Feito: `tests/qualidade.test.ts`. Correções: 6 dicas do Quem é que entregavam a resposta (Lampião já na 1ª dica, Light e Sasuke na 4ª, Taylor Swift, Tiradentes, Gabigol) e 10 apelidos que a última dica citava e valiam como resposta (Fenômeno, Imperador, Kaiser...) |
+| Roteiro contínuo | `npm run inventario` | Feito, mais `scripts/conferir_escalacoes.py` para conferir o Que Time nas próximas rodadas |
+
+**Testes:** `tests/rodada15.test.ts` (4) e `tests/qualidade.test.ts` (5). Total: 200 testes passando e build ok.
