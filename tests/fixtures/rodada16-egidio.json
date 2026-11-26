@@ -1,0 +1,794 @@
+{
+ "entity": {
+  "id": "Q3720578",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Egídio Pereira Júnior"
+   },
+   "pt": {
+    "language": "pt",
+    "value": "Egídio de Araújo Pereira Júnior"
+   },
+   "es": {
+    "language": "es",
+    "value": "Egídio Pereira Júnior"
+   }
+  },
+  "sitelinks": {
+   "itwiki": {
+    "title": "Egídio de Araújo Pereira Júnior"
+   },
+   "dewiki": {
+    "title": "Egídio"
+   },
+   "ukwiki": {
+    "title": "Ежидіо Перейра Жуніор"
+   },
+   "ruwiki": {
+    "title": "Перейра, Эжидио"
+   },
+   "kowiki": {
+    "title": "에지지우 페레이라 주니오르"
+   },
+   "jawiki": {
+    "title": "エジージオ・ジ・アラウージョ・ペレイラ・ジュニオール"
+   },
+   "eswiki": {
+    "title": "Egídio de Araújo Pereira Júnior"
+   },
+   "frwiki": {
+    "title": "Egídio"
+   },
+   "arzwiki": {
+    "title": "اجيديو پيريرا چونيور"
+   },
+   "enwiki": {
+    "title": "Egídio (footballer)"
+   },
+   "hawiki": {
+    "title": "Egídio"
+   },
+   "ptwiki": {
+    "title": "Egídio (futebolista)"
+   },
+   "commonswiki": {
+    "title": "Category:Egídio de Araújo Pereira Júnior"
+   },
+   "arwiki": {
+    "title": "إيغديو"
+   },
+   "plwiki": {
+    "title": "Egídio"
+   }
+  },
+  "claims": {
+   "P54": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 838534,
+        "id": "Q838534"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2007-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2007-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+0",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+0",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 274465,
+        "id": "Q274465"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2010-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2010-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+30",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+1",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 17479,
+        "id": "Q17479"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2003-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2012-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+11",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+1",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 1052219,
+        "id": "Q1052219"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2011-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2011-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+11",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+1",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 188277,
+        "id": "Q188277"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2013-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2014-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+63",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+2",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 218334,
+        "id": "Q218334"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2009-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2009-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+26",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+4",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 910453,
+        "id": "Q910453"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2008-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2008-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+14",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+0",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 816779,
+        "id": "Q816779"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2012-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2012-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+33",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+2",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 80964,
+        "id": "Q80964"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2015-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 175687,
+        "id": "Q175687"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2015-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+2015-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+1",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+0",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "P106": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 937857,
+        "id": "Q937857"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P569": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "time": "+1986-06-16T00:00:00Z",
+        "timezone": 0,
+        "before": 0,
+        "after": 0,
+        "precision": 11,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P413": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 336286,
+        "id": "Q336286"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P1532": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 155,
+        "id": "Q155"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P27": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 155,
+        "id": "Q155"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P2048": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "amount": "+175",
+        "unit": "http://www.wikidata.org/entity/Q174728"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P1477": []
+  }
+ },
+ "labels": {
+  "Q838534": {
+   "pt": "Paraná Clube",
+   "en": "Paraná Clube"
+  },
+  "Q274465": {
+   "pt": "Esporte Clube Vitória",
+   "en": "E.C. Vitória"
+  },
+  "Q17479": {
+   "pt": "Clube de Regatas do Flamengo",
+   "en": "Clube de Regatas do Flamengo"
+  },
+  "Q1052219": {
+   "pt": "Ceará Sporting Club",
+   "en": "Ceará Sporting Club"
+  },
+  "Q188277": {
+   "pt": "Cruzeiro Esporte Clube",
+   "en": "Cruzeiro E.C."
+  },
+  "Q218334": {
+   "pt": "Figueirense Futebol Clube",
+   "en": "Figueirense Futebol Clube"
+  },
+  "Q910453": {
+   "pt": "Esporte Clube Juventude",
+   "en": "Esporte Clube Juventude"
+  },
+  "Q816779": {
+   "pt": "Goiás Esporte Clube",
+   "en": "Goiás Esporte Clube"
+  },
+  "Q80964": {
+   "pt": "Sociedade Esportiva Palmeiras",
+   "en": "Sociedade Esportiva Palmeiras"
+  },
+  "Q175687": {
+   "pt": "FC Dnipro Dnipropetrovsk",
+   "en": "FC Dnipro"
+  },
+  "Q336286": {
+   "pt": "zagueiro",
+   "en": "defender"
+  },
+  "Q155": {
+   "pt": "Brasil",
+   "en": "Brazil"
+  }
+ },
+ "wiki_pt": "{{Info/Futebolista\n|nome              = Egídio\n|imagem            = Palmeiras x Santos - Brasileirão 2015 (19976891642).jpg\n|imagem_tamanho    = 230px\n|imagem_legenda    = Egídio atuando pelo {{Futebol Palmeiras}} em 2015\n|nomecompleto      = Egídio de Araújo Pereira Júnior\n|apelido           = ''Egideus''<ref>{{citar web|url=https://www.otempo.com.br/superfc/egideus-brinca-com-memes-e-promete-dominio-de-bola-igual-ao-de-marcelo-1.1607253|titulo='Egideus' brinca com memes e promete domínio de bola igual ao de Marcelo|data=03/05/2018|acessodata=16/01/2022|publicado=O Tempo|autor=Josias Pereira}}</ref><br>''Gidão''<ref name=\"bieber\">{{citar web|url=https://www.hojeemdia.com.br/esportes/cruzeiro/eg%C3%ADdio-ex-cruzeiro-%C3%A9-anunciado-no-fluminense-com-direito-a-telefonema-de-justin-bieber-1.767605|titulo=Egídio, ex-Cruzeiro, é anunciado no Fluminense com direito a 'telefonema' de Justin Bieber|data=18/01/2020|acessodata=16/01/2022|publicado=Hoje em Dia|autor=Luciano Dias}}</ref><br>''Djosti''<ref name=\"bieber\" />\n|datadenascimento  = {{dni|16|6|1986}}\n|cidadenatal       = [[Rio de Janeiro]], [[Rio de Janeiro (estado)|Rio de Janeiro]]\n|paisnatal         = [[Brasil]]\n|nacionalidade     = {{BRAn|o}}\n|altura            = 1,77 m\n|pé                = [[canhoto]]\n|actualclube       = ''Aposentado''\n|clubenumero       = \n|posição           = [[Lateral (futebol)|lateral-esquerdo]]\n|jovemanos         = 2002–2006\n|jovemclubes       = {{Futebol Flamengo}}\n|ano               = 2003–2012<br />2007<br />2008<br />2009<br />2010<br />2011<br />2012<br />2013–2014<br />2015<br />2015–2017<br />2018–2019<br />2020–2021<br />2022<br />2023\n|clubes            = {{Futebol Flamengo}}<br />{{seta fut}} {{Futebol Paraná}} {{emp fut}}<br />{{seta fut}} {{Futebol Juventude}} {{emp fut}}<br />{{seta fut}} {{Futebol Figueirense}} {{emp fut}}<br />{{seta fut}} {{Futebol Vitória}} {{emp fut}}<br />{{seta fut}} {{Futebol Ceará}} {{emp fut}}<br />{{seta fut}} {{Futebol Goiás}} {{emp fut}}<br />{{Futebol Cruzeiro}}<br />{{Futebol Dnipro}}<br />{{Futebol Palmeiras}}<br />{{Futebol Cruzeiro}}<br />{{Futebol Fluminense}}<br />{{Futebol Coritiba}}<br />{{Futebol Tombense}}\n|jogos(golos)      = {{0|000}}41 {{0|000}}(1)<br />{{0|000}}10 {{0|000}}(0)<br />{{0|000}}14 {{0|000}}(2)<br />{{0|000}}26 {{0|000}}(4)<br />{{0|000}}67 {{0|000}}(2)<br />{{0|000}}13 {{0|000}}(1)<br />{{0|000}}61 {{0|000}}(8)<br />{{0|00}}106 {{0|000}}(4)<br />{{0|0000}}5 {{0|000}}(0)<br />{{0|00}}100 {{0|000}}(3)<br />{{0|00}}101 {{0|000}}(1)<br />{{0|000}}75 {{0|000}}(1)<br />{{0|000}}34 {{0|000}}(2)<br />{{0|000}}34 {{0|000}}(1)\n|tupdate           = 23 de março de 2024\n}}"
+}

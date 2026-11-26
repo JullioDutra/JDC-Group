@@ -1,6 +1,7 @@
+import { normalize } from '../game/text';
 import type { Position } from '../game/types';
 import type { PlayerRecord } from './types';
-import { USER_AGENT, fetchClubs, isNationalTeamLabel, isYouthOrReserve, mapPosition, type Fetcher } from './wikidata';
+import { USER_AGENT, fetchClubs, isNationalTeamLabel, isYouthOrReserve, mapPosition, titleName, type Fetcher } from './wikidata';
 
 /**
  * Fontes para conferir a carreira de um jogador na hora da jogada (rodada 14).
@@ -46,7 +47,16 @@ export interface PlayerSources {
    * base (busca sob demanda: quem a carga ainda não alcançou). [] = nenhum.
    */
   searchPlayers?(name: string): Promise<PlayerRecord[]>;
+  /**
+   * Candidatos no Wikidata (melhor primeiro) por qualquer um dos nomes: nome
+   * coerente, futebolista, ano de nascimento com até 1 de diferença.
+   */
+  findIds?(names: string[], birthYear: number | null): Promise<string[]>;
+  /** Página do jogador na Wikipédia pelo título ("Egídio (futebolista)"), quando o Wikidata não acha. */
+  guessWikipedia?(name: string): Promise<(WikiInfo & { title: string }) | null>;
 }
+
+export { titleName } from './wikidata';
 
 const WIKIDATA = 'https://www.wikidata.org';
 /** Futebolista (ocupação P106). */
@@ -356,18 +366,103 @@ const FOOTBALL_WORDS = /futebol|football|soccer|f[uú]tbol|calci|fu[sß]ball/i;
  * confere a ocupação e o ano de nascimento (se souber) na página da entidade.
  */
 export async function findWikidataId(name: string, birthYear: number | null, fetcher: Fetcher = fetch): Promise<string | null> {
-  for (const lang of ['pt', 'en'] as const) {
-    const url = `${WIKIDATA}/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${lang}&uselang=${lang}&type=item&limit=10&format=json`;
-    const data = (await getJson(url, fetcher, 5_000)) as { search?: Array<{ id: string; description?: string }> };
-    const hits = (data.search ?? []).filter((h) => FOOTBALL_WORDS.test(h.description ?? '')).slice(0, 3);
-    for (const hit of hits) {
-      const e = await fetchEntity(hit.id, fetcher);
-      if (!e || !isFootballer(e)) continue;
-      const born = birthOf(e);
-      if (birthYear && born && Number(born.slice(0, 4)) !== birthYear) continue;
-      return e.id;
+  return (await findWikidataIds([name], birthYear, fetcher))[0] ?? null;
+}
+
+const tokensOf = (s: string) => normalize(s).split(' ').filter((t) => t.length > 1);
+
+/** Nomes do item: rótulos e títulos da Wikipédia. */
+function entityNames(e: Entity): string[] {
+  return [e.labels?.pt?.value, e.labels?.en?.value, e.labels?.es?.value, titleName(e.sitelinks?.ptwiki?.title), titleName(e.sitelinks?.enwiki?.title)].filter(
+    (n): n is string => !!n,
+  );
+}
+
+/**
+ * Candidatos no Wikidata, melhor primeiro (rodada 16). Antes valia só o
+ * primeiro com o ano de nascimento idêntico ao da IA, que às vezes erra o ano:
+ * aí jogador conhecido virava "não achei a carreira". Agora: busca por todos
+ * os nomes (o conhecido e o completo), aceita 1 ano de diferença e ordena por
+ * nome igual > nome contido > fama. Lança erro só se nenhuma busca respondeu.
+ */
+export async function findWikidataIds(names: string[], birthYear: number | null, fetcher: Fetcher = fetch): Promise<string[]> {
+  const ids: string[] = [];
+  let answered = false;
+  let failure: unknown = null;
+  for (const name of [...new Set(names.filter((n) => n && n.trim()))].slice(0, 3)) {
+    for (const lang of ['pt', 'en'] as const) {
+      try {
+        const url = `${WIKIDATA}/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${lang}&uselang=${lang}&type=item&limit=10&format=json`;
+        const data = (await getJson(url, fetcher, 5_000)) as { search?: Array<{ id: string; description?: string }> };
+        answered = true;
+        for (const h of data.search ?? []) if (FOOTBALL_WORDS.test(h.description ?? '') && !ids.includes(h.id)) ids.push(h.id);
+      } catch (error) {
+        failure = error;
+      }
+    }
+    if (ids.length >= 6) break;
+  }
+  if (!answered && failure) throw failure;
+  if (!ids.length) return [];
+  const wantedIds = ids.slice(0, 8);
+  let entities: Entity[] = await fetchEntities(wantedIds, fetcher).catch(() => []);
+  // O que o pedido em lote não trouxe vem pela página de cada entidade.
+  const missing = wantedIds.filter((id) => !entities.some((e) => e.id === id)).slice(0, 4);
+  if (missing.length) {
+    const more = await Promise.all(missing.map((id) => fetchEntity(id, fetcher).catch(() => null)));
+    entities = [...entities, ...more.filter((e): e is Entity => !!e)];
+  }
+  const wanted = names.map(tokensOf).filter((t) => t.length);
+  const scored: Array<{ id: string; score: number }> = [];
+  for (const e of entities) {
+    if (!isFootballer(e)) continue;
+    const born = birthOf(e);
+    const delta = birthYear && born ? Math.abs(Number(born.slice(0, 4)) - birthYear) : 0;
+    if (delta > 1) continue;
+    const theirs = entityNames(e).map(tokensOf);
+    const exact = wanted.some((w) => theirs.some((t) => t.join(' ') === w.join(' ')));
+    const inside = wanted.some((w) => theirs.some((t) => w.every((x) => t.includes(x))));
+    if (!exact && !inside) continue;
+    const links = Object.keys(e.sitelinks ?? {}).length;
+    scored.push({ id: e.id, score: (exact ? 2000 : 1000) + (delta === 0 ? 500 : 0) + links });
+  }
+  return scored.sort((a, b) => b.score - a.score).map((x) => x.id);
+}
+
+/**
+ * Página do jogador na Wikipédia pelo título, quando o Wikidata não acha:
+ * "Nome", "Nome (futebolista)", "Nome (futebolista brasileiro)" em pt e
+ * "Nome (footballer)" em en. Vale só página com caixa de futebolista (página
+ * de desambiguação ou de outra pessoa não tem). Segue um redirecionamento.
+ */
+export async function guessWikipedia(name: string, fetcher: Fetcher = fetch): Promise<(WikiInfo & { title: string }) | null> {
+  const tries: Array<['pt' | 'en', string]> = [
+    ['pt', `${name} (futebolista)`], ['pt', name], ['pt', `${name} (futebolista brasileiro)`], ['en', `${name} (footballer)`], ['en', name],
+  ];
+  let answered = false;
+  let failure: unknown = null;
+  for (const [lang, first] of tries) {
+    let title = first;
+    try {
+      for (let hop = 0; hop < 2; hop++) {
+        const text = await getText(rawUrl(lang, title), fetcher, 5_000);
+        answered = true;
+        if (!text) break;
+        const redirect = text.match(/^#(?:REDIRECT|REDIRECIONAMENTO|REDIRECCIÓN)\s*\[\[([^\]|#]+)/i);
+        if (redirect) {
+          title = redirect[1].trim();
+          continue;
+        }
+        if (!infobox(text)) break;
+        const clubs = parseInfoboxClubs(text);
+        if (!clubs.length) break;
+        return { title, clubs, positions: parseInfoboxPositions(text), national: parseInfoboxNational(text) };
+      }
+    } catch (error) {
+      failure = error;
     }
   }
+  if (!answered && failure) throw failure;
   return null;
 }
 
@@ -400,7 +495,9 @@ export function recordFromEntity(e: Entity, labels: Map<string, { pt?: string; e
   const name = e.labels?.pt?.value ?? e.labels?.en?.value;
   if (!name) return null;
   const aliases: string[] = [];
-  for (const n of [e.labels?.en?.value, e.labels?.es?.value, textOf(claimsOf(e, 'P1477')[0]?.mainsnak)]) {
+  // Títulos da Wikipédia: o nome conhecido (ex.: "Egídio", cujo rótulo é o nome completo).
+  const titles = [titleName(e.sitelinks?.ptwiki?.title), titleName(e.sitelinks?.enwiki?.title)];
+  for (const n of [...titles, e.labels?.en?.value, e.labels?.es?.value, textOf(claimsOf(e, 'P1477')[0]?.mainsnak)]) {
     if (n && n !== name && !aliases.includes(n)) aliases.push(n);
   }
   const positions: Position[] = [];
@@ -457,6 +554,8 @@ export function defaultSources(fetcher: Fetcher = fetch): PlayerSources {
     wikipediaClubs: (wiki) => wikipediaClubs(wiki, fetcher),
     wikipediaInfo: (wiki) => wikipediaInfo(wiki, fetcher),
     findId: (name, year) => findWikidataId(name, year, fetcher),
+    findIds: (names, year) => findWikidataIds(names, year, fetcher),
+    guessWikipedia: (name) => guessWikipedia(name, fetcher),
     searchPlayers: (name) => searchWikidataPlayers(name, fetcher),
   };
 }

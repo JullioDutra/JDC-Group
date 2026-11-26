@@ -101,12 +101,24 @@ export function identityQuery(ids: string[]): string {
 }`;
 }
 
-/** Nome em espanhol e nome completo de registro (P1477). */
+/** "Egídio (futebolista)" → "Egídio": o título da Wikipédia é o nome pelo qual o jogador é conhecido. */
+export function titleName(title: string | undefined | null): string | null {
+  if (!title) return null;
+  const name = title.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  return name || null;
+}
+
+/**
+ * Nome em espanhol, nome completo de registro (P1477) e (rodada 16) o título
+ * da página na Wikipédia em português: muitos jogadores brasileiros têm o
+ * nome completo como rótulo e o nome conhecido só no título ("Egídio").
+ */
 export function namesQuery(ids: string[]): string {
-  return `SELECT ?p ?es ?full WHERE {
+  return `SELECT ?p ?es ?full ?ptTitle WHERE {
   VALUES ?p { ${values(ids)} }
   OPTIONAL { ?p rdfs:label ?es FILTER(LANG(?es) = "es") }
   OPTIONAL { ?p wdt:P1477 ?full }
+  OPTIONAL { ?ptArticle schema:about ?p ; schema:isPartOf <https://pt.wikipedia.org/> ; schema:name ?ptTitle }
 }`;
 }
 
@@ -195,7 +207,7 @@ export function buildRecords(
   for (const b of names) {
     const r = byId.get(qid(val(b, 'p')));
     if (!r) continue;
-    for (const a of [val(b, 'es'), val(b, 'full')]) {
+    for (const a of [titleName(val(b, 'ptTitle')), val(b, 'es'), val(b, 'full')]) {
       if (a && a !== r.name && !r.aliases.includes(a) && r.aliases.length < 6) r.aliases.push(a);
     }
   }

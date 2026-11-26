@@ -171,11 +171,24 @@ function statsFrom(p: PlayerProfile): PlayerRecord['stats'] {
 async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRecord[]): Promise<PlayerRecord> {
   const name = normalize(profile.name);
   const pool = nearby.length ? nearby : await store.findPlayers([name], 20);
-  const same = pool.find(
+  const tokens = (x: string) => normalize(x).split(' ').filter((t) => t.length > 1);
+  const typed = tokens(profile.name);
+  // Mesmo nome; ou (rodada 16) a ficha do Wikidata com o mesmo nascimento cujo
+  // nome completo contém o nome conhecido ("Egídio" em "Egídio de Araújo
+  // Pereira Júnior"): é o mesmo jogador, e o nome conhecido passa a valer.
+  const byName = pool.find(
     (r) =>
       [r.name, ...r.aliases].some((a) => normalize(a) === name) &&
       (!r.birthDate || !profile.birthDate || r.birthDate === profile.birthDate),
   );
+  const byFullName = byName
+    ? undefined
+    : pool.find(
+        (r) =>
+          /^Q\d+$/.test(r.id) && !!r.birthDate && r.birthDate === profile.birthDate && typed.length > 0 &&
+          [r.name, ...r.aliases].some((a) => typed.every((t) => tokens(a).includes(t))),
+      );
+  const same = byName ?? byFullName;
   const fromAi = statsFrom(profile);
   let record: PlayerRecord;
   if (same) {
@@ -211,6 +224,10 @@ async function saveFromAi(store: Store, profile: PlayerProfile, nearby: PlayerRe
     };
   }
   await store.upsertPlayers([record]);
+  if (byFullName && !record.aliases.some((a) => normalize(a) === name)) {
+    await store.addManualAlias(record.id, profile.name).catch(() => undefined);
+    record.aliases = [...record.aliases, profile.name];
+  }
   return record;
 }
 
@@ -313,19 +330,81 @@ async function wikiInfoFor(store: Store, sources: PlayerSources, record: PlayerR
 }
 
 /** Q-id de uma ficha que só a IA tinha ('error' = a busca falhou agora). */
-async function wikidataIdOf(store: Store, sources: PlayerSources, record: PlayerRecord): Promise<string | null | 'error'> {
+/** Candidatos no Wikidata para uma ficha que só a IA tinha (melhor primeiro; 'error' = a busca falhou agora). */
+async function wikidataIdsOf(store: Store, sources: PlayerSources, record: PlayerRecord): Promise<string[] | 'error'> {
   const year = record.birthDate ? Number(record.birthDate.slice(0, 4)) : null;
-  const key = `wdid:v1:${normalize(record.name)}:${year ?? ''}`;
+  const key = `wdids:v2:${normalize(record.name)}:${year ?? ''}`;
   const cached = await store.getCachedProfile(key).catch(() => undefined);
-  if (cached !== undefined) return cached ? cached.name : null;
+  if (cached !== undefined) return cached ? cached.name.split(',').filter(Boolean) : [];
   try {
-    const id = await sources.findId(record.name, year);
-    await store.putCachedProfile(key, id ? ({ exists: true, name: id, clubs: [] } as unknown as PlayerProfile) : null).catch(() => undefined);
-    return id;
+    const ids = sources.findIds
+      ? await sources.findIds([record.name, ...record.aliases], year)
+      : [await sources.findId(record.name, year)].filter((x): x is string => !!x);
+    await store.putCachedProfile(key, ids.length ? ({ exists: true, name: ids.join(','), clubs: [] } as unknown as PlayerProfile) : null).catch(() => undefined);
+    return ids;
   } catch (error) {
     console.error('busca do Q-id falhou', record.name, error);
     return 'error';
   }
+}
+
+/** Página da Wikipédia pelo título, com cache de 30 dias ('error' = a Wikipédia não respondeu). */
+async function guessWikiOf(store: Store, sources: PlayerSources, name: string): Promise<WikiInfo | null | 'error'> {
+  if (!sources.guessWikipedia) return null;
+  const key = `wpguess:v1:${normalize(name)}`;
+  const cached = await store.getCachedProfile(key).catch(() => undefined);
+  if (cached !== undefined) return cached ? (cached as unknown as { info: WikiInfo }).info : null;
+  try {
+    const info = await sources.guessWikipedia(name);
+    await store.putCachedProfile(key, info ? ({ exists: true, name, clubs: info.clubs, info } as unknown as PlayerProfile) : null).catch(() => undefined);
+    return info;
+  } catch (error) {
+    console.error('Wikipédia pelo título falhou', name, error);
+    return 'error';
+  }
+}
+
+/**
+ * Ficha que só a IA tinha, numa rodada de clube (rodada 16):
+ * 1. candidatos no Wikidata (por todos os nomes; ano com 1 de folga): vale o
+ *    que jogou no clube da rodada; senão, o melhor. A ficha vira a do Wikidata;
+ * 2. sem Wikidata: a página da Wikipédia pelo título ("Egídio (futebolista)");
+ * 3. Wikidata e Wikipédia fora do ar: não bloqueia (vale o que a IA disse);
+ * 4. só quem não está em lugar nenhum fica "sem fonte".
+ */
+async function resolveAiRecord(
+  store: Store,
+  record: PlayerRecord,
+  team: Team,
+  sources: PlayerSources,
+): Promise<{ promoted: PlayerRecord } | { done: { record: PlayerRecord; how: string; unverified: boolean } }> {
+  const ids = await wikidataIdsOf(store, sources, record);
+  if (ids !== 'error' && ids.length) {
+    let first: { id: string; career: Career } | null = null;
+    for (const id of ids.slice(0, 3)) {
+      let career: Career | null = null;
+      try {
+        career = await careerOf(store, sources, id);
+      } catch (error) {
+        console.error('carreira do Wikidata falhou', id, error);
+      }
+      if (!career) continue;
+      first ??= { id, career };
+      if (career.clubs.some((c) => playedForClub(team, [c]))) return { promoted: await promote(store, record, id, career) };
+    }
+    if (first) return { promoted: await promote(store, record, first.id, first.career) };
+  }
+  const page = await guessWikiOf(store, sources, record.name);
+  if (page && page !== 'error') {
+    if (page.clubs.some((c) => playedForClub(team, [c]))) {
+      await store.addManualClub(record.id, { name: team.name, source: 'Wikipédia', at: today() }).catch((error) => console.error('gravar clube da Wikipédia falhou', error));
+      return { done: { record: { ...record, clubs: [...record.clubs, team.name] }, how: 'wp-titulo', unverified: false } };
+    }
+    // A página existe e não tem o clube: valem os clubes dela (os da IA não contam).
+    return { done: { record: { ...record, clubs: page.clubs }, how: 'wp-titulo', unverified: false } };
+  }
+  if (ids === 'error' || page === 'error') return { done: { record, how: 'fonte-fora', unverified: false } };
+  return { done: { record, how: 'sem-fonte', unverified: true } };
 }
 
 /**
@@ -385,16 +464,9 @@ async function confirmClubs(
   sources: PlayerSources,
 ): Promise<{ record: PlayerRecord; how: string; unverified: boolean }> {
   if (!isWikidataId(record.id)) {
-    const id = await wikidataIdOf(store, sources, record);
-    if (!id || id === 'error') return { record, how: id === 'error' ? 'fonte-fora' : 'sem-fonte', unverified: true };
-    let career: Career | null = null;
-    try {
-      career = await careerOf(store, sources, id);
-    } catch (error) {
-      console.error('carreira do Wikidata falhou', id, error);
-    }
-    if (!career) return { record, how: 'sem-fonte', unverified: true };
-    record = await promote(store, record, id, career);
+    const resolved = await resolveAiRecord(store, record, team, sources);
+    if ('done' in resolved) return resolved.done;
+    record = resolved.promoted;
   }
   let career: Career | null = null;
   try {
