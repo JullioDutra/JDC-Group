@@ -111,7 +111,13 @@ export class MemoryStore implements Store {
     for (const r of records) {
       const old = this.players.get(r.id)?.record;
       const merged: PlayerRecord = old
-        ? { ...r, positions: r.positions.length ? r.positions : old.positions, stats: { ...old.stats, ...r.stats }, manual: old.manual }
+        ? {
+            ...r,
+            positions: r.positions.length ? r.positions : old.positions,
+            // Número já gravado não muda na regravação: só entra o que falta (igual ao Neon).
+            stats: { ...r.stats, ...Object.fromEntries(Object.entries(old.stats).filter(([, v]) => typeof v === 'number')) },
+            manual: old.manual,
+          }
         : r;
       const manualAliases = merged.manual?.aliases ?? [];
       merged.aliases = [...merged.aliases, ...manualAliases.filter((a) => !merged.aliases.includes(a))];

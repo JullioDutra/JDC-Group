@@ -123,6 +123,53 @@ export function parseCorrection(norm: string): CorrectionCommand | null {
   return null;
 }
 
+export interface MultiCorrection {
+  player: string;
+  entries: Array<{ stat: StatKey; value: number; word: string }>;
+  /** Trechos que não viraram número (nome de dado desconhecido ou valor inválido). */
+  unknown: string[];
+}
+
+/**
+ * "tm Neymar: gols 439, jogos 717, assistências 252, valor atual 15"
+ * (rodada 17): vários números de um jogador de uma vez, conferidos pelo admin
+ * no Transfermarkt (no navegador dele: o bot não lê o site). Separe por
+ * vírgula, ponto e vírgula ou linha. Vale o texto original (com pontuação).
+ */
+export function parseMultiCorrection(raw: string): MultiCorrection | null {
+  const m = raw.trim().match(/^(?:tm|transfermarkt)\s+([^:]+?)\s*:\s*([\s\S]+)$/i);
+  if (!m) return null;
+  const player = m[1].trim();
+  const entries: MultiCorrection['entries'] = [];
+  const unknown: string[] = [];
+  for (const piece of m[2].split(/[;\n]|,(?=\s*[^\d\s])/)) {
+    const part = piece.trim().replace(/\.$/, '');
+    if (!part) continue;
+    const pm = part.match(/^(.+?)\s*:?\s+(\d[\d.,]*)\s*(?:mi|milhões|milhoes|m|cm)?$/i);
+    const word = pm ? normalize(pm[1]) : '';
+    const stat = STAT_WORDS.find(([w]) => w === word)?.[1];
+    const value = pm ? parseValue(pm[2]) : null;
+    if (!stat || value === null) unknown.push(part);
+    else entries.push({ stat, value, word });
+  }
+  return player && (entries.length || unknown.length) ? { player, entries, unknown } : null;
+}
+
+export async function applyMultiCorrection(store: Store, cmd: MultiCorrection, today: string, source = 'Transfermarkt'): Promise<string> {
+  if (!cmd.entries.length) return `Não entendi os números. Ex.: *tm Neymar: gols 439, jogos 717, assistências 252, valor atual 15*.`;
+  const [record, ...others] = await findRecords(store, cmd.player, 3);
+  if (!record) return `Não achei "${cmd.player}" na base. Confira o nome (vale o nome completo ou o id Q do Wikidata).`;
+  for (const e of cmd.entries) await store.setManualStat(record.id, e.stat, { value: e.value, source, at: today });
+  const homonyms = others.filter((o) => normalize(o.name) === normalize(record.name));
+  const lines = cmd.entries.map((e) => `• ${STAT_LABEL[e.stat]}: *${formatNumber(e.value)}*`);
+  return [
+    `✅ ${record.name} (${record.birthDate?.slice(0, 4) ?? 's/ data'}): ${cmd.entries.length} número(s) do ${source}, conferidos em ${brDate(today)}. Valem para todos os grupos e não mudam mais.`,
+    ...lines,
+    ...(cmd.unknown.length ? [`Não entendi: ${cmd.unknown.join('; ')}`] : []),
+    ...(homonyms.length ? [`Atenção: há outro ${record.name} na base (${homonyms.map((h) => h.id).join(', ')}). Se era ele, mande com o id: *tm ${homonyms[0].id}: ...*`] : []),
+  ].join('\n');
+}
+
 export interface ClubCorrection {
   player: string;
   /** Texto do clube como foi digitado (normalizado). */

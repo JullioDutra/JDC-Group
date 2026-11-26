@@ -8,7 +8,7 @@ import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, igno
 import { getTeam, isFromNation } from './teams';
 import { PICK_TRIES, clubVerdict, drawRestrictions, playContext } from './validate';
 import { helpText } from './commands';
-import { applyClubCorrection, applyCorrection, applyFamousName, findRecords, formatCard, parseClubCorrection, parseCorrection, parseFamousName } from '../players/admin';
+import { applyClubCorrection, applyCorrection, applyFamousName, applyMultiCorrection, findRecords, formatCard, parseClubCorrection, parseCorrection, parseFamousName, parseMultiCorrection } from '../players/admin';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import { anagramThemesText } from '../party/anagrama';
@@ -576,6 +576,12 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
     const cmd = parseCorrection(norm);
     if (!cmd) return [text('Formato: *corrigir <jogador> <dado> <valor>*. Ex.: corrigir Rogério Ceni gols 131. Dados: gols, jogos, assistências, valor atual, valor máximo, títulos, gols seleção, jogos seleção, gols copa, copas, gols champions, gols libertadores, gols brasileirão, altura, estreia.\nPassagem que falta: *corrigir <jogador> clube <clube> fonte <fonte>*. Ex.: corrigir Fábio clube Fluminense fonte ge.')];
     return [text(await applyCorrection(store, cmd, now.toISOString().slice(0, 10)))];
+  }
+  if (norm.startsWith('tm ') || norm.startsWith('transfermarkt ')) {
+    if (!manager) return [text('Só o admin do bot corrige dados.')];
+    const cmd = parseMultiCorrection(msg.text);
+    if (!cmd) return [text('Formato: *tm <jogador>: gols 439, jogos 717, assistências 252, valor atual 15* (números conferidos por você no Transfermarkt).')];
+    return [text(await applyMultiCorrection(store, cmd, now.toISOString().slice(0, 10)))];
   }
   if (norm.startsWith('nome famoso ')) {
     if (!manager) return [text('Só o admin do bot cadastra nomes famosos.')];

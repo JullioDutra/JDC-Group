@@ -574,6 +574,25 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       console.error('juntar duplicadas falhou', error);
     }
 
+    // Ficha só da IA fora de rodada de clube (rodada 17): se o Wikidata tem UM
+    // candidato só, ela vira a ficha dele. Assim a mesma pessoa não fica com
+    // duas fichas e dois números (era um dos motivos de o número mudar de uma
+    // partida para outra). Com mais de um candidato, só a rodada de clube decide.
+    if (sources && !isWikidataId(record.id) && ctx?.kind !== 'club') {
+      const ids = await wikidataIdsOf(store, sources, record);
+      if (ids !== 'error' && ids.length === 1) {
+        try {
+          const career = await careerOf(store, sources, ids[0]);
+          if (career) {
+            record = await promote(store, record, ids[0], career);
+            outcome += '+wd-unico';
+          }
+        } catch (error) {
+          console.error('juntar ficha da IA falhou', error);
+        }
+      }
+    }
+
     // Rodada de clube: confere a passagem na fonte (Wikidata, depois Wikipédia) antes de o jogo validar.
     let unverified = false;
     const team = ctx?.kind === 'club' ? getTeam(ctx.teamId) : undefined;

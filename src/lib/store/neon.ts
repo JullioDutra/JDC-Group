@@ -214,7 +214,8 @@ export class NeonStore implements Store {
            clubs = CASE WHEN cardinality(EXCLUDED.clubs) > 0 THEN EXCLUDED.clubs ELSE players.clubs END,
            debut_year = COALESCE(EXCLUDED.debut_year, players.debut_year),
            sitelinks = GREATEST(EXCLUDED.sitelinks, players.sitelinks),
-           stats = players.stats || EXCLUDED.stats,
+           -- Número já gravado não muda na regravação (carga ou outra ficha): só entra o que falta (rodada 17).
+           stats = EXCLUDED.stats || jsonb_strip_nulls(players.stats),
            anchors = COALESCE(EXCLUDED.anchors, players.anchors),
            updated_at = now()`,
         params,
