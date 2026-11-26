@@ -1855,3 +1855,17 @@ A rede do ambiente da sessão não permite `www.transfermarkt.com` (o proxy recu
 2. **Ritmo:** lotes de 300 por hora (3 pedidos por jogador, 1 a cada 4 s). Os 4 mil levam cerca de 13 horas, em lotes, retomando de onde parou.
 3. **Depois:** baixar a fama mínima (20, 10...) para ir mais fundo, priorizando clubes do Brasil.
 4. **Atualização:** a cada 30 dias, os jogadores já lidos são lidos de novo.
+
+### 34.5 O robots.txt do Transfermarkt (lido em 26/11/2026) e quem roda a coleta
+
+O admin liberou `www.transfermarkt.com.br` na rede do ambiente. O primeiro e único pedido feito daqui foi o robots.txt, que mostra três coisas:
+
+- **Agentes de IA bloqueados nominalmente** (`Disallow: /`): ClaudeBot, Claude-SearchBot, anthropic-ai, GPTBot, ChatGPT-User, Perplexity-User, Operator, Devin, NovaAct e outros. Também raspadores genéricos, como Scrapy e wget.
+- **Para qualquer outro robô (`*`):** `/ceapi`, `/schnellsuche`, `/quickselect` e `/jumplist` são proibidos. As páginas de jogador são permitidas.
+- **Licença de uso** declarada no próprio arquivo (`transfermarkt.de/license.xml`).
+
+**Decisão:**
+- **Uma sessão do Claude não roda a coleta.** O site barra agentes de IA, e rodar daqui com o nome do nosso bot seria contornar esse bloqueio. A coleta é rodada pelo admin, na máquina dele, como um robô comum, que respeita o robots.txt.
+- **Sem `/ceapi`:** o histórico de transferências e o valor de mercado ficam de fora. Clubes seguem vindo do Wikidata, da Wikipédia e do admin; valor de mercado vem do admin (*tm*, *corrigir*) ou da IA. A coleta traz os totais da carreira (jogos, gols, assistências e cartões), da página de dados detalhados.
+
+O módulo foi ajustado para o `.com.br`, com os títulos das colunas em português. A skill e a regra do `CLAUDE.md` agora dizem quem faz o quê. O robots.txt real virou fixture de teste.

@@ -144,3 +144,23 @@ test('Comando tm: vários números de uma vez, conferidos pelo admin', () => {
   assert.deepEqual(cmd.unknown, ['foo 3']);
   assert.equal(parseMultiCorrection('corrigir neymar gols 10'), null);
 });
+
+test('Transfermarkt: robots.txt real (26/11/2026) — o nosso robô lê os dados detalhados; /ceapi fechado; agentes de IA bloqueados', async () => {
+  const { readFileSync } = await import('node:fs');
+  const text = readFileSync('tests/fixtures/transfermarkt-robots-2026-11-26.txt', 'utf8');
+  const ours = parseRobots(text);
+  assert.equal(robotsAllows(ours, '/-/leistungsdatendetails/spieler/28003'), true);
+  assert.equal(robotsAllows(ours, '/ceapi/transferHistory/list/28003'), false);
+  assert.equal(robotsAllows(ours, '/ceapi/marketValueDevelopment/graph/28003'), false);
+  assert.equal(robotsAllows(ours, '/schnellsuche/ergebnis/schnellsuche'), false);
+  for (const ai of ['claudebot', 'anthropic-ai', 'claude-searchbot', 'chatgpt-user', 'operator']) {
+    assert.equal(robotsAllows(parseRobots(text, ai), '/-/leistungsdatendetails/spieler/28003'), false, ai);
+  }
+});
+
+test('Transfermarkt: títulos das colunas em português (transfermarkt.com.br)', () => {
+  const html = PERF.replace('title="Appearances"', 'title="Jogos"').replace('title="Goals"', 'title="Gols"').replace('title="Assists"', 'title="Assistências"')
+    .replace('title="Own goals"', 'title="Gols contra"').replace('title="Yellow cards"', 'title="Cartões amarelos"').replace('title="Second yellow cards"', 'title="Cartão amarelo-vermelho"')
+    .replace('title="Red cards"', 'title="Cartões vermelhos"').replace('title="Penalty goals"', 'title="Gols de pênalti"').replace('title="Minutes per goal"', 'title="Minutos por gol"').replace('title="Minutes played"', 'title="Minutos jogados"');
+  assert.deepEqual(parseCareerTotals(html), { apps: 1076, goals: 848, assists: 378, yellow: 98, secondYellow: 0, red: 3, minutes: 88564 });
+});

@@ -1,41 +1,39 @@
 ---
 name: transfermarkt-sync
-description: Atualiza a base de jogadores do Duelo de Craques com o Transfermarkt (totais da carreira, clubes com empréstimos, valor de mercado), em ritmo lento e respeitando o robots.txt. Use quando o admin pedir para atualizar ou ampliar os dados do Transfermarkt, ver o status da base do Transfermarkt ou incluir mais jogadores nela.
+description: Ajuda o admin do Duelo de Craques a atualizar a base de jogadores com o Transfermarkt (totais da carreira). A coleta roda na máquina do admin, não numa sessão do Claude. Use quando o admin pedir para preparar, conferir ou publicar uma atualização do Transfermarkt, ou trouxer uma página salva para ajustar a leitura.
 ---
 
-# Atualizar a base com o Transfermarkt
+# Atualização com o Transfermarkt
 
-Decisão do dono do bot (26/11/2026): os números de jogador vêm do Transfermarkt,
-lidos por este módulo. O jogo nunca acessa o site no meio da partida; ele lê a
-base gerada (`src/lib/transfermarkt/dados.ts`), que vai junto no deploy.
+Decisão do dono do bot (26/11/2026): os números de carreira vêm do Transfermarkt.
+O jogo nunca acessa o site no meio da partida; ele lê a base gerada
+(`src/lib/transfermarkt/dados.ts`), que vai junto no deploy.
 
-## Regras (não mudar sem o admin pedir)
+## Quem roda a coleta: o admin, não o Claude
 
-- Ritmo: 1 pedido a cada 4 s (mínimo de 2 s no código). Nada de pedidos em paralelo.
-- User-Agent do bot e robots.txt respeitado (caminho proibido fica de fora).
-- Bloqueio (403, ou 429/503 insistente): o script PARA. Não contornar: nada de
-  trocar IP, usar proxy, se passar por navegador ou resolver captcha. Conte ao
-  admin e tente outro dia.
-- Correção do admin (*corrigir*, *tm*) vale mais que o Transfermarkt; o
-  Transfermarkt vale mais que Wikidata, Wikipédia e IA.
+O robots.txt do Transfermarkt (lido em 26/11/2026) bloqueia nominalmente
+agentes de IA (ClaudeBot, Claude-SearchBot, anthropic-ai, ChatGPT-User,
+Operator, Devin...). Por isso:
 
-## Passos
+- NÃO rode `npm run tm -- rodar` numa sessão do Claude, nem acesse páginas do
+  Transfermarkt daqui (nem para "testar"). Mudar o User-Agent para passar não vale.
+- O admin roda na máquina dele. O módulo é um robô comum, com nome próprio, e
+  respeita o robots.txt.
+- `/ceapi` (histórico de transferências e valor de mercado) é proibido para
+  qualquer robô. O módulo registra "(robots.txt)" e segue só com os totais da
+  carreira (jogos, gols, assistências, cartões).
 
-Use sempre `npm run tm -- ...`: ele liga `NODE_USE_ENV_PROXY=1`, sem o qual o Node não passa pelo proxy da sessão.
+## O que o Claude faz
 
-
-1. Rede: `curl -s -o /dev/null -w "%{http_code}" https://www.transfermarkt.com/robots.txt`.
-   Se o proxy recusar, o host `www.transfermarkt.com` precisa estar liberado no
-   ambiente (configuração de rede do ambiente da sessão).
-2. Alvos (uma vez, ou para ampliar): `npm run tm -- alvos --min-fama 30 --max 5000`
-   (Wikidata; espera sozinho se o serviço limitar). Para ir mais fundo, rode de
-   novo com `--min-fama` menor.
-3. Leitura em lotes, em segundo plano: `npm run tm -- rodar --limite 300`
-   (300 jogadores ≈ 1 hora). Retoma de onde parou; salva a cada 10.
-4. Conferir: `npm run tm -- status`; olhar no relatório os "sem
-   leitura" (formato da página mudou? então ajustar `src/lib/transfermarkt/parse.ts`
-   com uma página real como fixture de teste antes de seguir).
-5. `npm test` e `npx next build`; commit de `src/lib/transfermarkt/dados.ts` e
-   `data/transfermarkt-alvos.json`; push (o deploy leva a base nova ao bot).
-6. Registrar no plano (`docs/PLANO-MELHORIAS-2026.md`): quantos jogadores, data e
-   o que ficou de fora.
+1. Explicar ao admin os comandos (na pasta do projeto, na máquina dele):
+   - `npm install`
+   - `npm run tm -- status`
+   - `npm run tm -- rodar --limite 300` (cerca de 1 hora; retoma de onde parou; para sozinho se o site bloquear)
+   - commit e push de `src/lib/transfermarkt/dados.ts`
+2. Conferir a leitura: se o relatório tiver muitos "sem leitura", pedir ao admin
+   uma página salva pelo navegador dele ("dados detalhados" de um jogador) e
+   ajustar `src/lib/transfermarkt/parse.ts` com ela como fixture de teste.
+3. Depois do push do admin: `npm test`, `npx next build`, conferir no
+   `src/lib/transfermarkt/dados.ts` se os números fazem sentido (amostra de
+   craques conhecidos), registrar no plano (`docs/PLANO-MELHORIAS-2026.md`).
+4. Prioridade no jogo: correção do admin > Transfermarkt > Wikipédia/Wikidata > IA.

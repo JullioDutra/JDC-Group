@@ -27,16 +27,17 @@ export interface CareerTotals {
 
 /** Nome da coluna pelo título (o Transfermarkt usa ícones com title). */
 function columnKey(title: string): keyof CareerTotals | null {
-  const t = title.toLowerCase();
-  if (/conceded|gegentor|clean sheet|zu null/.test(t)) return null; // goleiro: não é gol marcado
-  if (/appearance|einsätze|einsatz|^apps?$/.test(t)) return 'apps';
-  if (/second yellow|yellow-red|gelb-rot|gelbrot/.test(t)) return 'secondYellow';
-  if (/yellow|gelb/.test(t)) return 'yellow';
-  if (/red card|^red|rot/.test(t)) return 'red';
+  const t = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // Goleiro (gols sofridos, jogos sem sofrer gol), gol contra e gol de pênalti não são "gols".
+  if (/conceded|gegentor|clean sheet|zu null|sofrid|sem sofrer|own goal|eigentor|gols? contra|penalt|elfmeter/.test(t)) return null;
+  if (/appearance|einsatze|einsatz|^apps?$|^jogos$|partidas|^convoca/.test(t)) return 'apps';
+  if (/second yellow|yellow-red|gelb-rot|gelbrot|segundo amarelo|amarelo-vermelho|amarelo vermelho/.test(t)) return 'secondYellow';
+  if (/yellow|gelb|amarelo/.test(t)) return 'yellow';
+  if (/red card|^red|rot|vermelho/.test(t)) return 'red';
   if (/assist|vorlage/.test(t)) return 'assists';
-  if (/per goal|pro tor/.test(t)) return null;
-  if (/minutes|minuten/.test(t)) return 'minutes';
-  if (/^goals?$|goals scored|^tore$/.test(t)) return 'goals';
+  if (/per goal|pro tor|por gol/.test(t)) return null;
+  if (/minutes|minuten|minutos/.test(t)) return 'minutes';
+  if (/^goals?$|goals scored|^tore$|^gols?$|gols marcados/.test(t)) return 'goals';
   return null;
 }
 

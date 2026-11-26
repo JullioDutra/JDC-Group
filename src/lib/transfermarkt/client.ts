@@ -9,9 +9,16 @@
  *   (TmBlocked). Não há troca de IP, proxy ou disfarce para contornar bloqueio.
  * Usado só pelo script de atualização (scripts/tm-sync.ts), nunca no meio de
  * uma partida: o jogo lê a base gerada (dados.ts).
+ *
+ * Quem roda: o admin, na máquina dele. O robots.txt do site (lido em
+ * 26/11/2026) bloqueia nominalmente agentes de IA (ClaudeBot, anthropic-ai,
+ * ChatGPT-User, Operator...), então uma sessão do Claude não roda a coleta.
+ * Para qualquer robô, /ceapi (transferências e valor de mercado) é proibido:
+ * esses dados ficam de fora (o módulo registra e segue).
  */
 
-export const TM_BASE = 'https://www.transfermarkt.com';
+/** Domínio (o liberado na rede é o brasileiro). Dá para trocar com TM_SITE=https://www.transfermarkt.com. */
+export const TM_BASE = process.env.TM_SITE ?? 'https://www.transfermarkt.com.br';
 export const TM_USER_AGENT = 'DueloDeCraquesBot/1.0 (+https://duelo-de-craques-peach.vercel.app; atualização lenta de dados de jogadores)';
 
 export type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
