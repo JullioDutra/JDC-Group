@@ -1814,3 +1814,44 @@ Fonte: página "2026 FIFA World Cup" da Wikipédia em inglês, mais as caixas de
 | Linha do Tempo / Intruso / Conexões | +3 / +3 / +2 | +3 / +3 / +2 |
 
 **Testes:** `tests/rodada16.test.ts` (5) usa os dados reais do Egídio. Cobre o título como nome, o ano errado da IA, o general romano que não pode ser escolhido, a junção com a ficha da base, a Wikipédia pelo título, a fonte fora do ar e o conteúdo novo. Total: 206 testes passando e build ok.
+
+## 34. Base sólida: números estáveis e módulo do Transfermarkt (26/11)
+
+> Pedido: "Estamos saindo com dados muito imprecisos, mudando de uma partida para outra, queria ter dados sólidos como o TM. Crie um módulo separado para skill scrape e vamos atualizar os dados com o Transfermarkt. Pausei os jogos no grupo e vamos focar nesse ponto agora, até ter uma base de dados sólida."
+
+### 34.1 Por que o número mudava de uma partida para outra
+
+1. **A regravação da ficha trocava números já gravados.** Isso valia para a carga do Wikidata (agora no reparo das seleções) e para a junção de fichas. Agora a regravação só preenche o que falta: no Neon, `EXCLUDED.stats || jsonb_strip_nulls(players.stats)`.
+2. **A mesma pessoa ficava em duas fichas (uma da IA e uma do Wikidata), com números diferentes.** Agora, quando o Wikidata tem um único candidato, a ficha da IA vira a do Wikidata também fora das rodadas de clube.
+3. **IA fora do ar:** a estimativa do Wikidata não é gravada (de propósito, para não congelar número errado). Quando a IA volta, entra o número dela uma vez. Com a base do Transfermarkt, esses temas deixam de depender da IA.
+
+### 34.2 Módulo do Transfermarkt (decisão do dono, regra nova no `CLAUDE.md`)
+
+- **Peças:**
+  - `src/lib/transfermarkt/`: cliente, leitores, leitura de um jogador e base gerada `dados.ts`;
+  - `scripts/tm-sync.ts`, com os comandos `alvos`, `rodar` e `status`;
+  - skill `.claude/skills/transfermarkt-sync`.
+- **Boa vizinhança, fixa no código:**
+  - 1 pedido a cada 4 s (mínimo de 2 s);
+  - User-Agent do bot;
+  - robots.txt respeitado;
+  - 429/503 espera; 403 ou limite insistente para tudo, sem contornar.
+- **O jogo nunca acessa o site.** Ele lê a base gerada, que vai no deploy, e por isso o número não muda no meio da partida.
+- **Ligação sem homônimo:** o código do Transfermarkt de cada jogador vem do Wikidata (P2446) e casa pelo Q-id.
+- **Dados por jogador:**
+  - totais da carreira em todas as competições (jogos, gols, assistências, cartões);
+  - clubes do histórico de transferências, com empréstimos;
+  - valor de mercado atual e o maior da carreira.
+- **Prioridade:** correção do admin > Transfermarkt > Wikipédia/Wikidata > IA. Os clubes do Transfermarkt valem na conferência de clubes. A *ficha* mostra "Números e clubes do Transfermarkt, lidos em DD/MM/AAAA".
+- **Comando do admin `tm`:** vários números conferidos de uma vez, por exemplo *tm Neymar: gols 439, jogos 717, assistências 252, valor atual 60*.
+
+### 34.3 Bloqueio atual
+
+A rede do ambiente da sessão não permite `www.transfermarkt.com` (o proxy recusou). O pedido para incluir o endereço foi recusado pelo serviço de ambientes. Até o admin liberar o host na configuração de rede do ambiente, o módulo fica pronto, mas sem rodar. Os leitores foram testados com páginas sintéticas no formato conhecido do site. Na primeira leitura real, eles serão conferidos com páginas de verdade como fixtures, antes de gravar em lote.
+
+### 34.4 Plano de carga
+
+1. **Alvos:** futebolistas com código do Transfermarkt e 30 artigos ou mais na Wikipédia (cerca de 4 mil, os que mais aparecem no jogo).
+2. **Ritmo:** lotes de 300 por hora (3 pedidos por jogador, 1 a cada 4 s). Os 4 mil levam cerca de 13 horas, em lotes, retomando de onde parou.
+3. **Depois:** baixar a fama mínima (20, 10...) para ir mais fundo, priorizando clubes do Brasil.
+4. **Atualização:** a cada 30 dias, os jogadores já lidos são lidos de novo.

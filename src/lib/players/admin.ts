@@ -1,4 +1,5 @@
 import { findTeamByName } from '../game/teams';
+import { tmPlayerFor, withTransfermarkt } from '../transfermarkt';
 import { formatNumber, normalize } from '../game/text';
 import { POSITION_LABEL } from '../game/types';
 import type { Store } from '../store/types';
@@ -234,7 +235,9 @@ export async function findRecords(store: Store, query: string, limit = 3): Promi
 const brDate = (iso: string) => iso.split('-').reverse().join('/');
 
 /** Ficha em texto para o grupo. */
-export function formatCard(r: PlayerRecord): string {
+export function formatCard(card: PlayerRecord): string {
+  const r = withTransfermarkt(card);
+  const tm = tmPlayerFor(r.id);
   const lines = [`*${r.name}*${r.aliases.length ? ` (${r.aliases.slice(0, 3).join(', ')})` : ''}`];
   const meta = [
     r.birthDate ? `nasceu em ${brDate(r.birthDate)}` : '',
@@ -255,6 +258,7 @@ export function formatCard(r: PlayerRecord): string {
     nums.push(`• ${STAT_LABEL[k]}: ${formatNumber(value)}${tag}`);
   }
   if (nums.length) lines.push(nums.join('\n'));
+  if (tm) lines.push(`📊 Números e clubes do Transfermarkt, lidos em ${brDate(tm.at)}.`);
   lines.push(`_id ${r.id.startsWith('ai:') ? 'pesquisado pela IA' : r.id}_`);
   return lines.join('\n');
 }

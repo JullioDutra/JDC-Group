@@ -2,6 +2,7 @@ import { getTeam, playedForClub, type Team } from '../game/teams';
 import { normalize } from '../game/text';
 import { POSITION_LABEL, type MetricKey, type PlayerProfile } from '../game/types';
 import type { Store } from '../store/types';
+import { withTransfermarkt } from '../transfermarkt';
 import { queryKeys, queryTokens } from './keys';
 import { nameMatchesQuery, rankCandidates } from './rank';
 import type { Career, PlayerSources, WikiInfo } from './sources';
@@ -496,12 +497,13 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
     const log = (outcome: string, playerId?: string) =>
       store.logLookup({ query, context: desc, outcome, playerId, ms: Date.now() - started }).catch(() => undefined);
 
-    let candidates = await store.findPlayers(queryKeys(q), 80);
+    // Transfermarkt junto da ficha já na escolha (rodada 17): clube e números dele contam no ranking.
+    let candidates = (await store.findPlayers(queryKeys(q), 80)).map(withTransfermarkt);
     let ranked = rankCandidates(candidates, q, ctx);
     // Nome com mais de uma palavra: procura também por partes ("pedro guilherme").
     const tokens = queryTokens(q);
     if (!ranked.some((r) => r.fits) && tokens.length > 1) {
-      candidates = [...candidates, ...(await store.findPlayers(tokens, 120))];
+      candidates = [...candidates, ...(await store.findPlayers(tokens, 120)).map(withTransfermarkt)];
       ranked = rankCandidates(candidates, q, ctx);
     }
     let record: PlayerRecord | null = ranked.find((r) => r.fits)?.record ?? null;
@@ -574,6 +576,8 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       console.error('juntar duplicadas falhou', error);
     }
 
+    record = withTransfermarkt(record);
+
     // Ficha só da IA fora de rodada de clube (rodada 17): se o Wikidata tem UM
     // candidato só, ela vira a ficha dele. Assim a mesma pessoa não fica com
     // duas fichas e dois números (era um dos motivos de o número mudar de uma
@@ -616,6 +620,9 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
         outcome += '+wp-posicao';
       }
     }
+
+    // A conferência pode ter regravado os clubes: o Transfermarkt entra de novo (não duplica).
+    record = withTransfermarkt(record);
 
     const stat = isStatKey(ctx?.metric) ? ctx!.metric as StatKey : null;
 
