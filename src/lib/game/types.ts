@@ -71,6 +71,11 @@ export interface PlayerProfile {
   penaltyGoals?: number | null;
   /** Data da conferência dos números corrigidos à mão (AAAA-MM-DD), se houver. */
   manualAt?: string;
+  /**
+   * Rodada de clube com ficha que só a IA tinha e que não deu para conferir
+   * (nem Wikidata nem Wikipédia): o clube da IA não prova a passagem.
+   */
+  clubsUnverified?: boolean;
 }
 
 export type RestrictionKind = 'none' | 'club' | 'country';

@@ -64,10 +64,21 @@ export interface ManualEntry {
   at: string;
 }
 
+/** Passagem por clube confirmada fora do Wikidata (admin ou Wikipédia). */
+export interface ManualClub {
+  name: string;
+  /** "Wikipédia" ou a fonte que o admin informou. */
+  source: string;
+  /** Data da conferência (AAAA-MM-DD). */
+  at: string;
+}
+
 export interface ManualData {
   stats?: Partial<Record<StatKey, ManualEntry>>;
   /** Nomes famosos aceitos pelo admin (ex.: "Gabigol"). */
   aliases?: string[];
+  /** Clubes confirmados pelo admin ou pela Wikipédia; a carga do Wikidata nunca apaga. */
+  clubs?: ManualClub[];
 }
 
 /** Contexto da jogada: resolve homônimos e diz qual número o tema precisa. */

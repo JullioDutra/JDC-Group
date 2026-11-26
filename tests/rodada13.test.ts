@@ -43,8 +43,9 @@ test('Rodada 13: em rodada de clube, os clubes vêm do Wikidata e a ficha contam
   // Ficha contaminada por respostas antigas da IA (Boca e Flamengo a mais).
   await store.upsertPlayers([wd('Q187125', 'Puskás', ['Budapest Honvéd', 'Real Madrid', 'Boca Juniors', 'Flamengo'], { positions: ['ATA'], nationality: 'Hungria' })]);
   let calls = 0;
-  const clubs = async (id: string) => (calls++, id === 'Q187125' ? ['Budapest Honvéd', 'Real Madrid'] : null);
-  const lookup = createLookup(store, async () => null, undefined, clubs);
+  const career = async (id: string) =>
+    (calls++, id === 'Q187125' ? { id, clubs: ['Budapest Honvéd', 'Real Madrid'], wiki: {}, sitelinks: 80, birthDate: '1927-04-01', label: 'Puskás' } : null);
+  const lookup = createLookup(store, async () => null, undefined, { career, wikipediaClubs: async () => null, findId: async () => null });
   const ctx = { position: 'ATA' as const, kind: 'club' as const, teamId: 'flamengo' };
   const p = (await lookup('Puskás', ctx))!;
   assert.deepEqual(p.clubs, ['Budapest Honvéd', 'Real Madrid']);
@@ -58,9 +59,10 @@ test('Rodada 13: em rodada de clube, os clubes vêm do Wikidata e a ficha contam
   // Wikidata fora do ar: vale a ficha gravada.
   const store2 = new MemoryStore();
   await store2.upsertPlayers([wd('Q1', 'Fulano', ['Flamengo'])]);
-  const down = createLookup(store2, async () => null, undefined, async () => {
+  const offline = async () => {
     throw new Error('fora do ar');
-  });
+  };
+  const down = createLookup(store2, async () => null, undefined, { career: offline, wikipediaClubs: offline, findId: offline });
   const err = console.error;
   console.error = () => undefined;
   try {

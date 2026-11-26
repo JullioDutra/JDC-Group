@@ -120,7 +120,7 @@ export function teamsQuery(ids: string[]): string {
   OPTIONAL { ?st pq:P1351 ?goals }
   OPTIONAL { ?team rdfs:label ?pt FILTER(LANG(?pt) = "pt") }
   OPTIONAL { ?team rdfs:label ?en FILTER(LANG(?en) = "en") }
-  BIND(EXISTS { ?team wdt:P31 wd:Q6979593 } AS ?nat)
+  BIND(EXISTS { ?team wdt:P31/wdt:P279? wd:Q6979593 } AS ?nat)
 }`;
 }
 
@@ -134,6 +134,18 @@ export function mapPosition(label: string): Position | null {
   if (/midfielder|playmaker|regista|volante/.test(l)) return 'MEI';
   if (/forward|striker|winger|attacker|centre forward|center forward/.test(l)) return 'ATA';
   return null;
+}
+
+/**
+ * Seleção pelo rótulo ("Seleção Brasileira de Futebol", "Argentina national
+ * football team", "Selección de fútbol de Uruguay"). Complementa a classe do
+ * Wikidata: desde 2025 as seleções masculinas são "men's national association
+ * football team" (Q135408445, subclasse de Q6979593), e a consulta antiga só
+ * reconhecia a classe-mãe. Resultado: a seleção entrava como clube (ex.: na
+ * ficha do Fábio) e os jogos pela seleção não eram somados.
+ */
+export function isNationalTeamLabel(label: string): boolean {
+  return /^\s*sele[cç][aã]o\b|\bnational\b[^,]{0,40}?\b(football|soccer)\s+team\b|^\s*selecci[oó]n\b|\bnationalmannschaft\b|\bnazionale\b|\b[ée]quipe de france de football\b/i.test(label);
 }
 
 /** Time de base, reserva, B ou olímpico: não conta como passagem pelo clube/seleção. */
@@ -195,7 +207,7 @@ export function buildRecords(
     const both = `${val(b, 'pt') ?? ''} ${val(b, 'en') ?? ''}`;
     if (isYouthOrReserve(both)) continue;
     const team = qid(val(b, 'team'));
-    const nat = val(b, 'nat') === 'true';
+    const nat = val(b, 'nat') === 'true' || isNationalTeamLabel(both);
     const entry = r._teams.get(team) ?? { label, start: null, nat, apps: 0, goals: 0 };
     const start = year(val(b, 'start'));
     if (start && (!entry.start || start < entry.start)) entry.start = start;
@@ -259,6 +271,8 @@ export interface ImportPart {
   clubCountry?: string;
   minSitelinks: number;
   fromYear: number;
+  /** Último ano de nascimento desta parte (padrão: o da carga). */
+  toYear?: number;
 }
 
 export const DEFAULT_PLAN: ImportPart[] = [
@@ -291,6 +305,33 @@ export const DEFAULT_PLAN: ImportPart[] = [
   { label: 'clubes dos Emirados', clubCountry: 'Q878', minSitelinks: 1, fromYear: 1965 },
   { label: 'clubes da China', clubCountry: 'Q148', minSitelinks: 2, fromYear: 1965 },
 ];
+
+/**
+ * Partes acrescentadas depois que a carga começou (rodada 14). Entram na
+ * carga em andamento logo depois da parte atual (ver extendPlan).
+ * - Lendas nascidas antes de 1920 (Friedenreich, Domingos da Guia, Leônidas,
+ *   Meazza...): a carga começava em 1920 e eles só existiam pela IA.
+ * - Reparo das seleções: refaz os mais conhecidos para tirar a seleção da
+ *   lista de clubes e somar de novo os jogos pela seleção.
+ */
+export const LATE_PARTS: ImportPart[] = [
+  { label: 'lendas (nascidos antes de 1920)', minSitelinks: 2, fromYear: 1860, toYear: 1919 },
+  { label: 'reparo das seleções (mais conhecidos)', minSitelinks: 10, fromYear: 1930 },
+];
+
+/** Põe na carga salva as partes novas que ela ainda não tem, logo depois da parte atual. */
+export function extendPlan<T extends ImportState>(state: T, extra: ImportPart[] = LATE_PARTS): T {
+  if (!Array.isArray(state.plan)) return state;
+  const missing = extra.filter((p) => !state.plan.some((q) => q.label === p.label));
+  if (!missing.length) return state;
+  if (state.done) {
+    const plan = [...state.plan, ...missing];
+    const part = state.plan.length;
+    return { ...state, plan, part, done: false, cursor: `${plan[part].fromYear}-01-01`, spanDays: 365, offset: 0 };
+  }
+  const plan = [...state.plan.slice(0, state.part + 1), ...missing, ...state.plan.slice(state.part + 1)];
+  return { ...state, plan };
+}
 
 export interface ImportState {
   runId: string;
@@ -385,8 +426,9 @@ export async function importStep(
     }
   };
   if (state.done) return next;
-  if (Number(state.cursor.slice(0, 4)) > state.untilYear) return nextPart(next);
   const part = state.plan[state.part];
+  const lastYear = Math.min(part.toYear ?? state.untilYear, state.untilYear);
+  if (Number(state.cursor.slice(0, 4)) > lastYear) return nextPart(next);
   const to = addDays(state.cursor, state.spanDays);
   let list: Array<{ id: string; sitelinks: number; birth: string | null }>;
   let imported = 0;
@@ -427,5 +469,5 @@ export async function importStep(
   // Janela concluída: segue; se veio pouca gente, a próxima janela é maior.
   const grow = list.length < PAGE / 4 ? state.spanDays * 2 : state.spanDays;
   next = { ...next, cursor: to, offset: 0, spanDays: Math.min(MAX_SPAN, Math.max(grow, 30)) };
-  return Number(to.slice(0, 4)) > state.untilYear ? nextPart(next) : next;
+  return Number(to.slice(0, 4)) > lastYear ? nextPart(next) : next;
 }

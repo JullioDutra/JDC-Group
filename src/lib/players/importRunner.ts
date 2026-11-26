@@ -1,4 +1,4 @@
-import { importStep, newImportState, type ImportState } from './wikidata';
+import { extendPlan, importStep, newImportState, type ImportState } from './wikidata';
 import { scheduleAdminCall } from '../scheduler';
 import type { Store } from '../store/types';
 
@@ -40,6 +40,8 @@ export type ImportCall = { action?: string; runId?: string; untilYear?: number; 
 export async function runImportCall(store: Store, url: string, body: ImportCall, now = new Date()) {
   const action = body.action ?? 'status';
   let state = (await store.getImportState(IMPORT_STATE_ID)) as StoredImport | null;
+  // Partes novas do plano (lendas, reparo das seleções) entram na carga em andamento.
+  if (state && Array.isArray(state.plan) && !state.stopped && action !== 'status') state = extendPlan(state);
 
   if (action === 'status') return { state, players: await store.countPlayers() };
   if (action === 'stop') {

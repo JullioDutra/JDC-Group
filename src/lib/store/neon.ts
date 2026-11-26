@@ -3,7 +3,7 @@ import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { SCHEMA_STATEMENTS } from './schema';
 import { nameKeys } from '../players/keys';
-import type { ManualData, ManualEntry, PlayerRecord, StatKey } from '../players/types';
+import type { ManualClub, ManualData, ManualEntry, PlayerRecord, StatKey } from '../players/types';
 import { normalize } from '../game/text';
 import type { Position } from '../game/types';
 import type { Store, MatchStats, Season } from './types';
@@ -170,10 +170,13 @@ export class NeonStore implements Store {
 
   private static manualOf(row: Record<string, unknown>): Partial<PlayerRecord> {
     const manual = (row.manual as ManualData | null) ?? null;
-    if (!manual || (!manual.stats && !manual.aliases)) return {};
+    if (!manual || (!manual.stats && !manual.aliases && !manual.clubs)) return {};
     const aliases = ((row.aliases as string[]) ?? []).slice();
     for (const a of manual.aliases ?? []) if (!aliases.includes(a)) aliases.push(a);
-    return { manual, aliases };
+    // Clubes confirmados pelo admin ou pela Wikipédia valem como clubes da ficha.
+    const clubs = ((row.clubs as string[]) ?? []).slice();
+    for (const c of manual.clubs ?? []) if (c?.name && !clubs.includes(c.name)) clubs.push(c.name);
+    return { manual, aliases, clubs };
   }
 
   async findPlayers(keys: string[], limit: number): Promise<PlayerRecord[]> {
@@ -245,6 +248,16 @@ export class NeonStore implements Store {
         manual = jsonb_set(manual, '{aliases}', COALESCE(manual->'aliases', '[]'::jsonb) || to_jsonb(${alias}::text)),
         manual_keys = manual_keys || ${keys}::text[],
         keys = keys || ${keys}::text[],
+        updated_at = now()
+      WHERE id = ${id}`;
+  }
+
+  async addManualClub(id: string, club: ManualClub): Promise<void> {
+    await this.sql`
+      UPDATE players SET
+        manual = jsonb_set(manual, '{clubs}',
+          COALESCE((SELECT jsonb_agg(c) FROM jsonb_array_elements(manual->'clubs') c WHERE c->>'name' <> ${club.name}), '[]'::jsonb)
+          || jsonb_build_array(${JSON.stringify(club)}::jsonb)),
         updated_at = now()
       WHERE id = ${id}`;
   }

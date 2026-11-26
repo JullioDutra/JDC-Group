@@ -1,5 +1,5 @@
 import { GameMode, metricValue } from './modes';
-import { NATIONS, clubsIn, drawLeagueTeams, drawTeams, getTeam, isFromNation, playedForClub, type LeagueId } from './teams';
+import { NATIONS, clubsIn, drawLeagueTeams, drawTeams, getTeam, isFromNation, playedForClub, type LeagueId, type Team } from './teams';
 import { MetricKey, PlayerProfile, POSITION_LABEL, Position, Restriction, SLOTS } from './types';
 import type { LookupContext } from '../players/types';
 
@@ -19,6 +19,26 @@ export function clubsNote(clubs: string[], max = 7): string {
   return ` Clubes: ${clubs.slice(0, max).join(', ')}${clubs.length > max ? '…' : ''}.`;
 }
 
+/**
+ * Passagem pelo clube da rodada. Ficha sem fonte (só a IA) não prova a
+ * passagem: recusa sem gastar tentativa ('data'), porque a culpa não é de quem
+ * jogou; se nem a IA põe o jogador no clube, aí é erro mesmo ('club').
+ */
+export function clubVerdict(profile: PlayerProfile, team: Team): Extract<Verdict, { ok: false }> | null {
+  const played = playedForClub(team, profile.clubs);
+  if (profile.clubsUnverified) {
+    if (played) {
+      return {
+        ok: false,
+        kind: 'data',
+        reason: `Não achei a carreira de *${profile.name}* no Wikidata nem na Wikipédia, então não dá para confirmar a passagem pelo *${team.name}*. Manda outro (não gasta tentativa).`,
+      };
+    }
+    return { ok: false, kind: 'club', reason: `*${profile.name}* não tem passagem confirmada pelo *${team.name}*.` };
+  }
+  return played ? null : { ok: false, kind: 'club', reason: `*${profile.name}* não tem passagem pelo *${team.name}*.${clubsNote(profile.clubs)}` };
+}
+
 export function checkPick(
   profile: PlayerProfile,
   slot: Position,
@@ -31,9 +51,8 @@ export function checkPick(
     return { ok: false, kind: 'position', reason: `*${profile.name}* é ${actual}, e esta rodada pede um ${POSITION_LABEL[slot]}.` };
   }
   const team = getTeam(restriction?.teamId);
-  if (team && restriction?.kind === 'club' && !playedForClub(team, profile.clubs)) {
-    return { ok: false, kind: 'club', reason: `*${profile.name}* não tem passagem pelo *${team.name}*.${clubsNote(profile.clubs)}` };
-  }
+  const club = team && restriction?.kind === 'club' ? clubVerdict(profile, team) : null;
+  if (club) return club;
   if (team && restriction?.kind === 'country' && !isFromNation(team, profile.nationality)) {
     return { ok: false, kind: 'country', reason: `*${profile.name}* não é da seleção *${team.name}*${profile.nationality ? ` (é de ${profile.nationality})` : ''}.` };
   }

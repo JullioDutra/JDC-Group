@@ -1,7 +1,7 @@
 import type { Nomination, NominationInput, NominationResult } from '../awards/types';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
 import { nameKeys } from '../players/keys';
-import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
+import type { ManualClub, ManualEntry, PlayerRecord, StatKey } from '../players/types';
 import type { MatchStats, Season, Store } from './types';
 
 const isOpen = (s: SessionState) => s.status !== 'FINISHED' && s.status !== 'CANCELLED';
@@ -115,6 +115,8 @@ export class MemoryStore implements Store {
         : r;
       const manualAliases = merged.manual?.aliases ?? [];
       merged.aliases = [...merged.aliases, ...manualAliases.filter((a) => !merged.aliases.includes(a))];
+      const manualClubs = (merged.manual?.clubs ?? []).map((c) => c.name);
+      merged.clubs = [...merged.clubs, ...manualClubs.filter((c) => !merged.clubs.includes(c))];
       this.players.set(r.id, { record: structuredClone(merged), keys: nameKeys([merged.name, ...merged.aliases]) });
     }
   }
@@ -145,6 +147,14 @@ export class MemoryStore implements Store {
     manual.aliases = [...(manual.aliases ?? []), alias];
     if (!p.record.aliases.includes(alias)) p.record.aliases.push(alias);
     p.keys = nameKeys([p.record.name, ...p.record.aliases]);
+  }
+
+  async addManualClub(id: string, club: ManualClub) {
+    const p = this.players.get(id);
+    if (!p) return;
+    const manual = (p.record.manual ??= {});
+    manual.clubs = [...(manual.clubs ?? []).filter((c) => c.name !== club.name), club];
+    if (!p.record.clubs.includes(club.name)) p.record.clubs.push(club.name);
   }
 
   async deletePlayers(ids: string[]) {

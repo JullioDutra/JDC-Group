@@ -1,6 +1,6 @@
 import type { Nomination, NominationInput, NominationResult } from '../awards/types';
 import type { MatchPlayer, PlayerProfile, RankingRow, Session, SessionState, Side } from '../game/types';
-import type { ManualEntry, PlayerRecord, StatKey } from '../players/types';
+import type { ManualClub, ManualEntry, PlayerRecord, StatKey } from '../players/types';
 
 /** Temporada do ranking de um grupo. */
 export interface Season {
@@ -60,6 +60,8 @@ export interface Store {
   setManualStat(id: string, stat: StatKey, entry: ManualEntry | null): Promise<void>;
   /** Nome famoso aceito pelo admin: o jogador passa a ser achado por ele. */
   addManualAlias(id: string, alias: string): Promise<void>;
+  /** Passagem por clube confirmada fora do Wikidata (admin ou Wikipédia): vale como clube da ficha. */
+  addManualClub(id: string, club: ManualClub): Promise<void>;
   /** Apaga fichas (usado ao juntar duplicadas). */
   deletePlayers(ids: string[]): Promise<void>;
   /** Jogadores conhecidos ao acaso (modos gerados da base). */

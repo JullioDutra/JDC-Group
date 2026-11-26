@@ -5,10 +5,10 @@ import type { FactCheck, TeamJudge, WordCheck } from '../party/common';
 import { freshPick } from '../party/common';
 import { ConflictError } from './conflict';
 import { FAST_TURN_SECONDS, GameMode, MODES, Twists, getMode, isRandomWord, ignoredLeagueNote, leagueFits, leagueLabel, metricValue, parseModeChoice, randomMode } from './modes';
-import { getTeam, isFromNation, playedForClub } from './teams';
-import { PICK_TRIES, clubsNote, drawRestrictions, playContext } from './validate';
+import { getTeam, isFromNation } from './teams';
+import { PICK_TRIES, clubVerdict, drawRestrictions, playContext } from './validate';
 import { helpText } from './commands';
-import { applyCorrection, applyFamousName, findRecords, formatCard, parseCorrection, parseFamousName } from '../players/admin';
+import { applyClubCorrection, applyCorrection, applyFamousName, findRecords, formatCard, parseClubCorrection, parseCorrection, parseFamousName } from '../players/admin';
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import { anagramThemesText } from '../party/anagrama';
@@ -570,8 +570,10 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   if (norm.startsWith('corrigir ')) {
     if (!manager) return [text('Só o admin do bot corrige dados.')];
+    const clubCmd = parseClubCorrection(norm);
+    if (clubCmd) return [text(await applyClubCorrection(store, clubCmd, now.toISOString().slice(0, 10)))];
     const cmd = parseCorrection(norm);
-    if (!cmd) return [text('Formato: *corrigir <jogador> <dado> <valor>*. Ex.: corrigir Rogério Ceni gols 131. Dados: gols, jogos, assistências, valor atual, valor máximo, títulos, gols seleção, jogos seleção, gols copa, copas, gols champions, gols libertadores, gols brasileirão, altura, estreia.')];
+    if (!cmd) return [text('Formato: *corrigir <jogador> <dado> <valor>*. Ex.: corrigir Rogério Ceni gols 131. Dados: gols, jogos, assistências, valor atual, valor máximo, títulos, gols seleção, jogos seleção, gols copa, copas, gols champions, gols libertadores, gols brasileirão, altura, estreia.\nPassagem que falta: *corrigir <jogador> clube <clube> fonte <fonte>*. Ex.: corrigir Fábio clube Fluminense fonte ge.')];
     return [text(await applyCorrection(store, cmd, now.toISOString().slice(0, 10)))];
   }
   if (norm.startsWith('nome famoso ')) {
@@ -823,9 +825,10 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   const restriction = state.restrictions[state.round];
   const team = getTeam(restriction.teamId);
-  if (team && restriction.kind === 'club' && !playedForClub(team, profile.clubs)) {
-    return wrong(`*${profile.name}* não tem passagem pelo *${team.name}*.${clubsNote(profile.clubs)}`);
-  }
+  const club = team && restriction.kind === 'club' ? clubVerdict(profile, team) : null;
+  // Sem fonte para conferir (ficha só da IA): avisa e não gasta tentativa.
+  if (club?.kind === 'data') return [text(`❌ ${club.reason}`)];
+  if (club) return wrong(club.reason);
   if (team && restriction.kind === 'country' && !isFromNation(team, profile.nationality)) {
     return wrong(`*${profile.name}* não é da seleção *${team.name}*${profile.nationality ? ` (é de ${profile.nationality})` : ''}.`);
   }

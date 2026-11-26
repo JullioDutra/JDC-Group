@@ -1,0 +1,935 @@
+{
+ "entities": {
+  "Q677923": {
+   "id": "Q677923",
+   "labels": {
+    "en": {
+     "language": "en",
+     "value": "Fábio"
+    },
+    "pt": {
+     "language": "pt",
+     "value": "Fábio"
+    }
+   },
+   "sitelinks": {
+    "eswiki": {
+     "title": "Fábio Deivson Lopes Maciel"
+    },
+    "itwiki": {
+     "title": "Fábio Deivson Lopes Maciel"
+    },
+    "ptwiki": {
+     "title": "Fábio Deivson Lopes Maciel"
+    },
+    "enwiki": {
+     "title": "Fábio (footballer, born 1980)"
+    },
+    "frwiki": {
+     "title": "Fábio (football, 1980)"
+    },
+    "dewiki": {
+     "title": "Fábio (Fußballspieler, 1980)"
+    }
+   },
+   "claims": {
+    "P54": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 9195913,
+         "id": "Q9195913"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1997-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1997-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+23",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 5014111,
+         "id": "Q5014111"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2000-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2004-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+84",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 188277,
+         "id": "Q188277"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1999-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2000-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+4",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 506832,
+         "id": "Q506832"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1998-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1998-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+16",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 188277,
+         "id": "Q188277"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2005-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 83459,
+         "id": "Q83459"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2003-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2006-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+3",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P106": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "id": "Q937857"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P569": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "time": "+1980-09-30T00:00:00Z",
+         "timezone": 0,
+         "before": 0,
+         "after": 0,
+         "precision": 11,
+         "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ]
+   }
+  },
+  "Q717927": {
+   "id": "Q717927",
+   "labels": {
+    "pt": {
+     "language": "pt",
+     "value": "Domingos Antônio da Guia"
+    },
+    "en": {
+     "language": "en",
+     "value": "Domingos da Guia"
+    }
+   },
+   "sitelinks": {
+    "enwiki": {
+     "title": "Domingos da Guia"
+    },
+    "dewiki": {
+     "title": "Domingos da Guia"
+    },
+    "frwiki": {
+     "title": "Domingos da Guia"
+    },
+    "eswiki": {
+     "title": "Domingos Antônio da Guia"
+    },
+    "itwiki": {
+     "title": "Domingos da Guia"
+    },
+    "ptwiki": {
+     "title": "Domingos da Guia"
+    }
+   },
+   "claims": {
+    "P54": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 170703,
+         "id": "Q170703"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1935-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1937-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+56",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 499616,
+         "id": "Q499616"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1933-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1933-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 17479,
+         "id": "Q17479"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1937-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1943-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+230",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 35933,
+         "id": "Q35933"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1943-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1947-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+116",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 788363,
+         "id": "Q788363"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1929-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1932-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+57",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+2",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 5014111,
+         "id": "Q5014111"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1934-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1934-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 788363,
+         "id": "Q788363"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1947-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1948-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+22",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 83459,
+         "id": "Q83459"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1931-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+1946-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P1350": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+30",
+           "unit": "1"
+          }
+         }
+        }
+       ],
+       "P1351": [
+        {
+         "datavalue": {
+          "value": {
+           "amount": "+0",
+           "unit": "1"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P106": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "id": "Q937857"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P569": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "time": "+1912-11-19T00:00:00Z",
+         "timezone": 0,
+         "before": 0,
+         "after": 0,
+         "precision": 11,
+         "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ]
+   }
+  }
+ },
+ "wiki": {
+  "fabio_pt": "{{Info/Futebol\n|nome              = Fábio\n|imagem            = Fábio Deivson Lopes Maciel of Cruzeiro EC (cropped).jpg\n|imagem_tamanho    = 210px\n|imagem_legenda    = Fábio em 2009\n|nome completo     = Fábio Deivson Lopes Maciel\n|data de nascimento = {{dni|30|9|1980}}\n|local de nascimento = [[Nobres (Mato Grosso)|Nobres]], [[Mato Grosso]]\n|nacionalidade     = {{BRAn|o}}\n|altura            = 1,89 m\n|pé                = [[destro]]\n|apelido           = ''Muralha Azul''<ref>{{citar web|url=https://www.em.com.br/app/colunistas/gustavo-nolasco/2020/09/23/interna_gustavo_nolasco,1188007/os-desabafos-de-fabio-muralha-azul-e-da-torcida-do-cruzeiro.shtml|título=Os desabafos de Fábio, Muralha Azul, e da torcida do Cruzeiro|data=23/09/2020|acessodata=25/02/2022|publicado=Jornal Estado de Minas|autor=Gustavo Nolasco|wayb=20260606044219}}</ref> <br />''Goleiro de Deus''<ref>{{citar web|url=https://www.cnnbrasil.com.br/esportes/futebol/futebol-internacional/fabio-do-fluminense-impressiona-jornal-italiano-goleiro-de-deus/|título=Fábio, do Fluminense, impressiona jornal italiano: \"Goleiro de Deus\"|data=30/06/2025|acessodata=01/12/2025|wayb=20250814024509}}</ref>\n|atividade         = 1997–presente\n|clube atual       = {{Futebol Fluminense}}\n|número            = 1\n|posição           = [[goleiro]]\n|ano1              = 1997–2000\n|clube1            = {{Futebol União Bandeirante}}\n|jogos1            = 30\n|gols1             = 0\n|ano2              = 1998\n|clube2            = {{Futebol Athletico Paranaense}}\n|empréstimo2       = sim\n|jogos2            = 0\n|gols2             = 0\n|ano3              = 1999–2000\n|clube3            = {{Futebol Cruzeiro}}\n|empréstimo3       = sim\n|jogos3            = 1\n|gols3             = 0\n|ano4              = 2000–2004\n|clube4            = {{Futebol Vasco da Gama}}\n|jogos4            = 150\n|gols4             = 0\n|ano5              = 2005–2021\n|clube5            = {{Futebol Cruzeiro}}\n|jogos5            = 975\n|gols5             = 0\n|ano6              = 2022–\n|clube6            = {{Futebol Fluminense}}\n|jogos6            = 321\n|gols6             = 0\n|seleção-ano1      = 1997\n|seleção1          = [[Seleção Brasileira de Futebol Sub-17|Brasil {{pequeno|Sub-17}}]]\n|seleção-jogos1    = 6\n|seleção-gols1     = 0\n|seleção-ano2      = 1999\n|seleção2          = [[Seleção Brasileira de Futebol Sub-20|Brasil {{pequeno|Sub-20}}]]\n|seleção-jogos2    = 5\n|seleção-gols2     = 0\n|seleção-ano3      = 2003–2011\n|seleção3          = [[Seleção Brasileira de Futebol|Brasil]]\n|seleção-jogos3    = 0\n|seleção-gols3     = 0\n|medalhas          = {{MedalCompetition|[[Copa América]]}}\n{{MedalGold|[[Copa América de 2004|Peru 2004]]|Jogador}}\n{{MedalCompetition|[[Copa do Mundo FIFA Sub-17]]}}\n{{MedalGold|[[Copa do Mundo FIFA Sub-17|Egito 1997]]|Jogador}}\n{{MedalCompetition|[[Campeonato Sul-Americano de Futebol Sub-17]]}}\n{{MedalGold|[[Campeonato Sul-Americano de Futebol Sub-17|Paraguai 1997]]|Jogador}}\n|clube-atualização = 06 de novembro de 2026<ref name=\"Checamos: saiba quanto falta para Fábio, do Fluminense, ser o recordista de jogos na história do futebol\">{{citar web |último=Maciel de Sá |primeiro=Edgard |título=Checamos: saiba quanto falta para Fábio, do Fluminense, ser o recordista de jogos na história do futebol |url=https://ge.globo.com/futebol/times/fluminense/noticia/2025/05/23/checamos-saiba-quanto-falta-para-fabio-do-fluminense-ser-o-recordista-de-jogos-na-historia-do-futebol.ghtml |obra=GE.com |acessodata=27 de Maio de 2025 |autor2=Gustavo Garcia|autor3=Marcello Neves|wayb=20260109190539 }}</ref>\n}}",
+  "fabio_en": "{{Infobox football biography\n| name = Fábio\n| image = Fábio Deivson Lopes Maciel of Cruzeiro EC (cropped).jpg\n| caption = Fábio in 2009\n| full_name = Fábio Deivson Lopes Maciel Bento<ref name=\"FIFA\">{{cite web |url=https://fdp.fifa.org/assetspublic/ce119/pdf/SquadLists-English.pdf |title=FIFA Club World Cup Saudi Arabia 2023™: List of Players: Fluminense FC |publisher=[[FIFA]] |page=5 |date=6 December 2023 |access-date=10 December 2023 |archive-url=https://web.archive.org/web/20231206205418/https://fdp.fifa.org/assetspublic/ce119/pdf/SquadLists-English.pdf |archive-date=6 December 2023 |url-status=live}}</ref>\n| birth_date = {{birth date and age|df=yes|1980|9|30}}<ref name=\"FIFA\"/>\n| birth_place = [[Nobres]], Mato Grosso, Brazil\n| height = 1.89 m<ref name=\"FIFA\"/>\n| position = [[Goalkeeper (association football)|Goalkeeper]]\n| current_club = [[Fluminense FC|Fluminense]]\n| club_number = 1\n| youth_years1 = 1993–1997\n| youth_clubs1 = [[União Bandeirante Futebol Clube|União Bandeirante]]\n| years1 = 1997–2000\n| years2 = 1998\n| years3 = 1999–2000\n| years4 = 2000–2004\n| years5 = 2005–2021\n| years6 = 2022–\n| clubs1 = [[União Bandeirante Futebol Clube|União Bandeirante]]\n| clubs2 = → [[Clube Atlético Paranaense|Atlético Paranaense]] (loan)\n| clubs3 = → [[Cruzeiro Esporte Clube|Cruzeiro]] (loan)\n| clubs4 = [[CR Vasco da Gama|Vasco da Gama]]\n| clubs5 = [[Cruzeiro Esporte Clube|Cruzeiro]]\n| clubs6 = [[Fluminense FC|Fluminense]]\n| caps1 = 30\n| goals1 = 0\n| caps2 = 0\n| goals2 = 0\n| caps3 = 0\n| goals3 = 0\n| caps4 = 130\n| goals4 = 0\n| caps5 = 789\n| goals5 = 0\n| caps6 = 227\n| goals6 = 0\n| national_years1 = 1995–1997\n| national_team1 = [[Brazil national under-17 football team|Brazil U17]]{{efn-lr|name=\"Note about his matches for Brazil U17 – Fábio\"|Fábio made at least 13 appearances for Brazil U17:<ref>{{cite web |url=https://rsssfbrasil.com/sel/brazil198507u17.htm |title=Seleção Brasileira Sub-17 (U-17 Brazilian National Team) 1985–2007 |website=RSSSF.org |publisher=[[RSSSF]] |access-date=9 November 2023 |archive-date=9 November 2023 |archive-url=https://web.archive.org/web/20231109042141/https://rsssfbrasil.com/sel/brazil198507u17.htm |url-status=live }}</ref> seven appearances in the [[1997 South American U-17 Championship]]<ref>{{cite web |url=https://www.spfcpedia.com.br/ebooks/2021-05-02_revista-conmebol_048.pdf |title=CONMEBOL Magazine No. 48 |website=SPFCpedia.com.br |publisher=[[CONMEBOL]] |language=es |access-date=9 November 2023 |archive-date=9 November 2023 |archive-url=https://web.archive.org/web/20231109014859/https://www.spfcpedia.com.br/ebooks/2021-05-02_revista-conmebol_048.pdf |url-status=live |pages=60–80 (lineups in pages 72 and 74) }}</ref> and six appearances in the [[1997 FIFA U-17 World Championship]],<ref name=\"BeSoccer – Fábio\"/> and may have matches unaccounted for Brazil U17, having played for Brazil U17 since 1995.<ref>{{cite web |url=https://www.geocities.ws/netuniao/especial2.htm |title=União Bandeirante F.C. – Especial – Fábio |trans-title=União Bandeirante F.C. – Special – Fábio |publisher=[[União Bandeirante Futebol Clube]] |language=pt-br |access-date=15 July 2024 |archive-date=10 November 2023 |archive-url=https://web.archive.org/web/20231110015513/https://www.geocities.ws/netuniao/especial2.htm |url-status=live }}</ref> }}\n| national_caps1 = 13+\n| national_goals1 = 0\n| national_years2 = 1998–1999\n| national_team2 = [[Brazil national under-20 football team|Brazil U20]]{{efn-lr|name=\"Note about his matches for Brazil U20 – Fábio\"|Fábio made at least 9 appearances for Brazil U20:<ref name=Sub20>{{cite web |url=https://rsssfbrasil.com/sel/brazil198804u20.htm |title=Seleção Brasileira Sub-20 (U-20 Brazilian National Team) 1988–2004 |website=RSSSF.org |publisher=[[RSSSF]] |access-date=10 November 2023 |archive-date=7 November 2023 |archive-url=https://web.archive.org/web/20231107233708/https://rsssfbrasil.com/sel/brazil198804u20.htm |url-status=live }}</ref> four appearances in 1998<ref>{{cite web |url=https://www1.folha.uol.com.br/fol/esp/s2050580.htm |title=CBF convoca seleção para Mundialito sub 20 |trans-title=CBF's selection for the Mundialito under 20 |website=Folha.uol.com.br |publisher=[[Folha de S.Paulo]] |date=20 January 1998 |access-date=7 November 2023 |archive-date=7 November 2023 |archive-url=https://web.archive.org/web/20231107005441/https://www1.folha.uol.com.br/fol/esp/s2050580.htm |url-status=live |language=pt-br }}</ref><ref>{{cite web |url=https://www.rsssf.org/tablesp/perea-u20-98.html |title=Mundialito u-20 Álvaro Fabián Perea Berrospe 1998 |website=RSSSF.org |publisher=[[RSSSF]] |access-date=7 November 2023 |archive-date=6 November 2023 |archive-url=https://web.archive.org/web/20231106224838/https://www.rsssf.org/tablesp/perea-u20-98.html |url-status=live }}</ref> and five appearances in 1999,<ref name=\"BeSoccer – Fábio\">{{cite web |url=https://www.besoccer.com/player/career-path/fabio-104161 |title=Profile of Fábio: Info, news, matches and statistics |website=BeSoccer.com |access-date=7 October 2026 |archive-date=7 October 2026 |archive-url=https://web.archive.org/web/20261007081220/https://www.besoccer.com/player/career-path/fabio-104161 |url-status=live }}</ref> was also part of the U20 squad that played in the [[1999 South American U-20 Championship]],<ref name=\"Convocações do Brasil no Sul-Americano Sub-20 – Lance – Fábio\">{{cite web |url=https://www.lance.com.br/lancepedia/convocacoes-brasil-sul-americano-sub-20.html |title=Convocações do Brasil no Sul-Americano Sub-20: veja quem já jogou o torneio |trans-title=Brazil's squad for the South American U-20 Championship: see who has already played in the tournament |website=Lance.com.br |date=24 January 2025 |access-date=7 October 2026 |language=pt-br |archive-date=7 October 2026 |archive-url=https://web.archive.org/web/20261007060240/https://www.lance.com.br/lancepedia/convocacoes-brasil-sul-americano-sub-20.html |url-status=live }}</ref> but he didn't make any appearance ([[Júlio César (football goalkeeper, born 1979)|Júlio César]] was the goalkeeper in all matches Brazil played),<ref name=\"CONMEBOL – Revista 57\">{{cite web |url=https://docs.yandex.ru/docs/view?url=ya-disk-public%3A%2F%2FrDDgJJpQOcO80KzCI2eFmFA9PdgUlptWWhQqMJQyiSF66pgFD5D4xZZHDJuuEFc5q%2FJ6bpmRyOJonT3VoXnDag%3D%3D&name=057-1999.pdf |title=CONMEBOL – Revista 57 |website=docs.Yandex.ru |publisher=[[CONMEBOL]] |access-date=7 October 2026 |archive-date=7 October 2026 |archive-url=https://web.archive.org/web/20261007000000/https://docs.yandex.ru/docs/view?url=ya-disk-public%3A%2F%2FrDDgJJpQOcO80KzCI2eFmFA9PdgUlptWWhQqMJQyiSF66pgFD5D4xZZHDJuuEFc5q%2FJ6bpmRyOJonT3VoXnDag%3D%3D&name=057-1999.pdf |url-status=live |language=es }} [https://archive.org/details/057-1999_202610 Alt URL]</ref> and may have matches unaccounted for Brazil U20 in the [[1998 Toulon Tournament]].<ref name=Sub20/><ref>{{cite web |url=https://www.tournoimauricerevello.com/en/festival/archives/detail_equipe.php?id=73 |title=26th Toulon Tournament – Brazil (1998) |website=Festival-Foot-Espoirs.com |publisher=[[Maurice Revello Tournament|Toulon Tournament]] |access-date=10 November 2023 |archive-date=8 November 2023 |archive-url=https://web.archive.org/web/20231108022925/https://www.tournoimauricerevello.com/en/festival/archives/detail_equipe.php?id=73 |url-status=live }}</ref> }}\n| national_caps2 = 9+\n| national_goals2 = 0\n| national_years3 = 1998\n| national_team3 = [[Brazil national under-23 football team|Brazil U23]]<ref>{{cite web |title=Australia Under 23 National Team – 1998 Match Results |url=http://www.ozfootball.net/ark/Olympics/1998.html |website=OzFootball.net |access-date=6 November 2023 |archive-date=6 November 2023 |archive-url=https://web.archive.org/web/20231106214248/http://www.ozfootball.net/ark/Olympics/1998.html |url-status=live }}</ref><ref>{{cite web |url=http://ge.globo.com/futebol/times/cruzeiro/noticia/2011/12/clube-russo-cobre-multa-rescisoria-e-fabio-encerra-sua-historia-no-cruzeiro.html |title=Clube russo cobre multa rescisória, e goleiro Fábio pode deixar o Cruzeiro |trans-title=A Russian club covers the termination fee, and goalkeeper Fábio can leave Cruzeiro |website=ge.Globo.com |publisher=[[Grupo Globo]] |language=pt-br |access-date=6 November 2023 |archive-date=29 June 2022 |archive-url=https://web.archive.org/web/20220629053951/http://ge.globo.com/futebol/times/cruzeiro/noticia/2011/12/clube-russo-cobre-multa-rescisoria-e-fabio-encerra-sua-historia-no-cruzeiro.html |date=9 December 2011 |url-status=live }}</ref>\n| national_caps3 = 3\n| national_goals3 = 0\n| club_update = 18 November 2026 (UTC)\n}}",
+  "domingos_pt": "{{Info/Futebolista\n|nome               = Domingos da Guia\n|imagem             = Domingos da Guia.JPG\n|imagem_tamanho     = 200px\n|imagem_legenda     =\n|nomecompleto       = Domingos Antônio da Guia\n|datadenascimento   = {{dni|19|11|1912|si}}\n|cidadenatal        = [[Rio de Janeiro]], [[Distrito Federal do Brasil (1891–1960)|Distrito Federal]]<!-- NÃO ALTERAR: entre 24/02/1891 e 21/04/1960, o Rio de Janeiro foi a capital federal e se situava no então Distrito Federal. Brasília sedia o atual Distrito Federal desde 21/04/1960 -->\n|paisnatal          = [[Brasil]]\n|nacionalidade      = {{BRAn|o}}\n|datadefalecimento  = {{morte|18|5|2000|19|11|1912}}\n|cidadedamorte      = [[Rio de Janeiro]], [[Rio de Janeiro (estado)|Rio de Janeiro]]\n|paisdamorte        = [[Brasil]]\n|apelido            = ''Divino Mestre''<ref>{{citar web|url=https://terceirotempo.uol.com.br/que-fim-levou/domingos-da-guia-748|título=Que fim levou? DOMINGOS DA GUIA... Ex-zagueiro do Bangu, Fla e Corinthians|publicado=''[[Terceiro Tempo]]''|data=|acessodata=16/2/2024|wayb=20260519041948}}</ref>\n|altura             = 1,85 m\n|pé                 = [[destro]]\n|posição            = [[zagueiro]]\n|ano                = 1929–1932<br>1933<br>1934–1935<br>1935<br>1935–1936<br>1936–1943<br>1944–1948<br>1948–1950\n|clubes             = {{Futebol Bangu}}<br>{{Futebol Vasco}}<br>{{Futebol Nacional-URU}}<br>{{Futebol Vasco}}<br>{{Futebol Boca Juniors}}<br>{{Futebol Flamengo}}<br>{{Futebol Corinthians}}<br>{{Futebol Bangu}}\n|jogos(golos)       = {{0|000}}59 {{0|0000}}(2)<br>{{0|000}}33 {{0|0000}}(0)<br>{{0|000}}33 {{0|0000}}(0)<br>{{0|000}}31 {{0|0000}}(0)<br>{{0|000}}56 {{0|0000}}(0)<br>{{0|00}}223 {{0|0000}}(0)<br>{{0|00}}116 {{0|0000}}(0)<br>{{0|000}}21 {{0|0000}}(0)\n|anoselecao         = 1931–1946\n|selecaonacional    = [[Seleção Brasileira de Futebol|Brasil]]\n|partidasselecao    = {{0|000}}31 {{0|0000}}(0)<ref name=\"Folha SP\">{{citar web|url=https://www1.folha.uol.com.br/folha/especial/2006/copa/todos_os_brasileiros-1938.shtml|título=Todos os brasileiros|publicado=''[[Folha de S.Paulo]]''|data=9/12/2015|acessodata=30/8/2018|wayb=20260917053438}}</ref> \n|medalhas           = {{MedalCountry|[[Brasil]]||o}}\n{{MedalCompetition|Copa do Mundo FIFA}}\n{{MedalBronze|[[Copa do Mundo FIFA de 1938|França 1938]]|Jogador}}\n}}"
+ }
+}

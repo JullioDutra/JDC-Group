@@ -1,16 +1,18 @@
-import { getTeam } from '../game/teams';
+import { getTeam, playedForClub, type Team } from '../game/teams';
 import { normalize } from '../game/text';
 import { POSITION_LABEL, type MetricKey, type PlayerProfile } from '../game/types';
 import type { Store } from '../store/types';
 import { queryKeys, queryTokens } from './keys';
 import { nameMatchesQuery, rankCandidates } from './rank';
+import type { Career, PlayerSources } from './sources';
 import { STAT_KEYS, type LookupContext, type PlayerRecord, type StatKey } from './types';
+import { isNationalTeamLabel } from './wikidata';
+
+export type { PlayerSources } from './sources';
 
 /** Fonte de pesquisa quando o jogador não está na base (a IA). */
 export type IdentifySource = (query: string, hint?: string) => Promise<PlayerProfile | null>;
 export type StatSource = (player: PlayerRecord, stat: StatKey) => Promise<number | null>;
-/** Clubes verdadeiros de um jogador do Wikidata (null = não deu para saber). */
-export type ClubSource = (id: string) => Promise<string[] | null>;
 export type PlayerLookup = (query: string, ctx?: LookupContext) => Promise<PlayerProfile | null>;
 
 /** Troque quando mudar o formato das chaves de "não achei". */
@@ -76,7 +78,7 @@ export function toProfile(r: PlayerRecord): PlayerProfile {
     positions: r.positions,
     nationality: r.nationality,
     birthDate: r.birthDate,
-    clubs: r.clubs,
+    clubs: r.clubs.filter((c) => !isNationalTeamLabel(c)),
     heightCm: manualHeight ?? r.heightCm ?? n('heightCm'),
     careerGoals: n('careerGoals'),
     careerAssists: n('careerAssists'),
@@ -263,34 +265,139 @@ export function anchorEstimate(record: PlayerRecord, stat: StatKey): number | nu
  *    se o nome devolvido bater com o digitado; aí entra na base.
  * 3. Falta o número do tema: pergunta focada só nele, que fica gravada.
  */
-/**
- * Rodada de clube: os clubes de um jogador do Wikidata vêm da fonte (cache de
- * 30 dias). Se a ficha gravada tiver clube a mais (contaminada por respostas
- * antigas da IA), ela é regravada só com os verdadeiros.
- */
-async function verifiedClubs(store: Store, record: PlayerRecord, clubs: ClubSource): Promise<PlayerRecord> {
-  if (!/^Q\d+$/.test(record.id)) return record;
-  const key = `wdclubs:v1:${record.id}`;
-  let list: string[] | null = null;
+const isWikidataId = (id: string) => /^Q\d+$/.test(id);
+const numbers = (stats: PlayerRecord['stats']) => Object.fromEntries(Object.entries(stats).filter(([, v]) => typeof v === 'number'));
+const today = () => new Date().toISOString().slice(0, 10);
+
+/** Carreira do Wikidata com cache de 30 dias (lança erro se a fonte falhar). */
+async function careerOf(store: Store, sources: PlayerSources, id: string): Promise<Career | null> {
+  const key = `wdcareer:v1:${id}`;
   const cached = await store.getCachedProfile(key).catch(() => undefined);
-  if (cached) list = cached.clubs;
-  else {
-    try {
-      list = await clubs(record.id);
-    } catch (error) {
-      console.error('clubes do Wikidata falharam', record.id, error);
-    }
-    if (list) await store.putCachedProfile(key, { exists: true, name: record.name, clubs: list } as unknown as PlayerProfile).catch(() => undefined);
+  if (cached !== undefined) return cached ? (cached as unknown as { career: Career }).career : null;
+  const career = await sources.career(id);
+  await store.putCachedProfile(key, career ? ({ exists: true, name: id, clubs: career.clubs, career } as unknown as PlayerProfile) : null).catch(() => undefined);
+  return career;
+}
+
+/** Clubes da Wikipédia com cache de 30 dias (null = sem página/caixa ou a fonte falhou). */
+async function wikiClubsOf(store: Store, sources: PlayerSources, id: string, wiki: Career['wiki']): Promise<string[] | null> {
+  const key = `wpclubs:v1:${id}`;
+  const cached = await store.getCachedProfile(key).catch(() => undefined);
+  if (cached !== undefined) return cached ? cached.clubs : null;
+  try {
+    const clubs = await sources.wikipediaClubs(wiki);
+    await store.putCachedProfile(key, clubs ? ({ exists: true, name: id, clubs } as unknown as PlayerProfile) : null).catch(() => undefined);
+    return clubs;
+  } catch (error) {
+    console.error('clubes da Wikipédia falharam', id, error);
+    return null;
   }
-  if (!list) return record;
-  const same = list.length === record.clubs.length && list.every((c, i) => c === record.clubs[i]);
-  if (same) return record;
-  const fixed = { ...record, clubs: list };
-  await store.upsertPlayers([fixed]).catch((error) => console.error('regravar clubes falhou', error));
+}
+
+/** Q-id de uma ficha que só a IA tinha ('error' = a busca falhou agora). */
+async function wikidataIdOf(store: Store, sources: PlayerSources, record: PlayerRecord): Promise<string | null | 'error'> {
+  const year = record.birthDate ? Number(record.birthDate.slice(0, 4)) : null;
+  const key = `wdid:v1:${normalize(record.name)}:${year ?? ''}`;
+  const cached = await store.getCachedProfile(key).catch(() => undefined);
+  if (cached !== undefined) return cached ? cached.name : null;
+  try {
+    const id = await sources.findId(record.name, year);
+    await store.putCachedProfile(key, id ? ({ exists: true, name: id, clubs: [] } as unknown as PlayerProfile) : null).catch(() => undefined);
+    return id;
+  } catch (error) {
+    console.error('busca do Q-id falhou', record.name, error);
+    return 'error';
+  }
+}
+
+/**
+ * A ficha que só a IA tinha vira a ficha do Wikidata (ou se junta à que já
+ * existe): fica com o nome que o grupo usa, os números e as correções dela,
+ * mas os clubes passam a ser os da fonte.
+ */
+async function promote(store: Store, ai: PlayerRecord, id: string, career: Career): Promise<PlayerRecord> {
+  const existing = await store.getPlayer(id);
+  const names = (base: PlayerRecord, extra: Array<string | null>) =>
+    [...new Set([...base.aliases, ...extra.filter((n): n is string => !!n && normalize(n) !== normalize(base.name))])].slice(0, 8);
+  const target: PlayerRecord = existing
+    ? { ...existing, positions: existing.positions.length ? existing.positions : ai.positions, aliases: names(existing, [ai.name, ...ai.aliases]), stats: { ...numbers(ai.stats), ...numbers(existing.stats) } }
+    : { ...ai, id, source: 'wikidata', clubs: career.clubs, sitelinks: career.sitelinks, birthDate: career.birthDate ?? ai.birthDate, aliases: names(ai, [career.label]), manual: undefined };
+  await store.upsertPlayers([target]);
+  for (const [k, e] of Object.entries(ai.manual?.stats ?? {})) if (e && !target.manual?.stats?.[k as StatKey]) await store.setManualStat(id, k as StatKey, e);
+  for (const a of ai.manual?.aliases ?? []) await store.addManualAlias(id, a);
+  for (const c of ai.manual?.clubs ?? []) await store.addManualClub(id, c);
+  await store.deletePlayers([ai.id]);
+  return (await store.getPlayer(id)) ?? target;
+}
+
+/**
+ * Clubes da ficha = os do Wikidata (+ os confirmados pelo admin/Wikipédia).
+ * Ficha com clube a mais (contaminada por respostas antigas da IA) ou com a
+ * seleção no meio é regravada; os jogos pela seleção entram se faltarem.
+ */
+async function applyCareer(store: Store, record: PlayerRecord, career: Career): Promise<PlayerRecord> {
+  const confirmed = (record.manual?.clubs ?? []).map((c) => c.name);
+  const stored = record.clubs.filter((c) => !confirmed.includes(c));
+  const clubs = [...career.clubs, ...confirmed.filter((c) => !career.clubs.includes(c))];
+  const stats = { ...record.stats };
+  if (career.intlCaps && typeof stats.intlCaps !== 'number') {
+    stats.intlCaps = career.intlCaps;
+    stats.intlGoals = career.intlGoals ?? 0;
+  }
+  const sameClubs = stored.length === career.clubs.length && stored.every((c, i) => c === career.clubs[i]);
+  const fixed = { ...record, clubs, stats };
+  if (!sameClubs || stats.intlCaps !== record.stats.intlCaps) {
+    await store.upsertPlayers([{ ...fixed, clubs: career.clubs }]).catch((error) => console.error('regravar clubes falhou', error));
+  }
   return fixed;
 }
 
-export function createPlayerLookup(store: Store, identify: IdentifySource, stats?: StatSource, clubs?: ClubSource): PlayerLookup {
+/**
+ * Rodada de clube: confere a passagem na fonte antes de o jogo validar.
+ * 1. Ficha só da IA: procura o jogador no Wikidata e vira ficha conferida.
+ *    Não achou (ou a busca falhou): `unverified` (clube da IA não prova nada).
+ * 2. Wikidata (página da entidade): clubes verdadeiros, sem a seleção.
+ * 3. Não tem o clube da rodada: Wikipédia (caixa de informação pt/en). Se
+ *    tiver, a passagem fica gravada como confirmada pela Wikipédia.
+ */
+async function confirmClubs(
+  store: Store,
+  record: PlayerRecord,
+  team: Team,
+  sources: PlayerSources,
+): Promise<{ record: PlayerRecord; how: string; unverified: boolean }> {
+  if (!isWikidataId(record.id)) {
+    const id = await wikidataIdOf(store, sources, record);
+    if (!id || id === 'error') return { record, how: id === 'error' ? 'fonte-fora' : 'sem-fonte', unverified: true };
+    let career: Career | null = null;
+    try {
+      career = await careerOf(store, sources, id);
+    } catch (error) {
+      console.error('carreira do Wikidata falhou', id, error);
+    }
+    if (!career) return { record, how: 'sem-fonte', unverified: true };
+    record = await promote(store, record, id, career);
+  }
+  let career: Career | null = null;
+  try {
+    career = await careerOf(store, sources, record.id);
+  } catch (error) {
+    console.error('carreira do Wikidata falhou', record.id, error);
+  }
+  if (career) record = await applyCareer(store, record, career);
+  if (playedForClub(team, record.clubs)) return { record, how: career ? 'wd' : 'ficha', unverified: false };
+  const wiki = career?.wiki;
+  if (wiki && (wiki.pt || wiki.en)) {
+    const clubs = await wikiClubsOf(store, sources, record.id, wiki);
+    if (clubs?.some((c) => playedForClub(team, [c]))) {
+      await store.addManualClub(record.id, { name: team.name, source: 'Wikipédia', at: today() }).catch((error) => console.error('gravar clube da Wikipédia falhou', error));
+      return { record: { ...record, clubs: [...record.clubs, team.name] }, how: 'wp', unverified: false };
+    }
+  }
+  return { record, how: career ? 'wd' : 'ficha', unverified: false };
+}
+
+export function createPlayerLookup(store: Store, identify: IdentifySource, stats?: StatSource, sources?: PlayerSources): PlayerLookup {
   return async (query, ctx) => {
     const started = Date.now();
     const q = normalize(query);
@@ -356,8 +463,19 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       console.error('juntar duplicadas falhou', error);
     }
 
-    // Rodada de clube: confere os clubes na fonte antes de o jogo validar.
-    if (clubs && ctx?.kind === 'club') record = await verifiedClubs(store, record, clubs);
+    // Rodada de clube: confere a passagem na fonte (Wikidata, depois Wikipédia) antes de o jogo validar.
+    let unverified = false;
+    const team = ctx?.kind === 'club' ? getTeam(ctx.teamId) : undefined;
+    if (sources && team) {
+      try {
+        const checked = await confirmClubs(store, record, team, sources);
+        record = checked.record;
+        unverified = checked.unverified;
+        outcome += `+${checked.how}`;
+      } catch (error) {
+        console.error('conferir clubes falhou', error);
+      }
+    }
 
     const stat = isStatKey(ctx?.metric) ? ctx!.metric as StatKey : null;
     if (stat && stats && needsStat(record, stat)) {
@@ -369,6 +487,7 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
     }
 
     void log(outcome, record.id);
-    return toProfile(record);
+    const profile = toProfile(record);
+    return unverified ? { ...profile, clubsUnverified: true } : profile;
   };
 }

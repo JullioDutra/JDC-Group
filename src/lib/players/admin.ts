@@ -1,3 +1,4 @@
+import { findTeamByName } from '../game/teams';
 import { formatNumber, normalize } from '../game/text';
 import { POSITION_LABEL } from '../game/types';
 import type { Store } from '../store/types';
@@ -5,6 +6,7 @@ import { queryKeys, queryTokens } from './keys';
 import { mergeDuplicates, statOf } from './lookup';
 import { rankCandidates } from './rank';
 import { STAT_KEYS, type ManualEntry, type PlayerRecord, type StatKey } from './types';
+import { isNationalTeamLabel } from './wikidata';
 
 /**
  * Dados à mão (frente F1): o admin confere um número (no Transfermarkt, por
@@ -17,6 +19,7 @@ import { STAT_KEYS, type ManualEntry, type PlayerRecord, type StatKey } from './
  *   corrigir Neymar valor atual 60 fonte Transfermarkt
  *   corrigir Neymar gols apagar        (volta para o número automático)
  *   nome famoso Gabigol = Gabriel Barbosa   (só admin)
+ *   corrigir Fábio clube Fluminense fonte ge   (só admin: passagem que falta)
  */
 
 /** Nome do dado no comando → chave. As mais longas primeiro ("gols selecao" antes de "gols"). */
@@ -120,6 +123,35 @@ export function parseCorrection(norm: string): CorrectionCommand | null {
   return null;
 }
 
+export interface ClubCorrection {
+  player: string;
+  /** Texto do clube como foi digitado (normalizado). */
+  club: string;
+  source: string;
+}
+
+/** "corrigir <jogador> clube <clube> [fonte X]" (texto já normalizado). */
+export function parseClubCorrection(norm: string): ClubCorrection | null {
+  const m = norm.match(/^corrigir (.+?) clube (.+?)(?: fonte (.+))?$/);
+  if (!m) return null;
+  const player = m[1].trim();
+  const club = m[2].trim();
+  return player && club ? { player, club, source: (m[3] ?? 'admin').trim().slice(0, 40) } : null;
+}
+
+/**
+ * Passagem que falta na ficha (o Wikidata e a Wikipédia ainda não têm, ou têm
+ * errado): o admin confirma e ela passa a valer em todos os grupos.
+ */
+export async function applyClubCorrection(store: Store, cmd: ClubCorrection, today: string): Promise<string> {
+  const team = findTeamByName(cmd.club);
+  if (!team) return `Não conheço o clube "${cmd.club}" no jogo. Use o nome como aparece nas rodadas (ex.: Fluminense, Atlético-MG, Real Madrid).`;
+  const [record] = await findRecords(store, cmd.player, 1);
+  if (!record) return `Não achei "${cmd.player}" na base. Confira o nome (vale o nome completo ou o id Q do Wikidata).`;
+  await store.addManualClub(record.id, { name: team.name, source: cmd.source, at: today });
+  return `✅ ${record.name}: passagem pelo *${team.name}* confirmada (${cmd.source}, ${brDate(today)}). Vale para todos os grupos.`;
+}
+
 /** "nome famoso <apelido> = <jogador>" */
 export function parseFamousName(raw: string): { alias: string; player: string } | null {
   const m = raw.trim().match(/^nome famoso\s+(.+?)\s*=\s*(.+)$/i);
@@ -163,7 +195,10 @@ export function formatCard(r: PlayerRecord): string {
     r.positions.map((p) => POSITION_LABEL[p]).join('/'),
   ].filter(Boolean);
   if (meta.length) lines.push(meta.join(' · '));
-  if (r.clubs.length) lines.push(`Clubes: ${r.clubs.slice(0, 10).join(', ')}${r.clubs.length > 10 ? '…' : ''}`);
+  // Sem a seleção (fichas antigas a tinham como clube); clube confirmado fora do Wikidata mostra a fonte.
+  const confirmed = new Map((r.manual?.clubs ?? []).map((c) => [c.name, c.source]));
+  const clubs = r.clubs.filter((c) => !isNationalTeamLabel(c)).map((c) => (confirmed.has(c) ? `${c} (${confirmed.get(c)})` : c));
+  if (clubs.length) lines.push(`Clubes: ${clubs.slice(0, 10).join(', ')}${clubs.length > 10 ? '…' : ''}`);
   const nums: string[] = [];
   for (const k of STAT_KEYS) {
     const manual = r.manual?.stats?.[k];
