@@ -1,5 +1,6 @@
 import type { ContentCategory } from '../../game/types';
 import { TIMELINE_R11 } from './rodada11';
+import { TIMELINE_R14 } from './rodada14';
 
 /**
  * Linha do Tempo: eventos com ano. A cada rodada saem 4 eventos de anos
@@ -262,6 +263,7 @@ export const TIMELINE: TimelineEvent[] = [
   e('t-h-mandela-livre', 'historia', 1990, 'Nelson Mandela é libertado depois de 27 anos preso'),
   // Anime (rodada 11).
   ...TIMELINE_R11,
+  ...TIMELINE_R14,
 ];
 
 export function getEvent(id: string): TimelineEvent | undefined {

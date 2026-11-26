@@ -20,7 +20,7 @@ import { IMPOSTOR_RULES, cardText, impostorThemesText } from '../party/impostor'
 import { ACTIVATE_IMPOSTOR, IMPOSTOR_GROUP_HELP, isImpostorOnly, setImpostorOnly } from './groupMode';
 import type { SimData } from '../sim/brasileirao';
 import { SIM_COMMAND, simulatorText } from '../sim/text';
-import { NEWS, NEWS_COMMAND, NEWS_SEEN_KIND, newsOutgoing } from './novidades';
+import { NEWS, NEWS_COMMAND, NEWS_SEEN_KIND, latestNewsFor, newsOutgoing } from './novidades';
 import { LIGAS_COMMAND, ligasOutgoing } from './ligas';
 import { SNAPSHOT_2026 } from '../sim/snapshot-2026';
 import { siteUrl } from '../sim/data';
@@ -498,7 +498,8 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   }
   if (norm === 'ajuda texto') return [text(HELP)];
   if (NEWS_COMMAND.test(norm)) {
-    const card = NEWS[0] ? newsOutgoing(NEWS[0], onlyImpostor) : null;
+    const latest = latestNewsFor(onlyImpostor);
+    const card = latest ? newsOutgoing(latest, onlyImpostor) : null;
     return card ? [card] : [text('Sem novidades por enquanto.')];
   }
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];

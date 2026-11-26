@@ -161,7 +161,8 @@ test('Rodada 13: depois de uma atualização, a imagem de novidades vai uma vez 
   assert.ok(!hasNews(await say('Ana', 'ajuda')), 'só uma vez');
   assert.deepEqual(await say('Ana', 'conversa qualquer'), [], 'conversa não dispara nada');
   // Outro grupo, com partida aberta: espera a partida acabar.
-  await say('Ana', 'ativar jogos', 'outro@g.us').then(() => store.unmarkSeen('outro@g.us', 'novidades', ['2026-11-25']));
+  const { NEWS } = await import('../src/lib/game/novidades');
+  await say('Ana', 'ativar jogos', 'outro@g.us').then(() => store.unmarkSeen('outro@g.us', 'novidades', [NEWS[0].id]));
   await say('Ana', 'abrir sala 1', 'outro@g.us');
   assert.ok(!hasNews(await say('Bia', 'entrar', 'outro@g.us')), 'no meio da sala, não');
 });

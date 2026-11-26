@@ -1,6 +1,7 @@
 import type { ContentCategory } from '../../game/types';
 import { EMOJI_GERAIS, RELAMPAGO_GERAIS } from './cards-gerais';
 import { EMOJI_R11, RELAMPAGO_R11 } from './rodada11';
+import { EMOJI_R14, RELAMPAGO_R14 } from './rodada14';
 
 /**
  * Cartas de pergunta-e-resposta curta: Emoji (adivinhe pelo emoji) e Quiz
@@ -142,6 +143,7 @@ export const EMOJI_CARDS: Card[] = [
   // Fora do futebol (rodada 10).
   ...EMOJI_GERAIS,
   ...EMOJI_R11,
+  ...EMOJI_R14,
 ];
 
 export const RELAMPAGO_CARDS: Card[] = [
@@ -322,6 +324,7 @@ export const RELAMPAGO_CARDS: Card[] = [
   // Fora do futebol (rodada 10).
   ...RELAMPAGO_GERAIS,
   ...RELAMPAGO_R11,
+  ...RELAMPAGO_R14,
 ];
 
 export const CARDS = { emoji: EMOJI_CARDS, relampago: RELAMPAGO_CARDS };

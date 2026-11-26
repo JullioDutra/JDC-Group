@@ -1,6 +1,7 @@
 import type { ContentCategory } from '../../game/types';
 import { FACTS_GERAIS } from './fato-gerais';
 import { FACTS_R11 } from './rodada11';
+import { FACTS_R14 } from './rodada14';
 
 /**
  * Fato ou Fake: afirmações curtas, verdadeiras ou falsas, com a explicação que
@@ -139,6 +140,7 @@ export const FACTS: FactCard[] = [
   // Fora do futebol (rodada 10).
   ...FACTS_GERAIS,
   ...FACTS_R11,
+  ...FACTS_R14,
 ];
 
 export function getFact(id: string): FactCard | undefined {

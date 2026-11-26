@@ -256,3 +256,43 @@ test('Rodada 14: Career (tipo) só tem campos simples (cabe no cache)', () => {
   const c: Career = { id: 'Q1', clubs: ['A'], wiki: {}, sitelinks: 1, birthDate: null, label: null };
   assert.deepEqual(JSON.parse(JSON.stringify(c)), c);
 });
+
+test('Rodada 14: conteúdo de 2025/26 nos jogos (sem repetir id e sem item ambíguo no Conexões)', async () => {
+  const { RELAMPAGO_R14, FACTS_R14, EMOJI_R14, WHOIS_R14, TIMELINE_R14, INTRUSO_R14, CONEXOES_R14 } = await import('../src/lib/party/content/rodada14');
+  const { CARDS } = await import('../src/lib/party/content/cards');
+  const { FACTS } = await import('../src/lib/party/content/fato');
+  const { WHOIS } = await import('../src/lib/party/content/whois');
+  const { TIMELINE } = await import('../src/lib/party/content/linha');
+  const { INTRUSO_SETS } = await import('../src/lib/party/content/intruso');
+  const { CONEXOES } = await import('../src/lib/party/content/conexoes');
+  const { LINEUPS } = await import('../src/lib/party/content/lineups');
+  const has = <T extends { id: string }>(all: T[], some: T[]) => some.every((x) => all.some((y) => y.id === x.id));
+  assert.ok(has(CARDS.relampago, RELAMPAGO_R14) && has(CARDS.emoji, EMOJI_R14) && has(FACTS, FACTS_R14) && has(WHOIS, WHOIS_R14));
+  assert.ok(has(TIMELINE, TIMELINE_R14) && has(INTRUSO_SETS, INTRUSO_R14) && has(CONEXOES, CONEXOES_R14));
+  for (const list of [CARDS.relampago, CARDS.emoji, FACTS, WHOIS, TIMELINE, INTRUSO_SETS, CONEXOES, LINEUPS] as Array<Array<{ id: string }>>) {
+    const ids = list.map((x) => x.id);
+    assert.equal(new Set(ids).size, ids.length, `id repetido: ${ids.filter((id, i) => ids.indexOf(id) !== i)}`);
+  }
+  assert.ok(RELAMPAGO_R14.length >= 10 && FACTS_R14.length >= 10 && EMOJI_R14.length >= 8);
+  // Fato ou Fake equilibrado e Conexões com 16 itens diferentes.
+  assert.ok(FACTS_R14.some((x) => x.fact) && FACTS_R14.some((x) => !x.fact));
+  for (const p of CONEXOES_R14) {
+    const items = p.groups.flatMap((g) => g.items);
+    assert.equal(new Set(items).size, 16, p.id);
+  }
+  // Que Time: as três finais novas, com 11 titulares cada.
+  for (const id of ['espanha-2026', 'flamengo-2025', 'crystal-palace-2026']) {
+    const l = LINEUPS.find((x) => x.id === id)!;
+    assert.equal(l.lines.flat().length, 11, id);
+  }
+});
+
+test('Rodada 14: novidades de 26/11 (e o grupo só de Impostor ainda vê a última com Impostor)', async () => {
+  const { NEWS, NEWS_LINE_MAX, latestNewsFor, newsOutgoing } = await import('../src/lib/game/novidades');
+  assert.equal(NEWS[0].id, '2026-11-26');
+  for (const i of NEWS[0].items) for (const l of i.lines) assert.ok(l.length <= NEWS_LINE_MAX, l);
+  assert.ok(NEWS[0].items.some((i) => /Fábio no Fluminense/.test(i.lines.join(' '))));
+  assert.equal(newsOutgoing(NEWS[0], true), null, 'nada desta versão é do Impostor');
+  assert.equal(latestNewsFor(true)?.id, '2026-11-25');
+  assert.equal(latestNewsFor(false)?.id, '2026-11-26');
+});

@@ -260,6 +260,22 @@ export const LINEUPS: Lineup[] = [
     match: 'final da Libertadores de 2024, 3 x 1 no Atlético-MG',
     lines: [['John'], ['Vitinho', 'Bastos', 'Barboza', 'Alex Telles'], ['Gregore', 'Marlon Freitas'], ['Luiz Henrique', 'Thiago Almada', 'Savarino'], ['Igor Jesus']],
   },
+  // Rodada 14: escalações das súmulas na Wikipédia em inglês (páginas das finais), conferidas em 26/11/2026.
+  {
+    id: 'flamengo-2025', team: 'Flamengo', aliases: ['flamengo', 'mengao', 'fla'], year: 2025,
+    match: 'final da Libertadores de 2025, 1 x 0 no Palmeiras, em Lima',
+    lines: [['Rossi'], ['Varela', 'Danilo', 'Léo Pereira', 'Alex Sandro'], ['Pulgar', 'Jorginho'], ['Carrascal', 'Arrascaeta', 'Samuel Lino'], ['Bruno Henrique']],
+  },
+  {
+    id: 'espanha-2026', team: 'Espanha', aliases: ['espanha'], year: 2026,
+    match: 'final da Copa de 2026, 1 x 0 na Argentina, na prorrogação',
+    lines: [['Unai Simón'], ['Pedro Porro', 'Cubarsí', 'Laporte', 'Cucurella'], ['Fabián Ruiz', 'Rodri', 'Dani Olmo'], ['Lamine Yamal', 'Oyarzabal', 'Álex Baena']],
+  },
+  {
+    id: 'crystal-palace-2026', team: 'Crystal Palace', aliases: ['crystal palace', 'palace'], year: 2026,
+    match: 'final da Conference League de 2026, 1 x 0 no Rayo Vallecano',
+    lines: [['Henderson'], ['Riad', 'Lacroix', 'Canvot'], ['Muñoz', 'Wharton', 'Kamada', 'Mitchell'], ['Ismaïla Sarr', 'Mateta', 'Yéremy Pino']],
+  },
 ];
 
 export function getLineup(id: string): Lineup | undefined {

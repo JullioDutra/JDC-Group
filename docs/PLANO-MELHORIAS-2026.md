@@ -1546,3 +1546,109 @@ O Puskás é o mesmo caso repetido: cada rodada com um clube diferente acrescent
 | Temas 20 a 22 | Falta, finais, pênalti | Feito: Rei da Falta, Decisivo, Dono da Marca; *corrigir* aceita os 3 dados; menu com 22 cards |
 
 **Testes:** `tests/rodada13.test.ts` (7) e o detetive em `tests/impostor2.test.ts`. Total: 172 testes passando e build ok.
+
+## 31. Estrutura dos dados de jogador, passagens conferidas em duas fontes e conteúdo de 2025/26 (26/11)
+
+> Pedido: "Erros: *Arthur*: *Fábio* não tem passagem pelo *Fluminense*. Clubes: União Bandeirante, Athletico Paranaense, Cruzeiro, Vasco, Seleção Brasileira de Futebol. Domingos da Guia aceito no Milan. Faça todo um planejamento e estruturação dos dados, ajustes necessários. Adição de mais dados atuais nos conteúdos."
+
+### 31.1 Diagnóstico (conferido nas fontes em 25/11/2026)
+
+| Caso | O que a fonte tem | Por que o jogo errou |
+|---|---|---|
+| Fábio no Fluminense (recusado) | Wikidata (Q677923): União Bandeirante, Athletico, Cruzeiro, Vasco e a seleção. **Não tem o Fluminense** (desde 2022). A Wikipédia pt e en tem. | O jogo só olhava o Wikidata, que está desatualizado para esse jogador. |
+| "Seleção Brasileira de Futebol" na lista de clubes | Desde 2025 o Wikidata classifica as seleções masculinas como Q135408445 ("men's national association football team"), subclasse de Q6979593. | A consulta só reconhecia a classe-mãe: a seleção virava clube e os jogos pela seleção não eram somados (vale para todas as fichas da carga). |
+| Domingos da Guia no Milan (aceito) | Wikidata (Q717927): Bangu, Nacional, Vasco, Boca, Flamengo e Corinthians. **Nunca jogou no Milan.** | Nasceu em 1912 e a carga começa em 1920: ele só existia como ficha da IA, com clubes inventados por respostas antigas, e ficha da IA não era conferida. |
+| Conferência da rodada 13 | O serviço de consultas do Wikidata (WDQS) estava em pane, limitado a 1 consulta por minuto. | A conferência por WDQS falhava e caía na ficha gravada (com os erros acima). |
+
+### 31.2 Estrutura dos dados de jogador
+
+**Ordem de confiança das passagens por clube:**
+1. Correção do admin (*corrigir <jogador> clube <clube> fonte <fonte>*).
+2. Wikidata (passagens P54), lido pela página da entidade (`Special:EntityData`), que tem cache e não depende do WDQS.
+3. Wikipédia (caixa de informação pt e en: `clubeN`, `clubes`, `clube atual`, `clubsN`), só quando o Wikidata não tem a passagem pedida.
+4. IA: ajuda a achar o jogador, mas **nunca prova passagem sozinha**.
+
+**Na ficha (`players`):**
+- `clubs`: só clubes profissionais do Wikidata (sem base, time B nem seleção).
+- `manual.clubs` (novo): passagens confirmadas fora do Wikidata, com nome, fonte ("Wikipédia" ou a do admin) e data. A carga nunca apaga; na leitura elas entram na lista de clubes.
+- `stats.intlCaps` / `intlGoals`: voltam a vir das passagens pela seleção.
+- Caches de 30 dias: `wdcareer:v1:<Q>` (carreira), `wpclubs:v1:<Q>` (Wikipédia), `wdid:v1:<nome>:<ano>` (Q-id de ficha da IA).
+
+**Ficha que só a IA tinha:** na rodada de clube o bot procura o jogador no Wikidata (busca + ocupação futebolista + ano de nascimento). Achou: vira a ficha do Wikidata (fica o nome que o grupo usa, os números e as correções dela) e a da IA é apagada. Não achou: o clube da IA não prova a passagem; o bot avisa e **não gasta tentativa**.
+
+**Carga:** duas partes novas entram na carga em andamento, logo depois da parte atual: lendas nascidas antes de 1920 (2+ artigos na Wikipédia) e reparo das seleções (os mais conhecidos, 10+ artigos, para tirar a seleção da lista e somar de novo os jogos pela seleção). Fichas antigas já saem sem a seleção na leitura.
+
+**Diagnóstico:** o registro de cada busca ganha o caminho da conferência (`+wd`, `+wp`, `+ficha`, `+sem-fonte`, `+fonte-fora`), visível em `buscas24h` no `/api/health`.
+
+### 31.3 Conteúdo: inventário (antes) e metas
+
+Itens com 2025 ou 2026 no texto, por jogo (contagem do script de inventário em 26/11):
+
+| Jogo | Total | De 2025/26 | Meta |
+|---|---|---|---|
+| Quem é? | 184 | 6 | +4 (fatos que não mudam com a temporada) |
+| Emoji | 268 | 1 | +8 |
+| Quiz Relâmpago | 365 | 111 | +10 |
+| Fato ou Fake | 281 | 75 | +10 |
+| Linha do Tempo | 287 | 14 | +6 |
+| Intruso | 189 | 19 | +4 |
+| Conexões | 57 | 1 | +2 |
+| Que Time | 49 | 1 | +3 (finais de 2025/26) |
+
+O conteúdo de 2026 que já estava no jogo (Copa, Bola de Ouro, ligas, Champions, NBA, Oscar, eleição, estaduais, Enzo no City) não foi repetido.
+
+### 31.4 Fontes
+
+Páginas da Wikipédia em inglês, lidas no texto original em 26/11/2026 (citam FIFA, UEFA e CONMEBOL):
+- **2026 FIFA World Cup final:** Espanha 1 x 0 Argentina na prorrogação, gol de Ferran Torres (106'). Enzo Fernández expulso (2º amarelo em Cubarsí). A Argentina não chutou nos 90 minutos. Escalação da Espanha.
+- **2026 UEFA Champions League final:** PSG 1 x 1 Arsenal (Havertz 6', Dembélé 65' de pênalti), PSG 4 x 3 nos pênaltis; Gabriel perdeu o último. Budapeste.
+- **2026 UEFA Europa League final:** Freiburg 0 x 3 Aston Villa (Tielemans, Buendía, Morgan Rogers), em Istambul.
+- **2026 UEFA Conference League final:** Crystal Palace 1 x 0 Rayo Vallecano (Mateta), em Leipzig; escalação do Palace.
+- **2025 Copa Libertadores final:** Palmeiras 0 x 1 Flamengo (Danilo, 67'), em Lima; escalação do Flamengo.
+- **Caixas de informação dos jogadores:**
+  - transferências de 2026 (clube desde 2026): Enzo Fernández, Morgan Rogers, Elliot Anderson, Yan Diomande, Barcola, Bruno Guimarães e Bouaddi;
+  - dicas do Quem é: Danilo, Tielemans, Mateta e Unai Simón.
+
+  Na conferência apareceu que o Tielemans e o Ferran Torres também trocaram de clube em 2026. Por isso o Tielemans saiu do grupo "gol em final" do Conexões, onde caberia em dois grupos.
+
+### 31.5 O que fica de fora
+
+- **Final da Libertadores 2026:** Palmeiras x Estudiantes, em 28/11.
+- **Copa do Brasil 2026:** final em 6/12.
+- **Brasileirão 2026:** em andamento.
+- **Valores de transferência:** cada fonte dá um número, e o Transfermarkt só entra por cadastro manual.
+- **Ids de clube do Wikidata em todos os times do jogo:** a comparação continua pelo nome, com os apelidos de cada time. Fica para depois.
+
+### 31.6 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Seleção fora dos clubes | Classe nova + rótulo; limpar fichas antigas | Feito na carga (subclasse + rótulo), na conferência e na leitura (recusa, FICHA, busca) |
+| Conferência sem WDQS | Página da entidade + rótulos | Feito (`src/lib/players/sources.ts`); se os rótulos falharem, cai no WDQS |
+| Wikipédia como 2ª fonte | Caixa pt e en quando o Wikidata não tem a passagem | Feito; a passagem fica gravada como "Wikipédia" (Fábio no Fluminense) |
+| Ficha só da IA | Procurar no Wikidata; sem fonte, não vale | Feito; vira ficha do Wikidata (Domingos da Guia) ou recusa sem gastar tentativa |
+| Admin | *corrigir X clube Y fonte Z* | Feito; a FICHA mostra a fonte |
+| Carga | Lendas antes de 1920 + reparo das seleções | Feito; entram na carga em andamento, logo depois da parte atual |
+| Quem é | +4 | +4 (Danilo, Tielemans, Mateta, Unai Simón) |
+| Emoji | +8 | +9 |
+| Quiz Relâmpago | +10 | +12 |
+| Fato ou Fake | +10 | +10 |
+| Linha do Tempo | +6 | +7 |
+| Intruso | +4 | +4 |
+| Conexões | +2 | +2 |
+| Que Time | +3 | +3 (Espanha 2026, Flamengo 2025, Crystal Palace 2026) |
+| Novidades | Entrada de 26/11 | Feita; o grupo só de Impostor continua vendo a última com Impostor |
+
+**Testes:** `tests/rodada14.test.ts` (10 testes) usa dados reais do Wikidata e da Wikipédia (fixture em `tests/fixtures/rodada14-fontes.json`) e cobre:
+- a seleção fora dos clubes;
+- a carreira sem WDQS;
+- as caixas pt e en;
+- o Fábio no Fluminense;
+- o Domingos da Guia no Milan;
+- a ficha sem fonte no 1 x 1;
+- o comando do admin;
+- a carga;
+- o conteúdo;
+- as novidades.
+
+Total: 191 testes passando e build ok.

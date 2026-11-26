@@ -4,6 +4,7 @@
  */
 import type { ContentCategory } from '../../game/types';
 import { WHOIS_GERAIS } from './whois-gerais';
+import { WHOIS_R14 } from './rodada14';
 
 export interface WhoIsCard {
   id: string;
@@ -802,6 +803,7 @@ export const WHOIS: WhoIsCard[] = [
   },
   // Fora do futebol (rodada 10): gerais, história e anime.
   ...WHOIS_GERAIS,
+  ...WHOIS_R14,
 ];
 
 export function getWhoIs(id: string): WhoIsCard | undefined {

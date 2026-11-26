@@ -26,6 +26,18 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    id: '2026-11-26',
+    date: '26/11',
+    items: [
+      { head: 'Clube conferido em 2 fontes', lines: ['Wikidata e, se faltar, a Wikipédia.', 'Ex.: Fábio no Fluminense agora vale.'] },
+      { head: 'Passagem inventada não vale', lines: ['Ficha que só a IA tinha é conferida.', 'Ex.: Domingos da Guia no Milan não vale.'] },
+      { head: 'Seleção não é clube', lines: ['A seleção saiu da lista de clubes', 'que aparece na recusa e na FICHA.'] },
+      { head: 'Sem fonte: não gasta tentativa', lines: ['Carreira que não dá para conferir:', 'o bot avisa e você manda outro.'] },
+      { head: 'Conteúdo de 2025/26', lines: ['Finais da Champions, Liga Europa,', 'Conference e Libertadores; janela de 2026.'] },
+      { head: 'Que Time: 3 escalações novas', lines: ['Espanha 2026, Flamengo 2025 e Palace 2026.'] },
+    ],
+  },
+  {
     id: '2026-11-25',
     date: '25/11',
     items: [
@@ -52,6 +64,11 @@ export const NEWS_SEEN_KIND = 'novidades';
 /** Itens que valem para o grupo (só de Impostor: só os do Impostor). */
 export function newsFor(news: News, onlyImpostor: boolean): NewsItem[] {
   return news.items.filter((i) => (onlyImpostor ? i.games?.includes('impostor') : true));
+}
+
+/** Versão mais nova com algo para o grupo (o grupo só de Impostor pula as que não mexem no Impostor). */
+export function latestNewsFor(onlyImpostor: boolean): News | null {
+  return NEWS.find((n) => newsFor(n, onlyImpostor).length > 0) ?? null;
 }
 
 export function newsOutgoing(news: News, onlyImpostor: boolean): Outgoing | null {
