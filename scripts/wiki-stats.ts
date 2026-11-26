@@ -96,11 +96,18 @@ async function alvos() {
 } ORDER BY DESC(?sl) LIMIT ${max}`));
   }
   const seen = new Set<string>();
-  const all = [...famous, ...br].filter((a) => (seen.has(a.qid) ? false : (seen.add(a.qid), true)));
+  // Quem jogou no Brasil sobe na fila (+15 de fama): o grupo escala muito time brasileiro.
+  const all = [...famous.map((a) => ({ a, score: a.sitelinks })), ...br.map((a) => ({ a, score: a.sitelinks + BR_BONUS }))]
+    .sort((x, y) => y.score - x.score)
+    .map((x) => x.a)
+    .filter((a) => (seen.has(a.qid) ? false : (seen.add(a.qid), true)));
   mkdirSync('data', { recursive: true });
   writeFileSync(ALVOS, JSON.stringify(all).replace(/},{/g, '},\n{') + '\n');
   console.log(`${famous.length} famosos + ${br.length} do Brasil = ${all.length} alvos em ${ALVOS}`);
 }
+
+/** Bônus de fama na fila para quem jogou em clube brasileiro (fora dos mais famosos). */
+const BR_BONUS = 15;
 
 async function page(title: string): Promise<{ status: number; text: string }> {
   const url = `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}?action=raw`;
