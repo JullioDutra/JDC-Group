@@ -1755,5 +1755,6 @@ A carga do Wikidata está na parte 9 de 30 (Alemanha). Quem ainda não entrou de
 | Conexões | +6 | +4 (finais de 2026, recordes, campeões europeus, Libertadores). As outras 2 ideias foram descartadas porque havia jogador que cabia em dois grupos (ex.: Donnarumma campeão da Euro e da Champions) |
 | Testes de qualidade | Regras em todo o conteúdo | Feito: `tests/qualidade.test.ts`. Correções: 6 dicas do Quem é que entregavam a resposta (Lampião já na 1ª dica, Light e Sasuke na 4ª, Taylor Swift, Tiradentes, Gabigol) e 10 apelidos que a última dica citava e valiam como resposta (Fenômeno, Imperador, Kaiser...) |
 | Roteiro contínuo | `npm run inventario` | Feito, mais `scripts/conferir_escalacoes.py` para conferir o Que Time nas próximas rodadas |
+| Carga com o Wikidata limitado (achado no deploy) | — | Corrigido. Depois do deploy, o `/api/health` mostrou 8 erros seguidos na carga (a cadeia para com 10). Com o serviço do Wikidata limitado, cada lote refazia as 4 consultas do começo e nunca passava da 2ª. Agora o lote guarda as consultas que deram certo e continua dali, e o limite de cota (429) espera sem contar como erro seguido |
 
-**Testes:** `tests/rodada15.test.ts` (4) e `tests/qualidade.test.ts` (5). Total: 200 testes passando e build ok.
+**Testes:** `tests/rodada15.test.ts` (5) e `tests/qualidade.test.ts` (5). Total: 201 testes passando e build ok.

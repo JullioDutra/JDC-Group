@@ -74,7 +74,9 @@ export async function runImportCall(store: Store, url: string, body: ImportCall,
   } catch (error) {
     next = { ...next, lastError: (error as Error).message.slice(0, 200) };
   }
-  const errors = next.lastError ? (state.errors ?? 0) + 1 : 0;
+  // Cota do Wikidata (429): espera o que ele pede, sem contar como erro seguido
+  // (senão, numa pane longa do serviço, a cadeia parava de vez com 10 cotas).
+  const errors = next.lastError ? (next.retryAfter ? (state.errors ?? 0) : (state.errors ?? 0) + 1) : 0;
   const today = now.toISOString().slice(0, 10);
   let callsToday = state.callsDay === today ? (state.callsToday ?? 0) : 0;
   const saved: StoredImport = { ...next, errors, leaseUntil: undefined, callsDay: today, callsToday, chainError: undefined, nextAt: undefined };

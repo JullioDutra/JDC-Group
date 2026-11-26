@@ -353,6 +353,18 @@ export interface ImportState {
   yielded?: boolean;
   /** Jogadores por lote (diminui se os detalhes ficarem lentos; volta a crescer depois). */
   pageSize?: number;
+  /**
+   * Lote pela metade (rodada 15): as consultas que já deram certo ficam
+   * guardadas e a próxima chamada continua dali. Com o Wikidata limitado
+   * (pane de 25/11/2026: 1 consulta por minuto), refazer o lote do começo
+   * nunca passava da 2ª consulta.
+   */
+  batch?: {
+    key: string;
+    list: Array<{ id: string; sitelinks: number; birth: string | null }>;
+    identity?: Binding[];
+    names?: Binding[];
+  };
   /** Ajuste automático feito no último passo (não é erro). */
   note?: string;
   updatedAt?: string;
@@ -430,26 +442,37 @@ export async function importStep(
   const lastYear = Math.min(part.toYear ?? state.untilYear, state.untilYear);
   if (Number(state.cursor.slice(0, 4)) > lastYear) return nextPart(next);
   const to = addDays(state.cursor, state.spanDays);
-  let list: Array<{ id: string; sitelinks: number; birth: string | null }>;
+  let list: Array<{ id: string; sitelinks: number; birth: string | null }> = [];
   let imported = 0;
+  // Lote guardado pela metade (mesma parte, janela, página e tamanho): continua dele.
+  const key = `${state.part}:${state.cursor}:${state.spanDays}:${state.offset}:${page}`;
+  const batch: NonNullable<ImportState['batch']> | undefined = state.batch?.key === key ? { ...state.batch } : undefined;
+  let partial = batch;
   try {
-    const rows = await query(listQuery(state.cursor, to, part.minSitelinks, page, state.offset, part.clubCountry), 'list');
-    list = rows
-      .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
-      .filter((x) => /^Q\d+$/.test(x.id));
+    if (batch) list = batch.list;
+    else {
+      const rows = await query(listQuery(state.cursor, to, part.minSitelinks, page, state.offset, part.clubCountry), 'list');
+      list = rows
+        .map((b) => ({ id: qid(val(b, 'p')), sitelinks: Number(val(b, 'links') ?? 0), birth: val(b, 'born') ?? null }))
+        .filter((x) => /^Q\d+$/.test(x.id));
+      partial = { key, list };
+    }
     // Detalhes uma consulta de cada vez: respeita a cota do serviço.
     if (list.length) {
       const ids = list.map((x) => x.id);
-      const identity = await query(identityQuery(ids), 'detail');
-      const names = await query(namesQuery(ids), 'detail');
+      const identity = partial!.identity ?? (partial!.identity = await query(identityQuery(ids), 'detail'));
+      const names = partial!.names ?? (partial!.names = await query(namesQuery(ids), 'detail'));
       const teams = await query(teamsQuery(ids), 'detail');
       const records = buildRecords(list, identity, names, teams);
       await save(records);
       imported += records.length;
     }
+    next.batch = undefined;
   } catch (error) {
-    // Erro em qualquer consulta: não avança (refaz a página depois; gravar de novo não duplica).
-    if (error instanceof OutOfTime) return { ...state, yielded: true, updatedAt: next.updatedAt };
+    // Erro numa consulta: não avança a janela, mas guarda o que já veio (a próxima chamada continua dali).
+    const keep = partial && partial.list.length ? { batch: partial } : { batch: undefined };
+    if (error instanceof OutOfTime) return { ...state, ...keep, yielded: true, updatedAt: next.updatedAt };
+    next = { ...next, ...keep };
     const message = (error as Error).message;
     if (error instanceof SlowQuery) {
       if (error.kind === 'list' && state.spanDays > 7) return { ...next, spanDays: Math.ceil(state.spanDays / 2), note: message };

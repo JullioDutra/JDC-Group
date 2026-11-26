@@ -139,3 +139,39 @@ test('Rodada 15: Wikipédia completa posição que falta e dá os jogos pela sel
   assert.equal((await lookup('Kylian Mbappé', { position: 'ATA', metric: 'intlGoals' }))!.intlGoals, 70);
   assert.ok(wikiCalls <= 2, `cache da Wikipédia (${wikiCalls} pedidos)`);
 });
+
+test('Rodada 15: carga com o Wikidata limitado — o lote continua de onde parou e a cota não derruba a cadeia', async () => {
+  const { importStep, newImportState } = await import('../src/lib/players/wikidata');
+  const uri = (q: string) => ({ type: 'uri', value: `http://www.wikidata.org/entity/${q}` });
+  const lit = (v: string | number) => ({ type: 'literal', value: String(v) });
+  const asked: string[] = [];
+  let limited = true;
+  const fetcher = async (_url: string, init: RequestInit): Promise<Response> => {
+    const q = new URLSearchParams(String(init.body)).get('query') ?? '';
+    const kind = q.includes('GROUP BY ?p') ? 'lista' : q.includes('P1477') ? 'nomes' : q.includes('P54') ? 'times' : 'identidade';
+    asked.push(kind);
+    // Pane: a 3ª consulta da chamada estoura a cota.
+    if (limited && asked.filter((k) => k !== 'ok').length === 3) return new Response('Too Many Requests', { status: 429, headers: { 'retry-after': '60' } });
+    const out =
+      kind === 'lista' ? [{ p: uri('Q9'), links: lit(40), born: lit('1990-05-01T00:00:00Z') }]
+      : kind === 'times' ? [{ p: uri('Q9'), team: uri('T9'), pt: lit('Clube de Regatas do Flamengo'), start: lit('2010-01-01T00:00:00Z'), nat: lit('false') }]
+      : kind === 'nomes' ? []
+      : [{ p: uri('Q9'), pt: lit('Fulano'), pos: lit('forward'), country: lit('Brasil') }];
+    return new Response(JSON.stringify({ results: { bindings: out } }), { status: 200 });
+  };
+  const s0 = newImportState({ untilYear: 1991, plan: [{ label: 'teste', minSitelinks: 3, fromYear: 1990 }] });
+  const s1 = await importStep(s0, async () => undefined, fetcher);
+  assert.deepEqual(asked, ['lista', 'identidade', 'nomes']);
+  assert.equal(s1.retryAfter, 60);
+  assert.equal(s1.cursor, s0.cursor, 'a janela não avança');
+  assert.ok(s1.batch && s1.batch.list.length === 1 && s1.batch.identity && !s1.batch.names, 'guarda a lista e a identidade');
+  // Próxima chamada: só as consultas que faltam (nomes e times), e o lote fecha.
+  limited = false;
+  asked.length = 0;
+  let saved = 0;
+  const s2 = await importStep(s1, async (r) => void (saved += r.length), fetcher);
+  assert.deepEqual(asked, ['nomes', 'times']);
+  assert.equal(saved, 1);
+  assert.equal(s2.batch, undefined);
+  assert.equal(s2.cursor, '1991-01-01');
+});
