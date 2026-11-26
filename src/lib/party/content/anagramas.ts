@@ -124,6 +124,15 @@ export const ANAGRAM_THEMES: AnagramTheme[] = [
     theme: 'personagem de anime', category: 'anime', keys: ['anime', 'animes', 'personagens de anime', 'personagem de anime', 'otaku'],
     list: 'Goku, Naruto, Luffy, Pikachu, Vegeta, Sasuke, Ichigo, Seiya, Tanjiro, Nezuko, Zoro, Kakashi, Itachi, Gohan, Saitama, Mikasa, Eren, Sanji, Hinata, Sakura, Piccolo, Freeza, Doraemon, Totoro, Bulma, Kuririn, Shiryu, Hyoga',
   },
+  {
+    // Rodada 16: Copa do Mundo de 2026 (Wikipédia "2026 FIFA World Cup", conferida em 26/11/2026).
+    theme: 'Copa 2026', category: 'futebol', keys: ['copa 2026', 'copa de 2026', 'mundial 2026', 'mundial de 2026', 'copa 26'],
+    list:
+      'Mbappé|mbappe, Messi, Rodri, Lamine Yamal|yamal, Cubarsí|cubarsi, Unai Simón|unai, Haaland, Bellingham, Olise, Ferran Torres, ' +
+      'Oyarzabal, Cucurella, Pedri, Ancelotti, Toronto, Vancouver, Guadalajara, Monterrey, Seattle, Miami, Houston, Atlanta, Boston, ' +
+      'Dallas, Filadélfia|filadelfia, Azteca|estadio azteca, MetLife, Maple, Zayu, Clutch, Trionda, Cabo Verde, Curaçao|curacao, ' +
+      'Jordânia|jordania, Uzbequistão|uzbequistao, Noruega',
+  },
 ];
 
 /** Temas do Anagrama que o Impostor não herda (ele já tem os seus, com outros nomes). */

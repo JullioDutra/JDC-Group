@@ -26,6 +26,18 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    id: '2026-11-26c',
+    date: '26/11',
+    items: [
+      { head: 'Menos "não achei a carreira"', lines: ['Jogador conhecido pelo apelido (ex.: Egídio)', 'agora é achado no Wikidata e na Wikipédia.'] },
+      { head: 'Fonte fora do ar não trava', lines: ['Se o Wikidata não responder, vale o jogador', 'que a IA reconhece.'] },
+      { head: 'Anagrama: tema Copa 2026', lines: ['Mande: abrir anagrama copa 2026.'] },
+      { head: 'Impostor: tema Copa 2026', lines: ['Mande: abrir impostor copa 2026.', 'Sedes, mascotes, craques e estreantes.'], games: ['impostor'] },
+      { head: 'Mais Copa 2026 nos jogos', lines: ['Mascotes, bola, sedes, estreantes, show', 'da final e seleção do torneio.'] },
+      { head: 'Quem é: 3 fichas novas', lines: ['Cubarsí, Olise e Bellingham.'] },
+    ],
+  },
+  {
     id: '2026-11-26b',
     date: '26/11',
     items: [

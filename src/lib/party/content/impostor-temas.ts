@@ -108,6 +108,7 @@ export const ANAGRAM_LABELS: Record<string, string> = {
   esporte: 'esportes',
   novela: 'novelas',
   filme: 'filmes',
+  'Copa 2026': 'Copa 2026',
 };
 
 /** Temas novos (rodada 8): 5 de futebol, 27 gerais, anime e história. */

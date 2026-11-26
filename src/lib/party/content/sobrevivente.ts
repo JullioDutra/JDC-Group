@@ -1,6 +1,7 @@
 import type { ContentCategory } from '../../game/types';
 import { SURVIVOR_R11 } from './rodada11';
 import { SURVIVOR_R15 } from './rodada15';
+import { SURVIVOR_R16 } from './rodada16';
 
 /**
  * Sobrevivente: categorias FECHADAS e completas. Como errar tira vida, a lista
@@ -445,6 +446,7 @@ export const SURVIVOR_LISTS: SurvivorList[] = [
   // História e anime (rodada 11).
   ...SURVIVOR_R11,
   ...SURVIVOR_R15,
+  ...SURVIVOR_R16,
 ];
 
 /** Listas com menos itens que isso ficam fora do sorteio. */

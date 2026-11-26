@@ -293,6 +293,6 @@ test('Rodada 14: novidades de 26/11 (e o grupo só de Impostor ainda vê a últi
   for (const i of r14.items) for (const l of i.lines) assert.ok(l.length <= NEWS_LINE_MAX, l);
   assert.ok(r14.items.some((i) => /Fábio no Fluminense/.test(i.lines.join(' '))));
   assert.equal(newsOutgoing(r14, true), null, 'nada desta versão é do Impostor');
-  assert.equal(latestNewsFor(true)?.id, '2026-11-25');
+  assert.equal(latestNewsFor(true)?.id, NEWS.find((n) => n.items.some((i) => i.games?.includes('impostor')))?.id);
   assert.equal(latestNewsFor(false)?.id, NEWS[0].id);
 });

@@ -2,6 +2,7 @@ import type { ContentCategory } from '../../game/types';
 import { FACTS_GERAIS } from './fato-gerais';
 import { FACTS_R11 } from './rodada11';
 import { FACTS_R14 } from './rodada14';
+import { FACTS_R16 } from './rodada16';
 
 /**
  * Fato ou Fake: afirmações curtas, verdadeiras ou falsas, com a explicação que
@@ -141,6 +142,7 @@ export const FACTS: FactCard[] = [
   ...FACTS_GERAIS,
   ...FACTS_R11,
   ...FACTS_R14,
+  ...FACTS_R16,
 ];
 
 export function getFact(id: string): FactCard | undefined {

@@ -2,6 +2,7 @@ import type { Top10List } from '../game/types';
 import { TOP10_EXTRA } from './content/top10-extra';
 import { TOP10_R11 } from './content/rodada11';
 import { TOP10_R15 } from './content/rodada15';
+import { TOP10_R16 } from './content/rodada16';
 
 /**
  * Listas do Top 10. Regra de curadoria: só entra lista com fonte e data de
@@ -525,7 +526,7 @@ const BASE_LISTS: Top10List[] = [
 
 /** Categorias sorteadas no "aleatório". Política só entra quando pedida. */
 /** Listas antigas + as de 18/11/2026 (com os dados de 2026). */
-export const TOP10_LISTS: Top10List[] = [...BASE_LISTS, ...TOP10_EXTRA, ...TOP10_R11, ...TOP10_R15];
+export const TOP10_LISTS: Top10List[] = [...BASE_LISTS, ...TOP10_EXTRA, ...TOP10_R11, ...TOP10_R15, ...TOP10_R16];
 
 /**
  * Listas diferentes com o mesmo assunto: o sorteio trata como um tema só e

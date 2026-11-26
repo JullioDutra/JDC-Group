@@ -2,6 +2,7 @@ import type { ContentCategory } from '../../game/types';
 import { CONEXOES_R11 } from './rodada11';
 import { CONEXOES_R14 } from './rodada14';
 import { CONEXOES_R15 } from './rodada15';
+import { CONEXOES_R16 } from './rodada16';
 
 /**
  * Conexões: 16 nomes em 4 grupos de 4, do mais fácil ao mais difícil.
@@ -478,6 +479,7 @@ export const CONEXOES: ConexoesPuzzle[] = [
   ...CONEXOES_R11,
   ...CONEXOES_R14,
   ...CONEXOES_R15,
+  ...CONEXOES_R16,
 ];
 
 export function getConexoes(id: string): ConexoesPuzzle | undefined {

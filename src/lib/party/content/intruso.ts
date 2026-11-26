@@ -6,6 +6,7 @@ import type { ContentCategory } from '../../game/types';
 import { INTRUSO_GERAIS } from './intruso-gerais';
 import { INTRUSO_R11 } from './rodada11';
 import { INTRUSO_R14 } from './rodada14';
+import { INTRUSO_R16 } from './rodada16';
 
 export interface IntrusoSet {
   id: string;
@@ -473,6 +474,7 @@ export const INTRUSO_SETS: IntrusoSet[] = [
   ...INTRUSO_GERAIS,
   ...INTRUSO_R11,
   ...INTRUSO_R14,
+  ...INTRUSO_R16,
 ];
 
 export function getIntrusoSet(id: string): IntrusoSet | undefined {

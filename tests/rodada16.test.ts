@@ -134,3 +134,23 @@ test('Rodada 16: sem Wikidata, a Wikipédia pelo título confirma; com as fontes
   const p4 = (await createLookup(new MemoryStore(), ai(), undefined, none)('Egidio', cruzeiro))!;
   assert.equal(p4.clubsUnverified, true);
 });
+
+test('Rodada 16: Copa 2026 nos jogos (Anagrama, Impostor, listas) e novidades', async () => {
+  const { findAnagramTheme, ANAGRAMS } = await import('../src/lib/party/content/anagramas');
+  const { findImpostorTheme, impostorPool } = await import('../src/lib/party/content/impostor');
+  const { SURVIVOR_LISTS } = await import('../src/lib/party/content/sobrevivente');
+  const { TOP10_LISTS } = await import('../src/lib/party/top10-lists');
+  const { NEWS, newsOutgoing } = await import('../src/lib/game/novidades');
+  assert.equal(findAnagramTheme('copa 2026')?.theme, 'Copa 2026');
+  assert.ok(ANAGRAMS.filter((a) => a.theme === 'Copa 2026').length >= 30);
+  assert.equal(findImpostorTheme('copa 2026'), 'Copa 2026');
+  assert.ok(impostorPool('Copa 2026').some((s) => s.name === 'Zayu'));
+  assert.equal(findImpostorTheme('copa'), 'edição da Copa', '"copa" continua sendo o tema das edições');
+  const sedes = SURVIVOR_LISTS.find((l) => l.id === 's-sedes-copa-2026')!;
+  assert.equal(sedes.items.length, 16);
+  const estadios = TOP10_LISTS.find((l) => l.id === 'estadios-copa-2026')!;
+  assert.deepEqual(estadios.items.map((i) => i.rank), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(NEWS[0].id, '2026-11-26c');
+  const imp = newsOutgoing(NEWS[0], true);
+  assert.ok(imp && imp.type === 'image' && imp.image.kind === 'textBoard' && imp.image.rows.length === 1, 'grupo só de Impostor vê o tema novo');
+});

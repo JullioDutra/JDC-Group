@@ -1758,3 +1758,59 @@ A carga do Wikidata está na parte 9 de 30 (Alemanha). Quem ainda não entrou de
 | Carga com o Wikidata limitado (achado no deploy) | — | Corrigido. Depois do deploy, o `/api/health` mostrou 8 erros seguidos na carga (a cadeia para com 10). Com o serviço do Wikidata limitado, cada lote refazia as 4 consultas do começo e nunca passava da 2ª. Agora o lote guarda as consultas que deram certo e continua dali, e o limite de cota (429) espera sem contar como erro seguido |
 
 **Testes:** `tests/rodada15.test.ts` (5) e `tests/qualidade.test.ts` (5). Total: 201 testes passando e build ok.
+
+## 33. "Não achei a carreira" com jogador conhecido e mais Copa de 2026 (26/11)
+
+> Pedido: "❌ *Marcos*: Não achei a carreira de *Egidio* no Wikidata nem na Wikipédia, então não dá para confirmar a passagem pelo *Cruzeiro*. Temos que evitar ao máximo esse erro, pois prejudica em momentos que o jogador é conhecido. Vem acontecendo muito. Adicione mais conteúdo 2026 nos jogos."
+
+### 33.1 Diagnóstico (conferido nas fontes em 26/11/2026)
+
+- **Como o Egídio aparece nas fontes:**
+  - no Wikidata (Q3720578), o rótulo é o nome completo, "Egídio de Araújo Pereira Júnior";
+  - o nome que o grupo usa está só no título da página: "Egídio (futebolista)";
+  - a página "Egídio" da Wikipédia é de um general romano.
+- **Por que a base não achou:** "Egidio" sozinho não bate com o nome completo (regra de nomes), então a busca caiu na IA e virou ficha da IA.
+- **Por que a conferência falhou:** para a ficha da IA, a busca no Wikidata exigia o mesmo ano de nascimento que a IA deu, que às vezes vem errado. Também não tentava a Wikipédia pelo título. E, se o Wikidata não respondesse na hora, o jogador era barrado do mesmo jeito.
+- **O mesmo acontece com qualquer jogador conhecido pelo primeiro nome ou por apelido** quando o Wikidata guarda o nome completo.
+
+### 33.2 Correções
+
+1. **Nome conhecido.** O título da página na Wikipédia, sem o "(futebolista)", entra como nome da ficha. Isso vale na carga diária (consulta de nomes), na busca sob demanda e na ficha completa.
+2. **Busca tolerante.** O Q-id é procurado por todos os nomes (o conhecido e o completo). O ano de nascimento pode diferir em 1. Vence quem tem o nome igual, depois o nome contido, depois a fama. Entre os candidatos, vale o que jogou no clube da rodada.
+3. **Wikipédia pelo título.** Se o Wikidata não acha, o bot tenta "Nome (futebolista)", "Nome" e "Nome (footballer)", e só vale página com caixa de futebolista.
+4. **Fonte fora do ar não bloqueia.** Wikidata e Wikipédia sem resposta: vale o que a IA disse. "Não achei a carreira" fica só para quem não está em nenhuma das duas.
+5. **Ficha da IA junta com a da base.** Mesmo nascimento e nome contido no nome completo: é o mesmo jogador, e o nome conhecido passa a valer na ficha do Wikidata.
+
+### 33.3 Conteúdo de 2026: metas e fontes
+
+Fonte: página "2026 FIFA World Cup" da Wikipédia em inglês, mais as caixas de Cubarsí, Olise e Bellingham. Tudo lido no texto original em 26/11/2026.
+
+- **Anagrama e Impostor:** tema novo "Copa 2026" (craques, sedes, estádios, mascotes, bola, estreantes).
+- **Top 10:** os 10 maiores estádios da Copa de 2026, pela capacidade da FIFA.
+- **Sobrevivente:** as 16 cidades-sede, as 4 estreantes e a seleção do torneio.
+- **Quem é:** Cubarsí, Olise e Bellingham.
+- **Emoji, Quiz Relâmpago, Fato ou Fake, Linha do Tempo, Intruso e Conexões:**
+  - mascotes (Maple, Zayu, Clutch) e a bola Trionda;
+  - abertura no Azteca e o 1.000º jogo das Copas (Tunísia x Japão);
+  - Itália fora pela 3ª vez, eliminada pela Bósnia;
+  - show do intervalo da final (Madonna, Shakira, BTS) e cerimônia de encerramento;
+  - recorde de público (cerca de 7 milhões);
+  - Bola de Prata (Messi), Chuteira de Bronze (Bellingham, 7 gols) e gol do torneio (Cabo Verde).
+
+**Fica de fora:** final da Libertadores 2026 (28/11), Copa do Brasil (6/12) e Brasileirão 2026, que ainda não terminaram.
+
+### 33.4 Planejado x entregue
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Nome conhecido (título da Wikipédia) | Carga, busca sob demanda e ficha completa | Feito |
+| Busca tolerante do Q-id | Todos os nomes, ano ±1, clube da rodada | Feito (`findWikidataIds`) |
+| Wikipédia pelo título | Sem Wikidata, tenta a página do jogador | Feito (`guessWikipedia`); uma página sem o clube vale como recusa, com os clubes dela |
+| Fonte fora do ar | Não bloquear | Feito: vale a IA, registrado como `+fonte-fora` |
+| Ficha da IA + ficha da base | Juntar quando é o mesmo jogador | Feito: o nome conhecido entra na ficha do Wikidata |
+| Anagrama e Impostor | Tema "Copa 2026" | +36 em cada |
+| Top 10 / Sobrevivente | Estádios / sedes, estreantes, seleção do torneio | +1 / +3 |
+| Quem é / Emoji / Relâmpago / Fato | +3 / +6 / +10 / +8 | +3 / +6 / +11 / +8 |
+| Linha do Tempo / Intruso / Conexões | +3 / +3 / +2 | +3 / +3 / +2 |
+
+**Testes:** `tests/rodada16.test.ts` (5) usa os dados reais do Egídio. Cobre o título como nome, o ano errado da IA, o general romano que não pode ser escolhido, a junção com a ficha da base, a Wikipédia pelo título, a fonte fora do ar e o conteúdo novo. Total: 206 testes passando e build ok.
