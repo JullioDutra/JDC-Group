@@ -1,5 +1,6 @@
 import { findTeamByName } from '../game/teams';
 import { tmPlayerFor, withTransfermarkt } from '../transfermarkt';
+import { wikiStatsFor, withWikiStats } from './wikistats';
 import { formatNumber, normalize } from '../game/text';
 import { POSITION_LABEL } from '../game/types';
 import type { Store } from '../store/types';
@@ -236,8 +237,9 @@ const brDate = (iso: string) => iso.split('-').reverse().join('/');
 
 /** Ficha em texto para o grupo. */
 export function formatCard(card: PlayerRecord): string {
-  const r = withTransfermarkt(card);
+  const r = withTransfermarkt(withWikiStats(card));
   const tm = tmPlayerFor(r.id);
+  const wiki = wikiStatsFor(r.id);
   const lines = [`*${r.name}*${r.aliases.length ? ` (${r.aliases.slice(0, 3).join(', ')})` : ''}`];
   const meta = [
     r.birthDate ? `nasceu em ${brDate(r.birthDate)}` : '',
@@ -259,6 +261,7 @@ export function formatCard(card: PlayerRecord): string {
   }
   if (nums.length) lines.push(nums.join('\n'));
   if (tm) lines.push(`📊 Números e clubes do Transfermarkt, lidos em ${brDate(tm.at)}.`);
+  if (wiki) lines.push(`📊 Jogos e gols da carreira pela Wikipédia (clubes + seleção)${wiki.asOf ? `, atualizados até ${brDate(wiki.asOf)}` : ''}.`);
   lines.push(`_id ${r.id.startsWith('ai:') ? 'pesquisado pela IA' : r.id}_`);
   return lines.join('\n');
 }

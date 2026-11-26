@@ -26,6 +26,15 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    id: '2026-11-26d',
+    date: '26/11',
+    items: [
+      { head: 'Números da carreira com fonte', lines: ['Jogos e gols pela Wikipédia (clubes +', 'seleção), atualizados até novembro de 2026.'] },
+      { head: 'O número não muda mais', lines: ['O mesmo jogador tem o mesmo número', 'em todas as partidas.'] },
+      { head: 'FICHA mostra a fonte', lines: ['Mande: ficha Messi', 'e veja de onde vem cada número.'] },
+    ],
+  },
+  {
     id: '2026-11-26c',
     date: '26/11',
     items: [

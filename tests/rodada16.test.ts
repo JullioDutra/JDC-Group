@@ -150,7 +150,7 @@ test('Rodada 16: Copa 2026 nos jogos (Anagrama, Impostor, listas) e novidades', 
   assert.equal(sedes.items.length, 16);
   const estadios = TOP10_LISTS.find((l) => l.id === 'estadios-copa-2026')!;
   assert.deepEqual(estadios.items.map((i) => i.rank), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  assert.equal(NEWS[0].id, '2026-11-26c');
-  const imp = newsOutgoing(NEWS[0], true);
+  const r16 = NEWS.find((n) => n.id === '2026-11-26c')!;
+  const imp = newsOutgoing(r16, true);
   assert.ok(imp && imp.type === 'image' && imp.image.kind === 'textBoard' && imp.image.rows.length === 1, 'grupo só de Impostor vê o tema novo');
 });

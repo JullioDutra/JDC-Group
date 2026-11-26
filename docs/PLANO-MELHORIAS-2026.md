@@ -1869,3 +1869,50 @@ O admin liberou `www.transfermarkt.com.br` na rede do ambiente. O primeiro e ún
 - **Sem `/ceapi`:** o histórico de transferências e o valor de mercado ficam de fora. Clubes seguem vindo do Wikidata, da Wikipédia e do admin; valor de mercado vem do admin (*tm*, *corrigir*) ou da IA. A coleta traz os totais da carreira (jogos, gols, assistências e cartões), da página de dados detalhados.
 
 O módulo foi ajustado para o `.com.br`, com os títulos das colunas em português. A skill e a regra do `CLAUDE.md` agora dizem quem faz o quê. O robots.txt real virou fixture de teste.
+
+## 35. Base de números da carreira pela Wikipédia, atualizada em 2026 (26/11)
+
+> Pedido: "Você consegue pesquisar em fontes confiáveis, gerar e armazenar números, e já ir começando os ajustes, de preferência atualizados de 2026?"
+
+### 35.1 Fonte e regra
+
+- **Fonte:** páginas de jogador da Wikipédia em inglês. Os números vêm de duas partes da página:
+  - a tabela "Appearances and goals by club, season and competition", linha "Career total" (clubes, todas as competições);
+  - a caixa de informação (seleção principal).
+- **Data:** a página informa até quando está atualizada ("{{updated|match played 21 November 2026}}").
+- **Fontes por trás:** as tabelas citam Soccerway, ESPN, RSSSF e as ligas.
+- **Acesso:**
+  - pelo endereço do artigo (`/wiki/...`), que o robots.txt da Wikipédia permite (`/w/` e `/api/` não);
+  - 1 pedido a cada 3 s, com User-Agent do bot;
+  - 429 espera e tenta de novo; 5 seguidos param a coleta.
+- **Números por jogador:**
+  - jogos na carreira = clubes + seleção principal;
+  - gols na carreira = clubes + seleção principal;
+  - jogos e gols pela seleção.
+- **Prioridade no jogo:** admin > Transfermarkt > Wikipédia > Wikidata/IA.
+- **Base estática e versionada** (`src/lib/players/wikistats-dados.ts`): o número não muda no meio da partida nem de uma partida para outra.
+
+### 35.2 Alvos
+
+10.668 jogadores, montados pelo Wikidata, todos com página em inglês: os 6.000 mais famosos e 4.668 que jogaram em clube brasileiro (6 artigos ou mais).
+
+### 35.3 Teste com páginas reais (26/11/2026)
+
+| Jogador | Clubes (jogos / gols) | Seleção (jogos / gols) | Atualizado até |
+|---|---|---|---|
+| Messi | 1.010 / 822 | 208 / 126 | 21/11/2026 |
+| Haaland | 418 / 331 | 61 / 68 | 24/11/2026 |
+| Gabigol | 627 / 285 | 18 / 5 | 18/11/2026 |
+| Hulk | 909 / 452 | 49 / 11 | 19/11/2026 |
+
+Num lote de teste de 20 páginas:
+- 14 tiveram números;
+- 5 ficaram sem tabela:
+  - 4 pessoas que o Wikidata marca como "futebolista" sem serem jogadores de carreira (Camus, Niels Bohr, Sean Connery, Orbán);
+  - o Pelé, que tem tabelas próprias (registros do Santos e do Cosmos), fica com o número atual até ser corrigido à mão;
+- o 20º pedido foi o que a Wikipédia limitou.
+
+### 35.4 O que fica de fora
+
+- **Assistências, títulos e valor de mercado:** a Wikipédia não traz de forma padronizada. Continuam vindo do admin (*tm*, *corrigir*) ou da IA.
+- **Páginas com tabela própria** (Pelé e algumas lendas): sem número automático.

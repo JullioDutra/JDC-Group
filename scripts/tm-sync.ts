@@ -16,7 +16,7 @@
  * Boa vizinhança (no TmClient): 1 pedido a cada 4 s (mínimo 2 s), robots.txt,
  * User-Agent do bot e parada no bloqueio, sem contornar.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { TmBlocked, TmClient } from '../src/lib/transfermarkt/client';
 import { TM_DADOS } from '../src/lib/transfermarkt/dados';
 import { readTmPlayer } from '../src/lib/transfermarkt/sync';
@@ -37,10 +37,12 @@ const today = () => new Date().toISOString().slice(0, 10);
 function saveDados(players: TmPlayer[]) {
   const sorted = [...players].sort((a, b) => a.qid.localeCompare(b.qid, 'en', { numeric: true }));
   const body = sorted.map((p) => `  ${JSON.stringify(p)},`).join('\n');
+  // Atômico: um commit no meio da gravação nunca pega o arquivo pela metade.
   writeFileSync(
-    DADOS,
+    `${DADOS}.tmp`,
     `import type { TmPlayer } from './types';\n\n/**\n * Base do Transfermarkt, GERADA pelo scripts/tm-sync.ts (não editar à mão).\n * Cada linha: um jogador, ligado à nossa base pelo Q-id do Wikidata.\n */\nexport const TM_DADOS: TmPlayer[] = [\n${body}${body ? '\n' : ''}];\n`,
   );
+  renameSync(`${DADOS}.tmp`, DADOS);
 }
 
 /** CSV simples (aspas duplas, vírgula, quebra de linha dentro de aspas). */

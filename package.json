@@ -12,7 +12,8 @@
     "render:samples": "tsx scripts/render-samples.ts",
     "render:stress": "tsx scripts/render-stress.ts",
     "inventario": "tsx scripts/inventario.ts",
-    "tm": "NODE_USE_ENV_PROXY=1 tsx scripts/tm-sync.ts"
+    "tm": "NODE_USE_ENV_PROXY=1 tsx scripts/tm-sync.ts",
+    "wiki-stats": "NODE_USE_ENV_PROXY=1 tsx scripts/wiki-stats.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.1",
