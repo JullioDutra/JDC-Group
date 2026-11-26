@@ -4,7 +4,7 @@ import { POSITION_LABEL, type MetricKey, type PlayerProfile } from '../game/type
 import type { Store } from '../store/types';
 import { queryKeys, queryTokens } from './keys';
 import { nameMatchesQuery, rankCandidates } from './rank';
-import type { Career, PlayerSources } from './sources';
+import type { Career, PlayerSources, WikiInfo } from './sources';
 import { STAT_KEYS, type LookupContext, type PlayerRecord, type StatKey } from './types';
 import { isNationalTeamLabel } from './wikidata';
 
@@ -279,19 +279,37 @@ async function careerOf(store: Store, sources: PlayerSources, id: string): Promi
   return career;
 }
 
-/** Clubes da Wikipédia com cache de 30 dias (null = sem página/caixa ou a fonte falhou). */
-async function wikiClubsOf(store: Store, sources: PlayerSources, id: string, wiki: Career['wiki']): Promise<string[] | null> {
-  const key = `wpclubs:v1:${id}`;
+/**
+ * Caixa de informação da Wikipédia (clubes, posições, seleção) com cache de
+ * 30 dias. null = sem página/caixa ou a fonte falhou.
+ */
+async function wikiInfoOf(store: Store, sources: PlayerSources, id: string, wiki: Career['wiki']): Promise<WikiInfo | null> {
+  const key = `wpinfo:v1:${id}`;
   const cached = await store.getCachedProfile(key).catch(() => undefined);
-  if (cached !== undefined) return cached ? cached.clubs : null;
+  if (cached !== undefined) return cached ? (cached as unknown as { info: WikiInfo }).info : null;
   try {
-    const clubs = await sources.wikipediaClubs(wiki);
-    await store.putCachedProfile(key, clubs ? ({ exists: true, name: id, clubs } as unknown as PlayerProfile) : null).catch(() => undefined);
-    return clubs;
+    const info: WikiInfo | null = sources.wikipediaInfo
+      ? await sources.wikipediaInfo(wiki)
+      : await sources.wikipediaClubs(wiki).then((clubs) => (clubs ? { clubs, positions: [], national: null } : null));
+    await store.putCachedProfile(key, info ? ({ exists: true, name: id, clubs: info.clubs, info } as unknown as PlayerProfile) : null).catch(() => undefined);
+    return info;
   } catch (error) {
-    console.error('clubes da Wikipédia falharam', id, error);
+    console.error('Wikipédia falhou', id, error);
     return null;
   }
+}
+
+/** Caixa da Wikipédia de uma ficha do Wikidata (pela página dela, que o cache da carreira já tem). */
+async function wikiInfoFor(store: Store, sources: PlayerSources, record: PlayerRecord): Promise<WikiInfo | null> {
+  if (!isWikidataId(record.id)) return null;
+  let career: Career | null = null;
+  try {
+    career = await careerOf(store, sources, record.id);
+  } catch (error) {
+    console.error('carreira do Wikidata falhou', record.id, error);
+  }
+  const wiki = career?.wiki;
+  return wiki && (wiki.pt || wiki.en) ? wikiInfoOf(store, sources, record.id, wiki) : null;
 }
 
 /** Q-id de uma ficha que só a IA tinha ('error' = a busca falhou agora). */
@@ -388,7 +406,7 @@ async function confirmClubs(
   if (playedForClub(team, record.clubs)) return { record, how: career ? 'wd' : 'ficha', unverified: false };
   const wiki = career?.wiki;
   if (wiki && (wiki.pt || wiki.en)) {
-    const clubs = await wikiClubsOf(store, sources, record.id, wiki);
+    const clubs = (await wikiInfoOf(store, sources, record.id, wiki))?.clubs;
     if (clubs?.some((c) => playedForClub(team, [c]))) {
       await store.addManualClub(record.id, { name: team.name, source: 'Wikipédia', at: today() }).catch((error) => console.error('gravar clube da Wikipédia falhou', error));
       return { record: { ...record, clubs: [...record.clubs, team.name] }, how: 'wp', unverified: false };
@@ -416,6 +434,27 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
     }
     let record: PlayerRecord | null = ranked.find((r) => r.fits)?.record ?? null;
     let outcome = 'base';
+
+    // Busca sob demanda no Wikidata: quem a carga ainda não alcançou entra na
+    // base na hora, como ficha conferida (antes de perguntar à IA).
+    if (!record && sources?.searchPlayers) {
+      const key = `wdsearch:v1:${q}`;
+      if ((await store.getCachedProfile(key).catch(() => undefined)) === undefined) {
+        try {
+          const found = (await sources.searchPlayers(query)).filter((r) => !candidates.some((c) => c.id === r.id));
+          if (found.length) {
+            await store.upsertPlayers(found);
+            candidates = [...candidates, ...found];
+            ranked = rankCandidates(candidates, q, ctx);
+            record = ranked.find((r) => r.fits)?.record ?? null;
+            if (record) outcome = 'wikidata';
+          }
+          await store.putCachedProfile(key, found.length ? ({ exists: true, name: q, clubs: [] } as unknown as PlayerProfile) : null).catch(() => undefined);
+        } catch (error) {
+          console.error('busca no Wikidata falhou', query, error);
+        }
+      }
+    }
 
     if (!record) {
       const negKey = `${NEG_VERSION}:neg:${q}#${contextKey(ctx)}`;
@@ -477,7 +516,30 @@ export function createPlayerLookup(store: Store, identify: IdentifySource, stats
       }
     }
 
+    // Posição da rodada que o Wikidata não tem: a Wikipédia confirma (e fica gravada).
+    if (sources && ctx?.position && record.positions.length && !record.positions.includes(ctx.position) && isWikidataId(record.id)) {
+      const info = await wikiInfoFor(store, sources, record);
+      if (info?.positions.includes(ctx.position)) {
+        await store.addManualPosition(record.id, { position: ctx.position, source: 'Wikipédia', at: today() }).catch((error) => console.error('gravar posição falhou', error));
+        record = { ...record, positions: [...record.positions, ctx.position] };
+        outcome += '+wp-posicao';
+      }
+    }
+
     const stat = isStatKey(ctx?.metric) ? ctx!.metric as StatKey : null;
+
+    // Jogos e gols pela seleção: a Wikipédia (caixa em inglês, com data de atualização) vale mais que a IA.
+    if (sources && (stat === 'intlCaps' || stat === 'intlGoals') && !record.manual?.stats?.[stat] && isWikidataId(record.id)) {
+      const national = (await wikiInfoFor(store, sources, record))?.national;
+      if (national) {
+        if (record.stats.intlCaps !== national.caps || record.stats.intlGoals !== national.goals) {
+          await store.setPlayerStat(record.id, 'intlCaps', national.caps).catch(() => undefined);
+          await store.setPlayerStat(record.id, 'intlGoals', national.goals).catch(() => undefined);
+        }
+        record = { ...record, stats: { ...record.stats, intlCaps: national.caps, intlGoals: national.goals } };
+        outcome += '+wp-selecao';
+      }
+    }
     if (stat && stats && needsStat(record, stat)) {
       const value = await fetchStat(store, stats, record, stat);
       if (value.stored) outcome += '+dado';

@@ -1,0 +1,878 @@
+{
+ "entity": {
+  "id": "Q311739",
+  "labels": {
+   "pt": {
+    "language": "pt",
+    "value": "Leônidas da Silva"
+   },
+   "en": {
+    "language": "en",
+    "value": "Leônidas"
+   },
+   "es": {
+    "language": "es",
+    "value": "Leônidas da Silva"
+   }
+  },
+  "sitelinks": {
+   "ptwikiquote": {
+    "title": "Leônidas da Silva"
+   },
+   "commonswiki": {
+    "title": "Category:Leônidas da Silva"
+   },
+   "dewiki": {
+    "title": "Leônidas da Silva"
+   },
+   "frwiki": {
+    "title": "Leônidas"
+   },
+   "eswiki": {
+    "title": "Leônidas da Silva"
+   },
+   "ruwiki": {
+    "title": "Да Силва, Леонидас"
+   },
+   "itwiki": {
+    "title": "Leônidas"
+   },
+   "jawiki": {
+    "title": "レオニダス・ダ・シルバ"
+   },
+   "nlwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "plwiki": {
+    "title": "Leônidas"
+   },
+   "ptwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "svwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "fawiki": {
+    "title": "لئونیداس دا سیلوا"
+   },
+   "hewiki": {
+    "title": "לאונידאס דה סילבה"
+   },
+   "trwiki": {
+    "title": "Leônidas"
+   },
+   "huwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "fiwiki": {
+    "title": "Leônidas"
+   },
+   "arwiki": {
+    "title": "ليونيداس دا سيلفا"
+   },
+   "nowiki": {
+    "title": "Leônidas da Silva"
+   },
+   "ukwiki": {
+    "title": "Леонідас да Сілва"
+   },
+   "kowiki": {
+    "title": "레오니다스 다 시우바"
+   },
+   "cawiki": {
+    "title": "Leônidas da Silva"
+   },
+   "cswiki": {
+    "title": "Leônidas da Silva"
+   },
+   "srwiki": {
+    "title": "Леонидас да Силва"
+   },
+   "rowiki": {
+    "title": "Leônidas da Silva"
+   },
+   "idwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "dawiki": {
+    "title": "Leônidas da Silva"
+   },
+   "bgwiki": {
+    "title": "Леонидас да Силва"
+   },
+   "aywiki": {
+    "title": "Leônidas da Silva"
+   },
+   "azbwiki": {
+    "title": "لئونیداس دا سیلوا"
+   },
+   "bnwiki": {
+    "title": "লিওনিদাস"
+   },
+   "brwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "elwiki": {
+    "title": "Λεονίντας ντα Σίλβα"
+   },
+   "euwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "glwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "kkwiki": {
+    "title": "Леонидас да Силва"
+   },
+   "mgwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "mkwiki": {
+    "title": "Леонидас (фудбалер)"
+   },
+   "mswiki": {
+    "title": "Leônidas da Silva"
+   },
+   "quwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "shwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "tgwiki": {
+    "title": "Леонидас"
+   },
+   "arzwiki": {
+    "title": "ليونيداس دا سيلفا"
+   },
+   "simplewiki": {
+    "title": "Leônidas"
+   },
+   "lvwiki": {
+    "title": "Leonidass"
+   },
+   "hywiki": {
+    "title": "Լեոնիդաս դա Սիլվա"
+   },
+   "zhwiki": {
+    "title": "李安尼達斯"
+   },
+   "enwiki": {
+    "title": "Leônidas (footballer, born 1913)"
+   },
+   "afwiki": {
+    "title": "Leônidas da Silva"
+   },
+   "eowiki": {
+    "title": "Leônidas da Silva"
+   }
+  },
+  "claims": {
+   "P54": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 80958,
+        "id": "Q80958"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1935-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1936-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+33",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+42",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 5014111,
+        "id": "Q5014111"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1934-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1934-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+29",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+27",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 38568,
+        "id": "Q38568"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1943-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1950-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+211",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+140",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 16320,
+        "id": "Q16320"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1933-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1933-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+25",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+28",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 17479,
+        "id": "Q17479"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1936-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1942-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+149",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+153",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 8250768,
+        "id": "Q8250768"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1931-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1932-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+51",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+55",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 2708265,
+        "id": "Q2708265"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1929-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1929-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+29",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+31",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 83459,
+        "id": "Q83459"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1932-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1946-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P1350": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+19",
+          "unit": "1"
+         }
+        }
+       }
+      ],
+      "P1351": [
+       {
+        "datavalue": {
+         "value": {
+          "amount": "+21",
+          "unit": "1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 2205407,
+        "id": "Q2205407"
+       }
+      }
+     },
+     "rank": "normal",
+     "qualifiers": {
+      "P580": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1935-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ],
+      "P582": [
+       {
+        "datavalue": {
+         "value": {
+          "time": "+1935-01-01T00:00:00Z",
+          "timezone": 0,
+          "before": 0,
+          "after": 0,
+          "precision": 9,
+          "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "P106": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 937857,
+        "id": "Q937857"
+       }
+      }
+     },
+     "rank": "normal"
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 628099,
+        "id": "Q628099"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P569": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "time": "+1913-11-06T00:00:00Z",
+        "timezone": 0,
+        "before": 0,
+        "after": 0,
+        "precision": 11,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+       }
+      }
+     },
+     "rank": "normal"
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "time": "+1913-09-06T00:00:00Z",
+        "timezone": 0,
+        "before": 0,
+        "after": 0,
+        "precision": 11,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P413": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 280658,
+        "id": "Q280658"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P1532": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 155,
+        "id": "Q155"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P27": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "entity-type": "item",
+        "numeric-id": 155,
+        "id": "Q155"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P2048": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "value": {
+        "amount": "+173",
+        "unit": "http://www.wikidata.org/entity/Q174728"
+       }
+      }
+     },
+     "rank": "normal"
+    }
+   ],
+   "P1477": []
+  }
+ },
+ "labels": {
+  "Q80958": {
+   "pt": "Botafogo de Futebol e Regatas",
+   "en": "Botafogo F.R."
+  },
+  "Q5014111": {
+   "pt": "Club de Regatas Vasco da Gama",
+   "en": "CR Vasco da Gama"
+  },
+  "Q38568": {
+   "pt": "São Paulo Futebol Clube",
+   "en": "São Paulo FC"
+  },
+  "Q16320": {
+   "pt": "Club Atlético Peñarol",
+   "en": "Club Atlético Peñarol"
+  },
+  "Q17479": {
+   "pt": "Clube de Regatas do Flamengo",
+   "en": "Clube de Regatas do Flamengo"
+  },
+  "Q8250768": {
+   "pt": "Bonsucesso Futebol Clube",
+   "en": "Bonsucesso Futebol Clube"
+  },
+  "Q2708265": {
+   "pt": "São Cristóvão de Futebol e Regatas",
+   "en": "São Cristóvão de Futebol e Regatas"
+  },
+  "Q83459": {
+   "pt": "Seleção Brasileira de Futebol",
+   "en": "Brazil men's national football team"
+  },
+  "Q2205407": {
+   "pt": "Sport Club Brasil",
+   "en": "Sport Club Brasil"
+  },
+  "Q280658": {
+   "pt": "avançado",
+   "en": "forward"
+  },
+  "Q155": {
+   "pt": "Brasil",
+   "en": "Brazil"
+  }
+ },
+ "wiki": {
+  "mbappe_en": "{{Infobox football biography\n| name = Kylian Mbappé\n| image = Kylian Mbappe France v Senegal 16 June 2026-391 (cropped).jpg\n| caption = Mbappé with [[France national football team|France]] in 2026\n| full_name = Kylian Mbappé Lottin\n| birth_date = {{birth date and age|1998|12|20|df=y}}\n| birth_place = [[Paris]], France\n| height = 1.78 m<ref>{{cite web |url=https://www.realmadrid.com/en-US/football/first-team/players/kylian-mbappe |title=Mbappé |publisher=Real Madrid CF |language=EN |access-date=10 September 2025 |archive-date=19 August 2024 |archive-url=https://web.archive.org/web/20240819144021/https://www.realmadrid.com/en-US/football/first-team/players/kylian-mbappe |url-status=live }}</ref>\n| position = [[Forward (association football)|Forward]]\n| current_club = [[Real Madrid CF|Real Madrid]]\n| club_number = 10\n| youth_years1 = 2004–2013\n| youth_clubs1 = [[AS Bondy|Bondy]]\n| youth_years2 = 2013–2015\n| youth_clubs2 = [[AS Monaco Reserves and Academy|Monaco]]\n| years1 = 2015–2016\n| clubs1 = [[AS Monaco FC II|Monaco II]]\n| caps1 = 12\n| goals1 = 4\n| years2 = 2015–2018\n| clubs2 = [[AS Monaco FC|Monaco]]\n| caps2 = 41\n| goals2 = 16\n| years3 = 2017–2018\n| clubs3 = → [[Paris Saint-Germain FC|Paris Saint-Germain]] (loan)\n| caps3 = 27\n| goals3 = 13\n| years4 = 2018–2024\n| clubs4 = [[Paris Saint-Germain FC|Paris Saint-Germain]]\n| caps4 = 178\n| goals4 = 162\n| years5 = 2024–\n| clubs5 = [[Real Madrid CF|Real Madrid]]\n| caps5 = 78<!--La Liga matches only-->\n| goals5 = 69<!--La Liga matches only-->\n| national_years1 = 2014\n| national_team1 = [[France national under-17 football team|France U17]]\n| national_caps1 = 2\n| national_goals1 = 0\n| national_years2 = 2016\n| national_team2 = [[France national under-19 football team|France U19]]\n| national_caps2 = 11\n| national_goals2 = 7\n| national_years3 = 2017–\n| national_team3 = [[France national football team|France]]\n| national_caps3 = 108\n| national_goals3 = [[List of international goals scored by Kylian Mbappé|67]]\n| medal_templates = {{Medal|Sport|Men's [[Association football|football]]}}\n{{Medal|Country|{{fb|FRA}}}}\n{{Medal|Comp|[[FIFA World Cup]]}}\n{{Medal|W|[[2018 FIFA World Cup|2018 Russia]]|}}\n{{Medal|RU|[[2022 FIFA World Cup|2022 Qatar]]|}}\n{{Medal|Competition|[[UEFA Nations League]]}}\n{{Medal|Winner|[[2021 UEFA Nations League Finals|2021 Italy]]|}}\n{{Medal|Third|[[2025 UEFA Nations League Finals|2025 Germany]]|}}\n{{Medal|Comp|[[UEFA European Under-19 Championship]]}}\n{{Medal|W|[[2016 UEFA European Under-19 Championship|2016 Germany]]|}}\n| club_update = 22:07, 21 November 2026 (UTC)\n| national_team_update = 22:22, 15 November 2026 (UTC)\n| module = {{Infobox person|embed=yes\n| signature = Kylian Mbappé sig.svg\n }}\n}}",
+  "havertz_en": "{{Infobox football biography\n| name = Kai Havertz\n| image = Kai Havertz Ecuador v Germany 25 June 2026-118.jpg\n| caption = Havertz with [[Germany national football team|Germany]] in 2026\n| full_name = Kai Lukas Havertz\n| birth_date = {{birth date and age|1999|6|11|df=y}}\n| birth_place = [[Aachen]], Germany\n| height = 1.93 m<ref name=\"HPL\">{{cite web |url=https://www.premierleague.com/players/20810/Kai-Havertz/overview |title=Kai Havertz: Overview |publisher=Premier League |access-date=29 June 2023}}</ref>\n| position = [[Attacking midfielder]], [[Forward (association football)|Forward]]<ref>{{cite web |url=https://www.chelseafc.com/en/teams/profile/kai-havertz |title=Kai Havertz |publisher=Chelsea F.C. |archive-url=https://web.archive.org/web/20230605005738/https://www.chelseafc.com/en/teams/profile/kai-havertz |archive-date=5 June 2023}}</ref>\n| current_club = [[Arsenal F.C.|Arsenal]]\n| club_number = 29\n| youth_years1 = 2003–2009\n| youth_clubs1 = Alemannia Mariadorf\n| youth_years2 = 2009–2010\n| youth_clubs2 = [[Alemannia Aachen]]\n| youth_years3 = 2010–2016\n| youth_clubs3 = [[Bayer 04 Leverkusen|Bayer Leverkusen]]\n| years1 = 2016–2020\n| clubs1 = [[Bayer 04 Leverkusen|Bayer Leverkusen]]\n| caps1 = 118\n| goals1 = 36\n| years2 = 2020–2023\n| clubs2 = [[Chelsea F.C.|Chelsea]]\n| caps2 = 91\n| goals2 = 19\n| years3 = 2023–\n| clubs3 = [[Arsenal F.C.|Arsenal]]\n| caps3 = 83\n| goals3 = 27\n| national_years1 = 2014–2015\n| national_team1 = [[Germany national under-16 football team|Germany U16]]\n| national_caps1 = 6\n| national_goals1 = 0\n| national_years2 = 2015–2016\n| national_team2 = [[Germany national under-17 football team|Germany U17]]\n| national_caps2 = 16\n| national_goals2 = 2\n| national_years3 = 2017–2018\n| national_team3 = [[Germany national under-19 football team|Germany U19]]\n| national_caps3 = 8\n| national_goals3 = 7\n| national_years4 = 2018–\n| national_team4 = [[Germany national football team|Germany]]\n| national_caps4 = 65\n| national_goals4 = 25\n| club_update = 19:40, 21 November 2026 (UTC)\n| national_team_update = 21:47, 16 November 2026 (UTC)\n}}",
+  "danilo_en": "{{Infobox football biography\n| name = Danilo\n| image = Danilo and Bilal El Khannouss at 2026 FIFA World Cup by YantsImages (cropped).jpg\n| caption = Danilo with [[Brazil national football team|Brazil]] in 2026\n| full_name = Danilo Luiz da Silva<ref>{{cite web|url=https://www.premierleague.com/news/465277|title=Squads for 2017/18 Premier League confirmed|publisher=Premier League|date=1 September 2017|access-date=9 September 2017}}</ref>\n| birth_date = {{birth date and age|1991|7|16|df=y}}<ref>{{cite web |url=https://www.fifadata.com/documents/FWC/2018/pdf/FWC_2018_SQUADLISTS.PDF |title=FIFA World Cup Russia 2018: List of Players: Brazil |publisher=FIFA |page=4 |date=15 July 2018 |archive-url=https://web.archive.org/web/20190611000407/https://www.fifadata.com/documents/FWC/2018/pdf/FWC_2018_SQUADLISTS.PDF |archive-date=11 June 2019}}</ref>\n| birth_place = [[Bicas]], Minas Gerais, Brazil<ref name=\"RMAProfile\"/>\n| height = 1.84 m<ref name=\"RMAProfile\">{{cite web|url=http://www.realmadrid.com/futbol/plantilla/danilo-luiz-da-silva?pid=1378720068423|title=Danilo|work=Real Madrid C.F. - Web Oficial |publisher=[[Real Madrid CF]]|access-date=16 June 2022|archive-url=https://web.archive.org/web/20170708221114/http://www.realmadrid.com/futbol/plantilla/danilo-luiz-da-silva?pid=1378720068423|archive-date=8 July 2017}}</ref>\n| position = [[Centre-back (association football)|Centre-back]], [[Full-back (association football)|right-back]]\n| current_club = [[CR Flamengo|Flamengo]]\n| club_number = 13\n| youth_years1 = 2004–2005\n| youth_clubs1 = [[Tupynambás Futebol Clube|Tupynambás]]\n| youth_years2 = 2006–2009\n| youth_clubs2 = [[América Futebol Clube (MG)|América Mineiro]]\n| years1 = 2009–2010\n| clubs1 = [[América Futebol Clube (MG)|América Mineiro]]\n| caps1 = 29\n| goals1 = 2\n| years2 = 2010–2012\n| clubs2 = [[Santos FC|Santos]]\n| caps2 = 62\n| goals2 = 5\n| years3 = 2012–2015\n| clubs3 = [[FC Porto|Porto]]\n| caps3 = 91\n| goals3 = 11\n| years4 = 2015–2017\n| clubs4 = [[Real Madrid CF|Real Madrid]]\n| caps4 = 41\n| goals4 = 3\n| years5 = 2017–2019\n| clubs5 = [[Manchester City F.C.|Manchester City]]\n| caps5 = 34\n| goals5 = 4\n| years6 = 2019–2025\n| clubs6 = [[Juventus FC|Juventus]]\n| caps6 = 156\n| goals6 = 8\n| years7 = 2025–\n| clubs7 = [[CR Flamengo|Flamengo]]\n| caps7 = 39\n| goals7 = 2\n| national_years1 = 2011\n| national_team1 = [[Brazil national under-20 football team|Brazil U20]]\n| national_caps1 = 15\n| national_goals1 = 2\n| national_years2 = 2012\n| national_team2 = [[Brazil national under-23 football team|Brazil Olympic]]\n| national_caps2 = 4\n| national_goals2 = 1\n| national_years3 = 2011–2026\n| national_team3 = [[Brazil national football team|Brazil]]\n| national_caps3 = 75\n| national_goals3 = 1\n| medal_templates = {{MedalCountry|{{fb|BRA}}}} \n{{MedalCompetition|[[Copa América]]}}\n{{Medal|RU|[[2021 Copa América|2021 Brazil]]|}}\n{{MedalCompetition|[[Football at the Summer Olympics|Summer Olympics]]}}\n{{MedalSilver|[[2012 Summer Olympics|2012 London]]|[[Football at the 2012 Summer Olympics – Men's tournament|Team]]}}\n| club_update = 23:37, 21 November 2026 (UTC)\n| national_team_update = 22:20, 5 July 2026 (UTC)\n}}"
+ }
+}

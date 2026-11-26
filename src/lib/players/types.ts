@@ -79,6 +79,15 @@ export interface ManualData {
   aliases?: string[];
   /** Clubes confirmados pelo admin ou pela Wikipédia; a carga do Wikidata nunca apaga. */
   clubs?: ManualClub[];
+  /** Posições confirmadas pela Wikipédia (ou pelo admin) que o Wikidata não tem. */
+  positions?: ManualPosition[];
+}
+
+export interface ManualPosition {
+  position: Position;
+  source: string;
+  /** AAAA-MM-DD */
+  at: string;
 }
 
 /** Contexto da jogada: resolve homônimos e diz qual número o tema precisa. */

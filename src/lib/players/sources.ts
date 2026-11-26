@@ -1,4 +1,6 @@
-import { USER_AGENT, fetchClubs, isNationalTeamLabel, isYouthOrReserve, type Fetcher } from './wikidata';
+import type { Position } from '../game/types';
+import type { PlayerRecord } from './types';
+import { USER_AGENT, fetchClubs, isNationalTeamLabel, isYouthOrReserve, mapPosition, type Fetcher } from './wikidata';
 
 /**
  * Fontes para conferir a carreira de um jogador na hora da jogada (rodada 14).
@@ -26,6 +28,8 @@ export interface Career {
   sitelinks: number;
   birthDate: string | null;
   label: string | null;
+  /** Ano da primeira passagem por clube profissional. */
+  debutYear?: number | null;
 }
 
 export interface PlayerSources {
@@ -33,8 +37,15 @@ export interface PlayerSources {
   career(id: string): Promise<Career | null>;
   /** Clubes da caixa de informação da Wikipédia (pt e en). null = sem página ou sem caixa. */
   wikipediaClubs(wiki: Career['wiki']): Promise<string[] | null>;
+  /** Caixa de informação inteira (clubes, posições, seleção). null = sem página ou sem caixa. */
+  wikipediaInfo?(wiki: Career['wiki']): Promise<WikiInfo | null>;
   /** Q-id do jogador no Wikidata pelo nome (e ano de nascimento, se souber). null = não achou. */
   findId(name: string, birthYear: number | null): Promise<string | null>;
+  /**
+   * Jogadores do Wikidata com esse nome, em fichas completas para entrar na
+   * base (busca sob demanda: quem a carga ainda não alcançou). [] = nenhum.
+   */
+  searchPlayers?(name: string): Promise<PlayerRecord[]>;
 }
 
 const WIKIDATA = 'https://www.wikidata.org';
@@ -143,7 +154,9 @@ export function buildCareer(e: Entity, labels: Map<string, { pt?: string; en?: s
     teams.set(s.team, entry);
   }
   const all = [...teams.values()];
-  const clubs = all.filter((t) => !t.nat).sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999)).map((t) => t.label);
+  const sorted = all.filter((t) => !t.nat).sort((a, b) => (a.start ?? 9999) - (b.start ?? 9999));
+  const clubs = sorted.map((t) => t.label);
+  const starts = sorted.map((t) => t.start).filter((y): y is number => !!y);
   const national = all.filter((t) => t.nat);
   const caps = national.reduce((a, t) => a + t.apps, 0);
   return {
@@ -154,6 +167,7 @@ export function buildCareer(e: Entity, labels: Map<string, { pt?: string; en?: s
     sitelinks: Object.keys(e.sitelinks ?? {}).filter((k) => k.endsWith('wiki') && k !== 'commonswiki').length,
     birthDate: birthOf(e),
     label: e.labels?.pt?.value ?? e.labels?.en?.value ?? null,
+    debutYear: starts.length ? Math.min(...starts) : null,
   };
 }
 
@@ -216,19 +230,104 @@ function clubNames(value: string): string[] {
   return out;
 }
 
-/** Clubes profissionais da caixa de informação de um artigo (pt ou en). */
-export function parseInfoboxClubs(wikitext: string): string[] {
+/** Campos da caixa, na ordem: nome em minúsculas → valor (sem as referências). */
+function infoboxFields(wikitext: string): Array<[string, string]> | null {
   const box = infobox(wikitext);
-  if (!box) return [];
-  const out: string[] = [];
+  if (!box) return null;
+  const out: Array<[string, string]> = [];
   for (const field of box.split(/\n\s*\|/).slice(1)) {
     const eq = field.indexOf('=');
     if (eq < 0) continue;
-    const name = field.slice(0, eq).trim();
-    if (!CLUB_FIELD.test(name)) continue;
-    for (const club of clubNames(field.slice(eq + 1))) if (!out.includes(club) && !isNationalTeamLabel(club) && !isYouthOrReserve(club)) out.push(club);
+    const value = field.slice(eq + 1).replace(/<ref[^>]*\/>|<ref[^>]*>[\s\S]*?<\/ref>|<!--[\s\S]*?-->/g, '').trim();
+    out.push([field.slice(0, eq).trim().toLowerCase(), value]);
   }
   return out;
+}
+
+/** Clubes profissionais da caixa de informação de um artigo (pt ou en). */
+export function parseInfoboxClubs(wikitext: string): string[] {
+  const out: string[] = [];
+  for (const [name, value] of infoboxFields(wikitext) ?? []) {
+    if (!CLUB_FIELD.test(name)) continue;
+    for (const club of clubNames(value)) if (!out.includes(club) && !isNationalTeamLabel(club) && !isYouthOrReserve(club)) out.push(club);
+  }
+  return out;
+}
+
+/** Posição em pt ou en ("Goleiro", "Zagueiro", "Winger", "Centre-back"...). */
+export function mapAnyPosition(label: string): Position | null {
+  const l = label.toLowerCase();
+  if (/goleiro|guarda-redes|arqueiro/.test(l)) return 'GOL';
+  if (/zagueiro|defensor|lateral|beque|l[ií]bero|defesa|ala\b/.test(l)) return 'DEF';
+  if (/volante|meia|m[eé]dio|meio[- ]campo|meio-campista|armador/.test(l)) return 'MEI';
+  if (/atacante|ponta|centroavante|avan[cç]ado|extremo|segundo atacante/.test(l)) return 'ATA';
+  return mapPosition(label);
+}
+
+/** Posições da caixa ("position" em en, "posição" em pt), na ordem. */
+export function parseInfoboxPositions(wikitext: string): Position[] {
+  const out: Position[] = [];
+  for (const [name, value] of infoboxFields(wikitext) ?? []) {
+    if (name !== 'position' && name !== 'posição' && name !== 'posicao') continue;
+    for (const piece of value.split(/,|\/|<br\s*\/?>|\be\b|\band\b/i)) {
+      const text = piece.replace(/\[\[([^\]|]+\|)?([^\]]+)\]\]/g, '$2').replace(/\{\{[^}]*\}\}/g, '').trim();
+      const p = text ? mapAnyPosition(text) : null;
+      if (p && !out.includes(p)) out.push(p);
+    }
+  }
+  return out;
+}
+
+const numberIn = (value: string | undefined) => {
+  const m = (value ?? '').replace(/\[\[[^\]|]*\|/g, '').match(/\d+/);
+  return m ? Number(m[0]) : null;
+};
+
+/**
+ * Jogos e gols pela seleção principal (en: national_teamN / nationalteamN;
+ * pt: seleçãoN). Seleção de base, olímpica ou B não conta. Se o jogador
+ * defendeu duas seleções principais, vale a de mais jogos.
+ */
+export function parseInfoboxNational(wikitext: string): { caps: number; goals: number } | null {
+  const fields = new Map(infoboxFields(wikitext) ?? []);
+  let best: { caps: number; goals: number } | null = null;
+  for (let i = 1; i <= 12; i++) {
+    const team = fields.get(`national_team${i}`) ?? fields.get(`nationalteam${i}`) ?? fields.get(`seleção${i}`) ?? fields.get(`selecao${i}`);
+    if (!team) continue;
+    const label = team.replace(/\{\{\s*(pequeno|small)\s*\|([^}]*)\}\}/gi, ' $2');
+    if (isYouthOrReserve(label) || /\bolympic|ol[ií]mpic|sub-?\d{2}|\bu-?\d{2}\b|under-\d{2}/i.test(label)) continue;
+    const caps = numberIn(fields.get(`national_caps${i}`) ?? fields.get(`nationalcaps${i}`) ?? fields.get(`seleção-jogos${i}`));
+    const goals = numberIn(fields.get(`national_goals${i}`) ?? fields.get(`nationalgoals${i}`) ?? fields.get(`seleção-gols${i}`));
+    if (caps === null) continue;
+    if (!best || caps > best.caps) best = { caps, goals: goals ?? 0 };
+  }
+  return best;
+}
+
+export interface WikiInfo {
+  clubs: string[];
+  positions: Position[];
+  national: { caps: number; goals: number } | null;
+}
+
+/**
+ * Tudo da caixa de informação: clubes (pt + en), posições (pt + en) e
+ * seleção (en primeiro, que traz a data da atualização; pt se faltar).
+ */
+export async function wikipediaInfo(wiki: Career['wiki'], fetcher: Fetcher = fetch): Promise<WikiInfo | null> {
+  const info: WikiInfo = { clubs: [], positions: [], national: null };
+  let found = false;
+  for (const lang of ['en', 'pt'] as const) {
+    const title = wiki[lang];
+    if (!title) continue;
+    const text = await getText(rawUrl(lang, title), fetcher, 5_000);
+    if (!text || !infobox(text)) continue;
+    found = true;
+    for (const c of parseInfoboxClubs(text)) if (!info.clubs.includes(c)) info.clubs.push(c);
+    for (const p of parseInfoboxPositions(text)) if (!info.positions.includes(p)) info.positions.push(p);
+    info.national ??= parseInfoboxNational(text);
+  }
+  return found ? info : null;
 }
 
 const rawUrl = (lang: 'pt' | 'en', title: string) => `https://${lang}.wikipedia.org/w/index.php?title=${encodeURIComponent(title.replace(/ /g, '_'))}&action=raw`;
@@ -272,10 +371,92 @@ export async function findWikidataId(name: string, birthYear: number | null, fet
   return null;
 }
 
+// ---------- Busca sob demanda (ficha completa) ----------
+
+/** Várias entidades num pedido (rótulos pt/en/es, propriedades e páginas). */
+export async function fetchEntities(ids: string[], fetcher: Fetcher = fetch, timeoutMs = 6_000): Promise<Entity[]> {
+  if (!ids.length) return [];
+  const url = `${WIKIDATA}/w/api.php?action=wbgetentities&ids=${ids.join('|')}&props=labels|claims|sitelinks&languages=pt|en|es&format=json`;
+  const data = (await getJson(url, fetcher, timeoutMs)) as { entities?: Record<string, Entity> };
+  return ids.map((id) => data.entities?.[id]).filter((e): e is Entity => !!e && !!e.claims);
+}
+
+const heightOf = (e: Entity): number | null => {
+  const v = claimsOf(e, 'P2048')[0]?.mainsnak.datavalue?.value as { amount?: string; unit?: string } | undefined;
+  const n = Number(v?.amount);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const cm = Math.round(n < 3 ? n * 100 : n);
+  return cm >= 150 && cm <= 215 ? cm : null;
+};
+
+const textOf = (s: Snak | undefined) => (s?.datavalue?.value as { text?: string } | undefined)?.text ?? null;
+
+/**
+ * Ficha completa a partir da entidade e dos rótulos (times, posições e países):
+ * o mesmo formato da carga (nome em pt, nome completo como apelido, seleção
+ * pelo país do esporte ou pela cidadania, clubes sem base nem seleção).
+ */
+export function recordFromEntity(e: Entity, labels: Map<string, { pt?: string; en?: string }>): PlayerRecord | null {
+  const name = e.labels?.pt?.value ?? e.labels?.en?.value;
+  if (!name) return null;
+  const aliases: string[] = [];
+  for (const n of [e.labels?.en?.value, e.labels?.es?.value, textOf(claimsOf(e, 'P1477')[0]?.mainsnak)]) {
+    if (n && n !== name && !aliases.includes(n)) aliases.push(n);
+  }
+  const positions: Position[] = [];
+  for (const c of claimsOf(e, 'P413')) {
+    const label = labels.get(itemId(c.mainsnak) ?? '')?.en;
+    const p = label ? mapPosition(label) : null;
+    if (p && !positions.includes(p)) positions.push(p);
+  }
+  const country = (p: string) => claimsOf(e, p).map((c) => labels.get(itemId(c.mainsnak) ?? '')?.pt).find((l): l is string => !!l) ?? null;
+  const career = buildCareer(e, labels);
+  return {
+    id: e.id,
+    name,
+    aliases: aliases.slice(0, 6),
+    positions,
+    nationality: country('P1532') ?? country('P27'),
+    birthDate: career.birthDate,
+    heightCm: heightOf(e),
+    clubs: career.clubs,
+    debutYear: career.debutYear ?? null,
+    sitelinks: career.sitelinks,
+    stats: career.intlCaps ? { intlCaps: career.intlCaps, intlGoals: career.intlGoals ?? 0 } : {},
+    source: 'wikidata',
+  };
+}
+
+/**
+ * Busca sob demanda: futebolistas do Wikidata com esse nome (busca em pt e,
+ * sem resultado, em en), em fichas completas. São 3 pedidos: busca,
+ * entidades e rótulos dos times, posições e países.
+ */
+export async function searchWikidataPlayers(name: string, fetcher: Fetcher = fetch, max = 6): Promise<PlayerRecord[]> {
+  let ids: string[] = [];
+  for (const lang of ['pt', 'en'] as const) {
+    const url = `${WIKIDATA}/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${lang}&uselang=${lang}&type=item&limit=12&format=json`;
+    const data = (await getJson(url, fetcher, 5_000)) as { search?: Array<{ id: string; description?: string }> };
+    ids = (data.search ?? []).filter((h) => FOOTBALL_WORDS.test(h.description ?? '')).map((h) => h.id).slice(0, max);
+    if (ids.length) break;
+  }
+  const entities = (await fetchEntities(ids, fetcher)).filter(isFootballer);
+  if (!entities.length) return [];
+  const refs = new Set<string>();
+  for (const e of entities) {
+    for (const s of stintsOf(e)) refs.add(s.team);
+    for (const p of ['P413', 'P1532', 'P27']) for (const c of claimsOf(e, p)) if (itemId(c.mainsnak)) refs.add(itemId(c.mainsnak)!);
+  }
+  const labels = await fetchLabels([...refs], fetcher);
+  return entities.map((e) => recordFromEntity(e, labels)).filter((r): r is PlayerRecord => !!r);
+}
+
 export function defaultSources(fetcher: Fetcher = fetch): PlayerSources {
   return {
     career: (id) => wikidataCareer(id, fetcher),
     wikipediaClubs: (wiki) => wikipediaClubs(wiki, fetcher),
+    wikipediaInfo: (wiki) => wikipediaInfo(wiki, fetcher),
     findId: (name, year) => findWikidataId(name, year, fetcher),
+    searchPlayers: (name) => searchWikidataPlayers(name, fetcher),
   };
 }

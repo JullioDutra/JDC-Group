@@ -1652,3 +1652,83 @@ Páginas da Wikipédia em inglês, lidas no texto original em 26/11/2026 (citam 
 - as novidades.
 
 Total: 191 testes passando e build ok.
+
+## 32. Mais dados, mais correções e um roteiro para ficar cada vez mais completo (26/11)
+
+> Pedido: "Pode seguir. Depois foque em adicionar mais dados, deixar mais completo. Fazer mais correções. Planejamento de deixar cada vez mais completo."
+
+### 32.1 Onde falta dado hoje
+
+**Jogadores** (`/api/health`, últimas 24 h, em 26/11):
+- 173 buscas em que nem a base nem a IA acharam o jogador;
+- 196 jogadores que só a IA achou;
+- 66 jogadores achados, mas fora da posição ou do clube da rodada.
+
+A carga do Wikidata está na parte 9 de 30 (Alemanha). Quem ainda não entrou depende da IA para existir. Os jogos e gols pela seleção (temas 7 e 8) vêm da IA, porque a carga antiga perdia esses números (seção 31).
+
+**Conteúdo** (script de inventário, 26/11):
+
+| Jogo | Itens | Observação |
+|---|---|---|
+| Top 100 | 22 listas | só 1 de futebol (estádios do Brasil) |
+| Que Time | 52 escalações | nunca conferidas em lote contra as súmulas |
+| Conexões | 59 | o mais magro dos jogos mistos |
+| Sobrevivente | 98 listas | |
+| Top 10 | 71 listas | |
+| Quem é | 188 | |
+| Intruso | 193 | |
+| Fato ou Fake | 291 | |
+| Linha do Tempo | 294 | |
+| Emoji | 277 | |
+| Quiz Relâmpago | 377 | |
+| Chute Certo | 242 | |
+| Anagrama | 469 | |
+| Impostor | 2.326 | |
+
+### 32.2 Metas
+
+**Dados de jogador:**
+1. **Busca sob demanda no Wikidata.** Jogador que não está na base é procurado no Wikidata (busca, ocupação futebolista, nome coerente) e entra na hora como ficha conferida, com posição, seleção, nascimento, altura e clubes. Isso vem antes de perguntar à IA, que fica só para quem não está no Wikidata.
+2. **Jogos e gols pela seleção da Wikipédia** (caixa de informação em inglês, seleção principal), para os temas 7 e 8. Ordem: correção do admin, depois Wikipédia, depois IA.
+3. **Posição pela Wikipédia** quando o Wikidata não tem a posição pedida na rodada. Fica gravada em `manual.positions`, que a carga não apaga.
+
+**Correções:**
+4. **Que Time:** conferir as 52 escalações contra as súmulas da Wikipédia e corrigir o que divergir.
+5. **Testes de qualidade em todo o conteúdo:**
+   - Conexões com 16 itens diferentes;
+   - Intruso sem o intruso entre os membros;
+   - Sobrevivente sem item repetido;
+   - Top 100 com posições de 1 a 100;
+   - ids únicos.
+
+   Corrigir tudo o que os testes encontrarem.
+
+**Mais conteúdo:**
+6. **Que Time:** +10 escalações de finais, tiradas das súmulas da Wikipédia.
+7. **Top 100:** +2 listas de futebol (jogadores com mais jogos por seleção; maiores estádios de futebol do mundo).
+8. **Sobrevivente** +6 e **Conexões** +6, com listas fechadas e conferidas.
+
+**Roteiro contínuo:**
+9. Script de inventário no repositório (`npm run inventario`), com o total por jogo e por assunto e os itens de 2025/26. Toda rodada começa por ele.
+
+### 32.3 Fontes
+
+- **Wikidata:** página da entidade, busca e rótulos.
+- **Wikipédia em inglês e português:** caixas de informação; súmulas das finais; "List of men's footballers with 100 or more international caps" (atualizada em 17/11/2026, cita a FIFA); "List of association football stadiums by capacity".
+- Tudo é lido no texto original da página e conferido em 26/11/2026.
+
+### 32.4 O que fica de fora
+
+- **Números de carreira (gols, jogos, assistências):** a caixa da Wikipédia em inglês conta só a liga, e o tema é "na carreira". Continuam vindo da IA ou da correção do admin.
+- **Artilheiros da Champions e de seleções no Top 100:** as listas da Wikipédia têm menos de 100 nomes (52 e 86).
+- **Finais de 2026 ainda por jogar:** Libertadores (28/11) e Copa do Brasil (6/12).
+
+### 32.5 Como fica cada vez mais completo (roteiro)
+
+1. **Toda rodada:** rodar `npm run inventario`, pegar os três jogos mais magros e pôr meta e fonte para cada um.
+2. **Base de jogadores:**
+   - a carga diária segue o plano, com lendas e reparo das seleções;
+   - a busca sob demanda cobre quem a carga ainda não alcançou;
+   - toda passagem e posição confirmadas fora do Wikidata ficam gravadas com a fonte.
+3. **Erros que o grupo achar:** cada caso vira teste com o dado real (como Fábio e Domingos da Guia na rodada 14).
+4. **Temporada:** quando uma competição termina (Libertadores, Copa do Brasil, Brasileirão, ligas europeias), o resultado entra na rodada seguinte, com fonte.
