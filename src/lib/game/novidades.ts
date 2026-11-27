@@ -26,6 +26,16 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    id: '2026-11-27',
+    date: '27/11',
+    items: [
+      { head: 'Jogo novo: Cravada', lines: ['Mande: abrir cravada. O bot dá um ranking', 'e pede uma posição: quem é o 35º?'] },
+      { head: 'Como pontua', lines: ['1 palpite por pessoa. Cravou: 100; perto', 'vale mais; fora da lista: 0.'] },
+      { head: 'Cravada: 98 listas', lines: ['Artilheiros, Bola de Ouro 2026, tabelas', 'de 2025/26, seleções e transferências.'] },
+      { head: 'Escolha o tema', lines: ['abrir cravada artilheiros, premier,', 'brasileirão... (temas da cravada).'] },
+    ],
+  },
+  {
     // Repete os itens de 26/11d: com os jogos pausados, quase nenhum grupo viu.
     id: '2026-11-26e',
     date: '26/11',

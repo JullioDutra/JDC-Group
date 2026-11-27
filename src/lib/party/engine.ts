@@ -65,6 +65,8 @@ import { isImpostorOnly } from '../game/groupMode';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
 import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
+import { cravadaChoice, cravadaThemesText } from './content/cravada';
+import { newCravada } from './cravada';
 import { ONE_X_ONE, freshFirst, freshPick } from './common';
 
 const LOBBY_TTL_MS = 15 * 60_000;
@@ -124,6 +126,8 @@ export function parsePartyStart(norm: string): { game: PartyGame; rest: string }
   // "abrir impostor do futebol" sem outro tema = tema futebol.
   if (imp) return { game: 'impostor', rest: imp[4] ?? (imp[3] ? 'futebol' : '') };
   if (/^(abrir|jogar) (o |a )?(rostos? borrados?|fotos? borradas?|caras? borradas?)$/.test(norm)) return { game: 'rosto', rest: '' };
+  const cv = norm.match(/^(abrir|jogar) (a |o )?(cravada|crava|posicao|qual a posicao|ranking cego)(?: (.+))?$/);
+  if (cv) return { game: 'cravada', rest: cv[4] ?? '' };
   const ana = norm.match(/^(abrir|jogar) (o )?anagramas?(?: (?:de |do |da |dos |das )?(.+))?$/);
   if (ana) return { game: 'anagrama', rest: ana[3] ?? '' };
   if (/^(abrir|jogar|desafio) (a )?(grade|grade 3x3|grade 3 x 3|jogo da velha)$/.test(norm)) return { game: 'grade', rest: '' };
@@ -222,6 +226,11 @@ export async function createParty(
     const theme = rest && !['futebol', 'geral'].includes(rest) ? findAnagramTheme(rest) : undefined;
     if (rest && !['futebol', 'geral'].includes(rest) && !theme) return [text(anagramThemesText(`Não achei o tema "${rest}".`))];
     state = { ...base('anagrama', host, nowMs), ...newAnagrama(theme ? theme.category : contentCategory(rest, ANAGRAMS), theme?.theme ?? null) } as PartyState;
+  } else if (start.game === 'cravada') {
+    // "abrir cravada artilheiros": tema; "futebol"/"geral"/"história": a categoria; sem nada: a mistura.
+    const choice = cravadaChoice(start.rest);
+    if (!choice) return [text(cravadaThemesText(`Não achei o tema "${start.rest.trim()}".`))];
+    state = { ...base('cravada', host, nowMs), ...newCravada(choice.category, choice.theme, choice.listIds) } as PartyState;
   } else if (MODULES[start.game]) {
     state = { ...base(start.game, host, nowMs), ...MODULES[start.game]!.create() } as PartyState;
   } else if (start.game === 'alfabeto') {
@@ -299,6 +308,16 @@ function lobbyCaption(state: PartyState): string {
         ? `🎭🎭 *2 impostores* (vale com ${IMPOSTOR_TWO_MIN} ou mais na mesa).`
         : `Com ${IMPOSTOR_TWO_MIN} ou mais na mesa, o anfitrião pode mandar *2 impostores*.`,
       `${state.host.name}, mande *começar* quando todos entrarem (mínimo ${cfg.minPlayers}).`,
+    );
+  } else if (state.game === 'cravada') {
+    const cat: Record<string, string> = { futebol: 'futebol', geral: 'conhecimentos gerais', historia: 'história', anime: 'animes', politica: 'política' };
+    lines.push(
+      state.theme
+        ? `Tema: *${state.theme}*.`
+        : state.category
+          ? `Categoria: *${cat[state.category] ?? state.category}*.`
+          : 'Temas misturados: 4 rodadas de futebol e 1 de conhecimentos gerais. Para escolher: *abrir cravada artilheiros*, *premier*, *bola de ouro*... (*temas da cravada*).',
+      `${state.host.name}, mande *começar* quando todos entrarem.`,
     );
   } else {
     lines.push(`${state.host.name}, mande *começar* quando todos entrarem.`);

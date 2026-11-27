@@ -181,7 +181,8 @@ export type PartyGame =
   | 'anagrama'
   | 'top100'
   | 'impostor'
-  | 'rosto';
+  | 'rosto'
+  | 'cravada';
 
 export interface PartyPlayer {
   jid: string;
@@ -606,6 +607,29 @@ export interface RostoParty extends PartyBase {
   photos?: Array<{ id: string; name: string; aliases: string[]; faces: Array<[number, number, number, number]>; credit: string; upload?: boolean }>;
 }
 
+/**
+ * Cravada: o bot dá um ranking e uma posição ("quem é o 35º?"). Cada um manda
+ * 1 nome; cravou a posição leva mais, perto leva menos, fora da lista zera.
+ */
+export interface CravadaParty extends PartyBase {
+  game: 'cravada';
+  /** Categoria pedida (null = mistura: futebol e 1 rodada geral). */
+  category: ContentCategory | null;
+  /** Tema escolhido ("artilheiros", "premier"...) e as listas dele. */
+  theme: string | null;
+  themeLists: string[];
+  round: number;
+  totalRounds: number;
+  /** Lista e posição pedida de cada rodada. */
+  rounds: Array<{ listId: string; rank: number }>;
+  /** Palpites da rodada (jid → o que mandou e o item da lista; -1 = fora da lista). */
+  guesses: Record<string, { text: string; index: number }>;
+  /** Ordem em que os palpites chegaram (desempate). */
+  arrival: string[];
+  /** Rodada já revelada. */
+  closed: boolean;
+}
+
 /** Leilão de Craques: orçamento, lances no chat, overall escondido até o fim. */
 export interface LeilaoParty extends PartyBase {
   game: 'leilao';
@@ -647,7 +671,8 @@ export type PartyState =
   | AnagramaParty
   | Top100Party
   | ImpostorParty
-  | RostoParty;
+  | RostoParty
+  | CravadaParty;
 
 export type SessionState = MatchState | PartyState;
 

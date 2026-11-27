@@ -56,6 +56,8 @@ export const PARTY_CONFIG: Record<PartyGame, PartyConfig> = {
   impostor: { name: 'Impostor', maxPlayers: 10, minPlayers: 4, joinUntil: 0, seconds: 40 },
   // Rosto Borrado: 15 s por etapa (3 etapas de borrão), 8 fotos.
   rosto: { name: 'Rosto Borrado', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 15, rounds: 8 },
+  // Cravada: 60 s por rodada (fecha antes se todos palpitarem), 5 rodadas.
+  cravada: { name: 'Cravada', maxPlayers: 15, minPlayers: 2, joinUntil: 2, seconds: 60, rounds: 5 },
 };
 
 /** Jogos 1 x 1: quem aceitar entra e a partida começa sozinha. */

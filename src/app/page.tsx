@@ -31,6 +31,7 @@ const COMMANDS: Array<[string, string]> = [
   ['abrir linha do tempo', 'ponha 4 acontecimentos em ordem'],
   ['abrir fato ou fake', 'verdade ou mito?'],
   ['abrir rosto borrado', 'foto do craque com só o rosto borrado'],
+  ['abrir cravada', 'ranking + posição: quem é o 35º? Cravou, 100'],
   ['… política / história', 'categoria no fim do comando (política só se pedir)'],
   ['entrar · começar', 'entra na sala · anfitrião dá a largada'],
   ['próxima', 'pula a pausa entre rodadas'],

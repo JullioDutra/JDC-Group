@@ -1979,3 +1979,103 @@ A coleta leu os 10.668 alvos. Depois disso, a leitura aprendeu outros formatos d
 | Fotos do Rosto Borrado | pôr e tirar | ✅ com marcação do rosto, prévia do borrão, esconder e remarcar as fixas |
 | Testes | casos novos | ✅ `tests/goleiros.test.ts` (3) e `tests/admin-paginas.test.ts` (4); 224 no total |
 
+
+## 37. Jogo novo: Cravada (acerte quem está na posição) (27/11)
+
+> Pedido: "O jogo vai dar um tema, exemplo os 100 maiores goleadores da história, e vai pedir uma posição, exemplo o 35. Os jogadores devem buscar acertar quem tá nessa posição. Somente um palpite por pessoa e pode ser umas 5 rodadas pedindo posições diferentes. Quem cravar leva mais ponto, quem chegar mais perto também, e quanto mais afastado menos ponto. Se tiver fora da lista, zerado. Quem acumular mais pontos vence. Tem sempre que revelar qual a posição em que está o que a pessoa escolheu. Pode ser vários temas durante uma rodada. Já adicione bastante dados e conteúdo nesse, pode até usar outras listas."
+
+### 37.1 Regras
+
+- **Comando:**
+  - *abrir cravada*: mistura os temas;
+  - *abrir cravada futebol* ou *abrir cravada geral*: só um lado;
+  - *abrir cravada* + tema (ex.: *artilheiros*, *bola de ouro*, *premier*): as 5 rodadas na mesma lista, cada uma numa posição.
+  - *temas da cravada* mostra os temas.
+- **Rodadas:** 5. Cada rodada traz uma lista e uma posição ("Os maiores artilheiros das Copas. Quem é o *35º*?"). Sem tema escolhido, cada rodada é de uma lista diferente.
+- **Palpite:** 1 por pessoa em cada rodada (o primeiro nome que mandar vale e não dá para trocar). O bot só marca 📌. A posição de cada palpite fica escondida até o fim da rodada, para ninguém se guiar pelo palpite do outro.
+- **Tempo:** 60 s por rodada. A rodada fecha antes se todos já palpitaram.
+- **Pontos:**
+  - Cravou a posição: 100.
+  - Errou a posição, mas o nome está na lista: quanto mais perto, mais pontos, com mínimo de 5.
+    - Numa lista de 100: 1 posição de diferença vale 74, 5 valem 53, 10 valem 35 e 20 valem 15.
+    - Numa lista de 20: 1 de diferença vale 53 e 3 valem 23.
+    - Numa lista de 10: 1 de diferença vale 49 e 3 valem 18.
+  - Fora da lista: 0.
+- **Revelação (sempre):**
+  - quem está na posição pedida, com o número da lista (gols, pontos, valor);
+  - os 2 de cima e os 2 de baixo;
+  - o palpite de cada um, com a posição em que ele está na lista (ou "fora da lista") e os pontos.
+- **Casos especiais:**
+  - Nome que aparece duas vezes na lista (ex.: o Neymar nas maiores transferências) vale a posição mais perto da pedida.
+  - Posição empatada só é sorteada com até 3 empatados, e qualquer um deles crava. Quem chutar outro nome empatado conta a posição do empate.
+- **Fim:** vence quem somar mais. Entra no ranking do grupo como os outros jogos.
+
+### 37.2 Inventário (listas ordenadas que já existem)
+
+| Fonte no jogo | Listas | Uso na Cravada |
+|---|---|---|
+| Top 100 do Dia | 12 listas de 100 (10 geral, 1 futebol, 1 anime) | todas |
+| Top 10 | 107 listas (43 futebol, 43 geral, 8 história, 6 anime, 7 política), de 4 a 10 itens | 54: as que têm 8 itens ou mais, 5 posições sem empate e não são de política. São 13 de futebol, 31 gerais, 6 de história e 4 de anime. |
+
+### 37.3 Metas e fontes (listas novas de futebol)
+
+Meta: pelo menos 20 listas novas de futebol, de 18 a 111 nomes cada, todas com fonte e data no título. A Cravada fica com mais de 85 listas no total.
+
+Todas vêm da Wikipédia e foram lidas pelo endereço do artigo (`/wiki/...`), 1 pedido a cada 3 s, com o User-Agent do bot. Cada lista leva a data de atualização da própria página.
+
+| Lista | Página | Atualizada até |
+|---|---|---|
+| Maiores goleadores da história (500 gols ou mais) | List of men's footballers with 500 or more goals (lista da RSSSF) | 19/07/2026 |
+| Maiores artilheiros das Copas (5 gols ou mais) | List of FIFA World Cup top goalscorers | Copa de 2026 (19/07/2026) |
+| Maiores artilheiros de seleções (50 gols ou mais) | List of men's footballers with 50 or more international goals | 17/11/2026 |
+| Mais jogos por seleções (top 100) | List of men's footballers with 100 or more international caps | 17/11/2026 |
+| Mais jogos oficiais na carreira (1.000 ou mais) | List of men's footballers with 1,000 or more official appearances | 24/11/2026 |
+| Maiores artilheiros da Champions | List of UEFA Champions League top scorers | 25/11/2026 |
+| Artilheiros da Premier League (100 gols ou mais) | List of footballers with 100 or more Premier League goals | 25/10/2026 |
+| Artilheiros do Espanhol (100 ou mais) | List of La Liga top scorers | 22/11/2026 |
+| Artilheiros do Italiano (100 ou mais) | List of Serie A players with 100 or more goals | 31/08/2026 |
+| Artilheiros do Alemão (100 ou mais) | List of Bundesliga top scorers | 22/11/2026 |
+| Artilheiros do Francês | List of Ligue 1 top scorers | 30/08/2026 |
+| Artilheiros do Brasileirão (100 ou mais) | Lista de artilheiros do Campeonato Brasileiro de Futebol (pt) | 22/11/2026 |
+| Bola de Ouro 2026 (30 indicados) | 2026 Ballon d'Or | encerrada |
+| Bola de Ouro 2025 (30 indicados) | 2025 Ballon d'Or | encerrada |
+| Classificação final da Premier League 2025/26 | 2025–26 Premier League | encerrada |
+| Classificação final do Espanhol 2025/26 | Template:2025–26 La Liga table | encerrada |
+| Classificação final do Italiano 2025/26 | Template:2025–26 Serie A table | encerrada |
+| Classificação final do Alemão 2025/26 | Template:2025–26 Bundesliga table | encerrada |
+| Classificação final do Francês 2025/26 | Template:2025–26 Ligue 1 table | encerrada |
+| Classificação final do Brasileirão 2025 | 2025 Campeonato Brasileiro Série A | encerrada |
+| Transferências mais caras da história (top 50) | List of most expensive association football transfers | 01/09/2026 |
+| Os 30 clubes que mais faturam (Deloitte 2026) | Deloitte Football Money League | edição de 2026 |
+| Maiores estádios de futebol do mundo (mais de 40 mil lugares) | List of association football stadiums by capacity | lida em 27/11/2026 |
+
+- **Gerador:** `scripts/cravada-listas.ts` lê as páginas e gera `src/lib/party/content/cravada-wiki.ts`. Esse arquivo não se edita à mão; correções vão em ajustes no gerador.
+- **Apelidos dos clubes:** vão à mão no gerador (Man City, Barça, Inter, PSG, Galo...), porque são o que o grupo escreve.
+
+### 37.4 O que fica de fora
+
+- **Brasileirão 2026, Libertadores 2026 e a temporada europeia 2026/27:** ainda estão em andamento. As listas de todos os tempos entram com a data da página.
+- **Listas com empate demais:** quase toda posição empata (ex.: seleções por participações em Copas).
+- **Política:** fica de fora da mistura, como nos outros jogos. Só entra se pedirem *abrir cravada política*.
+- **Ponto parcial para quem é "quase da lista"** (o 101º de uma lista de 100): fora da lista é zero, como foi pedido.
+
+### 37.5 Planejado x entregue (27/11/2026)
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Jogo | as regras do pedido | ✅ *abrir cravada*, com 5 rodadas. Em cada uma, ranking + posição e 1 palpite escondido por pessoa. Pontos pela distância e fora da lista vale 0. A revelação traz a posição de cada palpite e os 2 de cima e os 2 de baixo. |
+| Vários temas na partida | sim | ✅ Sem tema: 4 rodadas de futebol (3 listas grandes e 1 do Top 10) e 1 de conhecimentos gerais. Com tema: as listas do tema. *temas da cravada* mostra todos. |
+| Listas novas de futebol | 20 ou mais | ✅ 24: goleadores (RSSSF e jogos oficiais), artilheiros das Copas, de seleções, da Champions, das 5 grandes ligas e do Brasileirão; mais jogos por seleções e na carreira; Bola de Ouro 2026 e 2025; tabelas finais 2025/26 das 5 ligas e do Brasileirão 2025; transferências mais caras; Deloitte 2026; maiores estádios. |
+| Total de listas | mais de 85 | ✅ 98: 43 de futebol, 41 gerais, 6 de história e 5 de anime, mais 3 de política (só quando pedida) |
+| Novidades | entrada nova | ✅ 27/11 |
+| Ajuda | comando novo | ✅ na imagem e no texto da ajuda, na página inicial e em *temas da cravada* |
+| Testes | casos novos | ✅ `tests/cravada.test.ts` (4): listas, pontos, comandos e palpites, e uma partida inteira. São 230 no total. |
+
+**Ajustes em relação ao plano:**
+- **Posições empatadas:** sem empate, as listas de gols das Copas teriam só 5 posições para pedir. Agora entra empate de até 3 nomes, e qualquer um deles crava.
+- **Estádios:** a lista vai até o 93º. Do 94º em diante são 91 estádios empatados com 40 mil lugares.
+- **Jogos por seleções:** tem 103 nomes, porque há empate no 100º.
+
+**Ficou de fora:**
+- **Artilheiros da Libertadores:** a página não tem a tabela de artilheiros de todos os tempos, e a Libertadores 2026 ainda não terminou.
+

@@ -7,7 +7,8 @@ import { GRADE_RULES, finishGrade, gradeAnswer, gradeTimeout, newGrade, startGra
 import { PENALTIS_RULES, finishPenaltis, goals, newPenaltis, penaltisAnswer, penaltisTimeout, scoreLine, startPenaltis } from './penaltis';
 import { finishByScore } from './common';
 import { LEILAO_RULES, closeLot, endLeilao, leilaoAnswer, leilaoBoard, newLeilao, startLeilao } from './leilao';
-import type { AnagramaParty, ImpostorParty, LeilaoParty, RostoParty, Top100Party } from '../game/types';
+import type { AnagramaParty, CravadaParty, ImpostorParty, LeilaoParty, RostoParty, Top100Party } from '../game/types';
+import { CRAVADA_RULES, cravadaAnswer, cravadaTimeout, newCravada, openCravadaRound, skipCravada, startCravada } from './cravada';
 import { ROSTO_RULES, newRosto, openRostoRound, rostoAnswer, rostoTimeout, skipRosto, startRosto } from './rosto';
 import { IMPOSTOR_RULES, endImpostor, impostorAnswer, impostorBoard, impostorSkip, impostorTimeout, newImpostor, startImpostor } from './impostor';
 import { TOP100_RULES, finishTop100, newTop100, playedTodayKey, startTop100, top100Answer, top100Timeout } from './top100';
@@ -17,7 +18,7 @@ import { ANAGRAMA_RULES, anagramaAnswer, anagramaTimeout, newAnagrama, openAnagr
  * Jogos gerados da base de jogadores (frente F2). Cada um declara as peças
  * que o motor das salas usa; assim o motor não precisa de um "if" por jogo.
  */
-export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty | AnagramaParty | Top100Party | ImpostorParty | RostoParty;
+export type BaseGameState = CarreiraParty | PonteParty | GradeParty | PenaltisParty | LeilaoParty | AnagramaParty | Top100Party | ImpostorParty | RostoParty | CravadaParty;
 
 export interface PartyModule {
   rules: string[];
@@ -150,7 +151,20 @@ const rosto: PartyModule = {
   seenItems: (s) => (s as RostoParty).order,
 };
 
-export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao, anagrama, top100, impostor, rosto };
+const cravada: PartyModule = {
+  rules: CRAVADA_RULES,
+  create: () => newCravada(),
+  start: async (s, d) => startCravada(s as CravadaParty, d),
+  answer: (s, p, m, d, save) => cravadaAnswer(s as CravadaParty, p, m, d, save),
+  timeout: (s, d) => cravadaTimeout(s as CravadaParty, d),
+  skip: (s, d) => skipCravada(s as CravadaParty, d),
+  resume: (s, d) => openCravadaRound(s as CravadaParty, d),
+  finish: (s, reason) => finishByScore(s, reason, 'abrir cravada'),
+  // As listas da partida (o sorteio prioriza as que o grupo ainda não jogou).
+  seenItems: (s) => [...new Set((s as CravadaParty).rounds.map((r) => r.listId))],
+};
+
+export const MODULES: Partial<Record<PartyGame, PartyModule>> = { carreira, ponte, grade, penaltis, leilao, anagrama, top100, impostor, rosto, cravada };
 
 export function isBaseGame(state: PartyState): state is BaseGameState {
   return state.game in MODULES;

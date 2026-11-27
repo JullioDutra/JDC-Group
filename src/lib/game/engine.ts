@@ -12,6 +12,7 @@ import { applyClubCorrection, applyCorrection, applyFamousName, applyMultiCorrec
 import { firstName, formatNumber, looksLikePlayerName, normalize } from './text';
 import { createParty, handlePartyMessage, handlePartyTick, isPartyStale, parsePartyStart, recordPartyIfFinished } from '../party/engine';
 import { anagramThemesText } from '../party/anagrama';
+import { cravadaThemesText } from '../party/content/cravada';
 import { playedTodayKey, resetTodayKey } from '../party/top100';
 import { dayKey } from '../party/content/top100';
 import { championsText, seasonTurnover, shortDay } from './season';
@@ -505,6 +506,7 @@ async function handleOnce(msg: IncomingMessage, deps: EngineDeps): Promise<Outgo
   if (norm === 'modos' || norm === 'temas') return [{ type: 'image', image: { kind: 'modes' } }];
   if (LIGAS_COMMAND.test(norm)) return [ligasOutgoing()];
   if (/^temas (do |de )?anagramas?$/.test(norm) || /^anagramas? temas$/.test(norm)) return [text(anagramThemesText())];
+  if (/^temas (da |de )?cravada$/.test(norm) || /^cravada temas$/.test(norm)) return [text(cravadaThemesText())];
   if (/^temas (do |de )?impostor$/.test(norm)) return [text(impostorThemesText('', onlyImpostor))];
   // "ranking": do 1º ao 10º. "ranking b": do 11º ao 20º.
   const rankingB = /^ranking (b|2|parte 2|(do |de )?11 a(o)? 20)$/.test(norm);

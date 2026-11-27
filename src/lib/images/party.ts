@@ -26,6 +26,10 @@ function colorOf(state: PartyState, jid: string): string {
 // ---------- Sala aberta ----------
 
 const NEW_LOBBY: Partial<Record<PartyState['game'], { subtitle: string; rules: string[] }>> = {
+  cravada: {
+    subtitle: `${PARTY_CONFIG.cravada.rounds} rodadas · um ranking e uma posição`,
+    rules: ['O bot dá um ranking e pede uma posição: quem é o 35º?', '1 palpite por pessoa. Cravou: 100; perto vale mais.', 'Fora da lista: 0. No fim, a posição de cada palpite.'],
+  },
   rosto: {
     subtitle: `${PARTY_CONFIG.rosto.rounds} fotos · só o rosto borrado`,
     rules: ['Foto de um craque com só o rosto borrado. Mande o nome.', `A cada ${PARTY_CONFIG.rosto.seconds}s o borrão diminui: 100, 70 e 40 pontos.`, '3 tentativas por foto. Vence quem somar mais.'],
@@ -143,6 +147,8 @@ export function partyLobby(state: PartyState): ReactElement {
     subtitle =
       state.game === 'impostor'
         ? `${impSub}${state.theme ? ` · tema: ${impostorThemeLabel(state.theme)}` : ''}`
+        : state.game === 'cravada' && state.theme
+        ? `${PARTY_CONFIG.cravada.rounds} rodadas · tema: ${state.theme}`
         : state.game === 'anagrama' && state.theme
         ? `${PARTY_CONFIG.anagrama.rounds} palavras · tema: ${state.theme}`
         : state.game === 'leilao'

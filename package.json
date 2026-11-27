@@ -13,7 +13,8 @@
     "render:stress": "tsx scripts/render-stress.ts",
     "inventario": "tsx scripts/inventario.ts",
     "tm": "NODE_USE_ENV_PROXY=1 tsx scripts/tm-sync.ts",
-    "wiki-stats": "NODE_USE_ENV_PROXY=1 tsx scripts/wiki-stats.ts"
+    "wiki-stats": "NODE_USE_ENV_PROXY=1 tsx scripts/wiki-stats.ts",
+    "cravada-listas": "NODE_USE_ENV_PROXY=1 tsx scripts/cravada-listas.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.1",
