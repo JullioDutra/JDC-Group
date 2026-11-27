@@ -5,6 +5,8 @@ import { SLOTS, type ImageSpec, type Pick } from '../game/types';
 import { getConexoes } from '../party/content/conexoes';
 import { helpText } from '../game/commands';
 import { getTop100 } from '../party/content/top100';
+import { cravadaThemesText } from '../party/content/cravada';
+import { cravadaRevealText, cravadaRoundText } from '../party/cravada';
 import { criterionLabel, parseCriterion } from '../party/gridCriteria';
 import { aproveitamentoText } from '../game/season';
 
@@ -111,6 +113,12 @@ export function imageAsText(spec: ImageSpec): string | null {
     }
     case 'faceQuiz':
       return spec.answer ? `📸 Era *${spec.answer}*.` : '📸 A foto não chegou. O anfitrião pode mandar *pular*.';
+    case 'cravadaRound':
+      return cravadaRoundText(spec);
+    case 'cravadaReveal':
+      return cravadaRevealText(spec);
+    case 'cravadaThemes':
+      return cravadaThemesText();
     case 'textBoard':
       return [`*${spec.title}*`, ...spec.rows.map((r) => [`*${r.head}*`, ...r.lines].join('\n'))].join('\n\n');
     default:

@@ -2079,3 +2079,24 @@ Todas vêm da Wikipédia e foram lidas pelo endereço do artigo (`/wiki/...`), 1
 **Ficou de fora:**
 - **Artilheiros da Libertadores:** a página não tem a tabela de artilheiros de todos os tempos, e a Libertadores 2026 ainda não terminou.
 
+### 37.6 Imagens da Cravada (27/11/2026)
+
+> Pedido: "Queria os da cravada gerando imagem, nos resultados, temas etc."
+
+- **Pergunta da rodada:**
+  - mostra a lista, a categoria e a posição pedida em destaque ("Qual é o 35º?");
+  - uma régua do 1º ao último marca onde fica essa posição;
+  - traz as regras em etiquetas;
+  - a legenda repete a pergunta.
+- **Revelação (resultado da rodada):**
+  - quem está na posição, com o número da lista, e os 2 de cima e os 2 de baixo;
+  - a régua com uma bolinha por palpite, na cor do jogador;
+  - uma linha por pessoa, com o nome que mandou, a posição dele na lista (ou FORA), a distância e os pontos;
+  - a legenda diz quem cravou ou quem chegou mais perto.
+- **Temas:**
+  - *temas da cravada* manda um cartão por tema, com quantas listas tem, e exemplos de comando;
+  - o tema que não existe recebe a mesma imagem.
+- **Placar:** a imagem de placar ganhou um rodapé próprio da Cravada.
+- **Plano B:** se a imagem não sair, o texto completo vai junto da legenda.
+- **Testes:** as 4 imagens são geradas no teste.
+

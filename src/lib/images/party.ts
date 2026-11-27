@@ -439,7 +439,7 @@ export function partyScore(state: PartyState, title: string, final: boolean): Re
         );
       }),
     ),
-    txt('1 palpite por pessoa em cada rodada · palpite repetido não vale', { fontSize: 22, color: C.muted, fontWeight: 500, justifyContent: 'center', marginTop: 12 }),
+    txt(state.game === 'cravada' ? 'Cravou: 100 · perto vale mais · fora da lista: 0' : '1 palpite por pessoa em cada rodada · palpite repetido não vale', { fontSize: 22, color: C.muted, fontWeight: 500, justifyContent: 'center', marginTop: 12 }),
   );
 }
 

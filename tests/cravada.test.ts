@@ -11,6 +11,14 @@ import { cravadaMatch, cravadaPoints } from '../src/lib/party/cravada';
 import { parsePartyStart } from '../src/lib/party/engine';
 import { MemoryStore } from '../src/lib/store/memory';
 import { asText } from './helpers';
+import { imageAsText } from '../src/lib/images/fallback';
+import { renderImage } from '../src/lib/images/render';
+import { imageMime } from '../src/lib/whatsapp';
+
+/** O que o grupo lê: a legenda e, se a imagem não sair, o texto de reserva dela. */
+const full = (out: Outgoing[]) =>
+  out.map((o) => (o.type === 'image' ? `[img:${o.image.kind}] ${o.caption ?? ''}\n${imageAsText(o.image) ?? ''}` : asText([o]))).join('\n');
+const kinds = (out: Outgoing[]) => out.flatMap((o) => (o.type === 'image' ? [o.image.kind] : []));
 
 test('Cravada: listas com fonte, data, posições em ordem e nomes limpos', () => {
   assert.equal(new Set(CRAVADA_LISTS.map((l) => l.id)).size, CRAVADA_LISTS.length, 'id repetido');
@@ -94,13 +102,19 @@ test('Cravada: partida (palpite escondido, revelação com a posição de cada u
   const state = async () => (await store.getActiveMatch(G))!.state as CravadaParty;
 
   await say('Ana', 'ativar jogos');
-  assert.match(asText(await say('Ana', 'abrir cravada xyzabc')), /Não achei o tema "xyzabc"/);
+  assert.deepEqual(kinds(await say('Ana', 'temas da cravada')), ['cravadaThemes']);
+  const notFound = await say('Ana', 'abrir cravada xyzabc');
+  assert.deepEqual(kinds(notFound), ['cravadaThemes']);
+  assert.match(asText(notFound), /Não achei o tema "xyzabc"/);
   const lobby = await say('Ana', 'abrir cravada brasileirão');
   assert.match(asText(lobby), /Cravada[\s\S]*Tema: \*brasileirão\*/);
   await say('Bia', 'entrar');
   await say('Caio', 'entrar');
-  const start = asText(await say('Ana', 'começar'));
+  const startOut = await say('Ana', 'começar');
+  assert.deepEqual(kinds(startOut), ['cravadaRound'], 'a pergunta vai em imagem');
+  const start = full(startOut);
   assert.match(start, /Cravada\* valendo! 3 jogadores, 5 rodadas\. Tema: \*brasileirão\*/);
+  assert.match(start, /Lista com \d+ nomes/);
   assert.match(start, /Rodada 1\/5[\s\S]*Qual é o \*\d+º\*\?/);
 
   let s = await state();
@@ -115,7 +129,13 @@ test('Cravada: partida (palpite escondido, revelação com a posição de cada u
   assert.match(asText(await say('Ana', other.name)), /vale só o primeiro palpite/);
   assert.equal(asText(await say('Bia', other.name)), '[react:📌]');
   // Caio manda alguém fora da lista: todos palpitaram, a rodada fecha e revela.
-  const reveal = asText(await say('Caio', 'Fulano Beltrano'));
+  const revealOut = await say('Caio', 'Fulano Beltrano');
+  assert.deepEqual(kinds(revealOut), ['cravadaReveal', 'cravadaRound'], 'revelação e próxima pergunta em imagem');
+  const card = revealOut.find((o) => o.type === 'image' && o.image.kind === 'cravadaReveal');
+  assert.ok(card && card.type === 'image' && card.image.kind === 'cravadaReveal');
+  assert.equal(card.image.guesses.length, 3);
+  assert.match(card.caption ?? '', /Cravou: \*Ana\* \(\+100\)/);
+  const reveal = full(revealOut);
   assert.match(reveal, /Todos palpitaram/);
   assert.match(reveal, new RegExp(`🎯 \\*${target}º:\\*`));
   assert.match(reveal, new RegExp(`🎯 Ana: ${exact.name} — ${target}º, cravou! \\(\\+100\\)`));
@@ -129,17 +149,35 @@ test('Cravada: partida (palpite escondido, revelação com a posição de cada u
 
   // Rodada 2: ninguém palpita; o prazo revela mesmo assim.
   clock += 61_000;
-  const timeout = asText(await tick());
+  const timeout = full(await tick());
   assert.match(timeout, /Tempo esgotado[\s\S]*Ninguém palpitou/);
   // Até o fim: placar final com o vencedor.
   let last = '';
   for (let r = 3; r <= 5; r++) {
     clock += 61_000;
-    last = asText(await tick());
+    last = full(await tick());
   }
-  assert.match(last, /\[img:partyScore\][\s\S]*Ana\* venceu com 100 pontos/);
+  assert.match(last, /\[img:cravadaReveal\][\s\S]*\[img:partyScore\][\s\S]*Ana\* venceu com 100 pontos/);
   assert.match(last, /abrir cravada/);
   // Listas da partida no histórico do grupo (a próxima prioriza as outras).
   const seen = await store.getSeen(G, 'cravada');
   assert.ok(seen.includes(list.id));
 });
+
+test('Cravada: imagens da pergunta, da revelação e dos temas (e o texto de reserva)', async () => {
+  const list = getCravadaList('artilheiros-seriea')!;
+  const tie = askableRanks(list).find((r) => list.items.filter((i) => i.rank === r).length > 1)!;
+  const guesses = [0, 5, -1].map((index, color) => ({ player: ['Ana', 'Bia', 'Caio'][color], color, guess: index < 0 ? 'Zé' : list.items[index].name, index, points: index < 0 ? 0 : 10 }));
+  const specs = [
+    { kind: 'cravadaRound' as const, listId: list.id, rank: tie, round: 2, total: 5, seconds: 60 },
+    { kind: 'cravadaReveal' as const, listId: list.id, rank: tie, round: 2, total: 5, reason: 'Tempo esgotado.', guesses },
+    { kind: 'cravadaReveal' as const, listId: 'tabela-brasileirao-2025', rank: 2, round: 5, total: 5, reason: 'Tempo esgotado.', guesses: [] },
+    { kind: 'cravadaThemes' as const },
+  ];
+  for (const spec of specs) assert.equal(imageMime(await renderImage(spec)).mimetype, 'image/png', spec.kind);
+  assert.match(imageAsText(specs[0])!, /empate: qualquer um dos empatados crava/);
+  assert.match(imageAsText(specs[1])!, /❌ Caio: Zé — fora da lista \(0\)/);
+  assert.match(imageAsText(specs[2])!, /Ninguém palpitou/);
+  assert.match(imageAsText(specs[3])!, /Temas da Cravada/);
+});
+

@@ -1,5 +1,5 @@
 import { firstName, looksLikePlayerName, normalize } from '../game/text';
-import type { ContentCategory, CravadaParty, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
+import type { ContentCategory, CravadaGuessView, CravadaParty, IncomingMessage, Outgoing, PartyPlayer } from '../game/types';
 import { PARTY_CONFIG, PartyDeps, Save, activePlayers, award, finishByScore, freshFirst, pauseBeforeNext, react, schedule, scoreImage, shuffle, text, warnOnce } from './common';
 import { CRAVADA_BIG, askableRanks, getCravadaList, listsOfCategory, type CravadaList } from './content/cravada';
 import { matchTop100 } from './top100';
@@ -93,7 +93,7 @@ export function startCravada(state: CravadaParty, deps: PartyDeps): Outgoing[] {
   state.status = 'PLAYING';
   state.round = -1;
   const tema = state.theme ? ` Tema: *${state.theme}*.` : '';
-  return [text(`🎯 *Cravada* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.${tema}`), ...openCravadaRound(state, deps)];
+  return openCravadaRound(state, deps, `🎯 *Cravada* valendo! ${state.players.length} jogadores, ${state.totalRounds} rodadas.${tema}\n`);
 }
 
 const current = (state: CravadaParty) => {
@@ -101,22 +101,33 @@ const current = (state: CravadaParty) => {
   return { list: getCravadaList(r.listId)!, rank: r.rank };
 };
 
-export function openCravadaRound(state: CravadaParty, deps: PartyDeps): Outgoing[] {
+/** Abre a rodada: a imagem da pergunta ("Qual é o 35º?"), com a pergunta também na legenda. */
+export function openCravadaRound(state: CravadaParty, deps: PartyDeps, head = ''): Outgoing[] {
   state.round += 1;
   state.guesses = {};
   state.arrival = [];
   state.closed = false;
   state.warned = [];
   const { list, rank } = current(state);
-  const tie = list.items.filter((i) => i.rank === rank).length > 1 ? ' (é um empate: qualquer um dos empatados crava)' : '';
+  const seconds = PARTY_CONFIG.cravada.seconds;
   return [
-    text(
-      `🎯 *Rodada ${state.round + 1}/${state.totalRounds}* · Cravada\n*${list.title}*\n\n` +
-        `Lista com ${list.items.length} nomes. Qual é o *${rank}º*?${tie}\n` +
-        `Mande 1 palpite (vale o primeiro, sem troca). ${PARTY_CONFIG.cravada.seconds}s.`,
-    ),
-    schedule(state, PARTY_CONFIG.cravada.seconds, deps.now.getTime(), 'cv'),
+    {
+      type: 'image',
+      image: { kind: 'cravadaRound', listId: list.id, rank, round: state.round + 1, total: state.totalRounds, seconds },
+      caption:
+        `${head}🎯 *Rodada ${state.round + 1}/${state.totalRounds}* · *${list.title}*\n` +
+        `Qual é o *${rank}º*? Mande 1 palpite (vale o primeiro, sem troca). ${seconds}s.`,
+    },
+    schedule(state, seconds, deps.now.getTime(), 'cv'),
   ];
+}
+
+/** O que a imagem da pergunta mostra além da legenda (plano B quando a imagem não sai). */
+export function cravadaRoundText(spec: { listId: string; rank: number }): string {
+  const list = getCravadaList(spec.listId);
+  if (!list) return '';
+  const tie = list.items.filter((i) => i.rank === spec.rank).length > 1 ? ' É um empate: qualquer um dos empatados crava.' : '';
+  return `Lista com ${list.items.length} nomes.${tie}`;
 }
 
 /**
@@ -155,7 +166,35 @@ export function cravadaAnswer(state: CravadaParty, player: PartyPlayer, msg: Inc
 
 const pos = (n: number) => `${n}º`;
 
-/** Fecha a rodada: revela a posição pedida, os vizinhos e onde está o palpite de cada um. */
+/** A revelação em texto (plano B da imagem): resposta, vizinhos, palpites e fonte. */
+export function cravadaRevealText(spec: { listId: string; rank: number; guesses: CravadaGuessView[] }): string {
+  const list = getCravadaList(spec.listId);
+  if (!list) return '';
+  const answers = list.items.filter((i) => i.rank === spec.rank);
+  const detail = (d?: string) => (d ? ` (${d})` : '');
+  const first = list.items.findIndex((i) => i.rank === spec.rank);
+  const last = first + answers.length - 1;
+  const around = [...list.items.slice(Math.max(0, first - 2), first), ...list.items.slice(last + 1, last + 3)].map((i) => `${pos(i.rank)} ${i.name}${detail(i.detail)}`);
+  const lines = [...spec.guesses]
+    .sort((a, b) => b.points - a.points)
+    .map((g) => {
+      if (g.index < 0) return `❌ ${firstName(g.player)}: ${g.guess} — fora da lista (0)`;
+      const item = list.items[g.index];
+      const d = Math.abs(item.rank - spec.rank);
+      const where = d === 0 ? 'cravou!' : `${d} ${d === 1 ? 'posição' : 'posições'} de distância`;
+      return `${d === 0 ? '🎯' : '✅'} ${firstName(g.player)}: ${item.name} — ${pos(item.rank)}, ${where} (+${g.points})`;
+    });
+  return [
+    `🎯 *${pos(spec.rank)}:* ${answers.map((a) => `*${a.name}*${detail(a.detail)}`).join(', ')}`,
+    around.length ? `Perto dele:\n${around.join('\n')}` : '',
+    lines.length ? `*Palpites:*\n${lines.join('\n')}` : 'Ninguém palpitou.',
+    `_Fonte: ${list.source}._`,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+/** Fecha a rodada: imagem da revelação (a posição de cada palpite e os pontos) e, no fim, o placar. */
 export function closeCravadaRound(state: CravadaParty, deps: PartyDeps, reason: string): Outgoing[] {
   if (state.closed) return [];
   state.closed = true;
@@ -163,38 +202,31 @@ export function closeCravadaRound(state: CravadaParty, deps: PartyDeps, reason: 
   state.timerToken = null;
   for (const p of state.players) if (!(p.jid in state.guesses)) p.missed += 1;
   const { list, rank } = current(state);
-  const size = list.items.length;
-  const answers = list.items.filter((i) => i.rank === rank);
-  const detail = (d?: string) => (d ? ` (${d})` : '');
-  const head = `🎯 *${pos(rank)}:* ${answers.map((a) => `*${a.name}*${detail(a.detail)}`).join(', ')}`;
-  // Vizinhos: 2 acima e 2 abaixo (pelo lugar na lista).
-  const first = list.items.findIndex((i) => i.rank === rank);
-  const last = first + answers.length - 1;
-  const around = [...list.items.slice(Math.max(0, first - 2), first), ...list.items.slice(last + 1, last + 3)]
-    .map((i) => `${pos(i.rank)} ${i.name}${detail(i.detail)}`);
-  const lines = state.arrival.map((jid) => {
-    const p = state.players.find((x) => x.jid === jid)!;
+  const guesses: CravadaGuessView[] = state.arrival.map((jid) => {
+    const i = state.players.findIndex((x) => x.jid === jid);
+    const p = state.players[i];
     const g = state.guesses[jid];
-    if (g.index < 0) return { p, points: 0, line: `❌ ${firstName(p.name)}: ${g.text} — fora da lista (0)` };
-    const item = list.items[g.index];
-    const d = Math.abs(item.rank - rank);
-    const points = cravadaPoints(d, size);
+    const points = g.index < 0 ? 0 : cravadaPoints(Math.abs(list.items[g.index].rank - rank), list.items.length);
     award(p, points, deps.now.getTime());
-    const where = d === 0 ? 'cravou!' : `${d} ${d === 1 ? 'posição' : 'posições'} de distância`;
-    return { p, points, line: `${d === 0 ? '🎯' : '✅'} ${firstName(p.name)}: ${item.name} — ${pos(item.rank)}, ${where} (+${points})` };
+    return { player: p.name, color: i, guess: g.text, index: g.index, points };
   });
-  lines.sort((a, b) => b.points - a.points);
-  const summary = [
-    `${reason}\n${head}`,
-    around.length ? `Perto dele:\n${around.join('\n')}` : '',
-    lines.length ? `*Palpites:*\n${lines.map((l) => l.line).join('\n')}` : 'Ninguém palpitou.',
-    `_Fonte: ${list.source}._`,
-  ]
-    .filter(Boolean)
-    .join('\n\n');
-  // Na última, a revelação vai em texto e o placar final na imagem (legenda curta).
-  if (state.round >= state.totalRounds - 1) return [text(summary), ...finishByScore(state, '', 'abrir cravada')];
-  const out: Outgoing[] = [text(summary)];
+  const answers = list.items.filter((i) => i.rank === rank).map((i) => i.name);
+  const exact = guesses.filter((g) => g.index >= 0 && list.items[g.index].rank === rank).map((g) => `*${firstName(g.player)}*`);
+  const best = [...guesses].sort((a, b) => b.points - a.points)[0];
+  const highlight = exact.length
+    ? `Cravou: ${exact.join(', ')} (+${CRAVADA_EXACT}).`
+    : best && best.points > 0
+      ? `Mais perto: *${firstName(best.player)}* (+${best.points}).`
+      : guesses.length
+        ? 'Ninguém acertou um nome da lista.'
+        : 'Ninguém palpitou.';
+  const reveal: Outgoing = {
+    type: 'image',
+    image: { kind: 'cravadaReveal', listId: list.id, rank, round: state.round + 1, total: state.totalRounds, reason, guesses },
+    caption: `${reason} 🎯 *${pos(rank)}: ${answers.join(', ')}*\n${highlight}`,
+  };
+  if (state.round >= state.totalRounds - 1) return [reveal, ...finishByScore(state, '', 'abrir cravada')];
+  const out: Outgoing[] = [reveal];
   if ((state.round + 1) % 3 === 0) out.push(scoreImage(state, false));
   return [...out, ...pauseBeforeNext(state, deps)];
 }

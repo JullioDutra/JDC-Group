@@ -26,6 +26,17 @@ export interface News {
 export const NEWS_LINE_MAX = 48;
 export const NEWS: News[] = [
   {
+    // Repete a Cravada de 27/11: a versão anterior durou pouco e quase nenhum grupo viu.
+    id: '2026-11-27b',
+    date: '27/11',
+    items: [
+      { head: 'Jogo novo: Cravada', lines: ['Mande: abrir cravada. O bot dá um ranking', 'e pede uma posição: quem é o 35º?'] },
+      { head: 'Cravada com imagens', lines: ['Pergunta, revelação com a régua da lista,', 'o palpite de cada um e os temas.'] },
+      { head: 'Como pontua', lines: ['1 palpite por pessoa. Cravou: 100; perto', 'vale mais; fora da lista: 0.'] },
+      { head: 'Escolha o tema', lines: ['abrir cravada artilheiros, premier,', 'brasileirão... (temas da cravada).'] },
+    ],
+  },
+  {
     id: '2026-11-27',
     date: '27/11',
     items: [

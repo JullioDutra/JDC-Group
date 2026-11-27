@@ -1,5 +1,5 @@
 import { normalize } from '../../game/text';
-import type { ContentCategory, Top10Item } from '../../game/types';
+import type { ContentCategory, Outgoing, Top10Item } from '../../game/types';
 import { TOP10_LISTS } from '../top10-lists';
 import { CRAVADA_WIKI } from './cravada-wiki';
 import { TOP100_LISTS } from './top100';
@@ -142,4 +142,13 @@ export function cravadaThemesText(head = ''): string {
   ]
     .filter(Boolean)
     .join('\n');
+}
+
+/** Imagem dos temas, com a explicação curta na legenda (o texto completo é o plano B da imagem). */
+export function cravadaThemesImage(head = ''): Outgoing {
+  return {
+    type: 'image',
+    image: { kind: 'cravadaThemes' },
+    caption: [head, '🎯 *Temas da Cravada*: mande *abrir cravada* + tema (ex.: *abrir cravada artilheiros*).'].filter(Boolean).join('\n'),
+  };
 }

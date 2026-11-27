@@ -765,8 +765,28 @@ export type ImageSpec =
   | { kind: 'gradeBoard'; state: GradeParty; final: boolean }
   | { kind: 'top100Board'; state: Top100Party; final: boolean }
   | { kind: 'textBoard'; game: PartyGame; title: string; subtitle: string; rows: Array<{ head: string; lines: string[]; color?: string; highlight?: boolean }>; /** Etiqueta do canto (padrão: nome do jogo). */ pill?: string }
+  /** Cravada: a pergunta da rodada (lista + posição pedida). */
+  | { kind: 'cravadaRound'; listId: string; rank: number; round: number; total: number; seconds: number }
+  /**
+   * Cravada: a revelação. Cada palpite com a cor do jogador (índice na sala) e
+   * o item da lista que ele acertou (index; -1 = fora da lista).
+   */
+  | { kind: 'cravadaReveal'; listId: string; rank: number; round: number; total: number; reason: string; guesses: CravadaGuessView[] }
+  /** Cravada: os temas ("temas da cravada"). */
+  | { kind: 'cravadaThemes' }
   /** Rosto Borrado: level 0 a 2 = borrão (forte a leve), 3 = foto limpa (revelação, com o nome em `answer`). */
   | { kind: 'faceQuiz'; photoId: string; level: number; round: number; total: number; answer?: string; /** Rostos e crédito da foto sorteada (fotos do admin não estão no código). */ faces?: Array<[number, number, number, number]>; credit?: string; /** Preenchidos na hora de renderizar: a foto (data URI) e o tamanho dela. */ photo?: string; photoW?: number; photoH?: number };
+
+/** Palpite da Cravada na revelação (imagem e texto). */
+export interface CravadaGuessView {
+  player: string;
+  /** Cor do jogador: a posição dele na sala. */
+  color: number;
+  guess: string;
+  /** Item da lista (-1 = fora da lista). */
+  index: number;
+  points: number;
+}
 
 /** Bandeira desenhada só com formas (faixas, círculo, cruz, triângulo, cantão). */
 export interface FlagSpec {

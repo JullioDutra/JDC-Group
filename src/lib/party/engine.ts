@@ -65,7 +65,7 @@ import { isImpostorOnly } from '../game/groupMode';
 import { matchTop100, newTop100, playedTodayKey, resetTodayKey } from './top100';
 import { TOP100_LISTS, dayKey, getTop100 } from './content/top100';
 import { ANAGRAMS, findAnagramTheme } from './content/anagramas';
-import { cravadaChoice, cravadaThemesText } from './content/cravada';
+import { cravadaChoice, cravadaThemesImage } from './content/cravada';
 import { newCravada } from './cravada';
 import { ONE_X_ONE, freshFirst, freshPick } from './common';
 
@@ -229,7 +229,7 @@ export async function createParty(
   } else if (start.game === 'cravada') {
     // "abrir cravada artilheiros": tema; "futebol"/"geral"/"história": a categoria; sem nada: a mistura.
     const choice = cravadaChoice(start.rest);
-    if (!choice) return [text(cravadaThemesText(`Não achei o tema "${start.rest.trim()}".`))];
+    if (!choice) return [cravadaThemesImage(`Não achei o tema "${start.rest.trim()}".`)];
     state = { ...base('cravada', host, nowMs), ...newCravada(choice.category, choice.theme, choice.listIds) } as PartyState;
   } else if (MODULES[start.game]) {
     state = { ...base(start.game, host, nowMs), ...MODULES[start.game]!.create() } as PartyState;
