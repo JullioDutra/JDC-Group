@@ -64,7 +64,7 @@ export const CRAVADA_THEMES: Array<{ label: string; keys: string[] }> = [
   { label: 'italiano', keys: ['italiano', 'serie a', 'italia'] },
   { label: 'alemão', keys: ['alemao', 'bundesliga', 'alemanha'] },
   { label: 'francês', keys: ['frances', 'ligue 1', 'franca'] },
-  { label: 'brasileirão', keys: ['brasileirao', 'brasil'] },
+  { label: 'brasileirão', keys: ['brasileirao', 'campeonato brasileiro'] },
   { label: 'bola de ouro', keys: ['bola de ouro', 'ballon dor'] },
   { label: 'tabelas', keys: ['tabelas', 'tabela', 'classificacao', 'classificacoes'] },
   { label: 'transferências', keys: ['transferencias', 'contratacoes'] },
@@ -89,13 +89,21 @@ const CATEGORY_WORDS: Array<[RegExp, ContentCategory]> = [
   [/^polit/, 'politica'],
 ];
 
-/** Listas de um tema: pela palavra-chave dos temas, pelas tags ou pelo título. */
+const titleHas = (l: CravadaList, k: string) => ` ${normalize(l.title)} `.includes(` ${k} `);
+/** Listas do Top 10 e do Top 100 (sem tags próprias: vale o título). */
+const reused = (l: CravadaList) => l.id.includes(':');
+
+/**
+ * Listas de um tema. Os temas da lista (artilheiros, premier...) são de
+ * futebol: valem as tags das listas novas e o título das do Top 10/Top 100.
+ * Outra palavra ("abrir cravada pokémon") procura em todas, menos política.
+ */
 function listsFor(word: string): CravadaList[] {
   const theme = CRAVADA_THEMES.find((t) => t.keys.includes(word) || normalize(t.label) === word);
-  const keys = theme ? theme.keys : [word];
-  return CRAVADA_LISTS.filter(
-    (l) => l.category !== 'politica' && keys.some((k) => l.tags.includes(k) || ` ${normalize(l.title)} `.includes(` ${k} `)),
-  );
+  if (theme) {
+    return CRAVADA_LISTS.filter((l) => l.category === 'futebol' && theme.keys.some((k) => l.tags.includes(k) || (reused(l) && titleHas(l, k))));
+  }
+  return CRAVADA_LISTS.filter((l) => l.category !== 'politica' && (l.tags.includes(word) || titleHas(l, word)));
 }
 
 /**
