@@ -73,16 +73,50 @@ function totalColumns(table: string): string[] {
   return named.length >= span ? named.slice(-span).map((s) => s.toLowerCase()) : ['apps', 'goals'];
 }
 
+/**
+ * Onde está a tabela de clubes: pela legenda ("Appearances and goals by club,
+ * season and competition" ou "Club appearances and goals by season...") ou,
+ * sem legenda, a primeira tabela logo abaixo do título "Club" da seção
+ * "Career statistics" (Ribéry, Puskás), se tiver as colunas Season e Apps.
+ */
+function clubTableAt(wikitext: string): number {
+  const caption = wikitext.search(/\|\+[^\n]*?\bappearances and goals by (club|season)\b/i);
+  if (caption >= 0) return caption;
+  const section = wikitext.search(/(?:^|\n)==\s*(Career statistics|Statistics)\s*==/i);
+  if (section < 0) return -1;
+  const sub = wikitext.slice(section).search(/\n===\s*Club( career)?\s*===/i);
+  if (sub < 0) return -1;
+  const from = section + sub + 1;
+  const start = wikitext.indexOf('{|', from);
+  const nextHeading = wikitext.slice(from + 3).search(/\n==/);
+  if (start < 0 || (nextHeading >= 0 && start > from + 3 + nextHeading)) return -1;
+  const head = wikitext.slice(start, start + 1500);
+  return /\bSeason\b/i.test(head) && /\bApps\b/i.test(head) ? start : -1;
+}
+
+/**
+ * Linha do total da carreira: "Career total" ou, sem ela, a última linha da
+ * tabela chamada só "Total" ocupando 3 colunas ou mais (Clube + Temporada +
+ * Divisão: Giggs, Lineker). O "Total" de 2 colunas é o de um clube só.
+ */
+function careerTotalRow(rows: string[]): string | null {
+  const career = rows.find((r) => /Career total/i.test(r));
+  if (career) return career.slice(career.search(/Career total/i) + 'Career total'.length);
+  const last = rows[rows.length - 1]?.trim() ?? '';
+  const m = last.match(/^!\s*colspan\s*=\s*"?([3-9])"?\s*\|\s*'*Totals?'*\s*(?=\n|!!|\|\|)/i);
+  return m ? last.slice(m[0].length) : null;
+}
+
 /** Total da carreira em clubes (todas as competições) e a seleção principal. */
 export function parseWikiStats(wikitext: string): WikiStats | null {
-  const caption = wikitext.search(/\|\+\s*Appearances and goals by club/i);
+  const caption = clubTableAt(wikitext);
   if (caption < 0) return null;
   const table = tableAround(wikitext, caption);
   if (!table) return null;
   const rows = table.split(/\n\|-[^\n]*/);
-  const total = rows.find((r) => /Career total/i.test(r));
-  if (!total) return null;
-  const nums = rowNumbers(total.slice(total.search(/Career total/i) + 'Career total'.length));
+  const total = careerTotalRow(rows);
+  if (total === null) return null;
+  const nums = rowNumbers(total);
   const cols = totalColumns(table);
   if (nums.length < cols.length) return null;
   const last = nums.slice(-cols.length);

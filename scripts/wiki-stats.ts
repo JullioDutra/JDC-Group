@@ -11,9 +11,11 @@
  *       Lê a página de cada alvo (pelo endereço do artigo, /wiki/..., que o
  *       robots.txt permite), um pedido a cada 3 s; 429 espera e repete; 5
  *       seguidos param. Salva a cada 25 e retoma de onde parou.
+ *       Com --reler-sem-tabela N, lê de novo quem ficou "sem tabela" e tem N
+ *       artigos ou mais (depois de a leitura aprender um formato novo).
  *   status
  */
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { USER_AGENT } from '../src/lib/players/wikidata';
 import { WIKI_STATS } from '../src/lib/players/wikistats-dados';
 import { parseWikiStats } from '../src/lib/players/wikistats-parse';
@@ -21,6 +23,7 @@ import type { WikiStatsEntry } from '../src/lib/players/wikistats';
 
 const ALVOS = 'data/wikipedia-alvos.json';
 const DADOS = 'src/lib/players/wikistats-dados.ts';
+const RELIDOS = 'data/wikipedia-relidos.json';
 interface Alvo { qid: string; title: string; sitelinks: number }
 
 const arg = (name: string, fallback: number) => {
@@ -124,7 +127,13 @@ async function rodar() {
   const entries = new Map(WIKI_STATS.map((e) => [e.qid, e]));
   const tried = new Set<string>(existsSync('data/wikipedia-sem-tabela.json') ? (JSON.parse(readFileSync('data/wikipedia-sem-tabela.json', 'utf8')) as string[]) : []);
   const fresh = (e: WikiStatsEntry) => (Date.now() - Date.parse(e.read)) / 86_400_000 <= refazer;
-  const pending = targets.filter((t) => !tried.has(t.qid) && !(entries.has(t.qid) && fresh(entries.get(t.qid)!))).slice(0, limite);
+  // Reler quem ficou "sem tabela" (a leitura aprendeu formatos novos): só com N artigos ou mais.
+  // Quem já foi relido fica em data/wikipedia-relidos.json até a releitura acabar (retoma de onde parou).
+  const reler = arg('reler-sem-tabela', 0);
+  const relidos = new Set<string>(reler > 0 && existsSync(RELIDOS) ? (JSON.parse(readFileSync(RELIDOS, 'utf8')) as string[]) : []);
+  const again = (t: Alvo) => reler > 0 && tried.has(t.qid) && t.sitelinks >= reler && !relidos.has(t.qid);
+  const candidates = targets.filter((t) => (again(t) || !tried.has(t.qid)) && !(entries.has(t.qid) && fresh(entries.get(t.qid)!)));
+  const pending = candidates.slice(0, limite);
   console.log(`${pending.length} para ler (de ${targets.length}; ${entries.size} na base)`);
   let ok = 0;
   let none = 0;
@@ -132,6 +141,7 @@ async function rodar() {
   const flush = () => {
     save([...entries.values()]);
     writeFileSync('data/wikipedia-sem-tabela.json', JSON.stringify([...tried]) + '\n');
+    if (reler > 0) writeFileSync(RELIDOS, JSON.stringify([...relidos]) + '\n');
   };
   for (const [i, t] of pending.entries()) {
     let title = t.title;
@@ -155,9 +165,11 @@ async function rodar() {
       continue;
     }
     limited = 0;
+    if (reler > 0) relidos.add(t.qid);
     const stats = result.status === 200 ? parseWikiStats(result.text) : null;
     if (stats) {
       entries.set(t.qid, { qid: t.qid, title, read: today(), ...stats });
+      tried.delete(t.qid);
       ok++;
     } else {
       tried.add(t.qid);
@@ -169,6 +181,7 @@ async function rodar() {
     }
   }
   flush();
+  if (reler > 0 && candidates.length <= limite && existsSync(RELIDOS)) unlinkSync(RELIDOS);
   console.log(`Fim: ${ok} com números, ${none} sem tabela. Base: ${entries.size} jogadores.`);
 }
 
