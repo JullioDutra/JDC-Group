@@ -2100,3 +2100,20 @@ Todas vêm da Wikipédia e foram lidas pelo endereço do artigo (`/wiki/...`), 1
 - **Plano B:** se a imagem não sair, o texto completo vai junto da legenda.
 - **Testes:** as 4 imagens são geradas no teste.
 
+
+## 38. Bot fora do ar: limite de CPU da Vercel (27/11)
+
+> Pedido: "Parece estar travado. Consegue verificar?"
+
+- **O que aconteceu:** desde a tarde de 27/11, a Vercel responde 402 (DEPLOYMENT_DISABLED) em todos os endereços do bot, inclusive nas versões antigas.
+  - A conta está no plano Hobby, e o painel de uso mostra Fluid Active CPU em 4h34 de 4h. Os outros itens estão longe do limite (por exemplo, 256 mil de 1 milhão de chamadas).
+  - Sem trocar de plano, o projeto volta só quando o mês de uso fecha ("Unpauses in 29d 22h").
+- **Onde ia a CPU:** cada imagem custava cerca de 0,7 a 1 s de CPU. O next/og monta o SVG com o satori e faz o PNG com o resvg em WebAssembly, que é lento. Cada partida manda várias imagens.
+- **Correção:**
+  - o satori na mesma versão do next/og (0.15.2, então o desenho não muda) monta o SVG, e o sharp (libvips, nativo, que o projeto já usava nas fotos) faz o PNG;
+  - medido aqui: 0,15 a 0,4 s por imagem, de 3 a 5 vezes menos;
+  - as imagens fixas (ajuda, modos, temas, novidades) ficam guardadas na memória da instância.
+- **Conferido:**
+  - as amostras (`npm run render:samples`), a Cravada, o Rosto Borrado (foto dentro da imagem) e a bandeira saem iguais às de antes;
+  - os 231 testes passam.
+- **Depende do dono:** subir para o Pro (volta na hora) ou esperar o mês fechar. A carga de jogadores em segundo plano (350 chamadas por dia) pode ser reduzida com `IMPORT_DAILY_CALLS` ou parada pela página do admin, se ainda for preciso economizar.

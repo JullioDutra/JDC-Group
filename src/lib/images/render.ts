@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
-import { ImageResponse } from 'next/og';
+import satori from 'satori';
 import type { ImageSpec } from '../game/types';
 import { glyphSafe } from './glyphs';
 import { buildImage } from './templates';
@@ -60,14 +60,37 @@ export function glyphSafeTree(node: ReactNode): ReactNode {
  * nada de baixar fonte ou emoji da internet na hora (ver glyphs.ts).
  */
 export async function renderImage(spec: ImageSpec): Promise<Buffer> {
+  // Imagens que não mudam (ajuda, temas, novidades...) saem da memória da instância.
+  const key = cacheKey(spec);
+  const hit = key ? cache.get(key) : undefined;
+  if (hit) return hit;
   let safe = glyphSafeSpec(spec);
   // Rosto Borrado: a foto entra pronta (borrada) depois do filtro de glifos.
   if (safe.kind === 'faceQuiz') safe = { ...safe, ...(await facePhoto(safe.photoId, safe.level, safe.faces)) };
   const element = glyphSafeTree(buildImage(safe)) as ReactElement;
-  const response = new ImageResponse(element, { width: W, height: H, fonts: await loadFonts() });
-  const png = Buffer.from(await response.arrayBuffer());
+  // Satori (o mesmo 0.15.2 do next/og) monta o SVG; o sharp (libvips, nativo)
+  // faz o PNG. O next/og fazia o PNG em WebAssembly, com cerca de 3 vezes mais
+  // CPU por imagem, e o limite de CPU da Vercel acabou (27/11/2026).
+  const svg = Buffer.from(await satori(element, { width: W, height: H, fonts: await loadFonts() }));
   // Foto vai em JPEG: o PNG de uma foto fica pesado demais para o WhatsApp.
-  return safe.kind === 'faceQuiz' ? sharp(png).jpeg({ quality: 84 }).toBuffer() : png;
+  const out = safe.kind === 'faceQuiz' ? await sharp(svg).jpeg({ quality: 84 }).toBuffer() : await sharp(svg).png().toBuffer();
+  if (key) remember(key, out);
+  return out;
+}
+
+/** Imagens fixas: a mesma especificação dá sempre a mesma imagem. */
+const STATIC_KINDS = new Set<ImageSpec['kind']>(['help', 'modes', 'cravadaThemes', 'textBoard']);
+const CACHE_MAX = 24;
+const cache = new Map<string, Buffer>();
+
+function cacheKey(spec: ImageSpec): string | null {
+  return STATIC_KINDS.has(spec.kind) ? JSON.stringify(spec) : null;
+}
+
+function remember(key: string, png: Buffer): void {
+  cache.delete(key);
+  cache.set(key, png);
+  while (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value!);
 }
 
 /** Foto do Rosto Borrado (data URI e tamanho), ou nada se não der para baixar (o cartão avisa). */
