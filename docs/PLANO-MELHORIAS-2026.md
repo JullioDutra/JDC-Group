@@ -1917,6 +1917,27 @@ Num lote de teste de 20 páginas:
 - **Assistências, títulos e valor de mercado:** a Wikipédia não traz de forma padronizada. Continuam vindo do admin (*tm*, *corrigir*) ou da IA.
 - **Páginas com tabela própria** (Pelé e algumas lendas): sem número automático.
 
+### 35.5 Planejado x entregue (27/11/2026)
+
+A coleta leu os 10.668 alvos. Depois disso, a leitura aprendeu outros formatos de tabela e as páginas famosas que tinham ficado sem número foram lidas de novo duas vezes.
+
+| Item | Planejado | Entregue |
+|---|---|---|
+| Alvos lidos | 10.668 | ✅ 10.668 |
+| Jogadores com número | o máximo dos alvos | ✅ 5.319 (4.500 dos 6.000 famosos; 819 dos 4.668 do Brasil) |
+| Os mais famosos | cobrir quase todos | ✅ 89 dos 100; 464 dos 500; 916 dos 1.000; 2.449 dos 3.000 |
+| Atualizados em 2026 | com data da página | ✅ 1.619 com data de 2026; 2.586 sem data na página |
+| Seleção principal | jogos e gols | ✅ 3.750 com números da seleção |
+| Formatos de tabela | o da legenda padrão | ✅ e também: outra legenda e linha "Total" (Giggs, Lineker), tabela sem legenda em "Career statistics > Club" (Ribéry, Puskás), "\|}" dentro de nota (Ricardo Carvalho), "Total career" (Víctor Valdés), comentário escondido no número (Mancini) e páginas japonesas ("Club statistics") |
+| Testes | página real | ✅ `tests/wikistats.test.ts` (4), com o Messi real e um caso de cada formato |
+
+**O que ficou sem número:**
+- **Do Brasil, a maioria:** são páginas curtas, com a caixa de informação vazia e sem tabela de clubes. Isso foi conferido página a página num lote e não é erro de leitura.
+- **Tabela só da liga** (sem o grupo Total), por exemplo de jogadores japoneses antigos: não conta a carreira inteira, então fica de fora de propósito.
+- **Pelé:** tem tabelas próprias.
+- **Quem não é jogador de carreira** (Camus, Niels Bohr, Orbán, Milei, Infantino) e **técnicos** cuja página só tem a tabela de técnico (Mourinho, Löw, Hiddink, Shankly).
+- **Essas pessoas seguem com o número atual** (Transfermarkt, Wikidata ou IA) e podem ser corrigidas pela página de correção (seção 36).
+
 ## 36. Goleiros com número, página de correção e fotos do Rosto Borrado (26/11)
 
 > Pedidos:
