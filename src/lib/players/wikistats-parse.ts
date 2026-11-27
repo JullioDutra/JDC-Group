@@ -28,22 +28,36 @@ export function englishDate(text: string): string | null {
   return null;
 }
 
-/** Tabela inteira a partir da posição da legenda ("|+ ..."), até o "|}" que a fecha. */
+/**
+ * Tabela inteira a partir da posição da legenda ("|+ ..."), até o "|}" que a
+ * fecha. Só vale "{|" e "|}" no começo da linha: dentro das células aparecem
+ * coisas como "{{ref label|A|}}", que não fecham nada (Ricardo Carvalho).
+ */
 function tableAround(text: string, at: number): string | null {
-  const start = text.lastIndexOf('{|', at);
+  let start = text.lastIndexOf('{|', at);
+  while (start > 0 && !/\n[ \t]*$/.test(text.slice(Math.max(0, start - 8), start))) start = text.lastIndexOf('{|', start - 1);
   if (start < 0) return null;
   let depth = 0;
-  for (let i = start; i < text.length - 1; i++) {
-    if (text.startsWith('{|', i)) {
-      depth++;
-      i++;
-    } else if (text.startsWith('|}', i)) {
+  let pos = start;
+  while (pos < text.length) {
+    const end = text.indexOf('\n', pos);
+    const line = text.slice(pos, end < 0 ? text.length : end).trimStart();
+    if (line.startsWith('{|')) depth++;
+    else if (line.startsWith('|}')) {
       depth--;
-      i++;
-      if (depth === 0) return text.slice(start, i + 1);
+      if (depth === 0) return text.slice(start, (end < 0 ? text.length : end));
     }
+    if (end < 0) break;
+    pos = end + 1;
   }
   return null;
+}
+
+/** Cabeçalho da tabela: as linhas antes da primeira linha de dados ("|..."). */
+function headerOf(table: string): string {
+  const lines = table.split('\n');
+  const first = lines.findIndex((l, i) => i > 0 && /^\|(?![-+}])/.test(l.trim()));
+  return lines.slice(0, first < 0 ? lines.length : first).join('\n');
 }
 
 /** Números de uma linha da tabela (ignora "—", notas e atributos). */
@@ -73,48 +87,67 @@ function totalColumns(table: string): string[] {
   return named.length >= span ? named.slice(-span).map((s) => s.toLowerCase()) : ['apps', 'goals'];
 }
 
+/** Primeira tabela logo abaixo de um título (antes do próximo título), se tiver jeito de tabela de temporadas. */
+function tableUnder(wikitext: string, heading: number): number {
+  const after = heading + 3;
+  const start = wikitext.indexOf('{|', after);
+  const nextHeading = wikitext.slice(after).search(/\n==/);
+  if (start < 0 || (nextHeading >= 0 && start > after + nextHeading)) return -1;
+  const head = headerOf(wikitext.slice(start, start + 4000));
+  return /\bSeason\b/i.test(head) && /\bApps\b/i.test(head) && /\bTotal\b/i.test(head) ? start : -1;
+}
+
 /**
  * Onde está a tabela de clubes: pela legenda ("Appearances and goals by club,
  * season and competition" ou "Club appearances and goals by season...") ou,
  * sem legenda, a primeira tabela logo abaixo do título "Club" da seção
- * "Career statistics" (Ribéry, Puskás), se tiver as colunas Season e Apps.
+ * "Career statistics" (Ribéry, Puskás) ou do título "Club statistics" (páginas
+ * de jogadores japoneses). Sem legenda, a tabela precisa ter Temporada, Apps e
+ * o grupo Total no cabeçalho (tabela só da liga não conta a carreira inteira).
  */
-function clubTableAt(wikitext: string): number {
+function clubTableAt(wikitext: string): number | null {
   const caption = wikitext.search(/\|\+[^\n]*?\bappearances and goals by (club|season)\b/i);
   if (caption >= 0) return caption;
-  const section = wikitext.search(/(?:^|\n)==\s*(Career statistics|Statistics)\s*==/i);
-  if (section < 0) return -1;
-  const sub = wikitext.slice(section).search(/\n===\s*Club( career)?\s*===/i);
-  if (sub < 0) return -1;
-  const from = section + sub + 1;
-  const start = wikitext.indexOf('{|', from);
-  const nextHeading = wikitext.slice(from + 3).search(/\n==/);
-  if (start < 0 || (nextHeading >= 0 && start > from + 3 + nextHeading)) return -1;
-  const head = wikitext.slice(start, start + 1500);
-  return /\bSeason\b/i.test(head) && /\bApps\b/i.test(head) ? start : -1;
+  const section = wikitext.search(/(?:^|\n)==\s*(Career statistics|Statistics|Player statistics)\s*==/i);
+  if (section >= 0) {
+    const sub = wikitext.slice(section).search(/\n===\s*Club( career| statistics)?\s*===/i);
+    const at = sub >= 0 ? tableUnder(wikitext, section + sub + 1) : -1;
+    if (at >= 0) return at;
+  }
+  const club = wikitext.search(/(?:^|\n)==\s*Club (career )?statistics\s*==/i);
+  const at = club >= 0 ? tableUnder(wikitext, club + 1) : -1;
+  return at >= 0 ? at : null;
 }
 
 /**
- * Linha do total da carreira: "Career total" ou, sem ela, a última linha da
- * tabela chamada só "Total" ocupando 3 colunas ou mais (Clube + Temporada +
- * Divisão: Giggs, Lineker). O "Total" de 2 colunas é o de um clube só.
+ * Linha do total da carreira: "Career total" (ou "Total career") ou, sem ela,
+ * a última linha da tabela chamada só "Total" ocupando 3 colunas ou mais
+ * (Clube + Temporada + Divisão: Giggs, Lineker), se o cabeçalho tiver o grupo
+ * Total. O "Total" de 2 colunas é o de um clube só.
  */
-function careerTotalRow(rows: string[]): string | null {
-  const career = rows.find((r) => /Career total/i.test(r));
-  if (career) return career.slice(career.search(/Career total/i) + 'Career total'.length);
+function careerTotalRow(table: string, rows: string[]): string | null {
+  const label = /\b(Career totals?|Total career)\b/i;
+  const career = rows.find((r) => label.test(r));
+  if (career) {
+    const m = career.match(label)!;
+    return career.slice(m.index! + m[0].length);
+  }
+  if (!/\bTotal\b/i.test(headerOf(table))) return null;
   const last = rows[rows.length - 1]?.trim() ?? '';
   const m = last.match(/^!\s*colspan\s*=\s*"?([3-9])"?\s*\|\s*'*Totals?'*\s*(?=\n|!!|\|\|)/i);
   return m ? last.slice(m[0].length) : null;
 }
 
 /** Total da carreira em clubes (todas as competições) e a seleção principal. */
-export function parseWikiStats(wikitext: string): WikiStats | null {
+export function parseWikiStats(raw: string): WikiStats | null {
+  // Comentários escondidos ("<!--Serie A stats only-->") grudam nos números.
+  const wikitext = raw.replace(/<!--[\s\S]*?-->/g, '');
   const caption = clubTableAt(wikitext);
-  if (caption < 0) return null;
+  if (caption === null) return null;
   const table = tableAround(wikitext, caption);
   if (!table) return null;
   const rows = table.split(/\n\|-[^\n]*/);
-  const total = careerTotalRow(rows);
+  const total = careerTotalRow(table, rows);
   if (total === null) return null;
   const nums = rowNumbers(total);
   const cols = totalColumns(table);
@@ -133,7 +166,9 @@ export function parseWikiStats(wikitext: string): WikiStats | null {
     out.intlGoals = national.goals;
   }
   const before = wikitext.slice(Math.max(0, caption - 600), caption);
-  const updated = before.match(/\{\{\s*updated\s*\|([^}]*)\}\}/i)?.[1] ?? before.match(/As of[^\n]*?(\d{1,2}\s+[A-Za-z]+\s+\d{4}|[A-Za-z]+\s+\d{1,2},\s+\d{4})/i)?.[1];
+  const updated =
+    before.match(/\{\{\s*updated\s*\|([^}]*)\}\}/i)?.[1] ??
+    before.match(/(?:As of|Updated (?:to|as of|on)?)[^\n]*?(\d{1,2}\s+[A-Za-z]+\s+\d{4}|[A-Za-z]+\s+\d{1,2},\s+\d{4})/i)?.[1];
   const asOf = updated ? englishDate(updated) : null;
   if (asOf) out.asOf = asOf;
   return out;

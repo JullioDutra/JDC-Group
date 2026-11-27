@@ -48,6 +48,22 @@ test('Wikipédia: outros formatos da tabela de clubes (Giggs, Lineker, Ribéry, 
   assert.equal(parseWikiStats(`==Career statistics==\n===Club===\nSem dados.\n==Honours==\n{| class="wikitable"\n${HEAD}!colspan="3"|Career total!!1!!1!!0!!0!!1!!1\n|}`), null);
 });
 
+test('Wikipédia: "|}" dentro de nota, "Total career", comentário escondido e páginas japonesas', () => {
+  // Ricardo Carvalho: "{{ref label|A|}}" no cabeçalho não fecha a tabela.
+  const carvalho = `==Career statistics==\n===Club===\n{{updated|26 November 2017}}\n{| class="wikitable"\n|-\n!rowspan="2"|Club\n!rowspan="2"|Season\n!colspan="2"|League Cup{{ref label|LeagueCup|A|}}\n!colspan="2"|Total\n|-\n!Apps!!Goals!!Apps!!Goals\n|-\n|Chelsea||2004–05||1||0||40||1\n|-\n!colspan=2|Career total\n!15!!0!!610!!24\n|}`;
+  assert.deepEqual(parseWikiStats(carvalho), { clubApps: 610, clubGoals: 24, asOf: '2017-11-26' });
+  // Víctor Valdés: "Total career"; Mancini: comentário colado no último número.
+  const valdes = `{| class="wikitable"\n|+ Appearances and goals by club, season and competition\n${HEAD}|Barcelona||2002–03||La Liga||14||0||2||0||16||0\n|-\n!colspan="3"|Total career\n!535!!0!!70!!0!!666!!0\n|}`;
+  assert.deepEqual(parseWikiStats(valdes), { clubApps: 666, clubGoals: 0 });
+  assert.deepEqual(parseWikiStats(valdes.replace('!666!!0', '!738!!201 <!--Serie A stats only-->')), { clubApps: 738, clubGoals: 201 });
+  // Japonês: seção "Club statistics", cabeçalho "Season !! Club !! League" e data "Updated to".
+  const maeda = `==Club statistics==\n''Updated to 23 February 2020''.<ref>X</ref>\n{| class="wikitable"\n|-\n! colspan=3 | Club performance\n! colspan=2 | League\n! colspan=2 | Total\n|-\n! Season !! Club !! League\n! Apps !! Goals\n! Apps !! Goals\n|-\n|2015||Tottori||J3||8||0||10||1\n|-\n! colspan=3 | Career total\n!289||40||326||46\n|}`;
+  assert.deepEqual(parseWikiStats(maeda), { clubApps: 326, clubGoals: 46, asOf: '2020-02-23' });
+  // Tabela só da liga (sem o grupo Total): não é a carreira inteira, fica sem número.
+  const leagueOnly = `==Club statistics==\n{| class="wikitable"\n|-\n! colspan=3 | Club performance\n! colspan=2 | League\n|-\n! Season !! Club !! League !! Apps !! Goals\n|-\n|1984||Yamaha||JSL||18||0\n|-\n!colspan=3|Total\n!109||3\n|}`;
+  assert.equal(parseWikiStats(leagueOnly), null);
+});
+
 const rec = (over: Partial<PlayerRecord> = {}): PlayerRecord => ({
   id: 'Q615', name: 'Lionel Messi', aliases: [], positions: ['ATA'], nationality: 'Argentina', birthDate: '1987-06-24', heightCm: 170,
   clubs: ['Futbol Club Barcelona'], debutYear: 2004, sitelinks: 228, stats: { careerGoals: 700, careerApps: 900 }, source: 'wikidata', ...over,
