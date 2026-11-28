@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env
+.env.*
+.vercel
+samples
+tests
+data
+docs
+*.tsbuildinfo
+deploy/vps/.env

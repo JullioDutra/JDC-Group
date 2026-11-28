@@ -1,0 +1,5 @@
+# HTTPS automático (Let's Encrypt) para o bot. DOMAIN e BOT_PORT vêm do .env.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy 127.0.0.1:{$BOT_PORT}
+}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { secretMatches } from '@/lib/auth';
+import { publicOrigin } from '@/lib/scheduler';
 import { evolutionConfig, evolutionSetupInstance } from '@/lib/whatsapp/evolution';
 
 export const runtime = 'nodejs';
@@ -31,7 +32,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const origin = new URL(request.url).origin;
+  // PUBLIC_APP_URL (VPS atrás de proxy) ou o endereço pelo qual o admin chamou.
+  const origin = publicOrigin(request);
   const webhookUrl = `${origin}/api/webhook?token=${encodeURIComponent(process.env.WEBHOOK_SECRET)}`;
   try {
     const { groupsIgnoreWasOn } = await evolutionSetupInstance(webhookUrl);

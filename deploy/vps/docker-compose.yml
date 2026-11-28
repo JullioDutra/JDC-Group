@@ -1,0 +1,43 @@
+# Duelo de Craques na VPS. Projeto próprio ("duelo-de-craques"): subir, parar ou
+# reconstruir este compose NÃO mexe na Evolution, no bot de finanças nem no Cadrius.
+# Guia: docs/MIGRACAO-VPS.md
+name: duelo-de-craques
+
+services:
+  bot:
+    build:
+      context: ../..
+    image: duelo-de-craques:latest
+    container_name: duelo-bot
+    restart: unless-stopped
+    env_file: .env
+    # Só na própria VPS (o proxy HTTPS repassa para cá). Troque BOT_PORT no .env se 3010 estiver em uso.
+    # Proxy que roda em container (Caddy/Nginx do Docker): BOT_BIND=172.17.0.1 no .env.
+    ports:
+      - "${BOT_BIND:-127.0.0.1}:${BOT_PORT:-3010}:3000"
+    # Limites para não disputar máquina com a Evolution e o Cadrius.
+    mem_limit: 768m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+
+  # Só se NADA estiver usando as portas 80 e 443 na VPS (passo 4 do guia):
+  #   docker compose --profile proxy up -d
+  caddy:
+    image: caddy:2.8.4
+    profiles: ["proxy"]
+    container_name: duelo-caddy
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DOMAIN: ${DOMAIN:?defina DOMAIN no .env}
+      BOT_PORT: ${BOT_PORT:-3010}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

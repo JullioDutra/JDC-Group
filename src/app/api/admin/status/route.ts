@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicOrigin } from '@/lib/scheduler';
 import { hasMaritacaKey } from '@/lib/ai/maritaca';
 import { secretMatches } from '@/lib/auth';
 import { adminNumbers } from '@/lib/owners';
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
     try {
       whatsapp.connection = await evolutionConnectionState();
       const hook = await evolutionWebhook();
-      const host = new URL(request.url).host;
+      const host = new URL(publicOrigin(request)).host;
       whatsapp.webhook = hook?.url
         ? { enabled: hook.enabled, pointsToThisApp: hook.url.includes(host), events: hook.events }
         : 'nenhum webhook configurado na instância';
