@@ -5,6 +5,10 @@ set -e
 cd "$(dirname "$0")/../.."
 git pull --ff-only
 cd deploy/vps
-docker compose build bot
-docker compose up -d bot
-docker compose ps bot
+# Com o Traefik da VPS (docker-compose.traefik.yml), usa os dois arquivos.
+if [ -f docker-compose.traefik.yml ] && grep -qE '^TRAEFIK_NETWORK=.+' .env; then
+  set -- -f docker-compose.yml -f docker-compose.traefik.yml
+fi
+docker compose "$@" build bot
+docker compose "$@" up -d bot
+docker compose "$@" ps bot

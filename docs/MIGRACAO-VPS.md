@@ -135,7 +135,29 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d duelo.seudominio.com.br
 ```
 
-**D) Traefik ou nginx-proxy-manager:** mande a saída do passo 1 que eu escrevo a configuração certa.
+**D) Já existe um Traefik** (é o caso desta VPS: `cadrius_traefik`): o bot entra por labels, e o Traefik o descobre sozinho, sem reiniciar.
+
+1. Descubra a rede, a entrada HTTPS e o emissor do certificado do Traefik:
+
+   ```bash
+   docker inspect cadrius_traefik --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+   docker inspect cadrius_traefik --format '{{json .Args}}' | tr ',' '\n'
+   docker inspect cadrius-prod-frontend-1 --format '{{json .Config.Labels}}' | tr ',' '\n' | grep traefik
+   ```
+
+2. Ponha no `.env`:
+   - `TRAEFIK_NETWORK`: a rede;
+   - `TRAEFIK_ENTRYPOINT`: a entrada HTTPS (em geral `websecure`);
+   - `TRAEFIK_CERTRESOLVER`: o nome do `certresolver`.
+
+3. Suba com os dois arquivos:
+
+   ```bash
+   cd /opt/duelo-de-craques/deploy/vps
+   docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build bot
+   ```
+
+**E) nginx-proxy-manager:** mande a saída do passo 1 que eu escrevo a configuração certa.
 
 **Teste (de qualquer lugar):**
 

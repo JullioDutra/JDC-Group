@@ -1,0 +1,23 @@
+# Bot atrás do Traefik que já existe na VPS (cadrius_traefik, portas 80/443).
+# O Traefik descobre o container pelas labels: NÃO é preciso reiniciá-lo.
+# Uso (dentro de deploy/vps):
+#   docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build bot
+# Os nomes (rede, entrada HTTPS, emissor do certificado) vêm do .env.
+services:
+  bot:
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:?defina TRAEFIK_NETWORK no .env}
+      - traefik.http.routers.duelo.rule=Host(`${DOMAIN:?defina DOMAIN no .env}`)
+      - traefik.http.routers.duelo.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.duelo.tls=true
+      - traefik.http.routers.duelo.tls.certresolver=${TRAEFIK_CERTRESOLVER:?defina TRAEFIK_CERTRESOLVER no .env}
+      - traefik.http.services.duelo.loadbalancer.server.port=3000
+    networks:
+      - default
+      - traefik
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK}
